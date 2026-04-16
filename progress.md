@@ -1,3 +1,26 @@
+## Run: Issue #12 — Comprehensive test suite expansion
+
+- **Date**: 2026-04-16
+- **Branch**: task/issue-12-test-suite
+- **PR target**: exp/expert-team
+
+### Files changed
+- `tests/test_calculator.py` — appended four test sections (sections 1–4) covering: integer happy path (16 parametrized cases), float inputs with `pytest.approx` (12 cases), invalid inputs raising `TypeError` (13 cases), and large/edge case numerics (12 cases)
+
+### Purpose
+Expand test coverage for all four `Calculator` methods (`add`, `subtract`, `multiply`, `divide`) with parametrized tests for normal operation, floating-point precision, invalid type inputs, and large-number edge cases.
+
+### Risks
+None. Change is purely additive to the test file; no production code (`src/calculator.py`) was modified. The existing two tests were preserved unchanged.
+
+### Test results
+57 passed, 0 failed. Full test suite green.
+
+### Tokens used
+Duration: N/A | Cost: N/A | Turns: N/A
+
+---
+
 ## Run: Issue #9 — ZeroDivisionError test coverage
 
 - **Date**: 2026-04-16
