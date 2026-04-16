@@ -1,0 +1,7 @@
+Task:
+- Add a command-line interface so the calculator can be used from bash by passing the operation and operand values as command-line arguments.
+- Ensure the CLI supports the calculator’s current operations consistently, including one-operand and two-operand cases, produces results through standard terminal output, and behaves predictably for incorrect argument usage.
+- Example usage:
+  python main.py add 5 7
+  python main.py factorial 5
+- Keep the change scoped to bash-based CLI access, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.

@@ -1,0 +1,3 @@
+Task:
+- Create PlantUml documentation diagrams for the calculator and place them into artifacts/.
+- Add a class diagram, activity diagram, and sequence diagram that document the calculator structure and usage flow.

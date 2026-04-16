@@ -1,0 +1,4 @@
+Task:
+- Add a CLI mode so the calculator can be executed from bash using command-line arguments.
+- Allow the user to provide the operation and required values directly in the command and print the result to the terminal.
+- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.

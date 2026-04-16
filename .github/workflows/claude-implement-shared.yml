@@ -1,0 +1,172 @@
+name: Claude Implement Issue (shared)
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'Experiment branch to check out and target (e.g. exp/naive-generic)'
+        type: string
+        required: true
+      experiment_name:
+        description: 'Human-readable experiment name used in the prompt (e.g. naive-generic)'
+        type: string
+        required: true
+      issue_number:
+        description: 'Issue number to implement'
+        type: string
+        required: true
+      issue_title:
+        description: 'Issue title'
+        type: string
+        required: true
+      issue_body:
+        description: 'Issue body / description'
+        type: string
+        required: false
+        default: ''
+      prompt_additions:
+        description: 'Experiment-specific prompt additions appended after the shared instructions'
+        type: string
+        required: false
+        default: ''
+    secrets:
+      anthropic_api_key:
+        required: true
+
+jobs:
+  claude-implement:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout experiment branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 1
+
+      - name: Run Claude Code Action
+        id: run-claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.anthropic_api_key }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          claude_args: "--max-turns 50"
+          prompt: |
+            You are the autonomous evolution engine for the **${{ inputs.experiment_name }}** experiment.
+
+            Active branch: ${{ inputs.branch }}
+            Do NOT access, inspect, or reference any other branch — only ${{ inputs.branch }} is in scope.
+            Any PR you open must target ${{ inputs.branch }}, never main.
+
+            The GitHub issue you must implement is:
+
+            Issue #${{ inputs.issue_number }}: ${{ inputs.issue_title }}
+
+            ${{ inputs.issue_body }}
+
+            Your task is not complete until one of these happens:
+            1. A pull request is created or updated with the implementation (targeting ${{ inputs.branch }})
+            2. You encounter a hard blocking error and explain it clearly
+
+            Instructions:
+            - Inspect the repository (current branch only)
+            - Create a dedicated sub-branch off ${{ inputs.branch }} for the task
+            - Implement the requested change
+            - Run tests if available; if tests do not exist, create appropriate ones
+            - Commit the changes
+            - Open or update a pull request targeting ${{ inputs.branch }}
+
+            Constraints:
+            - Never push directly to ${{ inputs.branch }} or main
+            - Follow CLAUDE.md strictly
+            - Keep changes minimal, reviewable, and reproducible
+            - Do not modify workflow or governance files unless explicitly required by the issue
+            - Never access or reference sibling experiment branches
+            ${{ inputs.prompt_additions }}
+
+            Progress logging format (mandatory):
+            When writing the cost/turns/duration line in progress.md, write it exactly as:
+            Duration: PENDING | Cost: PENDING | Turns: PENDING
+            Do not estimate or guess these values — the workflow will replace PENDING with real values after your run completes.
+
+      - name: Log cost and turns
+        if: always()
+        run: |
+          EXEC_FILE="${{ steps.run-claude.outputs.execution_file }}"
+          if [ -z "$EXEC_FILE" ] || [ ! -f "$EXEC_FILE" ]; then
+            echo "No execution file found, skipping cost logging."
+            exit 0
+          fi
+          RESULT=$(jq '.[] | select(.type == "result")' "$EXEC_FILE")
+          COST=$(echo "$RESULT" | jq -r '.total_cost_usd // "N/A"')
+          TURNS=$(echo "$RESULT" | jq -r '.num_turns // "N/A"')
+          DURATION=$(echo "$RESULT" | jq -r '.duration_ms // 0')
+          SUBTYPE=$(echo "$RESULT" | jq -r '.subtype // "unknown"')
+          DURATION_S=$(echo "scale=1; $DURATION / 1000" | bc)
+          echo "## Claude Run Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Result | $SUBTYPE |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total cost | \$$COST USD |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Turns | $TURNS |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Duration | ${DURATION_S}s |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Patch progress.md with actual cost
+        if: always()
+        run: |
+          EXEC_FILE="${{ steps.run-claude.outputs.execution_file }}"
+          if [ -z "$EXEC_FILE" ] || [ ! -f "$EXEC_FILE" ]; then
+            echo "No execution file, skipping progress.md patch."
+            exit 0
+          fi
+          RESULT=$(jq '.[] | select(.type == "result")' "$EXEC_FILE")
+          COST=$(echo "$RESULT" | jq -r '.total_cost_usd // "N/A"')
+          TURNS=$(echo "$RESULT" | jq -r '.num_turns // "N/A"')
+          DURATION=$(echo "$RESULT" | jq -r '.duration_ms // 0')
+          DURATION_S=$(echo "scale=1; $DURATION / 1000" | bc)
+          if [ "$COST" != "N/A" ]; then
+            COST_FMT=$(printf "%.6f" "$COST" 2>/dev/null || echo "$COST")
+          else
+            COST_FMT="$COST"
+          fi
+
+          git fetch --all --quiet
+          TASK_BRANCH=$(git branch -r | grep -E "origin/task/issue-${{ inputs.issue_number }}[^0-9]" | head -1 | tr -d ' ')
+          if [ -z "$TASK_BRANCH" ]; then
+            TASK_BRANCH=$(git branch -r | grep "origin/task/issue-${{ inputs.issue_number }}-" | head -1 | tr -d ' ')
+          fi
+          if [ -z "$TASK_BRANCH" ]; then
+            echo "No task branch found for issue ${{ inputs.issue_number }}, skipping."
+            exit 0
+          fi
+
+          LOCAL_BRANCH="${TASK_BRANCH#origin/}"
+          git checkout -b "$LOCAL_BRANCH" "$TASK_BRANCH" 2>/dev/null || git checkout "$LOCAL_BRANCH"
+
+          if [ ! -f "progress.md" ] || ! grep -q "PENDING" progress.md; then
+            echo "No PENDING placeholder in progress.md, skipping."
+            exit 0
+          fi
+
+          export ACTUAL_LINE="Duration: ${DURATION_S}s | Cost: \$${COST_FMT} USD | Turns: ${TURNS}"
+          python3 - <<'PYEOF'
+          import os
+          content = open('progress.md').read()
+          actual = os.environ['ACTUAL_LINE']
+          new = content.replace('Duration: PENDING | Cost: PENDING | Turns: PENDING', actual, 1)
+          open('progress.md', 'w').write(new)
+          PYEOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add progress.md
+          git commit -m "chore: update progress.md with actual workflow cost"
+          git push origin "$LOCAL_BRANCH"

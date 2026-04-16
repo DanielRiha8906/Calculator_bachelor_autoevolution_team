@@ -1,0 +1,4 @@
+Task:
+- Add support for launching the calculator in either GUI mode or guided interactive terminal mode through a startup argument or flag.
+- Make it possible to choose which mode to start while preserving the current functionality of both interfaces.
+- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.

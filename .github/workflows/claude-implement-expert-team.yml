@@ -1,0 +1,34 @@
+name: Claude Implement Issue - expert-team
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to implement'
+        required: true
+      issue_title:
+        description: 'Issue title'
+        required: true
+      issue_body:
+        description: 'Issue body / description'
+        required: false
+
+jobs:
+  claude-implement:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'ai-implement:expert-team'
+    permissions:                                                                                                                                                                          
+        contents: write                                                                                                                                                                                            
+        issues: write                                                                                                                                                                                              
+        pull-requests: write                                                                                                                                                                                       
+        id-token: write                                                                                                                                                                                         
+        actions: read
+    uses: ./.github/workflows/claude-implement-shared.yml
+    with:
+      branch: exp/expert-team
+      experiment_name: expert-team
+      issue_number: ${{ github.event.issue.number || inputs.issue_number }}
+      issue_title: ${{ github.event.issue.title || inputs.issue_title }}
+      issue_body: ${{ github.event.issue.body || inputs.issue_body }}
+    secrets: inherit

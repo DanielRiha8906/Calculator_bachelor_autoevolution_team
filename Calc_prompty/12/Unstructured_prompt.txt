@@ -1,0 +1,2 @@
+Task:
+- Refactor the calculator into more modules and prepare the structure for a future scientific mode.

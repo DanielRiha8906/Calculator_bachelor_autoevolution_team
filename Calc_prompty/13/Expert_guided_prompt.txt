@@ -1,0 +1,4 @@
+Task:
+- Add written documentation for the calculator application so users and developers can understand how to run, use, and maintain the current version of the project.
+- Document the available calculator functionality, guided interactive mode, bash-based CLI usage, local session behavior such as history and error logging, and the current code structure after refactoring.
+- Keep the documentation aligned with the actual implementation rather than idealized or planned future behavior, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.

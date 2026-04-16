@@ -1,0 +1,4 @@
+Task:
+- Add factorial as a supported calculator operation.
+- Ensure the implementation handles valid integer inputs correctly, including boundary cases such as 0 and 1, and rejects unsupported inputs such as negative values or non-integers.
+- Keep the change scoped to this feature, update the relevant tests, and avoid unrelated refactoring.

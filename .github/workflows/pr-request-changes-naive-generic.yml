@@ -1,0 +1,28 @@
+name: Claude Fix PR - naive-generic
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+jobs:
+  claude-fix:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'request-changes:naive-generic' &&
+       github.event.pull_request.base.ref == 'exp/naive-generic')
+    permissions:                                                                                                                                                                          
+        contents: write                                                                                                                                                                                            
+        issues: write                                                                                                                                                                                              
+        pull-requests: write                                                                                                                                                                                       
+        id-token: write                                                                                                                                                                                         
+        actions: read   
+    uses: ./.github/workflows/pr-request-changes-shared.yml
+    with:
+      branch: exp/naive-generic
+      experiment_name: naive-generic
+      pr_number: ${{ github.event.pull_request.number }}
+      pr_title: ${{ github.event.pull_request.title }}
+      pr_body: ${{ github.event.pull_request.body }}
+      pr_head_ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit

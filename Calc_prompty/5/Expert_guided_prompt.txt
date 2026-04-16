@@ -1,0 +1,4 @@
+Task:
+- Add interactive user input so the calculator can read the selected operation and the required operand values at runtime.
+- Ensure the interaction flow supports the calculator’s current operations consistently, including cases where some operations require one operand and others require two, and allow the user to perform multiple calculations in one session.
+- Keep the change scoped to input-driven execution, update relevant tests where appropriate, and avoid unrelated refactoring.

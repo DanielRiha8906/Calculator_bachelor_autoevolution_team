@@ -1,0 +1,4 @@
+Task:
+- Add square, cube, square root, cube root, power, base-10 logarithm (log), and natural logarithm as supported calculator operations.
+- Ensure the implementation integrates unary and binary operations consistently and handles important mathematical edge cases, including invalid inputs for square root, log, and ln, and correct behavior for cube root where the result domain differs.
+- Update the relevant tests for both standard and invalid cases, and avoid unrelated refactoring.

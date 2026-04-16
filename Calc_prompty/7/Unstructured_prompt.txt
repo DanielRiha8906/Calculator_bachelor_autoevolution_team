@@ -1,0 +1,2 @@
+Task:
+- Add CLI mode so the calculator can be used from bash.

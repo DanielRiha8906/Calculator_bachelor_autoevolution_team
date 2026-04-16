@@ -1,0 +1,3 @@
+Task:
+- Add square, cube, square root, cube root, power, log and ln as supported calculator operations.
+- Make sure the calculator can execute these operations correctly and update the tests to cover the new functionality.

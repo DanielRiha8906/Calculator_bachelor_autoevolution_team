@@ -1,0 +1,2 @@
+Task:
+- Add documentation for the calculator application.

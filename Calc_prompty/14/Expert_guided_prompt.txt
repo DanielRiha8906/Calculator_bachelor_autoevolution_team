@@ -1,0 +1,6 @@
+Task:
+- Add support for normal and scientific calculator modes in guided interactive use, and allow the user to switch between those modes during an interactive session.
+- Keep normal mode focused on the standard calculator operations (such as +, -, *, /, square, and sqrt), and make scientific mode expose an expanded operation set that includes advanced functions such as power, cube, cube root, factorial, log, ln, sin, cos, tan, cot, asin, and acos.
+- Ensure the interactive flow clearly presents the operations available in the currently selected mode and uses the existing modular operation structure so normal and scientific functionality remain separated cleanly.
+- Example behavior: the user should be able to choose normal or scientific mode, see only the operations available in that mode, perform a calculation, and continue using the calculator without restarting the application.
+- Keep the change scoped to interactive mode switching rather than GUI or bash-based CLI mode selection, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.

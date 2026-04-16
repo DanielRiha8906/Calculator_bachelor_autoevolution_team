@@ -1,0 +1,35 @@
+Typy tasků pro calc appku. 
+
+Sanity test:
+1. Vytvoř test pro dělení nulou
+
+Easy:
+2. Vytvoření reasonably plného test suite
+3. Přidání faktoriálu
+4. Přidání metod najednou - sqrt, druhá/třetí mocnina/odmocnina, abs(), lg, ln
+5. Přidání User inputu
+
+6. Přidání generace vývojových artefaktů
+Mid:
+
+7. Přidáníé CLI režimu
+8. Validace vstupů s retry logikou
+9. Přidání Historie operací
+10. Přidání logování chyb
+
+hard:
+
+11. Oddělení logiky od rozhraní
+12. Refactor do více modulů
+13. Přidání Dokumentace
+
+harder:
+14. Scientific mode - přepínání mezi moduly
+15. Přidání GUI
+16. Přepínání mezi módy CLI/GUI
+17. Přidání podpory pro matematické rovnice ex. (3+5) * 3 / sqrt(9)
+
+Kombinovaný počet tasků 
+
+
+18. Rozbití code base, nechat upravit claude celou kódovou bázi

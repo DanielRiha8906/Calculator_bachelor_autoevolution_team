@@ -1,0 +1,2 @@
+Task:
+- Add a startup argument or flag to switch between GUI and interactive mode in the calculator app.

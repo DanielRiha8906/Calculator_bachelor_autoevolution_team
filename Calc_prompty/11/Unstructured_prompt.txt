@@ -1,0 +1,2 @@
+Task:
+- Separate the calculator logic from the interface.

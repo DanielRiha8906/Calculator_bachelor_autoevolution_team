@@ -1,0 +1,3 @@
+Task:
+- Add factorial as a supported calculator operation.
+- Make sure the calculator can correctly compute factorial values for valid inputs and update the tests accordingly.

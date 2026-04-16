@@ -1,0 +1,2 @@
+Task:
+- Add a GUI for the calculator app using tkinter, and make sure the existing calculator functionality can still be used through the application.

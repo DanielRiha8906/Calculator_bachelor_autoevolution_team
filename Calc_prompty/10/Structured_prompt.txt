@@ -1,0 +1,4 @@
+Task:
+- Add error logging to the calculator so failures and invalid usage can be recorded in a local log file.
+- Log relevant problems such as invalid input, unsupported operations, and calculation errors without mixing them with normal operation history.
+- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.

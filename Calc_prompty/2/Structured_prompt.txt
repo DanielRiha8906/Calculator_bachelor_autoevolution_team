@@ -1,0 +1,3 @@
+Task:
+- Create a unit test suite for the calculator's current functionality.
+- Cover the existing arithmetic operations and verify that the expected results are valid inputs.

@@ -1,0 +1,2 @@
+Task:
+- Add square, cube, square root, cube root, power, log and ln to the calculator.

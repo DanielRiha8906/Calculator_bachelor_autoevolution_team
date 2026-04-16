@@ -1,0 +1,4 @@
+Task:
+- Create a unit test suite for the calculator’s currently implemented operations.
+- Include tests for expected results on normal inputs and for important edge cases such as invalid inputs, division by zero, and multiplication or division with floating-point values.
+- Ensure the tests reflect consistent calculator behavior across supported operations, and avoid unrelated refactoring unless a small correctness fix is necessary.

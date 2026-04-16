@@ -1,0 +1,4 @@
+Task:
+- Add error logging to the calculator so invalid usage and calculation failures are recorded in a dedicated local log file such as error.log.
+- Log relevant error situations consistently across guided interactive mode and bash-based CLI mode, including unsupported operations, invalid operand input, incorrect argument counts, and runtime calculation errors such as division by zero or invalid mathematical domains.
+- Keep error logging separate from user-facing operation history, avoid turning logging into a general persistence system, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.

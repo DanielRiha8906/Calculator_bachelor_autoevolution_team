@@ -1,0 +1,2 @@
+Task:
+- Add a scientific mode to the calculator and allow switching between normal and scientific mode in interactive use.

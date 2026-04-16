@@ -1,0 +1,2 @@
+Task:
+- Create PlantUml diagrams for the calculator and save then into artifacts/.

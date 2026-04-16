@@ -1,0 +1,4 @@
+Task:
+- Add focused test coverage for division by zero behavior in the calculator app.
+- Assert that division by zero raises ZeroDivisionError and update the implementation if needed.
+- Keep the change limited to this concern and avoid unrelated refactoring.

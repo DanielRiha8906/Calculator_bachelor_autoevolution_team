@@ -1,0 +1,2 @@
+Task:
+- Add validation for bad input and let the user retry a few times.

@@ -1,0 +1,4 @@
+Task:
+- Add written documentation for the calculator application so its features, usage, and project structure are easier to understand.
+- Document how to run and use the calculator, including its available functionality and supported interaction modes.
+- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.

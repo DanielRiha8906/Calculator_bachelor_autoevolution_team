@@ -1,0 +1,4 @@
+Task:
+- Create PlantUML documentation artifacts for the calculator and store them in artifacts/ according to the project structure.
+- Add a class diagram for the current calculator structure, an activity diagram for the user interaction flow, and a sequence diagram showing a typical user interaction with the calculator.
+- Base the diagrams on the actual implementation and current behavior of the application, keep them consistent with the existing project layout and naming, and avoid inventing abstractions or redesigning the system through documentation.

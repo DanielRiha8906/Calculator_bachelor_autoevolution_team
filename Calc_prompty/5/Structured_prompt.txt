@@ -1,0 +1,4 @@
+Task:
+- Add interactive user input so the calculator can read the selected operation and required values at runtime.
+- Make sure the entered values are used to perform calculations correctly and allow the user to continue using the calculator after a result is shown.
+- Update relevant testsas needed so they remain consistent with the current version of the application.

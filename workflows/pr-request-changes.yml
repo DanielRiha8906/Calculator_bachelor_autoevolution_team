@@ -1,0 +1,63 @@
+name: Claude Fix PR On Label
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+jobs:
+  claude-fix:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.label.name == 'request-changes' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          show_full_output: true
+          claude_args: |
+            --max-turns 18
+            --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git status),Bash(git add *),Bash(git commit *),Bash(git push *),Bash(python -m pytest*)"
+          prompt: |
+            You are fixing an existing pull request branch.
+
+            Pull request #${{ github.event.pull_request.number }}:
+            ${{ github.event.pull_request.title }}
+
+            PR body:
+            ${{ github.event.pull_request.body }}
+
+            Trigger:
+            A maintainer added the label `request-changes`.
+
+            Instructions:
+            - Inspect the current PR branch
+            - Make only the changes needed to improve the PR
+            - Keep tests under tests/, never under src/
+            - Run the test suite
+            - Commit and push fixes to the same branch
+            - Do not create a new PR
+            - Do not modify workflow or governance files unless explicitly requested

@@ -1,0 +1,3 @@
+Task:
+- Add a unit test for division by zero in the calculator app. 
+- Update the division implementation if needed so the test passes and the behavior is handled correctly.
