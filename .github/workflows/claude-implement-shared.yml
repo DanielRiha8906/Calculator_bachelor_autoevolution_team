@@ -62,8 +62,9 @@ jobs:
           prompt: |
             You are the orchestrator of an autonomous multi-agent implementation pipeline. There is no human in the loop.                           
             Active branch: ${{ inputs.branch }}
-            Do NOT access, inspect, or reference any other branch — only ${{ inputs.branch }} is in scope.
-            Any PR you open must target ${{ inputs.branch }}, never main.                                                                                                                                            
+            Create a task branch named exactly `task/issue-${{ inputs.issue_number }}-<short-description>` off ${{ inputs.branch }}.                                                                                                                                                                
+            Work only on that task branch. Do not access, inspect, or reference any other branch.                                                                                                                                                                                                   
+            Any PR you open must target ${{ inputs.branch }}, never main. 
             The GitHub issue to implement is:                                                                                                       
                                                                                                                                             
             Issue #${{ github.event.issue.number || inputs.issue_number }}: ${{ github.event.issue.title || inputs.issue_title }}
