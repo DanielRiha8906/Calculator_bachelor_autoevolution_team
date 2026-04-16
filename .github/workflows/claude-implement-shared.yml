@@ -88,6 +88,12 @@ jobs:
             - Follow CLAUDE.md strictly
             - Do not modify workflow or governance files unless explicitly required by the issue
 
+            Progress logging format (mandatory):
+            Write this line exactly as plain text, without markdown, bold, italics or any formatting:
+            Duration: PENDING | Cost: PENDING | Turns: PENDING
+            Do not estimate or guess these values — Do not modify spacing, punctuation or add any symbols.
+            The workflow will replace PENDING with real values after this run completes.
+
       - name: Log cost and turns
         if: always()
         run: |
