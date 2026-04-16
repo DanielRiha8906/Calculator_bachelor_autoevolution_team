@@ -1,0 +1,30 @@
+# Progress Log
+
+## Run: 2026-04-16 — Issue #7 (ZeroDivisionError tests)
+
+- **Branch/worktree:** task/issue-7-zero-division-test
+- **PR target:** exp/naive-team
+
+### Files changed
+- `tests/test_calculator.py` — added 5 test functions (6 collected test cases)
+
+### Purpose
+Add tests for incorrect inputs to `Calculator.divide(a, b)` per Issue #7. Covers: integer zero divisor, boolean False divisor, non-numeric divisors (string, None), infinity divisor (returns 0.0), NaN divisor (returns NaN).
+
+### Risks
+None. Test-only change; production code is untouched.
+
+### How it was tested
+`python -m pytest tests/test_calculator.py -v` — 6 passed. Independent review by pytest-edge-tester confirmed correctness.
+
+### Test results
+All 6 tests passed. No regressions.
+
+### Tokens used
+~77,000 (across all pipeline agents)
+
+### Estimated cost
+~$0.23 USD
+
+### Turns
+4 agent invocations (analyst → architect → implementer → tester)
