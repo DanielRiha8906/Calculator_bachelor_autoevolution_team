@@ -158,16 +158,18 @@ In this project, Claude (this instance) **is** the self-evolution engine. It is 
 
 Before any commit, append a run summary to `progress.md` including:
 
+Before any commit, append a run summary to `progress.md` including:
+
 - files changed
 - purpose of the change
 - risks
-- how it was tested
 - whether all tests passed
-- number of tokens used
-- estimated cost in USD
-- number of turns
 - current branch/worktree name
 - intended merge or PR target
+- cost and duration, written as a single plain-text line with no markdown formatting:
+    Duration: PENDING | Cost: PENDING | Turns: PENDING
+  (the workflow will replace PENDING with real values after the run completes)
+
 
 ---
 
