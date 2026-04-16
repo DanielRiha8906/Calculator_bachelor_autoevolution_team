@@ -17,4 +17,4 @@ None. Change is purely additive; no production code was modified.
 4 passed, 0 failed. All tests in `tests/test_calculator.py` pass.
 
 ### Tokens used
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 238.6s | Cost: $0.752894 USD | Turns: 20
