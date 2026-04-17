@@ -17,7 +17,7 @@ Test results: 252 passed, 0 failed, 0 skipped (python -m pytest); includes 73 ad
 Files also changed:
 - tests/test_input_handler_edge.py — 73 edge-case tests (negative operands, floats, zero, very large numbers, case-insensitive input, all unary/binary ops parametrized)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 586.5s | Cost: $1.376030 USD | Turns: 15
 
 ---
 
