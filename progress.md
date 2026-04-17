@@ -58,3 +58,21 @@ Risks: Low. Purely additive change — no existing methods or tests modified. Al
 Tests: 135 passed (47 pre-existing + 31 implementer + 57 edge-case tester additions), 0 failed, 0 skipped
 
 Duration: 420.7s | Cost: $1.018906 USD | Turns: 16
+
+## Run: Issue #20 — V1 Task 5 - User Input Loop (task/issue-20-user-input)
+
+Branch: task/issue-20-user-input
+PR target: exp/structured-team
+
+Files changed:
+- src/input_loop.py: new module — defines OPERATIONS constant, print_menu, get_operation, get_operands, dispatch, and run_loop; encapsulates the entire interactive session separate from Calculator logic
+- src/__main__.py: replaced hardcoded demo calls with import of run_loop and a single run_loop() call inside main()
+- tests/test_input_loop.py: 12 new test functions covering print_menu output, get_operation (valid/exit/invalid), get_operands (floats/non-numeric), dispatch (add/sqrt/divide-by-zero), and run_loop integration scenarios (success, invalid op, non-numeric operand, calculator error)
+
+Purpose: Introduce an interactive menu-driven REPL so the calculator is usable as a standalone program. The input_fn parameter on every public function keeps I/O injectable and testable without needing stdin.
+
+Risks: Low. Calculator logic is untouched. __main__.py change only affects the CLI entry point. The input_fn default is the built-in input resolved at call time; tests pass explicit lambdas rather than patching builtins.input to avoid pytest capture conflicts.
+
+Tests: 233 passed (135 pre-existing + 13 implementer input_loop tests + 85 edge-case tester additions), 0 failed, 0 skipped
+
+Duration: 532.5s | Cost: $1.510725 USD | Turns: 15
