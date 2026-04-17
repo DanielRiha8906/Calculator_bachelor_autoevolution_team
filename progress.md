@@ -66,4 +66,4 @@ Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
 - Tests passed: Yes (370 passed, 0 failed — 49 new CLI tests + 321 pre-existing)
 - Branch: task/issue-56-cli-mode
 - Intended merge/PR target: exp/naive-team
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 633.2s | Cost: $1.101738 USD | Turns: 14
