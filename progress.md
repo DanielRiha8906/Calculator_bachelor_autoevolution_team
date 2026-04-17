@@ -1,3 +1,22 @@
+## Run: Issue #18 — V1 Task 4 - Mathematical functions (square, cube, sqrt, cbrt, log10, ln, power)
+
+Branch: task/issue-18-math-functions
+PR target: exp/expert-team
+
+Files changed:
+- src/calculator.py — added 7 new methods to Calculator: square, cube, square_root, cube_root, log10, ln, power. Each follows the factorial canonical pattern with type hints, Google-style docstrings, ValueError guards for domain errors, and math module delegation.
+- tests/test_calculator.py — appended 85 new tests across 7 groups covering happy paths, domain error cases (ValueError for sqrt/log10/ln with invalid inputs), cube_root correctness on negatives (math.cbrt), and native ZeroDivisionError for power(0,-1).
+
+Purpose: Implement unary operations (square, cube, square_root, cube_root, log10, ln) and binary operation (power) as calculator functions with consistent error handling.
+
+Risks: Low. Purely additive changes. No existing methods or tests were modified. math.cbrt used for cube_root to correctly handle negative reals.
+
+Test results: 169 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #15 — Factorial feature implementation
 
 Branch: task/issue-15-factorial

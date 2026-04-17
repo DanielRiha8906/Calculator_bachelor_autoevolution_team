@@ -347,3 +347,351 @@ def test_factorial_value_error_message_contains_value(calc):
 def test_factorial_additional_happy_path(calc, n, expected):
     """Extend happy-path coverage across several small integers not in the base suite."""
     assert calc.factorial(n) == expected
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.square
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (0, 0),
+    (1, 1),
+    (2, 4),
+    (-3, 9),
+    (0.5, 0.25),
+    (-1.5, 2.25),
+])
+def test_square_happy_path(calc, x, expected):
+    """square returns x**2 for valid inputs spanning zero, positive, negative, and float."""
+    result = calc.square(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"square({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_square_zero_returns_zero(calc):
+    """square(0) must return exactly 0, the additive identity boundary."""
+    assert calc.square(0) == 0
+
+
+def test_square_negative_returns_positive(calc):
+    """Squaring any negative number must yield a non-negative result."""
+    assert calc.square(-7) >= 0
+
+
+def test_square_large_integer(calc):
+    """square handles very large integers without overflow."""
+    result = calc.square(10 ** 9)
+    assert result == 10 ** 18
+
+
+def test_square_does_not_mutate_input(calc):
+    """square must be side-effect-free on its argument."""
+    x = 5
+    calc.square(x)
+    assert x == 5
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.cube
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (0, 0),
+    (1, 1),
+    (2, 8),
+    (-2, -8),
+    (0.5, 0.125),
+    (-1.5, -3.375),
+])
+def test_cube_happy_path(calc, x, expected):
+    """cube returns x**3 for valid inputs spanning zero, positive, negative, and float."""
+    result = calc.cube(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"cube({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_cube_zero_returns_zero(calc):
+    """cube(0) must return exactly 0."""
+    assert calc.cube(0) == 0
+
+
+def test_cube_preserves_sign_of_negative(calc):
+    """Cubing a negative number must yield a negative result."""
+    assert calc.cube(-3) < 0
+
+
+def test_cube_large_integer(calc):
+    """cube handles very large integers without overflow."""
+    result = calc.cube(10 ** 6)
+    assert result == 10 ** 18
+
+
+def test_cube_does_not_mutate_input(calc):
+    """cube must be side-effect-free on its argument."""
+    x = 4
+    calc.cube(x)
+    assert x == 4
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.square_root
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (0, 0.0),
+    (1, 1.0),
+    (4, 2.0),
+    (9, 3.0),
+    (0.25, 0.5),
+])
+def test_square_root_happy_path(calc, x, expected):
+    """square_root returns math.sqrt(x) for valid non-negative inputs."""
+    result = calc.square_root(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"square_root({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+@pytest.mark.parametrize("x", [-1, -0.001, -1e10])
+def test_square_root_negative_raises_value_error(calc, x):
+    """square_root raises ValueError for any negative input."""
+    with pytest.raises(ValueError):
+        calc.square_root(x)
+
+
+@pytest.mark.parametrize("x", [-1, -0.001, -1e10])
+def test_square_root_error_message_contains_value(calc, x):
+    """ValueError message for negative input must contain the offending value."""
+    with pytest.raises(ValueError, match=str(x)):
+        calc.square_root(x)
+
+
+def test_square_root_zero_boundary(calc):
+    """square_root(0) is the exact lower boundary and must return 0.0, not raise."""
+    assert calc.square_root(0) == 0.0
+
+
+def test_square_root_large_value(calc):
+    """square_root handles large inputs correctly."""
+    result = calc.square_root(1e16)
+    assert math.isclose(result, 1e8, rel_tol=1e-9)
+
+
+def test_square_root_does_not_mutate_input(calc):
+    """square_root must be side-effect-free on its argument."""
+    x = 9
+    calc.square_root(x)
+    assert x == 9
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.cube_root
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (0, 0.0),
+    (1, 1.0),
+    (8, 2.0),
+    (-8, -2.0),
+    (27, 3.0),
+    (-27, -3.0),
+])
+def test_cube_root_happy_path(calc, x, expected):
+    """cube_root returns the real cube root for positive, negative, and zero inputs."""
+    result = calc.cube_root(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"cube_root({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_cube_root_negative_eight_exact(calc):
+    """cube_root(-8) must equal -2.0 exactly — validates math.cbrt usage, not x**(1/3)."""
+    result = calc.cube_root(-8)
+    assert result == -2.0, (
+        f"cube_root(-8) returned {result!r}; expected -2.0 (requires math.cbrt)"
+    )
+
+
+def test_cube_root_zero_returns_zero(calc):
+    """cube_root(0) must return 0.0 without raising."""
+    assert calc.cube_root(0) == 0.0
+
+
+def test_cube_root_large_positive(calc):
+    """cube_root handles large positive values correctly."""
+    result = calc.cube_root(1e9)
+    assert math.isclose(result, 1000.0, rel_tol=1e-9)
+
+
+def test_cube_root_large_negative(calc):
+    """cube_root handles large negative values, returning the negative real root."""
+    result = calc.cube_root(-1e9)
+    assert math.isclose(result, -1000.0, rel_tol=1e-9)
+
+
+def test_cube_root_does_not_mutate_input(calc):
+    """cube_root must be side-effect-free on its argument."""
+    x = 27
+    calc.cube_root(x)
+    assert x == 27
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.log10
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (1, 0.0),
+    (10, 1.0),
+    (100, 2.0),
+    (0.1, -1.0),
+    (1000, 3.0),
+])
+def test_log10_happy_path(calc, x, expected):
+    """log10 returns math.log10(x) for valid positive inputs."""
+    result = calc.log10(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"log10({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+@pytest.mark.parametrize("x", [0, -1, -100])
+def test_log10_non_positive_raises_value_error(calc, x):
+    """log10 raises ValueError for x <= 0."""
+    with pytest.raises(ValueError):
+        calc.log10(x)
+
+
+@pytest.mark.parametrize("x", [0, -1, -100])
+def test_log10_error_message_contains_value(calc, x):
+    """ValueError message for x <= 0 must contain the offending value."""
+    with pytest.raises(ValueError, match=str(x)):
+        calc.log10(x)
+
+
+def test_log10_very_small_positive(calc):
+    """log10 of a very small positive number returns a large negative value."""
+    result = calc.log10(1e-10)
+    assert math.isclose(result, -10.0, rel_tol=1e-9)
+
+
+def test_log10_large_value(calc):
+    """log10 handles large inputs without raising."""
+    result = calc.log10(1e100)
+    assert math.isclose(result, 100.0, rel_tol=1e-9)
+
+
+def test_log10_does_not_mutate_input(calc):
+    """log10 must be side-effect-free on its argument."""
+    x = 100
+    calc.log10(x)
+    assert x == 100
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.ln
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, expected", [
+    (1, 0.0),
+    (math.e, 1.0),
+    (math.e ** 2, 2.0),
+])
+def test_ln_happy_path(calc, x, expected):
+    """ln returns math.log(x) for valid positive inputs."""
+    result = calc.ln(x)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"ln({x}) returned {result!r}, expected {expected!r}"
+    )
+
+
+@pytest.mark.parametrize("x", [0, -1, -1e10])
+def test_ln_non_positive_raises_value_error(calc, x):
+    """ln raises ValueError for x <= 0."""
+    with pytest.raises(ValueError):
+        calc.ln(x)
+
+
+@pytest.mark.parametrize("x", [0, -1, -1e10])
+def test_ln_error_message_contains_value(calc, x):
+    """ValueError message for x <= 0 must contain the offending value."""
+    with pytest.raises(ValueError, match=str(x)):
+        calc.ln(x)
+
+
+def test_ln_very_small_positive(calc):
+    """ln of a very small positive number returns a large negative value."""
+    result = calc.ln(1e-10)
+    assert math.isclose(result, -10 * math.log(10), rel_tol=1e-9)
+
+
+def test_ln_large_value(calc):
+    """ln handles large inputs without raising."""
+    result = calc.ln(math.e ** 100)
+    assert math.isclose(result, 100.0, rel_tol=1e-6)
+
+
+def test_ln_does_not_mutate_input(calc):
+    """ln must be side-effect-free on its argument."""
+    x = math.e
+    calc.ln(x)
+    assert math.isclose(x, math.e)
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.power
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("x, y, expected", [
+    (2, 3, 8),
+    (3, 2, 9),
+    (2, 0, 1),
+    (0, 5, 0),
+    (2, -1, 0.5),
+    (4, 0.5, 2.0),
+    (-2, 3, -8),
+])
+def test_power_happy_path(calc, x, y, expected):
+    """power returns x**y for valid inputs spanning positive, negative, zero exponents."""
+    result = calc.power(x, y)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"power({x}, {y}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_power_zero_base_negative_exponent_raises_zero_division_error(calc):
+    """power(0, -1) raises ZeroDivisionError — native Python behavior with no guard needed."""
+    with pytest.raises(ZeroDivisionError):
+        calc.power(0, -1)
+
+
+def test_power_identity_exponent_one(calc):
+    """Any base raised to the power 1 equals the base."""
+    assert calc.power(7, 1) == 7
+
+
+def test_power_base_one_any_exponent(calc):
+    """1 raised to any exponent must equal 1."""
+    assert calc.power(1, 1000) == 1
+
+
+def test_power_fractional_exponent(calc):
+    """power supports fractional exponents, e.g. 27**(1/3) ~= 3.0."""
+    result = calc.power(27, 1 / 3)
+    assert math.isclose(result, 3.0, rel_tol=1e-9)
+
+
+def test_power_large_exponent(calc):
+    """power handles large integer exponents correctly."""
+    result = calc.power(2, 10)
+    assert result == 1024
+
+
+def test_power_does_not_mutate_inputs(calc):
+    """power must be side-effect-free on its arguments."""
+    x, y = 3, 4
+    calc.power(x, y)
+    assert x == 3
+    assert y == 4
