@@ -12,7 +12,7 @@ Risks: None. Change is purely additive (test-only). No existing tests removed or
 
 Test results: 46 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 355.4s | Cost: $0.810131 USD | Turns: 13
 
 ---
 
