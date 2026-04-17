@@ -236,3 +236,39 @@ def test_multiply_string_raises_type_error():
     calc = Calculator()
     with pytest.raises(TypeError):
         calc.multiply("a", "b")
+
+
+# ---------------------------------------------------------------------------
+# factorial
+# ---------------------------------------------------------------------------
+
+def test_factorial_zero_returns_one():
+    calc = Calculator()
+    assert calc.factorial(0) == 1
+
+
+def test_factorial_one_returns_one():
+    calc = Calculator()
+    assert calc.factorial(1) == 1
+
+
+def test_factorial_five_returns_120():
+    calc = Calculator()
+    assert calc.factorial(5) == 120
+
+
+def test_factorial_large_integer_returns_correct_result():
+    calc = Calculator()
+    assert calc.factorial(10) == math.factorial(10)
+
+
+def test_factorial_negative_raises_value_error():
+    calc = Calculator()
+    with pytest.raises(ValueError):
+        calc.factorial(-1)
+
+
+def test_factorial_float_raises_value_error():
+    calc = Calculator()
+    with pytest.raises(ValueError):
+        calc.factorial(1.5)
