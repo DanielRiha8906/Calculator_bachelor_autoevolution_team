@@ -79,7 +79,13 @@ jobs:
 
             Follow this sequence by default. You may ONLY invoke these four agents: github-task-analyst, system-architect, python-code-implementer, pytest-edge-tester.
             Do NOT invoke any other agent (Explore, general-purpose, Plan, or any other) for any reason — not for codebase exploration, not in parallel, not as a shortcut.
-            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.                                                          
+            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.
+
+            When invoking each agent, pass ONLY what is listed here — nothing more:
+            - github-task-analyst: pass the issue number, title, and body only. Do NOT tell it to read source files or explore the repo.
+            - system-architect: pass the analyst's requirements brief only.
+            - python-code-implementer: pass the architect's file-level plan only.
+            - pytest-edge-tester: pass the implementer's report (changed files and test targets) only.                                                          
    
             Constraints:                                                                                                                            
             - Never push directly to main
