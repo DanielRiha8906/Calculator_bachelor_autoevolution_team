@@ -1,0 +1,57 @@
+@startuml activity_diagram
+
+skinparam ArrowColor #444444
+skinparam ActivityBorderColor #444444
+skinparam swimlaneBorderColor #888888
+
+|User|
+start
+:Provide operand_a string;
+:Provide operand_b string;
+:Provide operator string;
+
+|__main__|
+:Call parse_input(operand_a, operand_b, operator);
+
+|input_handler / Calculator|
+:parse_operand attempts float conversion\nfor both operands;
+
+if (conversion fails?) then (yes)
+    :Print error to stderr;
+    :exit(1);
+    end
+else (no)
+endif
+
+:BINARY_OPERATORS lookup for operator;
+
+if (operator unsupported?) then (yes)
+    :Print error to stderr;
+    :exit(1);
+    end
+else (no)
+endif
+
+:Return (a, b, method_name);
+
+|__main__|
+:Call run_calculation(a, b, method_name);
+
+|input_handler / Calculator|
+:Instantiate Calculator;
+:Dispatch Calculator method via getattr;
+
+if (arithmetic error?\n(ZeroDivisionError / ValueError)) then (yes)
+    :Print error to stderr;
+    :exit(1);
+    end
+else (no)
+endif
+
+:Return result float;
+
+|__main__|
+:Print "Result: {result}";
+end
+
+@enduml
