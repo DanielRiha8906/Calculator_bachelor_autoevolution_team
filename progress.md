@@ -57,3 +57,13 @@ Duration: 479.1s | Cost: $1.202438 USD | Turns: 15
 - Branch: task/issue-53-development-artifacts
 - Intended merge/PR target: exp/naive-team
 Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
+
+## Run: 2026-04-17
+
+- Files changed: src/__main__.py (modified), tests/test_cli.py (created)
+- Purpose: Add CLI mode to calculator so it can be invoked from bash with positional infix arguments (issue #56)
+- Risks: Dispatch heuristic len(sys.argv) > 1 preserves interactive mode; argparse handles wrong arg counts automatically
+- Tests passed: Yes (362 passed, 0 failed)
+- Branch: task/issue-56-cli-mode
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING
