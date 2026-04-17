@@ -40,4 +40,4 @@ Risks: Low. Purely additive change — no existing methods or tests modified. im
 
 Tests: 47 passed (41 pre-existing + 6 new), 0 failed, 0 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 314.7s | Cost: $0.770040 USD | Turns: 15
