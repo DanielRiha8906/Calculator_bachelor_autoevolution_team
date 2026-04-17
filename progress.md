@@ -14,7 +14,7 @@ Tests: All existing tests must pass. New tests for validation module and retry i
 Branch: task/issue-61-retry-logic
 PR target: exp/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 870.8s | Cost: $1.849189 USD | Turns: 12
 
 ---
 
