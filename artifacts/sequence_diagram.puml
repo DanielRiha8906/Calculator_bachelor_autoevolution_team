@@ -6,26 +6,48 @@ skinparam SequenceLifeLineBorderColor #888888
 
 participant User
 participant "__main__" as main
+participant "cli" as cli
 participant input_handler
 participant Calculator
 
-User -> main : input() — enter first operand (operand_a)
-User -> main : input() — enter second operand (operand_b)
-User -> main : input() — enter operator
+alt CLI mode (sys.argv has arguments)
+    User -> main : python -m src OPERAND_A OPERATOR OPERAND_B
+    main -> cli : cli_main()
+    cli -> cli : build_parser().parse_args()
 
-main -> input_handler : parse_input(operand_a, operand_b, operator)
+    alt Argument count error or --help
+        cli -> User : usage / help text (stdout)
+        cli -> cli : sys.exit(0 or 2)
+    end
+
+    cli -> input_handler : parse_input(operand_a, operand_b, operator)
+else Interactive mode (no sys.argv arguments)
+    User -> main : input() — enter first operand (operand_a)
+    User -> main : input() — enter second operand (operand_b)
+    User -> main : input() — enter operator
+    main -> input_handler : parse_input(operand_a, operand_b, operator)
+end
+
+note over input_handler
+    Shared parse + dispatch flow
+    (caller is __main__ or cli depending on mode)
+end note
 
 input_handler -> input_handler : parse_operand(operand_a)
 input_handler -> input_handler : parse_operand(operand_b)
 
 alt ValueError raised (invalid operand or unsupported operator)
-    input_handler --> main : raises ValueError
-    main -> main : print error to stderr
-    main -> main : sys.exit(1)
+    input_handler --> cli : raises ValueError (CLI mode)
+    cli -> cli : print error to stderr\nsys.exit(1)
+else
+    input_handler --> main : raises ValueError (interactive mode)
+    main -> main : print error to stderr\nsys.exit(1)
 end
 
-input_handler --> main : return (a, b, method_name)
+input_handler --> cli : return (a, b, method_name) [CLI mode]
+cli -> input_handler : run_calculation(a, b, method_name)
 
+input_handler --> main : return (a, b, method_name) [interactive mode]
 main -> input_handler : run_calculation(a, b, method_name)
 
 create Calculator
@@ -35,14 +57,18 @@ input_handler -> Calculator : e.g. add(a, b)
 
 alt ZeroDivisionError or ValueError raised
     Calculator --> input_handler : raises exception
-    input_handler --> main : propagates exception
-    main -> main : print error to stderr
-    main -> main : sys.exit(1)
+    input_handler --> cli : propagates (CLI mode)
+    cli -> cli : print error to stderr\nsys.exit(1)
+else
+    input_handler --> main : propagates (interactive mode)
+    main -> main : print error to stderr\nsys.exit(1)
 end
 
 Calculator --> input_handler : return result
-input_handler --> main : return result
+input_handler --> cli : return result [CLI mode]
+cli -> User : print "Result: {result}"
 
+input_handler --> main : return result [interactive mode]
 main -> User : print "Result: {result}"
 
 @enduml

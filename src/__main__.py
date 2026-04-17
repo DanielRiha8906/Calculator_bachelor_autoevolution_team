@@ -1,5 +1,6 @@
 import sys
 
+from src.cli import main as cli_main
 from src.input_handler import parse_input, run_calculation
 
 
@@ -25,4 +26,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # When command-line arguments are present (beyond the module name itself),
+    # delegate to the CLI handler.  Otherwise fall back to interactive mode.
+    if len(sys.argv) > 1:
+        cli_main()
+    else:
+        main()

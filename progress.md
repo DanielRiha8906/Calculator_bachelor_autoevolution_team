@@ -57,3 +57,13 @@ Duration: 479.1s | Cost: $1.202438 USD | Turns: 15
 - Branch: task/issue-53-development-artifacts
 - Intended merge/PR target: exp/naive-team
 Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
+
+## Run Summary — Issue #56: CLI mode (Naive/team)
+
+- Files changed: src/cli.py (created), src/__main__.py (modified), tests/test_cli.py (created), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)
+- Purpose: Add CLI mode so the calculator can be invoked from bash with three positional args (operand_a, operator, operand_b); exit 0 on success, 1 on arithmetic/input error, 2 on bad arg count; __main__.py dispatches to cli.main() when argv is present
+- Risks: Low — strictly additive; interactive mode path unchanged; exit-code contract is new public interface
+- Tests passed: Yes (383 passed, 0 failed)
+- Branch: task/issue-56-cli-mode
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING
