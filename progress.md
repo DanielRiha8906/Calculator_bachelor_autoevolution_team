@@ -57,3 +57,12 @@ Duration: 479.1s | Cost: $1.202438 USD | Turns: 15
 - Branch: task/issue-53-development-artifacts
 - Intended merge/PR target: exp/naive-team
 Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
+
+## Run: Issue #56 — CLI Mode (2026-04-17)
+- Files changed: src/cli.py (new), src/__main__.py, src/__init__.py, artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml, tests/test_cli.py (new)
+- Purpose: Add CLI mode so the calculator can be invoked from bash with expressions as arguments
+- Risks: Minimal — CLI dispatch placed in __main__ guard to preserve existing interactive test contract
+- Tests passed: Yes (412 passed, 0 failed)
+- Branch: task/issue-56-cli-mode
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING

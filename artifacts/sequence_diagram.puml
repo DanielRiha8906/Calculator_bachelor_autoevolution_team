@@ -6,14 +6,22 @@ skinparam SequenceLifeLineBorderColor #888888
 
 participant User
 participant "__main__" as main
+participant cli
 participant input_handler
 participant Calculator
 
-User -> main : input() — enter first operand (operand_a)
-User -> main : input() — enter second operand (operand_b)
-User -> main : input() — enter operator
-
-main -> input_handler : parse_input(operand_a, operand_b, operator)
+alt No CLI arguments — interactive mode
+    User -> main : input() — enter first operand (operand_a)
+    User -> main : input() — enter second operand (operand_b)
+    User -> main : input() — enter operator
+    main -> input_handler : parse_input(operand_a, operand_b, operator)
+else CLI arguments present
+    User -> main : sys.argv — expression string or tokens
+    main -> cli : run_cli()
+    cli -> cli : join argv[1:] into expr string
+    cli -> cli : parse_cli_expression(expr)
+    cli -> input_handler : parse_input(operand_a, operand_b, operator)
+end
 
 input_handler -> input_handler : parse_operand(operand_a)
 input_handler -> input_handler : parse_operand(operand_b)

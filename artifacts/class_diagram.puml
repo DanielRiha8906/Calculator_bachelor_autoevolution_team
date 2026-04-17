@@ -43,11 +43,18 @@ class "input_handler" as input_handler <<module>> {
     +run_calculation(a: float, b: float, method_name: str) : float
 }
 
+class "cli" as cli_module <<module>> {
+    +parse_cli_expression(expr: str) : tuple
+    +run_cli() : None
+}
+
 class "__main__" as main_module <<module>> {
     +main() : None
 }
 
 input_handler ..> Calculator : imports / instantiates
+cli_module ..> input_handler : imports / calls
 main_module ..> input_handler : imports / calls
+main_module ..> cli_module : delegates CLI mode
 
 @enduml

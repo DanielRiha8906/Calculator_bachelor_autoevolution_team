@@ -6,12 +6,34 @@ skinparam swimlaneBorderColor #888888
 
 |User|
 start
-:Provide operand_a string;
-:Provide operand_b string;
-:Provide operator string;
 
 |__main__|
-:Call parse_input(operand_a, operand_b, operator);
+if (sys.argv has arguments?) then (yes — CLI mode)
+
+    |cli|
+    :Join argv[1:] into expression string;
+    :Split into 3 tokens\n(operand_a, operator, operand_b);
+
+    if (token count != 3?) then (yes)
+        :Print error to stderr;
+        :exit(1);
+        end
+    else (no)
+    endif
+
+    :Call parse_input(operand_a, operand_b, operator);
+
+else (no — interactive mode)
+
+    |User|
+    :Provide operand_a string;
+    :Provide operand_b string;
+    :Provide operator string;
+
+    |__main__|
+    :Call parse_input(operand_a, operand_b, operator);
+
+endif
 
 |input_handler / Calculator|
 :parse_operand attempts float conversion\nfor both operands;
@@ -34,10 +56,7 @@ endif
 
 :Return (a, b, method_name);
 
-|__main__|
 :Call run_calculation(a, b, method_name);
-
-|input_handler / Calculator|
 :Instantiate Calculator;
 :Dispatch Calculator method via getattr;
 

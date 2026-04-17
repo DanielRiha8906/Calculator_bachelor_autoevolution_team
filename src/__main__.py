@@ -1,5 +1,6 @@
 import sys
 
+from src.cli import run_cli
 from src.input_handler import parse_input, run_calculation
 
 
@@ -25,4 +26,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # When invoked as `python -m src [args...]`, route to CLI mode if the
+    # user supplied any arguments; otherwise run the interactive calculator.
+    if len(sys.argv) > 1:
+        run_cli()
+    else:
+        main()
