@@ -6,4 +6,4 @@ Risks: None — additive guard clause, no existing behaviour changed for non-zer
 Tests passed: yes (21/21 — test_divide_valid, test_divide_by_zero, plus 19 edge-case tests)
 Branch: task/issue-8-zero-division-error
 Intended merge/PR target: experiment lineage branch (not main)
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 278.8s | Cost: $0.882417 USD | Turns: 15
