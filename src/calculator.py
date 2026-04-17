@@ -9,5 +9,19 @@ class Calculator:
         return a * b
 
     def divide(self, a, b):
+        """Divide a by b.
+
+        Args:
+            a: The dividend.
+            b: The divisor.
+
+        Returns:
+            The result of a divided by b.
+
+        Raises:
+            ValueError: If b is zero.
+        """
+        if b == 0:
+            raise ValueError("Division by zero is not allowed")
         return a / b
 
