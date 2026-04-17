@@ -131,4 +131,4 @@ Risks: Low. Calculator engine unchanged. Retry logic isolated to input layer. Al
 
 Tests: 421 passed, 0 failed, 0 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 797.0s | Cost: $1.857161 USD | Turns: 17
