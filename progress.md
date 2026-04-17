@@ -24,3 +24,20 @@ Duration: 308.6s | Cost: $0.718064 USD | Turns: 15
 - Risks: None — test-only change, no production code modified
 - Tests Passed: all (verify count after run)
 Duration: 334.6s | Cost: $0.807385 USD | Turns: 11
+
+## Run: Issue #14 — V1 Task 3 - Factorial (exp/structured-team)
+
+Branch: task/issue-14-factorial-operation
+PR target: exp/structured-team
+
+Files changed:
+- src/calculator.py: added import math; added Calculator.factorial(n) method with isinstance and non-negativity guards, delegating to math.factorial
+- tests/test_calculator.py: added 6 test functions covering factorial(0), factorial(1), factorial(5), factorial(10), negative input ValueError, and float input ValueError
+
+Purpose: Add factorial as a supported calculator operation with correct computation for all valid non-negative integer inputs and proper error handling for invalid inputs.
+
+Risks: Low. Purely additive change — no existing methods or tests modified. import math from stdlib introduces no new package dependencies.
+
+Tests: 47 passed (41 pre-existing + 6 new), 0 failed, 0 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
