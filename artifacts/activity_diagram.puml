@@ -6,11 +6,27 @@ skinparam swimlaneBorderColor #888888
 
 |User|
 start
-:Provide operand_a string;
-:Provide operand_b string;
-:Provide operator string;
 
 |__main__|
+if (sys.argv has arguments?) then (yes)
+    :Delegate to cli.main();
+    |cli|
+    :argparse parses\n(operand_a, operator, operand_b);
+
+    if (wrong argument count\nor --help?) then (yes)
+        :argparse prints usage / help;
+        :exit(0) or exit(2);
+        end
+    else (no)
+    endif
+else (no)
+    |User|
+    :Provide operand_a string;
+    :Provide operand_b string;
+    :Provide operator string;
+    |__main__|
+endif
+
 :Call parse_input(operand_a, operand_b, operator);
 
 |input_handler / Calculator|
