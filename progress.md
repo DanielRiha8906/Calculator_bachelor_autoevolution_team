@@ -47,3 +47,13 @@ Duration: 382.0s | Cost: $1.014629 USD | Turns: 11
 - Branch: task/issue-19-user-input
 - Intended merge/PR target: exp/naive-team
 Duration: 479.1s | Cost: $1.202438 USD | Turns: 15
+
+## Run Summary — Issue #53: Development Artifacts (PlantUML Diagrams)
+
+- Files changed: artifacts/class_diagram.puml (created), artifacts/activity_diagram.puml (created), artifacts/sequence_diagram.puml (created)
+- Purpose: Create PlantUML development artifacts (class, activity, sequence diagrams) for the calculator implementation on exp/naive-team (issue #53)
+- Risks: None — documentation-only, no source or test changes
+- Tests passed: Yes (no tests affected)
+- Branch: task/issue-53-development-artifacts
+- Intended merge/PR target: exp/naive-team
+Duration: 265.3s | Cost: $0.719627 USD | Turns: 12

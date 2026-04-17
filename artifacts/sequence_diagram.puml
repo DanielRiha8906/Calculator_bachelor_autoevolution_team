@@ -1,0 +1,48 @@
+@startuml sequence_diagram
+
+skinparam ArrowColor #444444
+skinparam ParticipantBorderColor #444444
+skinparam SequenceLifeLineBorderColor #888888
+
+participant User
+participant "__main__" as main
+participant input_handler
+participant Calculator
+
+User -> main : input() — enter first operand (operand_a)
+User -> main : input() — enter second operand (operand_b)
+User -> main : input() — enter operator
+
+main -> input_handler : parse_input(operand_a, operand_b, operator)
+
+input_handler -> input_handler : parse_operand(operand_a)
+input_handler -> input_handler : parse_operand(operand_b)
+
+alt ValueError raised (invalid operand or unsupported operator)
+    input_handler --> main : raises ValueError
+    main -> main : print error to stderr
+    main -> main : sys.exit(1)
+end
+
+input_handler --> main : return (a, b, method_name)
+
+main -> input_handler : run_calculation(a, b, method_name)
+
+create Calculator
+input_handler -> Calculator : new Calculator()
+
+input_handler -> Calculator : e.g. add(a, b)
+
+alt ZeroDivisionError or ValueError raised
+    Calculator --> input_handler : raises exception
+    input_handler --> main : propagates exception
+    main -> main : print error to stderr
+    main -> main : sys.exit(1)
+end
+
+Calculator --> input_handler : return result
+input_handler --> main : return result
+
+main -> User : print "Result: {result}"
+
+@enduml

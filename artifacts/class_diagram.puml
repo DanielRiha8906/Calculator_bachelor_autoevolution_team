@@ -1,0 +1,53 @@
+@startuml class_diagram
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam ArrowColor #444444
+skinparam ClassBorderColor #444444
+
+class Calculator {
+    +add(a: float, b: float) : float
+    +subtract(a: float, b: float) : float
+    +multiply(a: float, b: float) : float
+    +divide(a: float, b: float) : float
+    +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+    +power(base: float, exponent: float) : float
+    +log(x: float) : float
+    +ln(x: float) : float
+}
+
+note right of Calculator::factorial
+    Raises ValueError for non-int or negative n
+end note
+
+note right of Calculator::square_root
+    Raises ValueError for negative x
+end note
+
+note right of Calculator::log
+    Raises ValueError for non-positive x
+end note
+
+note right of Calculator::ln
+    Raises ValueError for non-positive x
+end note
+
+class "input_handler" as input_handler <<module>> {
+    +BINARY_OPERATORS : dict
+    +parse_operand(raw: str) : float
+    +parse_input(operand_a: str, operand_b: str, operator: str) : tuple
+    +run_calculation(a: float, b: float, method_name: str) : float
+}
+
+class "__main__" as main_module <<module>> {
+    +main() : None
+}
+
+input_handler ..> Calculator : imports / instantiates
+main_module ..> input_handler : imports / calls
+
+@enduml
