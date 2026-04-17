@@ -135,6 +135,27 @@ In this project, Claude (this instance) **is** the self-evolution engine. It is 
 ---
 
 
+## Multi-agent pipeline
+
+When operating as an orchestrator coordinating github-task-analyst, system-architect, python-code-implementer, and pytest-edge-tester:
+
+### Agent boundaries — hard rules
+
+- **python-code-implementer** owns `src/` and `artifacts/` only. It must never receive instructions to create, modify, or run files under `tests/`. Strip all test-related steps from the architect's plan before passing it to the implementer.
+- **pytest-edge-tester** owns `tests/` only. All test creation, modification, and execution is its exclusive responsibility. Pass it the stripped test steps from the architect's plan plus the implementer's report.
+- **system-architect** produces a full plan covering both source and test changes. This is correct — the orchestrator is responsible for routing source steps to the implementer and test steps to the tester. Do not interpret the architect's plan as instructions for the implementer verbatim.
+- **github-task-analyst** receives only the issue text. It must not be told to read source files.
+
+### Orchestrator filtering responsibility
+
+Before invoking python-code-implementer, the orchestrator must explicitly separate the architect's plan into two parts:
+1. Source/artifact steps → passed to python-code-implementer
+2. Test steps (anything touching `tests/`) → held back and passed to pytest-edge-tester
+
+Passing the full architect plan to the implementer unfiltered is a pipeline violation and causes unnecessary cost.
+
+---
+
 ## Allowed changes without extra discussion
 
 - Add or improve tests

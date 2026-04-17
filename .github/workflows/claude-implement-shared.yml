@@ -84,8 +84,8 @@ jobs:
             When invoking each agent, pass ONLY what is listed here — nothing more:
             - github-task-analyst: pass the issue number, title, and body only. Do NOT tell it to read source files or explore the repo.
             - system-architect: pass the analyst's requirements brief only.
-            - python-code-implementer: pass the architect's file-level plan only, Do not include tests in the implementer's plan or instructions. Tests are the sole responsibility of the pytest-edge-tester agent.
-            - pytest-edge-tester: pass the implementer's report (changed files and test targets) and the list of tests that should be changed from Architect.                                                        
+            - python-code-implementer: pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/ — do not summarize, paraphrase, or delegate those steps. The implementer must receive zero test-related instructions. Tests are exclusively the pytest-edge-tester's responsibility.
+            - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.                                                        
 
             Constraints:                                                                                                                            
             - Never push directly to main
