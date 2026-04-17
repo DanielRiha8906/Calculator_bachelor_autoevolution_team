@@ -37,3 +37,13 @@ Duration: 338.2s | Cost: $0.904748 USD | Turns: 11
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
 Duration: 382.0s | Cost: $1.014629 USD | Turns: 11
+
+## Run: 2026-04-17
+
+- Files changed: src/input_handler.py (created), src/__main__.py (modified), tests/test_input_handler.py (created), tests/test_input_handler_edge_cases.py (created)
+- Purpose: Add user input to calculator via interactive CLI entry point; parse_input and run_calculation extracted as pure testable functions in input_handler.py; __main__.py updated to prompt user for operands and operator
+- Risks: getattr dispatch in run_calculation couples to Calculator method names; operator whitespace-stripping added conservatively; no eval/exec used
+- Tests passed: Yes (321 passed, 0 failed)
+- Branch: task/issue-19-user-input
+- Intended merge/PR target: exp/naive-team
+Duration: 479.1s | Cost: $1.202438 USD | Turns: 15

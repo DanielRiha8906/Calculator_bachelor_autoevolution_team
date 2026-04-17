@@ -1,11 +1,28 @@
-from .calculator import Calculator
+import sys
 
-def main():
-    calc = Calculator()
-    print("Addition:", calc.add(10, 5))
-    print("Subtraction:", calc.subtract(10, 5))
-    print("Multiplication:", calc.multiply(10, 5))
-    print("Division:", calc.divide(10, 5))
+from src.input_handler import parse_input, run_calculation
+
+
+def main() -> None:
+    """Run the interactive calculator.
+
+    Prompts the user for two operands and an operator, delegates parsing
+    and dispatch to the input_handler module, and prints the result.
+    Exits with status 1 on any input or arithmetic error.
+    """
+    operand_a = input("Enter first operand: ")
+    operand_b = input("Enter second operand: ")
+    operator = input("Enter operator (+, -, *, /): ")
+
+    try:
+        a, b, method_name = parse_input(operand_a, operand_b, operator)
+        result = run_calculation(a, b, method_name)
+    except (ValueError, ZeroDivisionError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Result: {result}")
+
 
 if __name__ == "__main__":
     main()
