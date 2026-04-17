@@ -1,3 +1,26 @@
+## Run: Issue #58 — CLI mode for Python calculator
+
+Branch: task/issue-58-cli-mode
+PR target: exp/expert-team
+
+Files changed:
+- main.py (created) — thin shim at project root; calls run_cli(sys.argv[1:])
+- src/cli.py (created) — run_cli() dispatch function and _die() helper; validates op name, arity, and operand coercion against OPERATIONS; writes result to stdout, errors to stderr; exits 0/1
+- tests/test_cli.py (created) — 30 tests covering successful two-operand and one-operand calls, parametrized smoke test across all OPERATIONS, unknown operation, wrong arity, non-numeric operand, no-args, and domain errors (divide by zero, sqrt negative, log zero, factorial negative, factorial float string)
+- artifacts/class_diagram.puml (modified) — added CLI class and MAIN_NOTE component; added relationships: main → CLI → Calculator and CLI → OPERATIONS_NOTE
+- artifacts/activity_diagram.puml (modified) — appended CLI Mode Flow partition after REPL flow; covers all validation and error exit paths
+- artifacts/sequence_diagram.puml (modified) — appended "CLI Mode Interaction" scenario after existing interactive scenario; includes success path and alt error block
+
+Purpose: Add CLI access layer for bash-based calculator usage so the calculator can be driven non-interactively from the command line.
+
+Risks: OPERATIONS registry coupling (cli.py depends on structure of OPERATIONS dict from input_handler.py); sys.exit() calls inside run_cli require pytest.raises(SystemExit) in tests; stdout/stderr separation must be maintained for scripting correctness.
+
+Test results: 349 passed, 0 failed, 0 skipped (python3 -m pytest)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #55 — Development artifacts (PlantUML diagrams)
 
 Branch: task/issue-55-development-artifacts

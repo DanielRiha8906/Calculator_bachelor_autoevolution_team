@@ -53,4 +53,72 @@ repeat
     endif
 repeat while (session active)
 
+' -----------------------------------------------------------------------
+' CLI Mode Flow
+' -----------------------------------------------------------------------
+
+partition "CLI Mode (src/cli.py run_cli)" {
+    start
+
+    :Parse sys.argv[1:] into args list;
+
+    if (len(args) == 0?) then (yes)
+        :Print usage message to stderr;
+        :sys.exit(1);
+        stop
+    else (no)
+        :Extract op_name = args[0];
+
+        if (op_name in OPERATIONS?) then (no)
+            :Print "Error: Unknown operation '<op_name>'" to stderr;
+            :sys.exit(1);
+            stop
+        else (yes)
+            :Read expected_arity from OPERATIONS[op_name];
+            :Count provided = len(args) - 1;
+
+            if (provided == expected_arity?) then (no)
+                :Print arity-mismatch error to stderr;
+                :sys.exit(1);
+                stop
+            else (yes)
+                :Read coerce callable from OPERATIONS[op_name]\n(default: float);
+
+                :For each operand string in args[1:];
+                fork
+                    :Attempt coerce(raw);
+                    if (ValueError or TypeError raised?) then (yes)
+                        :Print "Error: Invalid operand '<raw>'" to stderr;
+                        :sys.exit(1);
+                        stop
+                    else (no)
+                        :Append coerced value to operands list;
+                    endif
+                end fork
+
+                :Instantiate Calculator();
+                :Call getattr(calc, method_name)(*operands);
+
+                if (ZeroDivisionError raised?) then (yes)
+                    :Print "Error: Division by zero is not allowed." to stderr;
+                    :sys.exit(1);
+                    stop
+                elseif (ValueError raised?) then (yes)
+                    :Print "Error: <exc>" to stderr;
+                    :sys.exit(1);
+                    stop
+                elseif (TypeError raised?) then (yes)
+                    :Print "Error: <exc>" to stderr;
+                    :sys.exit(1);
+                    stop
+                else (no)
+                    :Print result to stdout;
+                    :sys.exit(0);
+                    stop
+                endif
+            endif
+        endif
+    endif
+}
+
 @enduml

@@ -50,4 +50,46 @@ end
 
 handler --> main : return (run() exits)
 
+' -----------------------------------------------------------------------
+' Scenario 2: CLI Mode Interaction
+' -----------------------------------------------------------------------
+
+== CLI Mode Interaction ==
+
+actor "User (shell)" as shell
+participant "main\n(main.py)" as climain
+participant "CLIHandler\n(src/cli.py run_cli)" as cli
+boundary "OPERATIONS" as clops
+participant "Calculator" as clcalc
+
+shell -> climain : python main.py add 10 5
+climain -> cli : run_cli(["add", "10", "5"])
+
+note over cli : len(args) == 3  — not empty\nargs[0] == "add"
+
+cli -> clops : "add" in OPERATIONS?
+clops --> cli : True
+
+cli -> clops : OPERATIONS["add"]
+clops --> cli : { method:"add", arity:2, coerce:<default float> }
+
+note over cli : expected_arity=2, provided=2  — match\nfloat("10")=10.0, float("5")=5.0\noperands=[10.0, 5.0]
+
+cli -> clcalc : calc = Calculator()
+cli -> clcalc : calc.add(10.0, 5.0)
+clcalc --> cli : 15.0
+
+cli -> shell : print("15.0")  [stdout]
+cli --> climain : sys.exit(0)
+
+alt Error path — unknown op / wrong arity / bad operand
+    shell -> climain : python main.py foobar 10
+    climain -> cli : run_cli(["foobar", "10"])
+
+    note over cli : "foobar" not in OPERATIONS
+
+    cli -> shell : print("Error: Unknown operation 'foobar'. ...")  [stderr]
+    cli --> climain : sys.exit(1)
+end
+
 @enduml
