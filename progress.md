@@ -57,3 +57,13 @@ Duration: 479.1s | Cost: $1.202438 USD | Turns: 15
 - Branch: task/issue-53-development-artifacts
 - Intended merge/PR target: exp/naive-team
 Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
+
+## Run Summary — Issue #56: CLI mode (V1 Task 7)
+
+- Files changed: src/cli.py (created), tests/test_cli.py (created), artifacts/class_diagram.puml (modified), artifacts/sequence_diagram.puml (modified), artifacts/activity_diagram.puml (modified)
+- Purpose: Add non-interactive CLI entry point so the calculator can be used from bash via `python -m src.cli <operand1> <operator> <operand2>`
+- Risks: Argument order transposition (parse_input takes operand_b before operator; CLI argv places operator before operand_b); handled correctly in src/cli.py
+- Tests passed: Yes (370 passed, 0 failed — 49 new CLI tests + 321 pre-existing)
+- Branch: task/issue-56-cli-mode
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING

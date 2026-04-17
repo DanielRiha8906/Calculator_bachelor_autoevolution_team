@@ -6,12 +6,29 @@ skinparam swimlaneBorderColor #888888
 
 |User|
 start
-:Provide operand_a string;
-:Provide operand_b string;
-:Provide operator string;
 
-|__main__|
-:Call parse_input(operand_a, operand_b, operator);
+fork
+    :Provide operand_a string\n(interactive prompt);
+    :Provide operand_b string\n(interactive prompt);
+    :Provide operator string\n(interactive prompt);
+
+    |__main__|
+    :Call parse_input(operand_a, operand_b, operator);
+
+fork again
+    :Invoke python -m src.cli\n<operand1> <operator> <operand2>\n(sys.argv);
+
+    |cli|
+    if (len(sys.argv) != 4?) then (yes)
+        :Print usage to stderr;
+        :exit(2);
+        end
+    else (no)
+    endif
+
+    :Call parse_input(operand1, operand2, operator);
+
+end fork
 
 |input_handler / Calculator|
 :parse_operand attempts float conversion\nfor both operands;
@@ -34,8 +51,13 @@ endif
 
 :Return (a, b, method_name);
 
-|__main__|
-:Call run_calculation(a, b, method_name);
+fork
+    |__main__|
+    :Call run_calculation(a, b, method_name);
+fork again
+    |cli|
+    :Call run_calculation(a, b, method_name);
+end fork
 
 |input_handler / Calculator|
 :Instantiate Calculator;
@@ -50,8 +72,15 @@ endif
 
 :Return result float;
 
-|__main__|
-:Print "Result: {result}";
+fork
+    |__main__|
+    :Print "Result: {result}";
+fork again
+    |cli|
+    :Print result to stdout;
+end fork
+
+|User|
 end
 
 @enduml

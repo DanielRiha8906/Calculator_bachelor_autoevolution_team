@@ -6,6 +6,7 @@ skinparam SequenceLifeLineBorderColor #888888
 
 participant User
 participant "__main__" as main
+participant cli
 participant input_handler
 participant Calculator
 
@@ -44,5 +45,46 @@ Calculator --> input_handler : return result
 input_handler --> main : return result
 
 main -> User : print "Result: {result}"
+
+== CLI path ==
+
+User -> cli : python -m src.cli <operand1> <operator> <operand2>
+
+alt wrong number of arguments (len(sys.argv) != 4)
+    cli -> cli : print usage to stderr
+    cli -> cli : sys.exit(2)
+end
+
+cli -> input_handler : parse_input(operand1, operand2, operator)
+
+input_handler -> input_handler : parse_operand(operand1)
+input_handler -> input_handler : parse_operand(operand2)
+
+alt ValueError raised (invalid operand or unsupported operator)
+    input_handler --> cli : raises ValueError
+    cli -> cli : print error to stderr
+    cli -> cli : sys.exit(1)
+end
+
+input_handler --> cli : return (a, b, method_name)
+
+cli -> input_handler : run_calculation(a, b, method_name)
+
+create Calculator
+input_handler -> Calculator : new Calculator()
+
+input_handler -> Calculator : e.g. add(a, b)
+
+alt ZeroDivisionError or ValueError raised
+    Calculator --> input_handler : raises exception
+    input_handler --> cli : propagates exception
+    cli -> cli : print error to stderr
+    cli -> cli : sys.exit(1)
+end
+
+Calculator --> input_handler : return result
+input_handler --> cli : return result
+
+cli -> User : print result to stdout
 
 @enduml
