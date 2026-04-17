@@ -98,7 +98,7 @@ Risks: Low. The CLI mode check uses an allowlist of known operation names, so un
 
 Tests: 364 passed, 0 failed, 0 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 637.7s | Cost: $1.715457 USD | Turns: 17
 
 ## Run: Issue #54 — V1 Task 6 - Development Artifacts (task/issue-54-development-artifacts)
 
