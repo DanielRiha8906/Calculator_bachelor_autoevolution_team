@@ -50,4 +50,38 @@ end
 
 handler --> main : return (run() exits)
 
+' -----------------------------------------------------------------------
+' CLI invocation sequence
+' -----------------------------------------------------------------------
+== CLI Mode (main.py) ==
+
+actor User as cli_user
+participant "main.py\nmain()" as cli_main
+participant "CliDispatcher" as dispatcher
+boundary "OPERATIONS" as cli_ops
+participant "Calculator" as cli_calc
+
+cli_user -> cli_main : python main.py add 5 7
+cli_main -> cli_calc : calc = Calculator()
+cli_main -> dispatcher : dispatcher = CliDispatcher(calc)
+cli_main -> dispatcher : dispatch_from_args(["add", "5", "7"])
+
+dispatcher -> cli_ops : "add" in OPERATIONS?
+cli_ops --> dispatcher : True — { method:"add", arity:2, coerce:float }
+
+note over dispatcher : len(["5","7"]) == arity(2) — OK
+
+dispatcher -> dispatcher : _coerce_operands(["5","7"], float)
+note over dispatcher : float("5") = 5.0, float("7") = 7.0\noperands = [5.0, 7.0]
+
+dispatcher -> dispatcher : _dispatch("add", [5.0, 7.0])
+dispatcher -> cli_ops : OPERATIONS["add"]["method"]
+cli_ops --> dispatcher : "add"
+dispatcher -> cli_calc : getattr(calculator, "add")(5.0, 7.0)
+cli_calc --> dispatcher : 12.0
+
+dispatcher -> cli_user : print("12.0")  [stdout]
+dispatcher --> cli_main : return 0
+cli_main -> cli_main : sys.exit(0)
+
 @enduml

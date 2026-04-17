@@ -53,4 +53,68 @@ repeat
     endif
 repeat while (session active)
 
+' -----------------------------------------------------------------------
+' CLI mode flow
+' -----------------------------------------------------------------------
+partition "CLI Mode (main.py)" {
+    start
+
+    :Create Calculator instance;
+    :Create CliDispatcher with calculator;
+    :Call dispatcher.dispatch_from_args(sys.argv[1:]);
+
+    if (args is empty?) then (yes)
+        :Print usage and available operations to stderr;
+        :Return exit code 1;
+        stop
+    else (no)
+        :Extract op_key = args[0].lower();
+
+        if (op_key in OPERATIONS?) then (no)
+            :Print "Error: Unknown operation '<op_key>'" to stderr;
+            :Return exit code 1;
+            stop
+        else (yes)
+            :Look up op_info from OPERATIONS;
+            :Extract arity and coerce callable;
+
+            :operand_args = args[1:];
+
+            if (len(operand_args) != arity?) then (yes)
+                :Print "Error: wrong operand count" to stderr;
+                :Return exit code 1;
+                stop
+            else (no)
+                :_coerce_operands(operand_args, coerce);
+
+                if (coerce raises ValueError or TypeError?) then (yes)
+                    :Print "Error: Invalid operand '<raw>'" to stderr;
+                    :Return exit code 1;
+                    stop
+                else (no)
+                    :_dispatch(op_key, operands)\ngetattr(calculator, method_name)(*operands);
+
+                    if (ZeroDivisionError raised?) then (yes)
+                        :Print "Error: Division by zero" to stderr;
+                        :Return exit code 1;
+                        stop
+                    elseif (ValueError raised?) then (yes)
+                        :Print "Error: <exc>" to stderr;
+                        :Return exit code 1;
+                        stop
+                    elseif (TypeError raised?) then (yes)
+                        :Print "Error: <exc>" to stderr;
+                        :Return exit code 1;
+                        stop
+                    else (no)
+                        :Print result to stdout;
+                        :Return exit code 0;
+                        stop
+                    endif
+                endif
+            endif
+        endif
+    endif
+}
+
 @enduml

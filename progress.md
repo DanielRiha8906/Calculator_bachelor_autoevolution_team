@@ -1,3 +1,26 @@
+## Run: Issue #58 — CLI mode for Calculator
+
+Branch: task/issue-58-cli-mode
+PR target: exp/expert-team
+
+Files changed:
+- src/cli.py — new module; CliDispatcher class with dispatch_from_args(args), _coerce_operands(), _dispatch(), and _print_error(); reuses OPERATIONS registry from input_handler.py; prints result to stdout and errors to stderr; returns exit code 0 on success, 1 on error
+- src/__init__.py — added import of CliDispatcher from .cli; added "CliDispatcher" to __all__
+- main.py — new root-level entry point; main() creates Calculator + CliDispatcher and calls dispatch_from_args(sys.argv[1:]); sys.exit() with returned code; if __name__ == "__main__" guard
+- artifacts/class_diagram.puml — added CliDispatcher class with all methods and notes; added dependency arrows to Calculator and OPERATIONS_NOTE; added MAIN_NOTE free-function note
+- artifacts/activity_diagram.puml — added CLI Mode partition showing full arg-parse, validate, coerce, dispatch, and exit-code flow
+- artifacts/sequence_diagram.puml — added CLI invocation sequence: main.py → CliDispatcher → OPERATIONS → Calculator for a representative add 5 7 invocation
+
+Purpose: Introduce a non-interactive CLI mode so the calculator can be driven from the command line with a single invocation (python main.py <op> <operands>).
+
+Risks: Low. No existing modules (calculator.py, input_handler.py, __main__.py) were modified. The __init__.py addition is purely additive. The new main.py is a new root-level file that does not conflict with src/__main__.py (the interactive entry point).
+
+Test results: 311 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #55 — Development artifacts (PlantUML diagrams)
 
 Branch: task/issue-55-development-artifacts
