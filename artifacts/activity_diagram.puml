@@ -1,0 +1,56 @@
+@startuml Calculator User Interaction Flow
+
+title Calculator User Interaction Flow
+
+start
+
+:Create Calculator instance;
+:Create InputHandler with calculator;
+:Call handler.run();
+
+repeat
+    :_show_menu()\nPrint available operations from OPERATIONS registry;
+    :Prompt user: "Enter operation (or 'exit'/'quit' to stop)";
+    :Read and strip/lower input;
+
+    if (input == "exit" or "quit"?) then (yes)
+        :Print "Goodbye!";
+        stop
+    else (no)
+        if (op_choice in OPERATIONS?) then (no)
+            :Print "Error: Unknown operation '<op_choice>'.\nPlease choose from the menu.";
+        else (yes)
+            :Look up op_info from OPERATIONS;
+            :Extract arity and coerce callable;
+
+            :_prompt_operands(arity, coerce);
+            fork
+                :Prompt for first operand (and second if arity=2);
+                :Read raw input and call coerce(raw);
+                if (coerce raises ValueError or TypeError?) then (yes)
+                    :Raise ValueError:\n"Invalid operand '<raw>': expected a numeric value.";
+                else (no)
+                    :Append coerced value to operands list;
+                endif
+            end fork
+
+            if (ValueError raised during _prompt_operands?) then (yes)
+                :Print "Error: <exc>";
+            else (no)
+                :_dispatch(op_choice, operands)\ngetattr(calculator, method_name)(*operands);
+
+                if (ZeroDivisionError raised?) then (yes)
+                    :Print "Error: Division by zero is not allowed.";
+                elseif (ValueError raised?) then (yes)
+                    :Print "Error: <exc>";
+                elseif (TypeError raised?) then (yes)
+                    :Print "Error: <exc>";
+                else (no)
+                    :Print "Result: <result>";
+                endif
+            endif
+        endif
+    endif
+repeat while (session active)
+
+@enduml

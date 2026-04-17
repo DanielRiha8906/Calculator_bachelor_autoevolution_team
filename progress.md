@@ -1,3 +1,23 @@
+## Run: Issue #55 — Development artifacts (PlantUML diagrams)
+
+Branch: task/issue-55-development-artifacts
+PR target: exp/expert-team
+
+Files changed:
+- artifacts/class_diagram.puml — new file; PlantUML class diagram documenting Calculator (12 methods), InputHandler (3 public, 3 private members), OPERATIONS module-level dict, and run_session free function with their relationships
+- artifacts/activity_diagram.puml — new file; PlantUML activity diagram tracing the full InputHandler.run() REPL loop including exit/quit branch, unknown operation branch, operand parsing error path, and all Calculator exception paths (ZeroDivisionError, ValueError, TypeError)
+- artifacts/sequence_diagram.puml — new file; PlantUML sequence diagram showing a complete successful interaction: program start, menu display, "add" operation with two operands, result output, and "quit" exit
+
+Purpose: Create development artifact documentation diagrams derived exclusively from the actual src/ implementation for thesis traceability and architectural documentation.
+
+Risks: None. No source code, tests, or configuration files were modified. Purely additive artifact creation.
+
+Test results: No source changes; existing test suite state unchanged (252 passed from prior run).
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Interactive session loop — InputHandler and run_session
 
 Branch: exp/expert-team

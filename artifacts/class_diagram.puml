@@ -1,0 +1,57 @@
+@startuml Calculator Class Diagram
+
+title Calculator Class Diagram
+
+class Calculator {
+    +add(a, b)
+    +subtract(a, b)
+    +multiply(a, b)
+    +divide(a, b)
+    +factorial(n: int): int
+    +square(x: float): float
+    +cube(x: float): float
+    +square_root(x: float): float
+    +cube_root(x: float): float
+    +log10(x: float): float
+    +ln(x: float): float
+    +power(x: float, y: float): float
+}
+
+class InputHandler {
+    -_calculator: Calculator
+    -_input_fn: Callable[[str], str]
+    +__init__(calculator: Calculator, input_fn: Callable | None)
+    +run(): None
+    -_show_menu(): None
+    -_prompt_operands(arity: int, coerce: Callable): list
+    -_dispatch(op_key: str, operands: list): float | int
+}
+
+note top of InputHandler
+    Module: src/input_handler.py
+    Drives an interactive calculator REPL session.
+end note
+
+note as OPERATIONS_NOTE
+    <b>OPERATIONS</b> : dict[str, dict]
+    Module-level constant in src/input_handler.py
+    Maps operation keys to dispatch metadata:
+    add, subtract, multiply, divide, power (arity=2)
+    factorial (arity=1, coerce=int)
+    square, cube, square_root, cube_root,
+    log10, ln (arity=1, coerce=float)
+    Each entry: { method, arity, label [, coerce] }
+end note
+
+note as RUN_SESSION_NOTE
+    <b>run_session</b>(calculator: Calculator, input_fn: Callable | None): None
+    Free function in src/input_handler.py
+    Convenience entry point: creates an InputHandler
+    and calls handler.run()
+end note
+
+InputHandler --> Calculator : dispatches operations to\n_calculator
+InputHandler ..> OPERATIONS_NOTE : reads registry for\nmenu and dispatch
+RUN_SESSION_NOTE ..> InputHandler : creates and calls run()
+
+@enduml
