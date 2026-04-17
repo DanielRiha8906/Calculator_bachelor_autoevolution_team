@@ -89,3 +89,23 @@ Duration: 532.5s | Cost: $1.510725 USD | Turns: 15
 - Risks: Low — no source code modified; only documentation artifacts created. Risk is invalid PlantUML syntax preventing thesis rendering.
 - Tests: No existing tests affected; no new tests added (PlantUML validation tooling not in scope per architectural plan).
 Duration: 402.0s | Cost: $1.054507 USD | Turns: 11
+
+## Run: Issue #57 — CLI mode (V1 Task 7, exp/structured-team)
+
+Branch: task/issue-57-cli-mode
+PR target: exp/structured-team
+
+Files changed:
+- src/cli.py: new CLI module with argparse-based argument parsing, operation validation, operand count/type validation, and result dispatch
+- src/__main__.py: updated entry point to route to run_cli() when CLI args present, or run_loop() for interactive mode
+- tests/test_cli.py: 62 new tests covering happy paths for all 12 operations, error cases (unknown operation, wrong operand count, non-numeric input, division by zero, sqrt of negative, etc.), edge cases, and main() routing
+- tests/test_input_loop.py: fixed test_main_runs_and_exits to use argv=[] parameter to avoid pytest's sys.argv interference
+- artifacts/class_diagram.puml: added CLI module with run_cli() and _build_parser(); dependency arrows to InputLoop (OPERATIONS) and Calculator
+- artifacts/activity_diagram.puml: added branch at program start for CLI vs interactive mode
+- artifacts/sequence_diagram.puml: added CLI mode sequence (happy path and error path)
+
+Purpose: Add CLI mode allowing the calculator to be invoked as `python -m calculator <operation> <operand1> <operand2>` from bash. Results print to stdout; errors print to stderr with exit code 2.
+
+Risks: Low. Changes isolated to new src/cli.py and minimal entry-point routing in __main__.py. No existing modules modified. All 371 tests pass.
+
+Duration: 541.1s | Cost: $1.146451 USD | Turns: 14

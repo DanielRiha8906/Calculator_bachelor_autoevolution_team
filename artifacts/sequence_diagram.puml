@@ -1,11 +1,39 @@
 @startuml
-title Calculator — Sequence Diagram (divide scenario)
+title Calculator — Sequence Diagram (interactive divide + CLI add scenarios)
 
 participant User
+participant Main
+participant CLI
 participant InputLoop
 participant Calculator
 
-User -> InputLoop : run_loop()
+== CLI mode (e.g. python -m src add 3 5) ==
+
+User -> Main : sys.argv = ["add", "3", "5"]
+Main -> CLI : run_cli()
+CLI -> CLI : _build_parser() — build argparse parser
+CLI -> CLI : validate operation in OPERATIONS
+CLI -> CLI : validate operand count == 2
+CLI -> CLI : parse operands as float: [3.0, 5.0]
+CLI -> Calculator : create Calculator()
+CLI -> InputLoop : dispatch("add", [3.0, 5.0], calc)
+InputLoop -> Calculator : add(3.0, 5.0)
+Calculator --> InputLoop : return 8.0
+InputLoop --> CLI : return 8.0
+CLI -> User : print("8.0")
+
+alt CLI error path (unknown operation)
+  User -> Main : sys.argv = ["badop", "1"]
+  Main -> CLI : run_cli()
+  CLI -> CLI : validate operation — not in OPERATIONS
+  CLI -> User : print error to stderr
+  CLI -> Main : sys.exit(2)
+end
+
+== Interactive mode (no CLI args) ==
+
+User -> Main : sys.argv = []
+Main -> InputLoop : run_loop()
 
 loop until "exit"
 

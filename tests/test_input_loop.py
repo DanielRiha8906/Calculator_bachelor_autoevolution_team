@@ -801,7 +801,8 @@ def test_main_runs_and_exits(capsys: pytest.CaptureFixture[str]) -> None:
     from src import __main__ as main_module
 
     # Patch run_loop inside the __main__ module so that no real I/O is required.
+    # Pass explicit argv=[] to override sys.argv[1:] which may contain pytest flags.
     with mock.patch.object(main_module, "run_loop") as mock_run_loop:
-        main_module.main()
+        main_module.main(argv=[])
 
     mock_run_loop.assert_called_once_with()
