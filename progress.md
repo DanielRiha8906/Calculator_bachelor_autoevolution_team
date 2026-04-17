@@ -108,4 +108,4 @@ Purpose: Add CLI mode allowing the calculator to be invoked as `python -m calcul
 
 Risks: Low. Changes isolated to new src/cli.py and minimal entry-point routing in __main__.py. No existing modules modified. All 371 tests pass.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 541.1s | Cost: $1.146451 USD | Turns: 14
