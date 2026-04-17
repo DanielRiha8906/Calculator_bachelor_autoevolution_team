@@ -17,7 +17,7 @@ Risks: Low. No existing modules (calculator.py, input_handler.py, __main__.py) w
 
 Test results: 311 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 424.1s | Cost: $0.939948 USD | Turns: 11
 
 ---
 
