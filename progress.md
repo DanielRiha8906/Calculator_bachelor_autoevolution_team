@@ -76,4 +76,4 @@ Duration: 299.4s | Cost: $0.865561 USD | Turns: 17
 - Tests passed: Partial — 374 passed, 9 failed (all in TestMain, all pre-existing tests requiring contract update)
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 496.1s | Cost: $1.142796 USD | Turns: 11
