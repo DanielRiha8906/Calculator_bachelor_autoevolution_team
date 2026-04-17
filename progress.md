@@ -55,6 +55,6 @@ Purpose: Extend Calculator with core math functions as required by Issue #17. Er
 
 Risks: Low. Purely additive change — no existing methods or tests modified. All seven methods use stdlib math (already imported); no new dependencies introduced.
 
-Tests: 78 passed (47 pre-existing + 31 new), 0 failed, 0 skipped
+Tests: 135 passed (47 pre-existing + 31 implementer + 57 edge-case tester additions), 0 failed, 0 skipped
 
 Duration: PENDING | Cost: PENDING | Turns: PENDING
