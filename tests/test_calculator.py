@@ -458,6 +458,374 @@ def test_factorial_does_not_mutate_input_variable():
     assert n == 5
 
 
+# Group 7 — Power and root functions
+
+# --- square ---
+
+def test_square_positive():
+    assert Calculator().square(4) == pytest.approx(16)
+
+
+def test_square_negative():
+    assert Calculator().square(-3) == pytest.approx(9)
+
+
+def test_square_zero():
+    assert Calculator().square(0) == pytest.approx(0)
+
+
+def test_square_float():
+    assert Calculator().square(2.5) == pytest.approx(6.25)
+
+
+# --- cube ---
+
+def test_cube_positive():
+    assert Calculator().cube(3) == pytest.approx(27)
+
+
+def test_cube_negative():
+    assert Calculator().cube(-2) == pytest.approx(-8)
+
+
+def test_cube_zero():
+    assert Calculator().cube(0) == pytest.approx(0)
+
+
+# --- square_root ---
+
+def test_square_root_perfect_square():
+    assert Calculator().square_root(9) == pytest.approx(3.0)
+
+
+def test_square_root_four():
+    assert Calculator().square_root(4) == pytest.approx(2.0)
+
+
+def test_square_root_float():
+    assert Calculator().square_root(2.0) == pytest.approx(math.sqrt(2.0))
+
+
+def test_square_root_negative_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().square_root(-1)
+
+
+# --- cube_root ---
+
+def test_cube_root_positive():
+    assert Calculator().cube_root(27) == pytest.approx(3.0)
+
+
+def test_cube_root_negative():
+    assert Calculator().cube_root(-8) == pytest.approx(-2.0)
+
+
+def test_cube_root_zero():
+    assert Calculator().cube_root(0) == pytest.approx(0.0)
+
+
+def test_cube_root_float():
+    assert Calculator().cube_root(8.0) == pytest.approx(2.0)
+
+
+# --- power ---
+
+def test_power_positive_exponent():
+    assert Calculator().power(2, 10) == pytest.approx(1024.0)
+
+
+def test_power_fractional_exponent():
+    assert Calculator().power(4, 0.5) == pytest.approx(2.0)
+
+
+def test_power_zero_zero():
+    assert Calculator().power(0, 0) == pytest.approx(1.0)
+
+
+def test_power_negative_base_integer_exponent():
+    assert Calculator().power(-2, 3) == pytest.approx(-8.0)
+
+
+# --- log (base-10) ---
+
+def test_log_hundred():
+    assert Calculator().log(100) == pytest.approx(2.0)
+
+
+def test_log_zero_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().log(0)
+
+
+def test_log_negative_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().log(-1)
+
+
+# --- ln (natural log) ---
+
+def test_ln_e():
+    assert Calculator().ln(math.e) == pytest.approx(1.0)
+
+
+def test_ln_zero_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().ln(0)
+
+
+def test_ln_negative_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().ln(-1)
+
+
+# Group 8 — Additional edge cases for power/root/log methods
+
+# --- square ---
+
+def test_square_large_integer():
+    assert Calculator().square(10**9) == pytest.approx(10**18)
+
+
+def test_square_float_inf():
+    assert Calculator().square(float("inf")) == float("inf")
+
+
+def test_square_negative_float_inf():
+    # (-inf)^2 == +inf
+    assert Calculator().square(float("-inf")) == float("inf")
+
+
+def test_square_nan_propagates():
+    result = Calculator().square(float("nan"))
+    assert math.isnan(result)
+
+
+def test_square_one():
+    assert Calculator().square(1) == pytest.approx(1)
+
+
+def test_square_does_not_mutate_input():
+    x = 5
+    Calculator().square(x)
+    assert x == 5
+
+
+# --- cube ---
+
+def test_cube_float():
+    assert Calculator().cube(1.5) == pytest.approx(3.375)
+
+
+def test_cube_negative_float():
+    assert Calculator().cube(-2.5) == pytest.approx(-15.625)
+
+
+def test_cube_large_integer():
+    assert Calculator().cube(10**6) == pytest.approx(10**18)
+
+
+def test_cube_float_inf():
+    assert Calculator().cube(float("inf")) == float("inf")
+
+
+def test_cube_negative_float_inf():
+    # (-inf)^3 == -inf
+    assert Calculator().cube(float("-inf")) == float("-inf")
+
+
+def test_cube_nan_propagates():
+    result = Calculator().cube(float("nan"))
+    assert math.isnan(result)
+
+
+# --- square_root ---
+
+def test_square_root_zero():
+    # Boundary: exactly at the valid/invalid threshold
+    assert Calculator().square_root(0) == pytest.approx(0.0)
+
+
+def test_square_root_one():
+    assert Calculator().square_root(1) == pytest.approx(1.0)
+
+
+def test_square_root_float_inf():
+    assert Calculator().square_root(float("inf")) == float("inf")
+
+
+def test_square_root_very_small_positive():
+    result = Calculator().square_root(1e-300)
+    assert result == pytest.approx(math.sqrt(1e-300))
+
+
+def test_square_root_large_float():
+    result = Calculator().square_root(1e200)
+    assert result == pytest.approx(math.sqrt(1e200))
+
+
+def test_square_root_nan_propagates():
+    # NaN is not < 0, so no ValueError; math.sqrt(nan) returns nan
+    result = Calculator().square_root(float("nan"))
+    assert math.isnan(result)
+
+
+@pytest.mark.parametrize("x", [-1e-9, -1e100, -0.001])
+def test_square_root_negative_parametrized(x):
+    with pytest.raises(ValueError):
+        Calculator().square_root(x)
+
+
+# --- cube_root ---
+
+def test_cube_root_one():
+    assert Calculator().cube_root(1) == pytest.approx(1.0)
+
+
+def test_cube_root_negative_one():
+    assert Calculator().cube_root(-1) == pytest.approx(-1.0)
+
+
+def test_cube_root_large_positive():
+    assert Calculator().cube_root(10**9) == pytest.approx(1000.0)
+
+
+def test_cube_root_large_negative():
+    result = Calculator().cube_root(-10**9)
+    assert result == pytest.approx(-1000.0)
+
+
+def test_cube_root_float_inf():
+    assert Calculator().cube_root(float("inf")) == float("inf")
+
+
+def test_cube_root_negative_float_inf():
+    assert Calculator().cube_root(float("-inf")) == float("-inf")
+
+
+def test_cube_root_nan_propagates():
+    result = Calculator().cube_root(float("nan"))
+    assert math.isnan(result)
+
+
+def test_cube_root_negative_sign_preserved():
+    # Verify copysign logic: result must be negative for negative input
+    result = Calculator().cube_root(-27)
+    assert result < 0
+
+
+# --- power ---
+
+def test_power_zero_base_positive_exponent():
+    assert Calculator().power(0, 5) == pytest.approx(0.0)
+
+
+def test_power_one_base_any_exponent():
+    assert Calculator().power(1, 999) == pytest.approx(1.0)
+
+
+def test_power_negative_exponent():
+    assert Calculator().power(2, -1) == pytest.approx(0.5)
+
+
+def test_power_base_ten():
+    assert Calculator().power(10, 3) == pytest.approx(1000.0)
+
+
+def test_power_fractional_base():
+    assert Calculator().power(0.5, 2) == pytest.approx(0.25)
+
+
+def test_power_inf_exponent():
+    # math.pow(2, inf) == inf
+    assert Calculator().power(2, float("inf")) == float("inf")
+
+
+def test_power_negative_base_fractional_exponent_raises():
+    # math.pow(-2, 0.5) raises ValueError because the result is complex
+    with pytest.raises(ValueError):
+        Calculator().power(-2, 0.5)
+
+
+@pytest.mark.parametrize("base,exp,expected", [
+    (3, 0, 1.0),
+    (0, 1, 0.0),
+    (2, 8, 256.0),
+    (10, 0, 1.0),
+])
+def test_power_parametrized(base, exp, expected):
+    assert Calculator().power(base, exp) == pytest.approx(expected)
+
+
+# --- log (base-10) ---
+
+def test_log_one():
+    # log10(1) == 0
+    assert Calculator().log(1) == pytest.approx(0.0)
+
+
+def test_log_ten():
+    assert Calculator().log(10) == pytest.approx(1.0)
+
+
+def test_log_thousand():
+    assert Calculator().log(1000) == pytest.approx(3.0)
+
+
+def test_log_float_inf():
+    assert Calculator().log(float("inf")) == float("inf")
+
+
+def test_log_very_small_positive():
+    result = Calculator().log(1e-300)
+    assert result == pytest.approx(math.log10(1e-300))
+
+
+def test_log_large_number():
+    assert Calculator().log(10**10) == pytest.approx(10.0)
+
+
+def test_log_float_value():
+    assert Calculator().log(0.1) == pytest.approx(-1.0)
+
+
+@pytest.mark.parametrize("x", [0, -1, -1e-9, -1e100])
+def test_log_non_positive_parametrized(x):
+    with pytest.raises(ValueError):
+        Calculator().log(x)
+
+
+# --- ln (natural log) ---
+
+def test_ln_one():
+    # ln(1) == 0
+    assert Calculator().ln(1) == pytest.approx(0.0)
+
+
+def test_ln_float_inf():
+    assert Calculator().ln(float("inf")) == float("inf")
+
+
+def test_ln_very_small_positive():
+    result = Calculator().ln(1e-300)
+    assert result == pytest.approx(math.log(1e-300))
+
+
+def test_ln_large_number():
+    result = Calculator().ln(1e100)
+    assert result == pytest.approx(math.log(1e100))
+
+
+def test_ln_float_value():
+    assert Calculator().ln(0.5) == pytest.approx(math.log(0.5))
+
+
+@pytest.mark.parametrize("x", [0, -1, -1e-9, -1e100])
+def test_ln_non_positive_parametrized(x):
+    with pytest.raises(ValueError):
+        Calculator().ln(x)
+
+
 # Group 3 — Self-modification output syntax validation
 
 def test_generated_output_files_are_syntactically_valid_python():

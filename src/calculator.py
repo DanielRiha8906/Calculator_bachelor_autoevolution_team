@@ -32,3 +32,97 @@ class Calculator:
             raise ValueError(f"factorial is not defined for negative integers, got {n}")
         return math.factorial(n)
 
+    def square(self, x: float) -> float:
+        """Return the square of x.
+
+        Args:
+            x: The number to square.
+
+        Returns:
+            x multiplied by itself.
+        """
+        return x * x
+
+    def cube(self, x: float) -> float:
+        """Return the cube of x.
+
+        Args:
+            x: The number to cube.
+
+        Returns:
+            x multiplied by itself twice.
+        """
+        return x * x * x
+
+    def square_root(self, x: float) -> float:
+        """Return the square root of x.
+
+        Args:
+            x: A non-negative number.
+
+        Returns:
+            The square root of x.
+
+        Raises:
+            ValueError: If x is negative.
+        """
+        if x < 0:
+            raise ValueError(f"square_root requires a non-negative number, got {x}")
+        return math.sqrt(x)
+
+    def cube_root(self, x: float) -> float:
+        """Return the real cube root of x, supporting negative inputs.
+
+        Args:
+            x: The number whose cube root is to be computed.
+
+        Returns:
+            The real cube root of x.
+        """
+        return math.copysign(abs(x) ** (1 / 3), x)
+
+    def power(self, base: float, exponent: float) -> float:
+        """Return base raised to the given exponent.
+
+        Args:
+            base: The base number.
+            exponent: The exponent to raise the base to.
+
+        Returns:
+            base raised to the power of exponent. Returns 1.0 when both
+            base and exponent are 0.
+        """
+        return math.pow(base, exponent)
+
+    def log(self, x: float) -> float:
+        """Return the base-10 logarithm of x.
+
+        Args:
+            x: A strictly positive number.
+
+        Returns:
+            The base-10 logarithm of x.
+
+        Raises:
+            ValueError: If x is zero or negative.
+        """
+        if x <= 0:
+            raise ValueError(f"log requires a positive number, got {x}")
+        return math.log10(x)
+
+    def ln(self, x: float) -> float:
+        """Return the natural (base-e) logarithm of x.
+
+        Args:
+            x: A strictly positive number.
+
+        Returns:
+            The natural logarithm of x.
+
+        Raises:
+            ValueError: If x is zero or negative.
+        """
+        if x <= 0:
+            raise ValueError(f"ln requires a positive number, got {x}")
+        return math.log(x)
+
