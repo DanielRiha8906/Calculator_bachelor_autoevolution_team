@@ -1,3 +1,22 @@
+## Run: Issue #15 — Factorial feature implementation
+
+Branch: task/issue-15-factorial
+PR target: exp/expert-team
+
+Files changed:
+- src/calculator.py — added `import math` at the top; added `Calculator.factorial(n)` method with bool guard, int type check, negative value check, and `math.factorial(n)` delegation
+- tests/test_calculator.py — appended a new "Tests for Calculator.factorial" section: test_factorial_happy_path (4 parametrized cases), test_factorial_returns_int, test_factorial_negative_raises_value_error (3 parametrized cases), test_factorial_invalid_type_raises_type_error (6 parametrized cases)
+
+Purpose: Implement Calculator.factorial with full input validation (reject booleans, non-integers, and negatives) and corresponding test coverage per the architect's plan.
+
+Risks: Low. Change is purely additive; no existing methods were modified. bool-before-int guard ordering is critical and is correctly implemented.
+
+Test results: 60 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: 342.7s | Cost: $0.823135 USD | Turns: 13
+
+---
+
 ## Run: Issue #12 — V1 Task 2 - Test Suite Expansion (add, subtract, multiply)
 
 Branch: task/issue-12-test-suite-expert-team

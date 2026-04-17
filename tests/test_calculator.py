@@ -195,3 +195,155 @@ def test_multiply_does_not_mutate_inputs(calc):
     calc.multiply(a, b)
     assert a == 3
     assert b == 8
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.factorial
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("n, expected", [
+    (0, 1),
+    (1, 1),
+    (5, 120),
+    (10, 3628800),
+])
+def test_factorial_happy_path(calc, n, expected):
+    """factorial returns the correct value for valid non-negative integers."""
+    assert calc.factorial(n) == expected, (
+        f"factorial({n}) returned {calc.factorial(n)!r}, expected {expected!r}"
+    )
+
+
+def test_factorial_returns_int(calc):
+    """factorial must return an int for valid input."""
+    result = calc.factorial(5)
+    assert isinstance(result, int)
+
+
+@pytest.mark.parametrize("n", [-1, -5, -100])
+def test_factorial_negative_raises_value_error(calc, n):
+    """factorial raises ValueError for negative integer arguments."""
+    with pytest.raises(ValueError):
+        calc.factorial(n)
+
+
+@pytest.mark.parametrize("n", [1.0, 2.5, "5", None, True, False])
+def test_factorial_invalid_type_raises_type_error(calc, n):
+    """factorial raises TypeError for non-integer arguments, including booleans."""
+    with pytest.raises(TypeError):
+        calc.factorial(n)
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case tests for Calculator.factorial
+# ---------------------------------------------------------------------------
+
+def test_factorial_zero_explicit_boundary(calc):
+    """factorial(0) is the lower boundary — must return exactly 1, not 0."""
+    assert calc.factorial(0) == 1
+
+
+def test_factorial_large_value(calc):
+    """factorial(20) must return the known exact integer 2432902008176640000."""
+    assert calc.factorial(20) == 2432902008176640000
+
+
+def test_factorial_large_value_is_int(calc):
+    """factorial(20) must be a plain Python int, not float or any other numeric type."""
+    result = calc.factorial(20)
+    assert type(result) is int
+
+
+def test_factorial_very_large_value(calc):
+    """factorial accepts large integers and returns the correct big integer."""
+    result = calc.factorial(50)
+    assert result == math.factorial(50)
+    assert type(result) is int
+
+
+def test_factorial_result_is_always_int_at_boundary(calc):
+    """factorial(1) — the second boundary — must return plain int 1."""
+    result = calc.factorial(1)
+    assert type(result) is int
+    assert result == 1
+
+
+@pytest.mark.parametrize("n", [[], [1, 2], {}, set(), (1,)])
+def test_factorial_collection_types_raise_type_error(calc, n):
+    """factorial raises TypeError when passed any collection type."""
+    with pytest.raises(TypeError):
+        calc.factorial(n)
+
+
+def test_factorial_complex_number_raises_type_error(calc):
+    """factorial raises TypeError for a complex number argument."""
+    with pytest.raises(TypeError):
+        calc.factorial(3 + 0j)
+
+
+def test_factorial_negative_float_raises_type_error(calc):
+    """A negative float like -1.0 must raise TypeError (not ValueError) because
+    the type check runs before the sign check."""
+    with pytest.raises(TypeError):
+        calc.factorial(-1.0)
+
+
+def test_factorial_negative_zero_float_raises_type_error(calc):
+    """The IEEE 754 negative zero float (-0.0) is not an int and must raise TypeError."""
+    with pytest.raises(TypeError):
+        calc.factorial(-0.0)
+
+
+def test_factorial_positive_zero_float_raises_type_error(calc):
+    """0.0 is a float, not an int; must raise TypeError even though the value is zero."""
+    with pytest.raises(TypeError):
+        calc.factorial(0.0)
+
+
+def test_factorial_inf_raises_type_error(calc):
+    """float('inf') is not an int and must raise TypeError."""
+    with pytest.raises(TypeError):
+        calc.factorial(float("inf"))
+
+
+def test_factorial_nan_raises_type_error(calc):
+    """float('nan') is not an int and must raise TypeError."""
+    with pytest.raises(TypeError):
+        calc.factorial(float("nan"))
+
+
+def test_factorial_does_not_mutate_input(calc):
+    """factorial must be side-effect-free; passing a name-bound int must leave it unchanged."""
+    n = 5
+    calc.factorial(n)
+    assert n == 5
+
+
+def test_factorial_type_error_message_contains_type_name(calc):
+    """TypeError raised for a float must mention the received type in its message."""
+    with pytest.raises(TypeError, match="float"):
+        calc.factorial(2.5)
+
+
+def test_factorial_type_error_for_bool_mentions_boolean(calc):
+    """TypeError raised for a boolean must mention 'bool' in its message."""
+    with pytest.raises(TypeError, match="bool"):
+        calc.factorial(True)
+
+
+def test_factorial_value_error_message_contains_value(calc):
+    """ValueError raised for a negative int must mention the offending value."""
+    with pytest.raises(ValueError, match="-3"):
+        calc.factorial(-3)
+
+
+@pytest.mark.parametrize("n, expected", [
+    (2, 2),
+    (3, 6),
+    (4, 24),
+    (6, 720),
+    (7, 5040),
+])
+def test_factorial_additional_happy_path(calc, n, expected):
+    """Extend happy-path coverage across several small integers not in the base suite."""
+    assert calc.factorial(n) == expected
