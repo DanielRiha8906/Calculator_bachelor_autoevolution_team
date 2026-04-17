@@ -77,6 +77,29 @@ Tests: 233 passed (135 pre-existing + 13 implementer input_loop tests + 85 edge-
 
 Duration: 532.5s | Cost: $1.510725 USD | Turns: 15
 
+## Run: Issue #57 — CLI Mode for Calculator (task/issue-57-cli-mode)
+
+Branch: task/issue-57-cli-mode
+PR target: exp/structured-team
+
+Files changed:
+- src/cli.py: new module — defines run_cli() using argparse; validates operand count and type; dispatches via existing dispatch(); prints result to stdout or error to stderr with exit code 1 on any failure
+- src/__main__.py: added import of run_cli and OPERATIONS; modified main() to route to run_cli() when sys.argv[1] is a known operation key, else run_loop()
+- artifacts/class_diagram.puml: added CLI class and arrows Main-->CLI and CLI-->InputLoop
+- artifacts/activity_diagram.puml: added CLI mode-selection branch at program start with matching if/endif blocks (5 if, 5 endif)
+- artifacts/sequence_diagram.puml: added participant CLI; added outer alt block showing CLI mode sequence alongside existing interactive loop
+- tests/test_artifacts.py: added test_contains_class_cli, test_cli_uses_inputloop_arrow in TestClassDiagram; added test_contains_cli_participant in TestSequenceDiagram
+- tests/test_cli.py: new test module — 16 test cases covering valid invocations for all 12 operations, invalid operation (exit code 2), wrong operand count (exit code 1), non-numeric operand (exit code 1), division by zero (exit code 1)
+- tests/test_cli_edge.py: new test module — 43 edge-case tests covering float operands, negative numbers, zero as valid operand, extra/missing operands, whitespace/empty strings, domain errors (sqrt of negative, log of zero/negative, factorial of negative/float), large numbers, special floats, error message content, and main() routing for both branches
+
+Purpose: Add non-interactive CLI mode so the calculator can be used in scripts and automated pipelines without entering the REPL. The mode-selection heuristic (check sys.argv[1] against OPERATIONS keys) avoids breaking the existing test_main_runs_and_exits test which runs under pytest where sys.argv contains pytest's own arguments.
+
+Risks: Low. The CLI mode check uses an allowlist of known operation names, so unrecognised arguments still fall through to run_loop(). Existing interfaces are untouched. No new dependencies introduced.
+
+Tests: 364 passed, 0 failed, 0 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #54 — V1 Task 6 - Development Artifacts (task/issue-54-development-artifacts)
 
 - Branch: task/issue-54-development-artifacts

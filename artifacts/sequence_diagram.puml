@@ -2,8 +2,20 @@
 title Calculator — Sequence Diagram (divide scenario)
 
 participant User
+participant CLI
 participant InputLoop
 participant Calculator
+
+alt CLI mode (argv present)
+  User -> CLI : run_cli(["divide", "10", "2"])
+  CLI -> CLI : parse_args() — operation="divide", operands=["10","2"]
+  CLI -> CLI : validate operand count (2 == 2)
+  CLI -> CLI : convert operands to float [10.0, 2.0]
+  CLI -> Calculator : dispatch("divide", [10.0, 2.0])
+  Calculator -> Calculator : divide(10.0, 2.0) — returns 5.0
+  Calculator --> CLI : return 5.0
+  CLI -> User : print("5.0")
+end
 
 User -> InputLoop : run_loop()
 

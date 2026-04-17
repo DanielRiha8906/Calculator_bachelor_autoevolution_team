@@ -3,6 +3,20 @@ title Calculator — Activity Diagram
 
 start
 
+if (CLI arguments present?) then (yes)
+  :Parse arguments with argparse;
+  :Validate operand count;
+  if (Operand count valid?) then (yes)
+    :Convert operands to float;
+    :Dispatch operation to Calculator (dispatch);
+    :Print result to stdout;
+  else (no)
+    :Print error to stderr;
+  endif
+  stop
+else (no)
+endif
+
 :Create Calculator instance;
 :Print operation menu (print_menu);
 :Prompt user for operation (get_operation);

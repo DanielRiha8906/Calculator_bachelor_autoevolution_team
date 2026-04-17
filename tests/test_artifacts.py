@@ -147,6 +147,14 @@ class TestClassDiagram:
     def test_title_line_present(self, content: str) -> None:
         assert "title" in content, "Expected a 'title' directive in the class diagram"
 
+    def test_contains_class_cli(self, content: str) -> None:
+        assert "class CLI" in content, "Expected 'class CLI' declaration in class diagram"
+
+    def test_cli_uses_inputloop_arrow(self, content: str) -> None:
+        assert "CLI --> InputLoop" in content, (
+            "Expected 'CLI --> InputLoop' relationship arrow in class diagram"
+        )
+
 
 # ---------------------------------------------------------------------------
 # activity_diagram.puml — detailed content checks
@@ -259,3 +267,8 @@ class TestSequenceDiagram:
 
     def test_contains_exit_condition(self, content: str) -> None:
         assert "exit" in content.lower(), "Expected 'exit' referenced in sequence diagram"
+
+    def test_contains_cli_participant(self, content: str) -> None:
+        assert "participant CLI" in content, (
+            "Expected 'participant CLI' declaration in sequence diagram"
+        )

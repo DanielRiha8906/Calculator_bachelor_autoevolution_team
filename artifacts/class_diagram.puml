@@ -34,7 +34,13 @@ class Main <<module>> {
   +main() : None
 }
 
+class CLI <<module>> {
+  +run_cli(argv: list[str] | None) : None
+}
+
 InputLoop --> Calculator : uses
 Main --> InputLoop : calls run_loop()
+Main --> CLI : calls run_cli()
+CLI --> InputLoop : uses OPERATIONS, dispatch
 
 @enduml
