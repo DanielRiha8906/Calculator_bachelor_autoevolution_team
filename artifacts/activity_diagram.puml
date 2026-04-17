@@ -3,6 +3,39 @@ title Calculator — Activity Diagram
 
 start
 
+if (CLI arguments present? (sys.argv[1:])) then (yes)
+  :Parse arguments with argparse (run_cli);
+  if (Operation recognised in OPERATIONS?) then (no)
+    :Print error to stderr;
+    :Exit with code 2;
+    stop
+  else (yes)
+  endif
+  if (Operand count correct?) then (no)
+    :Print error to stderr;
+    :Exit with code 2;
+    stop
+  else (yes)
+  endif
+  if (All operands parse as float?) then (no)
+    :Print error to stderr;
+    :Exit with code 2;
+    stop
+  else (yes)
+  endif
+  :Create Calculator instance;
+  :dispatch(operation, operands, calc);
+  if (ValueError raised?) then (yes)
+    :Print error to stderr;
+    :Exit with code 2;
+    stop
+  else (no)
+    :Print result to stdout;
+    stop
+  endif
+else (no)
+endif
+
 :Create Calculator instance;
 :Print operation menu (print_menu);
 :Prompt user for operation (get_operation);
