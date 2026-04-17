@@ -77,9 +77,9 @@ jobs:
             4. pytest-edge-tester — write and run tests
             5. YOU (orchestrator) — commit all changes and open a pull request targeting ${{ inputs.branch }}
 
-            Follow this sequence by default. Agents may request involvement of other agents when genuinely needed — for example, the tester finding
-            a bug that requires the programmer to fix, or the programmer needing clarification from the architect. Facilitate these when requested,
-            but do not initiate extra agent calls yourself.                                                          
+            Follow this sequence by default. You may ONLY invoke these four agents: github-task-analyst, system-architect, python-code-implementer, pytest-edge-tester.
+            Do NOT invoke any other agent (Explore, general-purpose, Plan, or any other) for any reason — not for codebase exploration, not in parallel, not as a shortcut.
+            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.                                                          
    
             Constraints:                                                                                                                            
             - Never push directly to main
