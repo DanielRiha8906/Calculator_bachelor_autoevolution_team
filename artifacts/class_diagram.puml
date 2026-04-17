@@ -1,0 +1,40 @@
+@startuml
+title Calculator — Class Diagram
+
+class Calculator {
+  +add(a, b) : float
+  +subtract(a, b) : float
+  +multiply(a, b) : float
+  +divide(a, b) : float
+  +power(base: float, exponent: float) : float
+  +factorial(n: int) : int
+  +square(x: float) : float
+  +cube(x: float) : float
+  +square_root(x: float) : float
+  +cube_root(x: float) : float
+  +log(x: float) : float
+  +ln(x: float) : float
+}
+
+note right of Calculator
+  Uses math.factorial, math.sqrt,
+  math.cbrt, math.log10, math.log
+end note
+
+class InputLoop <<module>> {
+  +OPERATIONS : dict
+  +print_menu() : None
+  +get_operation(input_fn: Callable) : str | None
+  +get_operands(count: int, input_fn: Callable) : list[float]
+  +dispatch(operation: str, operands: list, calc: Calculator) : float
+  +run_loop(input_fn: Callable) : None
+}
+
+class Main <<module>> {
+  +main() : None
+}
+
+InputLoop --> Calculator : uses
+Main --> InputLoop : calls run_loop()
+
+@enduml

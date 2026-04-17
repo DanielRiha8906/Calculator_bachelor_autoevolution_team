@@ -1,0 +1,44 @@
+@startuml
+title Calculator — Sequence Diagram (divide scenario)
+
+participant User
+participant InputLoop
+participant Calculator
+
+User -> InputLoop : run_loop()
+
+loop until "exit"
+
+  InputLoop -> User : print_menu()
+  User -> InputLoop : get_operation() => "divide"
+  InputLoop -> InputLoop : look up operand_count = 2
+  InputLoop -> User : get_operands(2) — prompt operand 1
+  User -> InputLoop : "10"
+  InputLoop -> User : get_operands(2) — prompt operand 2
+  User -> InputLoop : "2"
+  InputLoop -> Calculator : dispatch("divide", [10.0, 2.0])
+  Calculator -> Calculator : divide(10.0, 2.0) — b != 0, returns 5.0
+  Calculator --> InputLoop : return 5.0
+  InputLoop -> User : print("Result: 5.0")
+
+  alt Error path (b == 0)
+    InputLoop -> User : print_menu()
+    User -> InputLoop : get_operation() => "divide"
+    InputLoop -> InputLoop : look up operand_count = 2
+    InputLoop -> User : get_operands(2) — prompt operand 1
+    User -> InputLoop : "10"
+    InputLoop -> User : get_operands(2) — prompt operand 2
+    User -> InputLoop : "0"
+    InputLoop -> Calculator : dispatch("divide", [10.0, 0.0])
+    Calculator -> Calculator : divide(10.0, 0.0) — b == 0, raises ValueError
+    Calculator --> InputLoop : raise ValueError("Division by zero is not allowed")
+    InputLoop -> User : print("Error: Division by zero is not allowed")
+  end
+
+end
+
+User -> InputLoop : get_operation() => "exit"
+InputLoop -> User : print("Goodbye!")
+InputLoop --> User : return (run_loop ends)
+
+@enduml
