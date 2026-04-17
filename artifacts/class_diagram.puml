@@ -48,13 +48,22 @@ class "cli" as cli_module <<module>> {
     +main(argv: list[str] | None) : None
 }
 
+class "retry_handler" as retry_handler <<module>> {
+    +MAX_RETRIES : int
+    +get_operand_with_retries(prompt: str, max_retries: int) : float | None
+    +get_operator_with_retries(valid_operators: list[str], max_retries: int) : str | None
+    +get_input_with_retries(max_retries: int) : tuple[float, str, float] | None
+}
+
 class "__main__" as main_module <<module>> {
     +main() : None
 }
 
 input_handler ..> Calculator : imports / instantiates
 cli_module ..> input_handler : imports / calls
-main_module ..> input_handler : imports / calls
+main_module ..> retry_handler : imports / calls
+main_module ..> input_handler : imports (BINARY_OPERATORS, run_calculation)
 main_module ..> cli_module : delegates CLI mode
+retry_handler ..> input_handler : imports (BINARY_OPERATORS, parse_operand)
 
 @enduml

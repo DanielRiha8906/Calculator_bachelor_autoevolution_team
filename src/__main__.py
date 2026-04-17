@@ -1,23 +1,27 @@
 import sys
 
 from src.cli import main as cli_main
-from src.input_handler import parse_input, run_calculation
+from src.input_handler import BINARY_OPERATORS, run_calculation
+from src.retry_handler import get_input_with_retries
 
 
 def main() -> None:
     """Run the interactive calculator.
 
-    Prompts the user for two operands and an operator, delegates parsing
-    and dispatch to the input_handler module, and prints the result.
-    Exits with status 1 on any input or arithmetic error.
+    Collects two operands and an operator via retry-aware prompts, then
+    delegates dispatch to the input_handler module and prints the result.
+    Returns cleanly (without sys.exit) when the user exhausts retries, and
+    exits with status 1 only on an arithmetic error.
     """
-    operand_a = input("Enter first operand: ")
-    operand_b = input("Enter second operand: ")
-    operator = input("Enter operator (+, -, *, /): ")
+    result_tuple = get_input_with_retries()
+    if result_tuple is None:
+        return
+
+    first_operand, operator, second_operand = result_tuple
+    method_name = BINARY_OPERATORS[operator]
 
     try:
-        a, b, method_name = parse_input(operand_a, operand_b, operator)
-        result = run_calculation(a, b, method_name)
+        result = run_calculation(first_operand, second_operand, method_name)
     except (ValueError, ZeroDivisionError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)

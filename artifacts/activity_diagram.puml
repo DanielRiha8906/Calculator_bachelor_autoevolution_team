@@ -20,38 +20,43 @@ if (sys.argv has arguments?) then (yes)
     else (no)
     endif
 else (no)
-    |User|
-    :Provide operand_a string;
-    :Provide operand_b string;
-    :Provide operator string;
+    |__main__|
+    :Call get_input_with_retries();
+
+    |retry_handler|
+    :Prompt for first operand (with retries);
+    if (retries exhausted?) then (yes)
+        :Print "Maximum retries reached. Operation cancelled.";
+        |__main__|
+        :Return (no output);
+        end
+    else (no)
+    endif
+
+    :Prompt for second operand (with retries);
+    if (retries exhausted?) then (yes)
+        :Print "Maximum retries reached. Operation cancelled.";
+        |__main__|
+        :Return (no output);
+        end
+    else (no)
+    endif
+
+    :Prompt for operator (with retries);
+    if (retries exhausted?) then (yes)
+        :Print "Maximum retries reached. Operation cancelled.";
+        |__main__|
+        :Return (no output);
+        end
+    else (no)
+    endif
+
+    :Return (first_operand, operator, second_operand);
     |__main__|
 endif
 
-:Call parse_input(operand_a, operand_b, operator);
-
-|input_handler / Calculator|
-:parse_operand attempts float conversion\nfor both operands;
-
-if (conversion fails?) then (yes)
-    :Print error to stderr;
-    :exit(1);
-    end
-else (no)
-endif
-
-:BINARY_OPERATORS lookup for operator;
-
-if (operator unsupported?) then (yes)
-    :Print error to stderr;
-    :exit(1);
-    end
-else (no)
-endif
-
-:Return (a, b, method_name);
-
-|__main__|
-:Call run_calculation(a, b, method_name);
+:Lookup method_name via BINARY_OPERATORS;
+:Call run_calculation(first_operand, second_operand, method_name);
 
 |input_handler / Calculator|
 :Instantiate Calculator;
