@@ -1,3 +1,23 @@
+## Run: V1 Task 8 - Retry Logic - Expert/team (Issue #61)
+
+Files changed:
+- Created: src/validation.py
+- Modified: src/input_handler.py
+- Updated: artifacts/class_diagram.puml
+
+Purpose: Add input validation with retry logic to interactive guided mode. Interactive mode supports max 5 consecutive failed attempts per input type (operation vs operand) with graceful session termination. CLI mode remains fail-fast.
+
+Risks: Retry loop complexity in InputHandler; mitigated by extracting _prompt_for_operation method. RetryCounter is per-session (created in __init__). Off-by-one risks mitigated by unit tests.
+
+Tests: All existing tests must pass. New tests for validation module and retry integration.
+
+Branch: task/issue-61-retry-logic
+PR target: exp/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #58 — CLI mode for Calculator
 
 Branch: task/issue-58-cli-mode

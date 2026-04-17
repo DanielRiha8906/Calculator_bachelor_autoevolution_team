@@ -10,6 +10,13 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .validation import (
+    MAX_RETRIES,
+    RetryCounter,
+    RetryExhausted,
+    validate_operation,
+    validate_operand,
+)
 
 
 # Operations registry: insertion order defines menu display order.
@@ -78,6 +85,13 @@ OPERATIONS: dict[str, dict] = {
     },
 }
 
+# Sentinel returned by _prompt_for_operation when the user requests a session exit.
+_EXIT_SENTINEL = object()
+
+
+class _SessionExit(Exception):
+    """Internal signal: user typed 'exit'/'quit' during operand collection."""
+
 
 class InputHandler:
     """Drives an interactive calculator session.
@@ -96,6 +110,7 @@ class InputHandler:
     ) -> None:
         self._calculator = calculator
         self._input_fn: Callable[[str], str] = input_fn if input_fn is not None else input
+        self._retry_counter = RetryCounter()
 
     # ------------------------------------------------------------------
     # Public interface
@@ -106,31 +121,36 @@ class InputHandler:
 
         Prints the operation menu, reads the user's choice, collects operands,
         dispatches to the Calculator, and prints the result.  The loop exits
-        when the user enters "exit" or "quit" at the operation prompt.
+        when the user enters "exit" or "quit" at the operation prompt, or when
+        the retry limit (MAX_RETRIES) is exceeded for either the operation or
+        operand input.
         Catches ValueError, ZeroDivisionError, and TypeError, printing a
         user-friendly message without crashing.
         """
         while True:
-            self._show_menu()
-            op_choice = self._input_fn("Enter operation (or 'exit'/'quit' to stop): ").strip().lower()
-
-            if op_choice in ("exit", "quit"):
-                print("Goodbye!")
+            try:
+                op_choice = self._prompt_for_operation()
+            except RetryExhausted:
+                print("Too many invalid attempts. Ending session.")
                 break
 
-            if op_choice not in OPERATIONS:
-                print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
-                continue
+            if op_choice is _EXIT_SENTINEL:
+                # User entered exit/quit; _prompt_for_operation already printed "Goodbye!"
+                break
 
-            op_info = OPERATIONS[op_choice]
+            op_info = OPERATIONS[op_choice]  # type: ignore[index]
             arity: int = op_info["arity"]
             coerce: Callable = op_info.get("coerce", float)  # type: ignore[assignment]
 
             try:
                 operands = self._prompt_operands(arity, coerce)
-            except ValueError as exc:
-                print(f"Error: {exc}")
-                continue
+            except RetryExhausted:
+                print("Too many invalid attempts. Ending session.")
+                break
+            except _SessionExit:
+                # User typed exit/quit while being prompted for an operand.
+                print("Goodbye!")
+                break
 
             try:
                 result = self._dispatch(op_choice, operands)
@@ -156,8 +176,51 @@ class InputHandler:
         for key, info in OPERATIONS.items():
             print(f"  {key:<14} — {info['label']}")
 
+    def _prompt_for_operation(self) -> object:
+        """Show the menu and prompt for an operation, with retry logic.
+
+        Displays the operation menu, reads user input, handles exit/quit,
+        and validates the entered operation key.  On each invalid entry the
+        retry counter for "operation" is incremented; on success it is reset.
+
+        Returns:
+            A validated, lowercased operation key (str) present in OPERATIONS,
+            or ``_EXIT_SENTINEL`` if the user entered "exit" or "quit".
+
+        Raises:
+            RetryExhausted: When the number of consecutive invalid entries
+                reaches MAX_RETRIES.
+        """
+        while True:
+            self._show_menu()
+            op_choice = self._input_fn(
+                "Enter operation (or 'exit'/'quit' to stop): "
+            ).strip().lower()
+
+            if op_choice in ("exit", "quit"):
+                print("Goodbye!")
+                return _EXIT_SENTINEL
+
+            try:
+                validated = validate_operation(op_choice, OPERATIONS)
+            except ValueError as exc:
+                print(f"Error: {exc}")
+                self._retry_counter.increment("operation")
+                if self._retry_counter.is_exhausted("operation", MAX_RETRIES):
+                    raise RetryExhausted("operation", MAX_RETRIES)
+                continue
+
+            self._retry_counter.reset("operation")
+            return validated
+
     def _prompt_operands(self, arity: int, coerce: Callable = float) -> list:
-        """Prompt the user for the required number of operands.
+        """Prompt the user for the required number of operands, with retry logic.
+
+        For each required operand, re-prompts on invalid input until a valid
+        value is entered or the retry limit (MAX_RETRIES) is reached.  If the
+        user enters "exit" or "quit" during operand collection, a
+        ``_SessionExit`` exception is raised to signal a graceful session
+        termination.
 
         Args:
             arity: Number of operands to collect (1 or 2).
@@ -168,19 +231,34 @@ class InputHandler:
             A list of converted operand values.
 
         Raises:
-            ValueError: If any operand cannot be converted by ``coerce``.
+            RetryExhausted: When consecutive invalid attempts for a single
+                operand reach MAX_RETRIES.
+            _SessionExit: When the user enters "exit" or "quit" at an operand
+                prompt.
         """
         operands: list = []
         labels = ["first", "second"] if arity == 2 else [""]
         for label in labels[:arity]:
             prompt = f"Enter {label + ' ' if label else ''}operand: "
-            raw = self._input_fn(prompt).strip()
-            try:
-                operands.append(coerce(raw))
-            except (ValueError, TypeError):
-                raise ValueError(
-                    f"Invalid operand '{raw}': expected a numeric value."
-                )
+            while True:
+                raw = self._input_fn(prompt).strip()
+
+                # Allow graceful exit during operand collection.
+                if raw.lower() in ("exit", "quit"):
+                    raise _SessionExit()
+
+                try:
+                    value = validate_operand(raw, coerce, operand_position=label)
+                except ValueError as exc:
+                    print(f"Error: {exc}")
+                    self._retry_counter.increment("operand")
+                    if self._retry_counter.is_exhausted("operand", MAX_RETRIES):
+                        raise RetryExhausted("operand", MAX_RETRIES)
+                    continue
+
+                self._retry_counter.reset("operand")
+                operands.append(value)
+                break
         return operands
 
     def _dispatch(self, op_key: str, operands: list) -> float | int:

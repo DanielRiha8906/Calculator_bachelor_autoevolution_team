@@ -93,16 +93,23 @@ def test_prompt_operands_negative_float(calc):
 
 
 def test_prompt_operands_invalid_raises_value_error(calc):
-    """_prompt_operands must raise ValueError when a string cannot be coerced."""
-    handler = InputHandler(calc, make_input_fn(["not_a_number"]))
-    with pytest.raises(ValueError, match="Invalid operand"):
+    """_prompt_operands must raise RetryExhausted after 5 invalid operands."""
+    from src.validation import RetryExhausted
+    handler = InputHandler(calc, make_input_fn([
+        "not_a_number", "also_invalid", "still_bad", "nope", "fail"
+    ]))
+    with pytest.raises(RetryExhausted, match="operand"):
         handler._prompt_operands(1, float)
 
 
 def test_prompt_operands_invalid_second_operand_raises_value_error(calc):
-    """ValueError must fire on the second operand when the first is valid."""
-    handler = InputHandler(calc, make_input_fn(["5", "nope"]))
-    with pytest.raises(ValueError, match="Invalid operand"):
+    """RetryExhausted must fire on the second operand after 5 invalid attempts."""
+    from src.validation import RetryExhausted
+    handler = InputHandler(calc, make_input_fn([
+        "5",  # first operand valid
+        "bad1", "bad2", "bad3", "bad4", "bad5"  # second operand: 5 invalid attempts
+    ]))
+    with pytest.raises(RetryExhausted, match="operand"):
         handler._prompt_operands(2, float)
 
 
@@ -114,9 +121,10 @@ def test_prompt_operands_whitespace_stripped(calc):
 
 
 def test_prompt_operands_empty_string_raises_value_error(calc):
-    """An empty operand string must raise ValueError."""
-    handler = InputHandler(calc, make_input_fn(["", "exit"]))
-    with pytest.raises(ValueError, match="Invalid operand"):
+    """An empty operand string triggers retry; 5 empty strings raise RetryExhausted."""
+    from src.validation import RetryExhausted
+    handler = InputHandler(calc, make_input_fn(["", "", "", "", ""]))
+    with pytest.raises(RetryExhausted, match="operand"):
         handler._prompt_operands(1, float)
 
 

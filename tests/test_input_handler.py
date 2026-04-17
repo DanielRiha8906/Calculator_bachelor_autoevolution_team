@@ -141,3 +141,97 @@ def test_session_loop_multiple_calculations(calc, capsys):
     assert "5" in captured.out
     assert "20" in captured.out
     assert "Goodbye!" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# Retry logic — operation input
+# ---------------------------------------------------------------------------
+
+def test_retry_once_then_succeed_for_operation(calc, capsys):
+    """One invalid operation followed by valid one should complete the calculation."""
+    handler = InputHandler(calc, make_input_fn(["badop", "add", "3", "4", "exit"]))
+    handler.run()
+    captured = capsys.readouterr()
+    # The operation "add" should execute with operands 3 and 4
+    assert "7" in captured.out
+    assert "Goodbye!" in captured.out
+
+
+def test_max_operation_retries_terminates_session(calc, capsys):
+    """Five invalid operations should terminate session gracefully."""
+    handler = InputHandler(
+        calc,
+        make_input_fn(["bad1", "bad2", "bad3", "bad4", "bad5", "exit"]),
+    )
+    handler.run()
+    captured = capsys.readouterr()
+    # Should terminate with "Too many invalid attempts" message
+    assert "Too many invalid attempts" in captured.out
+    # Should not print "Goodbye!" since it exits at max retries, not gracefully
+    # (the run() method prints the message and breaks, no graceful goodbye)
+
+def test_invalid_operation_shows_available_ops(calc, capsys):
+    """Invalid operation should print error with available operations list."""
+    handler = InputHandler(calc, make_input_fn(["badop", "exit"]))
+    handler.run()
+    captured = capsys.readouterr()
+    # Should show available operations when invalid key is entered
+    assert "Error:" in captured.out or "error" in captured.out.lower()
+    assert "Goodbye!" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# Retry logic — operand input
+# ---------------------------------------------------------------------------
+
+def test_retry_once_then_succeed_for_operand(calc, capsys):
+    """One invalid operand followed by valid one should execute the operation."""
+    handler = InputHandler(
+        calc,
+        make_input_fn(["add", "notanumber", "3", "4", "exit"]),
+    )
+    handler.run()
+    captured = capsys.readouterr()
+    # After invalid operand, should retry and succeed with 3 and 4
+    assert "7" in captured.out
+    assert "Goodbye!" in captured.out
+
+
+def test_max_operand_retries_terminates_session(calc, capsys):
+    """Five invalid operands should terminate session gracefully."""
+    handler = InputHandler(
+        calc,
+        make_input_fn(["add", "a", "b", "c", "d", "e", "exit"]),
+    )
+    handler.run()
+    captured = capsys.readouterr()
+    # Should terminate with "Too many invalid attempts" message
+    assert "Too many invalid attempts" in captured.out
+    # Session should not crash
+    # Note: may or may not print "Goodbye!" depending on implementation
+
+
+def test_retry_on_first_operand_then_succeed(calc, capsys):
+    """Invalid first operand, then valid first, then valid second."""
+    handler = InputHandler(
+        calc,
+        make_input_fn(["multiply", "notnum", "5", "6", "exit"]),
+    )
+    handler.run()
+    captured = capsys.readouterr()
+    # After invalid first operand, retry with 5 and 6
+    assert "30" in captured.out
+    assert "Goodbye!" in captured.out
+
+
+def test_retry_on_second_operand_then_succeed(calc, capsys):
+    """Valid first operand, invalid second, then valid second."""
+    handler = InputHandler(
+        calc,
+        make_input_fn(["divide", "10", "notnum", "2", "exit"]),
+    )
+    handler.run()
+    captured = capsys.readouterr()
+    # First operand 10 accepted, second invalid then 2 provided
+    assert "5" in captured.out
+    assert "Goodbye!" in captured.out

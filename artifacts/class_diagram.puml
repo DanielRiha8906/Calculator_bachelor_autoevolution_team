@@ -20,9 +20,11 @@ class Calculator {
 class InputHandler {
     -_calculator: Calculator
     -_input_fn: Callable[[str], str]
+    -_retry_counter: RetryCounter
     +__init__(calculator: Calculator, input_fn: Callable | None)
     +run(): None
     -_show_menu(): None
+    -_prompt_for_operation(): str | _EXIT_SENTINEL
     -_prompt_operands(arity: int, coerce: Callable): list
     -_dispatch(op_key: str, operands: list): float | int
 }
@@ -75,9 +77,35 @@ note as MAIN_NOTE
     exits with the returned code.
 end note
 
+class RetryCounter {
+    -_counts: dict[str, int]
+    +__init__()
+    +increment(input_type: str): int
+    +reset(input_type: str): None
+    +get(input_type: str): int
+    +is_exhausted(input_type: str, max_retries: int): bool
+}
+
+class RetryExhausted {
+    +input_type: str
+    +max_retries: int
+    +__init__(input_type: str, max_retries: int)
+}
+
+note as VALIDATION_NOTE
+    <b>Module: src/validation.py</b>
+    MAX_RETRIES: int = 5
+    validate_operation(op_key: str, operations: dict): str
+    validate_operand(raw_operand: str, coerce: Callable, operand_position: str): float
+end note
+
 InputHandler --> Calculator : dispatches operations to\n_calculator
+InputHandler *-- RetryCounter : owns (created in __init__)
 InputHandler ..> OPERATIONS_NOTE : reads registry for\nmenu and dispatch
+InputHandler ..> VALIDATION_NOTE : uses validate_operation\nand validate_operand
 RUN_SESSION_NOTE ..> InputHandler : creates and calls run()
+
+RetryExhausted --|> Exception
 
 CliDispatcher --> Calculator : dispatches operations to\n_calculator
 CliDispatcher ..> OPERATIONS_NOTE : reads registry for\narity and coerce
