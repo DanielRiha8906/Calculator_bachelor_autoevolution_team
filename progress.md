@@ -17,7 +17,7 @@ Risks: OPERATIONS registry coupling (cli.py depends on structure of OPERATIONS d
 
 Test results: 349 passed, 0 failed, 0 skipped (python3 -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 611.4s | Cost: $1.620374 USD | Turns: 13
 
 ---
 
