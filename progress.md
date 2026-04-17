@@ -12,4 +12,4 @@ Risks: None. Implementation untouched; test-only change.
 
 Tests passed: yes (1/1, no regressions)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 185.3s | Cost: $0.622881 USD | Turns: 15
