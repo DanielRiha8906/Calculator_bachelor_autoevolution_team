@@ -1,0 +1,36 @@
+@startuml
+title Calculator — Activity Diagram
+
+start
+
+:Create Calculator instance;
+:Print operation menu (print_menu);
+:Prompt user for operation (get_operation);
+
+if (Operation == "exit"?) then (yes)
+  :Print "Goodbye!";
+  stop
+else (no)
+  if (Operation == "__invalid__"?) then (yes)
+    :Loop back to menu;
+    :Print operation menu (print_menu);
+    :Prompt user for operation (get_operation);
+  else (no)
+    :Look up operand_count from OPERATIONS;
+    group try
+      :Prompt user for operand(s) (get_operands);
+      :Dispatch operation to Calculator (dispatch);
+      :Print Result;
+    end group
+    if (ValueError raised?) then (yes)
+      :Print "Error: <message>";
+    else (no)
+    endif
+    :Loop back to menu;
+    :Print operation menu (print_menu);
+    :Prompt user for operation (get_operation);
+  endif
+endif
+
+stop
+@enduml
