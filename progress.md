@@ -41,3 +41,20 @@ Risks: Low. Purely additive change — no existing methods or tests modified. im
 Tests: 47 passed (41 pre-existing + 6 new), 0 failed, 0 skipped
 
 Duration: 314.7s | Cost: $0.770040 USD | Turns: 15
+
+## Run: Issue #17 — V1 Task 4 - Math Functions (task/issue-17-math-functions)
+
+Branch: task/issue-17-math-functions
+PR target: exp/structured-team
+
+Files changed:
+- src/calculator.py: added seven new instance methods to Calculator — square, cube, square_root, cube_root, power, log, ln — each with type hints and Google-style docstrings; square_root, log, ln include explicit ValueError guards matching the divide/factorial error-handling convention
+- tests/test_calculator.py: added 31 new test functions covering all seven operations (positive, zero, negative, float operands, ValueError cases)
+
+Purpose: Extend Calculator with core math functions as required by Issue #17. Error guards on square_root (negative), log (non-positive), and ln (non-positive) follow the established ValueError pattern rather than letting math module exceptions propagate.
+
+Risks: Low. Purely additive change — no existing methods or tests modified. All seven methods use stdlib math (already imported); no new dependencies introduced.
+
+Tests: 78 passed (47 pre-existing + 31 new), 0 failed, 0 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
