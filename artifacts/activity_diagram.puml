@@ -5,6 +5,11 @@ start
 
 if (CLI arguments present? (sys.argv[1:])) then (yes)
   :Parse arguments with argparse (run_cli);
+  note right
+    CLI mode validation is one-pass.
+    Invalid input exits immediately
+    with code 2 (no retries).
+  end note
   if (Operation recognised in OPERATIONS?) then (no)
     :Print error to stderr;
     :Exit with code 2;
@@ -37,33 +42,46 @@ else (no)
 endif
 
 :Create Calculator instance;
-:Print operation menu (print_menu);
-:Prompt user for operation (get_operation);
 
-if (Operation == "exit"?) then (yes)
-  :Print "Goodbye!";
-  stop
-else (no)
-  if (Operation == "__invalid__"?) then (yes)
-    :Loop back to menu;
-    :Print operation menu (print_menu);
-    :Prompt user for operation (get_operation);
+note right
+  Guided interactive mode uses retry logic.
+  MAX_RETRIES = 3 (src/retry_logic.py)
+  Operation retry: up to MAX_RETRIES per menu cycle.
+  Operand retry: single attempt; error loops back to menu.
+end note
+
+while (session active?) is (yes)
+  :Print operation menu (print_menu);
+  :Prompt user for operation\n(retry_get_operation, up to MAX_RETRIES attempts);
+
+  if (Operation == "exit"?) then (yes)
+    :Print "Goodbye!";
+    stop
   else (no)
-    :Look up operand_count from OPERATIONS;
-    group try
-      :Prompt user for operand(s) (get_operands);
-      :Dispatch operation to Calculator (dispatch);
-      :Print Result;
-    end group
-    if (ValueError raised?) then (yes)
-      :Print "Error: <message>";
-    else (no)
+    if (Operation valid?) then (no)
+      :Print "Invalid operation.\nN attempt(s) remaining.";
+      if (Attempt count < MAX_RETRIES?) then (yes)
+        :Loop back — prompt for operation again\n(within same menu cycle);
+      else (no)
+        :Print "Too many failed attempts. Please try again.";
+        :Loop back to top of menu (continue);
+      endif
+    else (yes)
+      :Look up operand_count from OPERATIONS;
+      group try
+        :Prompt user for operand(s)\n(retry_get_operands — single attempt);
+        :dispatch(operation, operands, calc);
+        :Print "Result: <value>";
+      end group
+      if (ValueError raised?) then (yes)
+        :Print "Error: <message>";
+        :Loop back to top of menu;
+      else (no)
+        :Loop back to top of menu;
+      endif
     endif
-    :Loop back to menu;
-    :Print operation menu (print_menu);
-    :Prompt user for operation (get_operation);
   endif
-endif
+endwhile (no)
 
 stop
 @enduml

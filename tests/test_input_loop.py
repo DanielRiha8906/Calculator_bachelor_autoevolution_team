@@ -806,3 +806,156 @@ def test_main_runs_and_exits(capsys: pytest.CaptureFixture[str]) -> None:
         main_module.main(argv=[])
 
     mock_run_loop.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# run_loop — retry behavior with retry_get_operation
+# ---------------------------------------------------------------------------
+
+
+def test_run_loop_invalid_operation_retries_once_then_valid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Enter invalid op once, then valid op; verify retry logic works."""
+    inputs = iter(["invalid_op", "add", "3", "4", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Unknown operation" in captured.out
+    assert "7" in captured.out  # Result of 3 + 4
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_invalid_operation_exhausts_max_attempts(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Enter invalid op 3 times; verify 'Too many failed attempts' message and session continues."""
+    inputs = iter(["bad1", "bad2", "bad3", "add", "1", "2", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Too many failed attempts. Please try again." in captured.out
+    # Session should continue and process the next valid operation
+    assert "3" in captured.out  # Result of 1 + 2
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_shows_remaining_attempts_on_retry(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Enter invalid op once; verify output contains remaining-attempts feedback."""
+    inputs = iter(["bad_op", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "attempt(s) remaining" in captured.out
+    assert "2 attempt(s) remaining" in captured.out
+
+
+def test_run_loop_retry_then_valid_then_exit(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Invalid op, then valid op, then valid operands, then exit; full session."""
+    inputs = iter(["bad", "multiply", "2", "3", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Unknown operation" in captured.out
+    assert "6" in captured.out  # Result of 2 * 3
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_exhausted_retries_shows_message_and_continues(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After exhausting retries, session should continue (not break)."""
+    inputs = iter(["x", "y", "z", "square", "4", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Too many failed attempts. Please try again." in captured.out
+    # Should still process the next valid operation
+    assert "16" in captured.out  # Result of 4 squared
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_multiple_exhaustion_cycles(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Multiple cycles of exhaustion should keep the session alive."""
+    inputs = iter(["a", "b", "c", "add", "1", "2", "x", "y", "z", "subtract", "5", "3", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    # Should see the exhaustion message
+    assert captured.out.count("Too many failed attempts") >= 1
+    # Should still compute both operations
+    assert "3" in captured.out  # Result of 1 + 2
+    assert "2" in captured.out  # Result of 5 - 3
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_operand_error_continues_after_successful_operation(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Valid op, operand error, then another valid op should work."""
+    inputs = iter(["add", "1", "2", "multiply", "abc", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "3" in captured.out  # First operation succeeds
+    assert "Error" in captured.out  # Operand error
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_exit_after_exhaustion_works(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After exhausting retries, entering exit should stop the loop."""
+    inputs = iter(["bad1", "bad2", "bad3", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Too many failed attempts" in captured.out
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_two_remaining_after_first_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After first invalid attempt with MAX_RETRIES=3, should show 2 remaining."""
+    inputs = iter(["bad", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "2 attempt(s) remaining" in captured.out
+
+
+def test_run_loop_one_remaining_after_second_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After second invalid attempt with MAX_RETRIES=3, should show 1 remaining."""
+    inputs = iter(["bad1", "bad2", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "2 attempt(s) remaining" in captured.out  # After first bad attempt
+    assert "1 attempt(s) remaining" in captured.out  # After second bad attempt
+
+
+def test_run_loop_no_remaining_message_after_third_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After third invalid attempt, no 'remaining' message; exhaustion instead."""
+    inputs = iter(["bad1", "bad2", "bad3", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Too many failed attempts. Please try again." in captured.out
+    # Should only see "remaining" messages for first two attempts
+    assert captured.out.count("attempt(s) remaining") == 2
+
+
+def test_run_loop_retry_respects_max_retries_constant(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Retry logic should respect the MAX_RETRIES constant."""
+    from src.retry_logic import MAX_RETRIES
+
+    # Create a sequence of (MAX_RETRIES + 1) invalid operations, then a valid one
+    inputs_list = ["bad"] * (MAX_RETRIES) + ["add", "1", "1", "exit"]
+    inputs = iter(inputs_list)
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Too many failed attempts" in captured.out
+    # Should still show results of next operation
+    assert "2" in captured.out  # 1 + 1

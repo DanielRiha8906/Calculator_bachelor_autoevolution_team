@@ -61,6 +61,8 @@ def run_cli() -> None:
     the process exits with code ``2``.  On success the numeric result is
     printed to *stdout* and the process exits normally (code ``0``).
     """
+    # CLI mode validation is one-pass: invalid input exits immediately with code 2.
+    # Retry logic (see src/retry_logic.py) is used only in guided interactive mode.
     parser = _build_parser()
     args = parser.parse_args()
 

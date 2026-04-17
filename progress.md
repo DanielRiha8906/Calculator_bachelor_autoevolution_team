@@ -109,3 +109,26 @@ Purpose: Add CLI mode allowing the calculator to be invoked as `python -m calcul
 Risks: Low. Changes isolated to new src/cli.py and minimal entry-point routing in __main__.py. No existing modules modified. All 371 tests pass.
 
 Duration: 541.1s | Cost: $1.146451 USD | Turns: 14
+
+## Run: Issue #60 — V1 Task 8 - Retry Logic (exp/structured-team)
+
+Branch: task/issue-60-retry-logic
+PR target: exp/structured-team
+
+Files changed:
+- src/retry_logic.py: new module with MAX_RETRIES=3 constant, retry_get_operation() wrapper (returns operation key, None on exit, "__exhausted__" after max failures), retry_get_operands() single-attempt pass-through
+- src/input_loop.py: refactored run_loop() to use retry wrappers; handles None (exit → "Goodbye!") and "__exhausted__" (too many attempts → "Too many failed attempts. Please try again." + continue)
+- src/cli.py: added clarifying comment that CLI mode is one-pass validation with immediate exit (no functional changes)
+- tests/test_retry_logic.py: 36 new tests for retry_get_operation and retry_get_operands covering happy path, retry, exhaustion, exit detection, dependency injection, and edge cases
+- tests/test_input_loop.py: 12 new tests for run_loop retry behavior, exhaustion messaging, remaining-attempts feedback, and session-continuity after exhaustion
+- tests/test_cli.py: 2 new tests confirming CLI has no retry on invalid operation or operand
+- artifacts/activity_diagram.puml: expanded interactive mode section to show retry loop with attempt counter and MAX_RETRIES decision point
+- artifacts/sequence_diagram.puml: added RetryLogic participant, retry scenario, and max-attempts-exceeded alt path
+
+Purpose: Add input validation with retry to guided interactive mode (max 3 attempts per operation prompt, session continues after exhaustion) and document that CLI mode already satisfies one-pass-exit requirement. Establishes retry_logic.py as a reusable input-policy layer separate from core validation.
+
+Risks: Low. Calculator engine unchanged. Retry logic isolated to input layer. All 371 existing tests continue to pass; 50 new tests added.
+
+Tests: 421 passed, 0 failed, 0 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

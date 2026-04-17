@@ -5,12 +5,18 @@ participant User
 participant Main
 participant CLI
 participant InputLoop
+participant RetryLogic
 participant Calculator
 
 == CLI mode (e.g. python -m src add 3 5) ==
 
 User -> Main : sys.argv = ["add", "3", "5"]
 Main -> CLI : run_cli()
+note over CLI
+  CLI mode validation is one-pass:
+  invalid input exits immediately with code 2.
+  Retry logic is not used here.
+end note
 CLI -> CLI : _build_parser() — build argparse parser
 CLI -> CLI : validate operation in OPERATIONS
 CLI -> CLI : validate operand count == 2
@@ -38,25 +44,67 @@ Main -> InputLoop : run_loop()
 loop until "exit"
 
   InputLoop -> User : print_menu()
-  User -> InputLoop : get_operation() => "divide"
+  InputLoop -> RetryLogic : retry_get_operation(input_fn, _get_operation_fn=get_operation)
+  RetryLogic -> InputLoop : get_operation(input_fn) => "divide"
+  InputLoop --> RetryLogic : return "divide"
+  RetryLogic --> InputLoop : return "divide"
   InputLoop -> InputLoop : look up operand_count = 2
-  InputLoop -> User : get_operands(2) — prompt operand 1
+  InputLoop -> RetryLogic : retry_get_operands(2, input_fn, _get_operands_fn=get_operands)
+  RetryLogic -> InputLoop : get_operands(2, input_fn) — prompt operand 1
   User -> InputLoop : "10"
-  InputLoop -> User : get_operands(2) — prompt operand 2
+  InputLoop -> RetryLogic : (continuing) — prompt operand 2
   User -> InputLoop : "2"
+  InputLoop --> RetryLogic : return [10.0, 2.0]
+  RetryLogic --> InputLoop : return [10.0, 2.0]
   InputLoop -> Calculator : dispatch("divide", [10.0, 2.0])
   Calculator -> Calculator : divide(10.0, 2.0) — b != 0, returns 5.0
   Calculator --> InputLoop : return 5.0
   InputLoop -> User : print("Result: 5.0")
 
+  alt Retry path — invalid operation input (within one menu cycle, MAX_RETRIES=3)
+    InputLoop -> User : print_menu()
+    InputLoop -> RetryLogic : retry_get_operation(input_fn, _get_operation_fn=get_operation)
+    RetryLogic -> InputLoop : get_operation(input_fn) => "__invalid__" (attempt 1/3)
+    RetryLogic -> User : print("Invalid operation. 2 attempt(s) remaining.")
+    RetryLogic -> InputLoop : get_operation(input_fn) => "add" (attempt 2/3)
+    InputLoop --> RetryLogic : return "add"
+    RetryLogic --> InputLoop : return "add"
+    InputLoop -> InputLoop : proceed normally with "add"
+  end
+
+  alt Max-retries-exceeded path — 3 consecutive invalid operation inputs
+    note over InputLoop, RetryLogic
+      After MAX_RETRIES (3) invalid operation inputs in a single menu cycle,
+      retry_get_operation returns "__exhausted__".
+      run_loop prints a warning and continues to the next menu cycle
+      (does NOT terminate the session).
+    end note
+    InputLoop -> User : print_menu()
+    InputLoop -> RetryLogic : retry_get_operation(input_fn, _get_operation_fn=get_operation)
+    RetryLogic -> InputLoop : get_operation(input_fn) => "__invalid__" (attempt 1/3)
+    RetryLogic -> User : print("Invalid operation. 2 attempt(s) remaining.")
+    RetryLogic -> InputLoop : get_operation(input_fn) => "__invalid__" (attempt 2/3)
+    RetryLogic -> User : print("Invalid operation. 1 attempt(s) remaining.")
+    RetryLogic -> InputLoop : get_operation(input_fn) => "__invalid__" (attempt 3/3)
+    RetryLogic --> InputLoop : return "__exhausted__"
+    InputLoop -> User : print("Too many failed attempts. Please try again.")
+    InputLoop -> InputLoop : continue — loop back to top of menu
+  end
+
   alt Error path (b == 0)
     InputLoop -> User : print_menu()
-    User -> InputLoop : get_operation() => "divide"
+    InputLoop -> RetryLogic : retry_get_operation(input_fn, _get_operation_fn=get_operation)
+    RetryLogic -> InputLoop : get_operation(input_fn) => "divide"
+    InputLoop --> RetryLogic : return "divide"
+    RetryLogic --> InputLoop : return "divide"
     InputLoop -> InputLoop : look up operand_count = 2
-    InputLoop -> User : get_operands(2) — prompt operand 1
+    InputLoop -> RetryLogic : retry_get_operands(2, input_fn, _get_operands_fn=get_operands)
+    RetryLogic -> InputLoop : get_operands(2, input_fn) — prompt operand 1
     User -> InputLoop : "10"
-    InputLoop -> User : get_operands(2) — prompt operand 2
+    RetryLogic -> InputLoop : (continuing) — prompt operand 2
     User -> InputLoop : "0"
+    InputLoop --> RetryLogic : return [10.0, 0.0]
+    RetryLogic --> InputLoop : return [10.0, 0.0]
     InputLoop -> Calculator : dispatch("divide", [10.0, 0.0])
     Calculator -> Calculator : divide(10.0, 0.0) — b == 0, raises ValueError
     Calculator --> InputLoop : raise ValueError("Division by zero is not allowed")
@@ -66,7 +114,8 @@ loop until "exit"
 end
 
 User -> InputLoop : get_operation() => "exit"
+RetryLogic --> InputLoop : return None
 InputLoop -> User : print("Goodbye!")
-InputLoop --> User : return (run_loop ends)
+InputLoop --> Main : return (run_loop ends)
 
 @enduml

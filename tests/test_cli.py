@@ -725,3 +725,32 @@ def test_main_with_explicit_argv_overrides_sys_argv(
 
     # Should use the explicit argv, not sys.argv[1:]
     mock_run_cli.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# run_cli behavior with invalid operations and operands (no retry)
+# ---------------------------------------------------------------------------
+
+
+def test_run_cli_invalid_operation_no_retry_exits_2(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli(['unknown_op', '1', '2']) must exit with code 2 (no retry)."""
+    monkeypatch.setattr(sys, "argv", ["src", "unknown_op", "1", "2"])
+    with pytest.raises(SystemExit) as exc_info:
+        run_cli()
+    assert exc_info.value.code == 2
+    captured = capsys.readouterr()
+    assert "unknown operation" in captured.err.lower()
+
+
+def test_run_cli_invalid_operand_no_retry_exits_2(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli(['add', 'not_a_number', '2']) must exit with code 2 (no retry)."""
+    monkeypatch.setattr(sys, "argv", ["src", "add", "not_a_number", "2"])
+    with pytest.raises(SystemExit) as exc_info:
+        run_cli()
+    assert exc_info.value.code == 2
+    captured = capsys.readouterr()
+    assert "valid number" in captured.err.lower() or "not a valid" in captured.err.lower()

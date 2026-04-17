@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .retry_logic import retry_get_operands, retry_get_operation
 
 # Maps string keys to (display_label, operand_count).
 # operand_count == 1 for unary operations, 2 for binary operations.
@@ -125,19 +126,27 @@ def dispatch(operation: str, operands: list[float], calc: Calculator) -> float:
 
 
 def run_loop(input_fn: Callable[[str], str] = input) -> None:
-    """Run the interactive calculator loop.
+    """Run the interactive calculator loop with retry logic.
 
     Creates a single :class:`~src.calculator.Calculator` instance and
     repeatedly:
 
     1. Prints the operation menu.
-    2. Reads and validates the user's operation choice.
-    3. Collects the required operands.
+    2. Reads and validates the user's operation choice via
+       :func:`~src.retry_logic.retry_get_operation` (up to
+       :data:`~src.retry_logic.MAX_RETRIES` attempts).
+    3. Collects the required operands via
+       :func:`~src.retry_logic.retry_get_operands` (up to
+       :data:`~src.retry_logic.MAX_RETRIES` attempts).
     4. Dispatches the calculation and prints the result.
 
-    The loop exits when the user types "exit".  :exc:`ValueError` raised by
-    either operand parsing or the Calculator is caught at the loop level so
-    the user is shown an error message and the loop continues.
+    The loop exits when the user types ``"exit"``.  If the operation prompt
+    exhausts its retry count within a single menu cycle the warning
+    ``"Too many failed attempts. Please try again."`` is printed and the loop
+    returns to the top of the menu without terminating the session.
+    :exc:`ValueError` raised during operand parsing or by the Calculator (e.g.
+    division by zero) is caught at the loop level so the user is shown an error
+    message and the loop continues from the top.
 
     Args:
         input_fn: Callable used to read user input throughout the session.
@@ -148,19 +157,23 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
 
     while True:
         print_menu()
-        operation = get_operation(input_fn)
+        operation = retry_get_operation(input_fn, _get_operation_fn=get_operation)
 
         if operation is None:
+            # User typed "exit".
             print("Goodbye!")
             break
 
-        if operation == "__invalid__":
+        if operation == "__exhausted__":
+            # Max retries exceeded for the operation prompt; warn and loop back
+            # to the menu so the user can try again in the next cycle.
+            print("Too many failed attempts. Please try again.")
             continue
 
         _, operand_count = OPERATIONS[operation]
 
         try:
-            operands = get_operands(operand_count, input_fn)
+            operands = retry_get_operands(operand_count, input_fn, _get_operands_fn=get_operands)
             result = dispatch(operation, operands, calc)
             print(f"Result: {result}")
         except ValueError as exc:
