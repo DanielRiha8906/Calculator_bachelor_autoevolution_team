@@ -75,4 +75,4 @@ Risks: Low. Calculator logic is untouched. __main__.py change only affects the C
 
 Tests: 233 passed (135 pre-existing + 13 implementer input_loop tests + 85 edge-case tester additions), 0 failed, 0 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 532.5s | Cost: $1.510725 USD | Turns: 15
