@@ -109,3 +109,89 @@ def test_divide_does_not_mutate_inputs(calc):
     calc.divide(a, b)
     assert a == 6
     assert b == 3
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.add
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("a, b, expected", [
+    (2, 3, 5),
+    (0, 5, 5),
+    (5, 0, 5),
+    (-3, -4, -7),
+    (-3, 5, 2),
+    (10**18, 1, 10**18 + 1),
+    (0.1, 0.2, 0.3),
+])
+def test_add_cases(calc, a, b, expected):
+    """add returns the correct sum across a range of operand types and signs."""
+    result = calc.add(a, b)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"add({a}, {b}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_add_does_not_mutate_inputs(calc):
+    """add must be side-effect-free on its arguments."""
+    a, b = 4, 7
+    calc.add(a, b)
+    assert a == 4
+    assert b == 7
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.subtract
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("a, b, expected", [
+    (10, 3, 7),
+    (3, 10, -7),
+    (5, 0, 5),
+    (-3, -4, 1),
+    (1.5, 0.5, 1.0),
+    (10**18, 1, 10**18 - 1),
+])
+def test_subtract_cases(calc, a, b, expected):
+    """subtract returns the correct difference across a range of operand types and signs."""
+    result = calc.subtract(a, b)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"subtract({a}, {b}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_subtract_does_not_mutate_inputs(calc):
+    """subtract must be side-effect-free on its arguments."""
+    a, b = 9, 4
+    calc.subtract(a, b)
+    assert a == 9
+    assert b == 4
+
+
+# ---------------------------------------------------------------------------
+# Tests for Calculator.multiply
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("a, b, expected", [
+    (3, 4, 12),
+    (5, 0, 0),
+    (-3, 4, -12),
+    (-3, -4, 12),
+    (7, 1, 7),
+    (0.5, 4.0, 2.0),
+    (10**9, 10**9, 10**18),
+])
+def test_multiply_cases(calc, a, b, expected):
+    """multiply returns the correct product across a range of operand types and signs."""
+    result = calc.multiply(a, b)
+    assert math.isclose(result, expected, rel_tol=1e-9), (
+        f"multiply({a}, {b}) returned {result!r}, expected {expected!r}"
+    )
+
+
+def test_multiply_does_not_mutate_inputs(calc):
+    """multiply must be side-effect-free on its arguments."""
+    a, b = 3, 8
+    calc.multiply(a, b)
+    assert a == 3
+    assert b == 8
