@@ -27,3 +27,13 @@ Duration: 476.4s | Cost: $0.998332 USD | Turns: 15
 - Branch: task/issue-13-factorial
 - Intended merge/PR target: exp/naive-team
 Duration: 338.2s | Cost: $0.904748 USD | Turns: 11
+
+## Run: 2026-04-17
+
+- Files changed: src/calculator.py, tests/test_calculator.py
+- Purpose: add square, cube, square_root, cube_root, power, log, ln methods to Calculator class (issue #16)
+- Risks: none — strictly additive change; cube_root uses math.copysign(abs(x)**(1/3), x) to correctly handle negative inputs without nan
+- Tests passed: Yes (143 passed, 0 failed)
+- Branch: exp/naive-team
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING
