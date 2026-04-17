@@ -1,3 +1,26 @@
+## Run: Interactive session loop — InputHandler and run_session
+
+Branch: exp/expert-team
+PR target: exp/expert-team
+
+Files changed:
+- src/input_handler.py — new module; OPERATIONS registry dict covering all 12 Calculator operations (5 binary, 7 unary); InputHandler class with run(), _show_menu(), _prompt_operands(), _dispatch(); run_session() convenience function
+- tests/test_input_handler.py — 10 new tests covering exit/quit, binary ops (add, power), unary ops (square_root, factorial), invalid operation key, invalid operand, division by zero, and a multi-operation session
+- src/__main__.py — replaced hardcoded demo body of main() with run_session(calc)
+
+Purpose: Introduce an interactive REPL session to the calculator so users can choose and execute operations without code changes.
+
+Risks: Low. No existing Calculator logic or test_calculator.py was modified. __main__.py interface (main() entry point) preserved; only its body changed.
+
+Test results: 252 passed, 0 failed, 0 skipped (python -m pytest); includes 73 additional edge-case tests in tests/test_input_handler_edge.py
+
+Files also changed:
+- tests/test_input_handler_edge.py — 73 edge-case tests (negative operands, floats, zero, very large numbers, case-insensitive input, all unary/binary ops parametrized)
+
+Duration: 586.5s | Cost: $1.376030 USD | Turns: 15
+
+---
+
 ## Run: Issue #18 — V1 Task 4 - Mathematical functions (square, cube, sqrt, cbrt, log10, ln, power)
 
 Branch: task/issue-18-math-functions
