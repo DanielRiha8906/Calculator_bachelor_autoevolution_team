@@ -249,6 +249,215 @@ def test_divide_sign_parametrized(a, b, expected):
     assert Calculator().divide(a, b) == pytest.approx(expected)
 
 
+# Group 5 — Factorial
+
+def test_factorial_zero():
+    assert Calculator().factorial(0) == 1
+
+
+def test_factorial_one():
+    assert Calculator().factorial(1) == 1
+
+
+def test_factorial_small_positive():
+    assert Calculator().factorial(5) == 120
+
+
+def test_factorial_larger_positive():
+    assert Calculator().factorial(10) == 3628800
+
+
+def test_factorial_negative_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(-1)
+
+
+def test_factorial_float_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(2.0)
+
+
+def test_factorial_string_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial("5")
+
+
+def test_factorial_none_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(None)
+
+
+# Group 6 — Factorial extended edge cases
+
+# --- bool inputs (bool is a subclass of int, intentional pass-through) ---
+
+def test_factorial_true_returns_one():
+    # True == 1 as an int, so factorial(True) == factorial(1) == 1
+    assert Calculator().factorial(True) == 1
+
+
+def test_factorial_false_returns_one():
+    # False == 0 as an int, so factorial(False) == factorial(0) == 1
+    assert Calculator().factorial(False) == 1
+
+
+# --- large valid inputs ---
+
+def test_factorial_twenty():
+    assert Calculator().factorial(20) == 2432902008176640000
+
+
+def test_factorial_large_value_is_positive_int():
+    # Verify math.factorial returns correct type and sign for a large n
+    result = Calculator().factorial(100)
+    assert isinstance(result, int)
+    assert result > 0
+
+
+def test_factorial_large_value_exact():
+    # 20! is well-known; use it as an anchored regression check
+    assert Calculator().factorial(20) == math.factorial(20)
+
+
+# --- boundary: n=2 ---
+
+def test_factorial_two():
+    assert Calculator().factorial(2) == 2
+
+
+# --- negative boundary values ---
+
+def test_factorial_negative_large_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(-100)
+
+
+def test_factorial_negative_one_error_message_contains_value():
+    with pytest.raises(ValueError, match="-1"):
+        Calculator().factorial(-1)
+
+
+# --- float variants that look integer-like ---
+
+def test_factorial_float_zero_raises_value_error():
+    # 0.0 is a float, not an int — must be rejected
+    with pytest.raises(ValueError):
+        Calculator().factorial(0.0)
+
+
+def test_factorial_float_one_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(1.0)
+
+
+def test_factorial_float_negative_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(-1.0)
+
+
+def test_factorial_float_nan_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(float("nan"))
+
+
+def test_factorial_float_inf_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(float("inf"))
+
+
+# --- other wrong types ---
+
+def test_factorial_list_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial([5])
+
+
+def test_factorial_dict_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial({"n": 5})
+
+
+def test_factorial_tuple_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial((5,))
+
+
+def test_factorial_bytes_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(b"5")
+
+
+def test_factorial_complex_raises_value_error():
+    with pytest.raises(ValueError):
+        Calculator().factorial(complex(5, 0))
+
+
+# --- error message content ---
+
+def test_factorial_float_error_message_mentions_type():
+    with pytest.raises(ValueError, match="float"):
+        Calculator().factorial(3.14)
+
+
+def test_factorial_string_error_message_mentions_type():
+    with pytest.raises(ValueError, match="str"):
+        Calculator().factorial("hello")
+
+
+def test_factorial_none_error_message_mentions_type():
+    with pytest.raises(ValueError, match="NoneType"):
+        Calculator().factorial(None)
+
+
+# --- parametrized correctness sweep ---
+
+@pytest.mark.parametrize("n,expected", [
+    (0, 1),
+    (1, 1),
+    (2, 2),
+    (3, 6),
+    (4, 24),
+    (5, 120),
+    (6, 720),
+    (7, 5040),
+    (10, 3628800),
+    (12, 479001600),
+])
+def test_factorial_parametrized_known_values(n, expected):
+    assert Calculator().factorial(n) == expected
+
+
+@pytest.mark.parametrize("bad_input", [
+    -1, -2, -10, -100,
+])
+def test_factorial_parametrized_negative_raises(bad_input):
+    with pytest.raises(ValueError):
+        Calculator().factorial(bad_input)
+
+
+@pytest.mark.parametrize("bad_input", [
+    0.0, 1.0, 2.5, -1.0, float("nan"), float("inf"), float("-inf"),
+    "0", "5", "", None, [], {}, (1,), b"5", complex(1, 0),
+])
+def test_factorial_parametrized_wrong_type_raises(bad_input):
+    with pytest.raises(ValueError):
+        Calculator().factorial(bad_input)
+
+
+# --- instance method is bound to the instance (not a static side-effect) ---
+
+def test_factorial_called_on_same_instance_twice_is_consistent():
+    calc = Calculator()
+    assert calc.factorial(5) == 120
+    assert calc.factorial(5) == 120
+
+
+def test_factorial_does_not_mutate_input_variable():
+    n = 5
+    Calculator().factorial(n)
+    assert n == 5
+
+
 # Group 3 — Self-modification output syntax validation
 
 def test_generated_output_files_are_syntactically_valid_python():

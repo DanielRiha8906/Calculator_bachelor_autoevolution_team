@@ -17,3 +17,13 @@
 - Branch: task/issue-10-test-suite-naive-team
 - Intended merge/PR target: exp/naive-team
 Duration: 476.4s | Cost: $0.998332 USD | Turns: 15
+
+## Run: 2026-04-17
+
+- Files changed: src/calculator.py, tests/test_calculator.py
+- Purpose: add factorial operation to Calculator class
+- Risks: none — strictly additive change, no existing behavior modified
+- Tests passed: Yes (65 passed, 0 failed)
+- Branch: task/issue-13-factorial
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING
