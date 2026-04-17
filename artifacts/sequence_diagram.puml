@@ -7,6 +7,7 @@ skinparam SequenceLifeLineBorderColor #888888
 participant User
 participant "__main__" as main
 participant "cli" as cli
+participant retry_handler
 participant input_handler
 participant Calculator
 
@@ -22,53 +23,104 @@ alt CLI mode (sys.argv has arguments)
 
     cli -> input_handler : parse_input(operand_a, operand_b, operator)
 else Interactive mode (no sys.argv arguments)
-    User -> main : input() — enter first operand (operand_a)
-    User -> main : input() — enter second operand (operand_b)
-    User -> main : input() — enter operator
-    main -> input_handler : parse_input(operand_a, operand_b, operator)
+    main -> retry_handler : get_input_with_retries()
+
+    loop up to MAX_RETRIES times
+        retry_handler -> User : prompt for first operand
+        User -> retry_handler : raw string
+        retry_handler -> input_handler : parse_operand(raw)
+        alt valid
+            note right: break loop
+        else invalid
+            retry_handler -> User : print error + remaining retries
+        end
+    end
+
+    alt retries exhausted (first operand)
+        retry_handler -> User : "Maximum retries reached. Operation cancelled."
+        retry_handler --> main : None
+        main -> main : return (no output)
+    end
+
+    loop up to MAX_RETRIES times
+        retry_handler -> User : prompt for second operand
+        User -> retry_handler : raw string
+        retry_handler -> input_handler : parse_operand(raw)
+        alt valid
+            note right: break loop
+        else invalid
+            retry_handler -> User : print error + remaining retries
+        end
+    end
+
+    alt retries exhausted (second operand)
+        retry_handler -> User : "Maximum retries reached. Operation cancelled."
+        retry_handler --> main : None
+        main -> main : return (no output)
+    end
+
+    loop up to MAX_RETRIES times
+        retry_handler -> User : prompt for operator
+        User -> retry_handler : raw string
+        alt operator in BINARY_OPERATORS
+            note right: break loop
+        else invalid
+            retry_handler -> User : print error + remaining retries
+        end
+    end
+
+    alt retries exhausted (operator)
+        retry_handler -> User : "Maximum retries reached. Operation cancelled."
+        retry_handler --> main : None
+        main -> main : return (no output)
+    end
+
+    retry_handler --> main : (first_operand, operator, second_operand)
+    main -> input_handler : run_calculation(first_operand, second_operand, method_name)
 end
 
-note over input_handler
-    Shared parse + dispatch flow
-    (caller is __main__ or cli depending on mode)
+note over cli, input_handler
+    CLI parse + dispatch flow
 end note
 
 input_handler -> input_handler : parse_operand(operand_a)
 input_handler -> input_handler : parse_operand(operand_b)
 
 alt ValueError raised (invalid operand or unsupported operator)
-    input_handler --> cli : raises ValueError (CLI mode)
+    input_handler --> cli : raises ValueError
     cli -> cli : print error to stderr\nsys.exit(1)
-else
-    input_handler --> main : raises ValueError (interactive mode)
-    main -> main : print error to stderr\nsys.exit(1)
 end
 
-input_handler --> cli : return (a, b, method_name) [CLI mode]
+input_handler --> cli : return (a, b, method_name)
 cli -> input_handler : run_calculation(a, b, method_name)
-
-input_handler --> main : return (a, b, method_name) [interactive mode]
-main -> input_handler : run_calculation(a, b, method_name)
 
 create Calculator
 input_handler -> Calculator : new Calculator()
-
 input_handler -> Calculator : e.g. add(a, b)
 
 alt ZeroDivisionError or ValueError raised
     Calculator --> input_handler : raises exception
-    input_handler --> cli : propagates (CLI mode)
+    input_handler --> cli : propagates
     cli -> cli : print error to stderr\nsys.exit(1)
-else
-    input_handler --> main : propagates (interactive mode)
-    main -> main : print error to stderr\nsys.exit(1)
 end
 
 Calculator --> input_handler : return result
-input_handler --> cli : return result [CLI mode]
+input_handler --> cli : return result
 cli -> User : print "Result: {result}"
 
-input_handler --> main : return result [interactive mode]
+note over main, input_handler
+    Interactive dispatch flow (retry path succeeded)
+end note
+
+input_handler -> Calculator : run_calculation(first_operand, second_operand, method_name)
+
+alt ZeroDivisionError or ValueError raised
+    Calculator --> input_handler : raises exception
+    input_handler --> main : propagates
+    main -> main : print error to stderr\nsys.exit(1)
+end
+
+input_handler --> main : return result
 main -> User : print "Result: {result}"
 
 @enduml

@@ -67,3 +67,13 @@ Duration: 265.3s | Cost: $0.719627 USD | Turns: 12
 - Branch: task/issue-56-cli-mode
 - Intended merge/PR target: exp/naive-team
 Duration: 299.4s | Cost: $0.865561 USD | Turns: 17
+
+## Run Summary — Issue #59: Retry Logic (Naive/team)
+
+- Files changed: src/retry_handler.py (created), src/__main__.py (modified), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)
+- Purpose: Add retry logic to interactive mode; get_operand_with_retries and get_operator_with_retries each retry up to MAX_RETRIES=3 times before returning None; main() now calls get_input_with_retries() and returns cleanly on None
+- Risks: Breaking contract change — 9 pre-existing TestMain tests in tests/test_input_handler_edge_cases.py were written against the old single-shot interface (1 input per slot, sys.exit(1) on first bad value). The retry loop consumes more inputs than those tests supply, causing StopIteration. These tests need updating by the Tester. All other 374 tests pass.
+- Tests passed: Partial — 374 passed, 9 failed (all in TestMain, all pre-existing tests requiring contract update)
+- Branch: exp/naive-team
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING

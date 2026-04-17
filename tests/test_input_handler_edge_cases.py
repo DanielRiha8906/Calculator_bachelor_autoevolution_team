@@ -332,25 +332,43 @@ class TestMain:
     # -----------------------------------------------------------------------
 
     def test_non_numeric_operand_a_exits_with_1(self, monkeypatch, capsys):
-        exc = self._run_main(monkeypatch, ["abc", "4", "+"], capsys)
-        assert exc.value.code == 1
+        # With retry logic, exhausted retries on first operand returns cleanly (no sys.exit)
+        from src.__main__ import main
+        inputs = iter(["abc", "abc", "abc", "abc"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise SystemExit
 
     def test_non_numeric_operand_a_prints_error_to_stderr(self, monkeypatch, capsys):
-        self._run_main(monkeypatch, ["abc", "4", "+"], capsys)
+        # Exhausted retries on first operand returns clean (no sys.exit), error messages printed
+        from src.__main__ import main
+        inputs = iter(["abc", "abc", "abc", "abc"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise
         captured = capsys.readouterr()
-        assert "Error:" in captured.err
+        assert "Invalid input:" in captured.out
 
     def test_non_numeric_operand_b_exits_with_1(self, monkeypatch, capsys):
-        exc = self._run_main(monkeypatch, ["3", "xyz", "+"], capsys)
-        assert exc.value.code == 1
+        # First operand valid, second operand exhausts retries - returns cleanly
+        from src.__main__ import main
+        inputs = iter(["3", "xyz", "xyz", "xyz", "xyz"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise SystemExit
 
     def test_non_numeric_operand_b_prints_error_to_stderr(self, monkeypatch, capsys):
-        self._run_main(monkeypatch, ["3", "xyz", "+"], capsys)
+        # First operand valid, second operand exhausts retries
+        from src.__main__ import main
+        inputs = iter(["3", "xyz", "xyz", "xyz", "xyz"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise
         captured = capsys.readouterr()
-        assert "Error:" in captured.err
+        assert "Invalid input:" in captured.out
 
     def test_non_numeric_no_stdout_output(self, monkeypatch, capsys):
-        self._run_main(monkeypatch, ["abc", "4", "+"], capsys)
+        # Exhaust retries on first operand
+        from src.__main__ import main
+        inputs = iter(["abc", "abc", "abc", "abc"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise
         captured = capsys.readouterr()
         assert "Result:" not in captured.out
 
@@ -359,20 +377,34 @@ class TestMain:
     # -----------------------------------------------------------------------
 
     def test_unsupported_operator_exits_with_1(self, monkeypatch, capsys):
-        exc = self._run_main(monkeypatch, ["3", "4", "%"], capsys)
-        assert exc.value.code == 1
+        # Both operands valid, operator exhausts retries - returns cleanly
+        from src.__main__ import main
+        inputs = iter(["3", "4", "%", "%", "%", "%"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise SystemExit
 
     def test_unsupported_operator_word_exits_with_1(self, monkeypatch, capsys):
-        exc = self._run_main(monkeypatch, ["3", "4", "add"], capsys)
-        assert exc.value.code == 1
+        # Both operands valid, operator exhausts retries - returns cleanly
+        from src.__main__ import main
+        inputs = iter(["3", "4", "add", "add", "add", "add"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise SystemExit
 
     def test_unsupported_operator_prints_error_to_stderr(self, monkeypatch, capsys):
-        self._run_main(monkeypatch, ["3", "4", "%"], capsys)
+        # Operator exhausts retries, returns clean (no sys.exit)
+        from src.__main__ import main
+        inputs = iter(["3", "4", "%", "%", "%", "%"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise
         captured = capsys.readouterr()
-        assert "Error:" in captured.err
+        assert "Invalid input:" in captured.out
 
     def test_unsupported_operator_no_result_on_stdout(self, monkeypatch, capsys):
-        self._run_main(monkeypatch, ["3", "4", "^"], capsys)
+        # Operator exhausts retries
+        from src.__main__ import main
+        inputs = iter(["3", "4", "^", "^", "^", "^"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()  # must not raise
         captured = capsys.readouterr()
         assert "Result:" not in captured.out
 
