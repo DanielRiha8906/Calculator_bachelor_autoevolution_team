@@ -87,3 +87,13 @@ Duration: 496.1s | Cost: $1.142796 USD | Turns: 11
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
 Duration: 523.4s | Cost: $1.473231 USD | Turns: 12
+
+## Run Summary — Error logging (Naive/team)
+
+- Files changed: src/logger.py (created), src/calculator.py (modified), src/calculator_with_history.py (modified), src/input_handler.py (modified), src/cli.py (modified), artifacts/class_diagram.puml (modified)
+- Purpose: Add centralized error logging via src/logger.py; all error-path raises in Calculator, CalculatorWithHistory, input_handler, and cli now emit an ERROR log before raising, using NullHandler by default so library consumers control output
+- Risks: Low — NullHandler default means no output change in production or tests; logger instances are created per call-site (not module-level singletons) which is safe but slightly less efficient; divide() in Calculator now has an explicit zero-guard before Python's native divide to ensure the log fires
+- Tests passed: Yes (518 passed, 0 failed)
+- Branch: exp/naive-team
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING
