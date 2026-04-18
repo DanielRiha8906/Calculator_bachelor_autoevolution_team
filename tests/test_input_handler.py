@@ -6,9 +6,11 @@ capsys is used to inspect printed output.
 
 import math
 import pytest
+from unittest.mock import Mock
 
 from src.calculator import Calculator
 from src.input_handler import InputHandler
+from src.logger import Logger
 
 
 # ---------------------------------------------------------------------------
@@ -455,3 +457,198 @@ def test_history_does_not_crash_on_invalid_operation(calc, capsys, tmp_path):
         assert "invalid_op" not in content
     finally:
         os.chdir(old_cwd)
+
+
+# ---------------------------------------------------------------------------
+# Logger Integration Tests
+# ---------------------------------------------------------------------------
+
+
+def test_invalid_operation_is_logged(calc):
+    """Invalid operation should be logged via Logger.log_unsupported_operation."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(calc, make_input_fn(["badop", "exit"]), logger=mock_logger)
+    handler.run()
+
+    # Verify the logger was called with log_unsupported_operation
+    mock_logger.log_unsupported_operation.assert_called()
+    call_args = mock_logger.log_unsupported_operation.call_args
+    assert call_args[0][0] == "badop"
+
+
+def test_invalid_operand_during_input_is_logged(calc):
+    """Invalid operand during input should be logged via log_invalid_operand."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["add", "not_a_number", "5", "5", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # Logger should be called with log_invalid_operand for the first failed attempt
+    assert mock_logger.log_invalid_operand.called
+    # Find the call with "not_a_number"
+    calls = mock_logger.log_invalid_operand.call_args_list
+    found_not_a_number = False
+    for call in calls:
+        if call[0][0] == "not_a_number":
+            found_not_a_number = True
+            assert call[0][1] == "<numeric>"  # expected type
+            break
+    assert found_not_a_number, "Expected log_invalid_operand to be called with 'not_a_number'"
+
+
+def test_division_by_zero_is_logged(calc):
+    """Division by zero should be logged via log_division_by_zero."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["divide", "5", "0", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # Logger should be called with log_division_by_zero
+    assert mock_logger.log_division_by_zero.called
+    call_args = mock_logger.log_division_by_zero.call_args
+    assert call_args[0][0] == [5.0, 0.0]  # operands
+
+
+def test_domain_error_sqrt_negative_is_logged(calc):
+    """Domain error (sqrt of negative) should be logged via log_domain_error."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["square_root", "-4", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # Logger should be called with log_domain_error
+    assert mock_logger.log_domain_error.called
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "square_root"  # operation
+    # The error message should describe the domain error
+
+
+def test_domain_error_log10_zero_is_logged(calc):
+    """Domain error (log10 of zero) should be logged via log_domain_error."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["log10", "0", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # Logger should be called with log_domain_error
+    assert mock_logger.log_domain_error.called
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "log10"
+
+
+def test_successful_operation_does_not_log_error(calc):
+    """Successful operations should not call any logger error methods."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["add", "3", "4", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # None of the error logging methods should be called
+    assert not mock_logger.log_unsupported_operation.called
+    assert not mock_logger.log_invalid_operand.called
+    assert not mock_logger.log_division_by_zero.called
+    assert not mock_logger.log_domain_error.called
+    assert not mock_logger.log_invalid_argument_count.called
+
+
+def test_multiple_invalid_operations_each_logged(calc):
+    """Each invalid operation should be logged."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["badop1", "badop2", "badop3", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # log_unsupported_operation should be called three times
+    assert mock_logger.log_unsupported_operation.call_count == 3
+
+
+def test_logger_lazy_initialization(calc):
+    """Logger should be lazily initialized if not provided."""
+    # Create handler without logger
+    handler = InputHandler(calc, make_input_fn(["exit"]))
+    assert handler._logger is None  # Not initialized yet
+
+    # Running should initialize it
+    handler.run()
+    assert handler._logger is not None  # Now initialized
+
+
+def test_logger_injection_prevents_lazy_creation(calc):
+    """Injected logger should prevent lazy creation."""
+    injected_logger = Mock(spec=Logger)
+    handler = InputHandler(calc, make_input_fn(["exit"]), logger=injected_logger)
+    assert handler._logger is injected_logger
+
+    handler.run()
+    # Should still be the injected logger
+    assert handler._logger is injected_logger
+
+
+def test_factorial_negative_is_logged_as_domain_error(calc):
+    """Factorial of negative should be logged as domain error."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["factorial", "-5", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # Should be logged as domain error
+    assert mock_logger.log_domain_error.called
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "factorial"
+
+
+def test_invalid_operand_retry_still_logs_each_attempt(calc):
+    """Each failed operand coercion should be logged."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["add", "not1", "5", "not2", "6", "exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # log_invalid_operand should be called at least twice (one for each operand's first failed attempt)
+    assert mock_logger.log_invalid_operand.call_count >= 2
+    # Verify both "not1" and "not2" were logged
+    calls = mock_logger.log_invalid_operand.call_args_list
+    raw_values = [call[0][0] for call in calls]
+    assert "not1" in raw_values
+    assert "not2" in raw_values
+
+
+def test_logger_not_called_on_exit(calc):
+    """Logger should not be called when session exits without operations."""
+    mock_logger = Mock(spec=Logger)
+    handler = InputHandler(
+        calc,
+        make_input_fn(["exit"]),
+        logger=mock_logger,
+    )
+    handler.run()
+
+    # No error logging methods should be called
+    assert not mock_logger.log_unsupported_operation.called
+    assert not mock_logger.log_invalid_operand.called
+    assert not mock_logger.log_division_by_zero.called
+    assert not mock_logger.log_domain_error.called

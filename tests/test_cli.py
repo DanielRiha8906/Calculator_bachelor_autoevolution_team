@@ -12,10 +12,12 @@ Tests cover:
 import pytest
 import sys
 from io import StringIO
+from unittest.mock import Mock
 
 from src.calculator import Calculator
 from src.cli import CliDispatcher
 from src.input_handler import OPERATIONS
+from src.logger import Logger
 
 
 # ===========================================================================
@@ -793,3 +795,143 @@ def test_cli_importer_exports_calculator():
     """Test that Calculator is importable from src module."""
     from src import Calculator as ImportedCalculator
     assert ImportedCalculator is Calculator
+
+
+# ===========================================================================
+# Test: Logger Integration
+# ===========================================================================
+
+
+def test_unknown_operation_is_logged(calc):
+    """Unknown operation should be logged via log_unsupported_operation."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["unknown_op", "5"])
+
+    # Verify logger was called
+    mock_logger.log_unsupported_operation.assert_called()
+    call_args = mock_logger.log_unsupported_operation.call_args
+    assert call_args[0][0] == "unknown_op"
+
+
+def test_invalid_argument_count_is_logged(calc):
+    """Invalid argument count should be logged via log_invalid_argument_count."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["add", "5"])  # Missing second operand
+
+    # Verify logger was called
+    mock_logger.log_invalid_argument_count.assert_called()
+    call_args = mock_logger.log_invalid_argument_count.call_args
+    assert call_args[0][0] == "add"  # operation
+    assert call_args[0][1] == 2  # expected
+    assert call_args[0][2] == 1  # given
+
+
+def test_invalid_operand_is_logged(calc):
+    """Invalid operand should be logged via log_invalid_operand."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["add", "abc", "5"])
+
+    # Verify logger was called
+    mock_logger.log_invalid_operand.assert_called()
+    call_args = mock_logger.log_invalid_operand.call_args
+    assert call_args[0][0] == "abc"  # raw value
+    assert call_args[0][1] == "<numeric>"  # expected type
+
+
+def test_division_by_zero_is_logged_cli(calc):
+    """Division by zero should be logged via log_division_by_zero."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["divide", "10", "0"])
+
+    # Verify logger was called
+    mock_logger.log_division_by_zero.assert_called()
+    call_args = mock_logger.log_division_by_zero.call_args
+    assert call_args[0][0] == [10.0, 0.0]  # operands
+
+
+def test_domain_error_sqrt_negative_is_logged_cli(calc):
+    """Domain error (sqrt of negative) should be logged via log_domain_error."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["square_root", "-4"])
+
+    # Verify logger was called
+    mock_logger.log_domain_error.assert_called()
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "square_root"  # operation
+
+
+def test_domain_error_log10_zero_is_logged_cli(calc):
+    """Domain error (log10 of zero) should be logged via log_domain_error."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["log10", "0"])
+
+    # Verify logger was called
+    mock_logger.log_domain_error.assert_called()
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "log10"
+
+
+def test_domain_error_factorial_negative_is_logged_cli(calc):
+    """Domain error (factorial of negative) should be logged via log_domain_error."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["factorial", "-5"])
+
+    # Verify logger was called
+    mock_logger.log_domain_error.assert_called()
+    call_args = mock_logger.log_domain_error.call_args
+    assert call_args[0][0] == "factorial"
+
+
+def test_successful_operation_does_not_log_error_cli(calc):
+    """Successful operations should not call any logger error methods."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args(["add", "3", "4"])
+
+    # None of the error logging methods should be called
+    assert not mock_logger.log_unsupported_operation.called
+    assert not mock_logger.log_invalid_operand.called
+    assert not mock_logger.log_division_by_zero.called
+    assert not mock_logger.log_domain_error.called
+    assert not mock_logger.log_invalid_argument_count.called
+
+
+def test_logger_lazy_initialization_cli(calc):
+    """Logger should be lazily initialized if not provided."""
+    dispatcher = CliDispatcher(calc)
+    assert dispatcher._logger is None  # Not initialized yet
+
+    dispatcher.dispatch_from_args(["add", "5", "3"])
+    assert dispatcher._logger is not None  # Now initialized
+
+
+def test_logger_injection_prevents_lazy_creation_cli(calc):
+    """Injected logger should prevent lazy creation."""
+    injected_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=injected_logger)
+    assert dispatcher._logger is injected_logger
+
+    dispatcher.dispatch_from_args(["add", "5", "3"])
+    # Should still be the injected logger
+    assert dispatcher._logger is injected_logger
+
+
+def test_empty_args_is_not_logged_as_error(calc):
+    """Empty args should not trigger any logging (it's just usage info)."""
+    mock_logger = Mock(spec=Logger)
+    dispatcher = CliDispatcher(calc, logger=mock_logger)
+    dispatcher.dispatch_from_args([])
+
+    # No error logging should occur for usage info
+    assert not mock_logger.log_unsupported_operation.called
+    assert not mock_logger.log_invalid_argument_count.called
+    assert not mock_logger.log_invalid_operand.called
+    assert not mock_logger.log_division_by_zero.called
+    assert not mock_logger.log_domain_error.called
