@@ -16,8 +16,9 @@ from typing import Callable
 from ..core.calculator import Calculator
 from ..shared.dispatcher import OperationDispatcher
 from ..shared.logger import Logger
-from ..operations import OPERATIONS
+from ..operations import OPERATIONS, NORMAL_OPERATIONS
 from .history import History
+from .mode import Mode, parse_mode_command
 
 
 # Maximum number of consecutive invalid inputs before the session is terminated.
@@ -49,6 +50,7 @@ class InputHandler:
         self._history = History()
         self._logger: Logger | None = logger
         self._dispatcher = OperationDispatcher(calculator)
+        self._mode: Mode = Mode.NORMAL
 
     # ------------------------------------------------------------------
     # Public interface
@@ -63,6 +65,9 @@ class InputHandler:
         the number of consecutive invalid operation inputs reaches MAX_RETRIES.
         Catches ValueError, ZeroDivisionError, and TypeError, printing a
         user-friendly message without crashing.
+
+        Users may switch modes by entering ``"mode normal"`` or
+        ``"mode scientific"`` at the operation prompt.
         """
         if self._logger is None:
             self._logger = Logger()
@@ -81,6 +86,13 @@ class InputHandler:
                     print("Goodbye!")
                     break
 
+                # Handle mode-switch commands before anything else.
+                mode_result = parse_mode_command(op_choice)
+                if mode_result is not None:
+                    self._mode = mode_result
+                    print(f"Mode switched to: {self._mode.value.capitalize()}")
+                    continue
+
                 if op_choice == "history":
                     entries = self._history.get_all()
                     if entries:
@@ -89,14 +101,25 @@ class InputHandler:
                         print("No history yet.")
                     continue
 
+                available_ops = self._get_available_operations_for_mode()
+
                 if op_choice not in OPERATIONS:
                     op_attempts += 1
                     self._logger.log_unsupported_operation(op_choice)
                     print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
-                    print("Available operations: " + ", ".join(OPERATIONS.keys()))
+                    print("Available operations: " + ", ".join(available_ops.keys()))
                     if op_attempts >= MAX_RETRIES:
                         print("Too many invalid attempts. Ending session.")
                         break
+                    continue
+
+                # Operation exists globally — check if it is accessible in the
+                # current mode.
+                if op_choice not in available_ops:
+                    print(
+                        f"Error: '{op_choice}' is only available in scientific mode. "
+                        "Type 'mode scientific' to switch."
+                    )
                     continue
 
                 op_attempts = 0
@@ -140,11 +163,32 @@ class InputHandler:
     # Private helpers
     # ------------------------------------------------------------------
 
+    def _get_available_operations_for_mode(self) -> dict:
+        """Return the subset of OPERATIONS accessible in the current mode.
+
+        In NORMAL mode only the keys present in NORMAL_OPERATIONS are returned.
+        In SCIENTIFIC mode the full unified OPERATIONS dict is returned,
+        exposing both normal and scientific operations.
+
+        Returns:
+            A dict mapping operation keys to their registry entries for the
+            current mode.
+        """
+        if self._mode is Mode.SCIENTIFIC:
+            return OPERATIONS
+        return {key: OPERATIONS[key] for key in NORMAL_OPERATIONS if key in OPERATIONS}
+
     def _show_menu(self) -> None:
-        """Print the list of available operations to stdout."""
-        print("\nAvailable operations:")
-        for key, info in OPERATIONS.items():
+        """Print the list of available operations to stdout.
+
+        The header reflects the current mode, and only operations accessible
+        in that mode are listed.
+        """
+        mode_label = self._mode.value.capitalize()
+        print(f"\nAvailable operations ({mode_label} Mode):")
+        for key, info in self._get_available_operations_for_mode().items():
             print(f"  {key:<14} — {info['label']}")
+        print("  (type 'mode normal' or 'mode scientific' to switch modes)")
 
     def _prompt_operands(self, arity: int, coerce: Callable = float) -> list:
         """Prompt the user for the required number of operands.
@@ -158,7 +202,7 @@ class InputHandler:
         ``self._dispatcher.coerce_operands()``.
 
         Args:
-            arity: Number of operands to collect (1 or 2).
+            arity: Number of operands to collect (0, 1, or 2).
             coerce: Callable used to convert the raw string to a numeric value;
                 defaults to ``float``.
 

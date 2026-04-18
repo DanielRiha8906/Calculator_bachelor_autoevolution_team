@@ -15,7 +15,28 @@ class Calculator {
     +log10(x: float): float
     +ln(x: float): float
     +power(x: float, y: float): float
+    +sin(x: float): float
+    +cos(x: float): float
+    +tan(x: float): float
+    +asin(x: float): float
+    +acos(x: float): float
+    +atan(x: float): float
+    +get_pi(): float
+    +get_e(): float
 }
+
+enum Mode {
+    NORMAL
+    SCIENTIFIC
+}
+
+note top of Mode
+    Module: src/session/mode.py
+    Controls which operations are visible
+    in the interactive session menu.
+    parse_mode_command(input_str: str): Mode | None
+    parses "mode normal" / "mode scientific" commands.
+end note
 
 class History {
     -_operations: list[str]
@@ -56,10 +77,12 @@ note as OPERATIONS_NOTE
     from NORMAL_OPERATIONS (src/operations/normal.py)
     and SCIENTIFIC_OPERATIONS (src/operations/scientific.py).
     Maps operation keys to dispatch metadata:
-    add, subtract, multiply, divide, power (arity=2)
+    NORMAL: add, subtract, multiply, divide, power (arity=2)
     factorial (arity=1, coerce=int)
     square, cube, square_root, cube_root,
     log10, ln (arity=1, coerce=float)
+    SCIENTIFIC: sin, cos, tan, asin, acos, atan (arity=1)
+    pi, e (arity=0 — no operands needed)
     Each entry: { method, arity, label [, coerce] }
     Imported by session/input_handler.py and interface/cli.py.
 end note
@@ -84,9 +107,11 @@ class InputHandler {
     -_history: History
     -_logger: Logger | None
     -_dispatcher: OperationDispatcher
+    -_mode: Mode
     +__init__(calculator: Calculator, input_fn: Callable | None, logger: Logger | None)
     +run(): None
     -_show_menu(): None
+    -_get_available_operations_for_mode(): dict
     -_prompt_operands(arity: int, coerce: Callable): list
     -_dispatch(op_key: str, operands: list): float | int
 }
@@ -96,6 +121,9 @@ note top of InputHandler
     (shim: src/input_handler.py for backwards compat)
     Drives an interactive calculator REPL session.
     Re-exports OPERATIONS for backwards compatibility.
+    _show_menu() filters OPERATIONS based on _mode:
+    NORMAL shows only NORMAL_OPERATIONS keys;
+    SCIENTIFIC shows all OPERATIONS keys.
 end note
 
 note as RUN_SESSION_NOTE
@@ -139,6 +167,7 @@ InputHandler --> History : manages session history
 InputHandler --> Logger : logs errors via\n_logger
 InputHandler *-- OperationDispatcher : owns _dispatcher
 InputHandler ..> OPERATIONS_NOTE : reads registry for\nmenu and dispatch
+InputHandler --> Mode : _mode controls which\noperations are shown
 RUN_SESSION_NOTE ..> InputHandler : creates and calls run()
 
 CliDispatcher --> Calculator : holds reference via\n_calculator

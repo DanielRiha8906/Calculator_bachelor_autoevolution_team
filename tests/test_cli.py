@@ -764,12 +764,19 @@ def test_all_registered_operations_can_be_dispatched(dispatcher, calc):
         coerce = op_info.get("coerce", float)
 
         # Create dummy operands with correct count
-        if arity == 1:
+        if arity == 0:
+            # Constants (pi, e)
+            operands = []
+        elif arity == 1:
             # Use a valid operand for each operation
             if op_key == "factorial":
                 operands = [5]
             elif op_key in ("square_root", "ln", "log10"):
                 operands = [10]  # positive values for these
+            elif op_key in ("asin", "acos"):
+                operands = [0.5]  # values in [-1, 1] domain
+            elif op_key in ("sin", "cos", "tan", "atan"):
+                operands = [0.5]  # any real number is fine for trig
             else:
                 operands = [5]
         else:  # arity == 2

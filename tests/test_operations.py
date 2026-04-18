@@ -22,8 +22,8 @@ def test_operations_is_dict():
 
 
 def test_operations_has_12_entries():
-    """OPERATIONS must contain exactly 12 operation entries."""
-    assert len(OPERATIONS) == 12
+    """OPERATIONS must contain exactly 20 operation entries (12 normal + 8 scientific)."""
+    assert len(OPERATIONS) == 20
 
 
 def test_operations_keys_are_strings():
@@ -237,8 +237,8 @@ def test_operations_all_methods_are_strings():
 
 
 def test_operations_all_arities_positive():
-    """All arity values must be positive (1 or 2)."""
-    assert all(entry["arity"] in (1, 2) for entry in OPERATIONS.values())
+    """All arity values must be non-negative (0, 1, or 2)."""
+    assert all(entry["arity"] in (0, 1, 2) for entry in OPERATIONS.values())
 
 
 def test_operations_no_extra_unknown_fields():

@@ -40,11 +40,15 @@ def calc() -> Calculator:
 # ---------------------------------------------------------------------------
 
 def test_show_menu_lists_all_operations(calc, capsys):
-    """_show_menu must print every key registered in OPERATIONS."""
+    """_show_menu in NORMAL mode lists all NORMAL operations only."""
+    from src.operations import NORMAL_OPERATIONS
+    from src.session.mode import Mode
     handler = InputHandler(calc)
+    handler._mode = Mode.NORMAL
     handler._show_menu()
     captured = capsys.readouterr()
-    for key in OPERATIONS:
+    # In NORMAL mode, only NORMAL_OPERATIONS should be listed
+    for key in NORMAL_OPERATIONS:
         assert key in captured.out
 
 

@@ -131,10 +131,12 @@ class TestOperationsDictStructure:
     }
 
     def test_operations_has_all_12_keys(self):
-        """OPERATIONS dict contains all 12 expected operation keys."""
+        """OPERATIONS dict contains all 12 normal operation keys (plus scientific)."""
         from src.operations import OPERATIONS
-        assert len(OPERATIONS) == 12
-        assert set(OPERATIONS.keys()) == self.EXPECTED_KEYS
+        # OPERATIONS now has 12 normal + 8 scientific = 20 total
+        assert len(OPERATIONS) == 20
+        # All normal keys must be present
+        assert self.EXPECTED_KEYS.issubset(set(OPERATIONS.keys()))
 
     @pytest.mark.parametrize("key", EXPECTED_KEYS)
     def test_operations_key_exists(self, key):
@@ -181,10 +183,11 @@ class TestScientificOperations:
         assert isinstance(SCIENTIFIC_OPERATIONS, dict)
 
     def test_scientific_operations_is_empty(self):
-        """SCIENTIFIC_OPERATIONS is an empty dict (for now)."""
+        """SCIENTIFIC_OPERATIONS now has 8 entries (sin, cos, tan, asin, acos, atan, pi, e)."""
         from src.operations import SCIENTIFIC_OPERATIONS
-        assert len(SCIENTIFIC_OPERATIONS) == 0
-        assert SCIENTIFIC_OPERATIONS == {}
+        assert len(SCIENTIFIC_OPERATIONS) == 8
+        expected_keys = {"sin", "cos", "tan", "asin", "acos", "atan", "pi", "e"}
+        assert set(SCIENTIFIC_OPERATIONS.keys()) == expected_keys
 
 
 # ============================================================================
@@ -195,20 +198,21 @@ class TestScientificOperations:
 class TestOperationsMerge:
     """Verify OPERATIONS is the correct merge of NORMAL + SCIENTIFIC."""
 
-    def test_operations_equals_normal_when_scientific_empty(self):
-        """When SCIENTIFIC_OPERATIONS is empty, OPERATIONS == NORMAL_OPERATIONS."""
+    def test_operations_is_union_of_normal_and_scientific(self):
+        """OPERATIONS is the union of NORMAL_OPERATIONS and SCIENTIFIC_OPERATIONS."""
         from src.operations import OPERATIONS, NORMAL_OPERATIONS, SCIENTIFIC_OPERATIONS
-        # Since SCIENTIFIC_OPERATIONS is empty, they should be equal
-        assert len(SCIENTIFIC_OPERATIONS) == 0
-        assert OPERATIONS == NORMAL_OPERATIONS
+        # OPERATIONS should have all normal + all scientific keys
+        assert len(SCIENTIFIC_OPERATIONS) == 8
+        assert len(OPERATIONS) == len(NORMAL_OPERATIONS) + len(SCIENTIFIC_OPERATIONS)
+        assert set(OPERATIONS.keys()) == set(NORMAL_OPERATIONS.keys()) | set(SCIENTIFIC_OPERATIONS.keys())
 
     def test_normal_operations_has_12_entries(self):
         """NORMAL_OPERATIONS has all 12 operations."""
         from src.operations import NORMAL_OPERATIONS
         assert len(NORMAL_OPERATIONS) == 12
 
-    def test_operations_is_union_of_normal_and_scientific(self):
-        """OPERATIONS is the union of NORMAL_OPERATIONS and SCIENTIFIC_OPERATIONS."""
+    def test_operations_union_composition(self):
+        """OPERATIONS correctly merges NORMAL and SCIENTIFIC entries."""
         from src.operations import OPERATIONS, NORMAL_OPERATIONS, SCIENTIFIC_OPERATIONS
         # All NORMAL_OPERATIONS keys should be in OPERATIONS
         for key in NORMAL_OPERATIONS:
@@ -238,7 +242,7 @@ class TestBackwardsCompatibilityMainExports:
         """OPERATIONS importable from src."""
         from src import OPERATIONS
         assert isinstance(OPERATIONS, dict)
-        assert len(OPERATIONS) == 12
+        assert len(OPERATIONS) == 20
 
     def test_cli_dispatcher_importable_from_src(self):
         """CliDispatcher importable from src."""
@@ -301,7 +305,7 @@ class TestBackwardsCompatibilityShims:
         """Can still import OPERATIONS from src.input_handler (shim)."""
         from src.input_handler import OPERATIONS
         assert isinstance(OPERATIONS, dict)
-        assert len(OPERATIONS) == 12
+        assert len(OPERATIONS) == 20
 
     def test_max_retries_from_old_location(self):
         """Can still import MAX_RETRIES from src.input_handler (shim)."""
@@ -578,8 +582,8 @@ class TestMixedImportIntegration:
         from src.input_handler import OPERATIONS as OldOps
 
         assert NewOps is OldOps
-        assert len(NewOps) == 12
-        assert len(OldOps) == 12
+        assert len(NewOps) == 20
+        assert len(OldOps) == 20
 
     def test_mixed_dispatcher_imports_same_class(self):
         """OperationDispatcher from old and new paths work together."""
@@ -665,12 +669,13 @@ class TestOperationsDictValidity:
             assert "label" in OPERATIONS[key], f"OPERATIONS[{key!r}] missing 'label' field"
 
     def test_operations_arity_values_are_positive_integers(self):
-        """All arity values in OPERATIONS are positive integers."""
+        """All arity values in OPERATIONS are non-negative integers (0 or 1 or 2)."""
         from src.operations import OPERATIONS
         for key in OPERATIONS:
             arity = OPERATIONS[key]["arity"]
             assert isinstance(arity, int), f"OPERATIONS[{key!r}]['arity'] is not int"
-            assert arity > 0, f"OPERATIONS[{key!r}]['arity'] is not positive"
+            assert arity >= 0, f"OPERATIONS[{key!r}]['arity'] is not >= 0"
+            assert arity in (0, 1, 2), f"OPERATIONS[{key!r}]['arity'] has unexpected value {arity}"
 
     def test_operations_method_values_are_strings(self):
         """All method values in OPERATIONS are strings."""
