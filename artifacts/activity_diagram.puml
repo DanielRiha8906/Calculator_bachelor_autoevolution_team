@@ -8,6 +8,21 @@ skinparam swimlaneBorderColor #888888
 start
 
 |__main__|
+if (--gui flag or CALCULATOR_GUI=1?) then (yes)
+    :Instantiate CalculatorGUI;
+    |CalculatorGUI|
+    :Build tkinter window\n(display, buttons, mode bar);
+    :Enter mainloop (event-driven);
+    note right
+        Normal mode: run_calculation()
+        Scientific mode: run_unary_calculation()
+        Errors shown in display
+    end note
+    end
+else (no)
+endif
+
+|__main__|
 if (sys.argv has arguments?) then (yes)
     :Delegate to cli.main();
     |cli|

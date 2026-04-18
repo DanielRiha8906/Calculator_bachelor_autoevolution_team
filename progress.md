@@ -128,6 +128,16 @@ Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
 - Intended merge/PR target: exp/naive-team
 - Duration: 313.8s | Cost: $0.828787 USD | Turns: 11
 
+## Run Summary — Issue #100: Tkinter GUI (Naive/team)
+
+- Files changed: src/gui.py (created), src/__main__.py (modified), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)
+- Purpose: Add a tkinter GUI (CalculatorGUI) supporting normal (binary) and scientific (unary) modes; dispatches through existing dispatcher API; launched via --gui flag or CALCULATOR_GUI=1 env var; all existing CLI and interactive paths unchanged
+- Risks: Low — strictly additive; gui import is conditional so environments without a display are not affected by import time; no new dependencies (tkinter ships with Python 3.12)
+- Tests passed: Yes (1239 passed, 0 failed)
+- Branch: task/issue-100-gui-tkinter
+- Intended merge/PR target: exp/naive-team
+- Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run Summary — Issue #97: Scientific Mode (Naive/team)
 
 - Files changed: src/operations/scientific.py (created), src/mode_manager.py (created), src/scientific_parser.py (created), src/calculator.py (modified), src/calculator_with_history.py (modified), src/parser.py (modified), src/retry_handler.py (modified), src/dispatcher.py (modified), src/__main__.py (modified), src/operations/__init__.py (modified), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)

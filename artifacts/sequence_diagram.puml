@@ -7,12 +7,55 @@ skinparam SequenceLifeLineBorderColor #888888
 participant User
 participant "__main__" as main
 participant "cli" as cli
+participant "CalculatorGUI" as gui
 participant ModeManager
 participant retry_handler
 participant input_handler
 participant CalculatorWithHistory
 
-alt CLI mode (sys.argv has arguments)
+alt GUI mode (--gui flag or CALCULATOR_GUI=1)
+    User -> main : python -m src --gui
+    create gui
+    main -> gui : new CalculatorGUI()
+    gui -> gui : build tkinter widgets
+    main -> gui : run() / mainloop()
+
+    loop User interaction (event-driven)
+        User -> gui : button click (digit / operator / function / equals / mode)
+
+        alt Normal mode — equals pressed
+            gui -> input_handler : run_calculation(a, b, method_name)
+            create CalculatorWithHistory
+            input_handler -> CalculatorWithHistory : new CalculatorWithHistory()
+            input_handler -> CalculatorWithHistory : e.g. add(a, b)
+            alt ZeroDivisionError or ValueError
+                CalculatorWithHistory --> input_handler : raises
+                input_handler --> gui : propagates
+                gui -> User : show error in display (red, auto-clears)
+            end
+            CalculatorWithHistory --> input_handler : result
+            input_handler --> gui : (result, calc)
+            gui -> User : update display + history label
+        else Scientific mode — equals pressed
+            gui -> input_handler : run_unary_calculation(x, method_name)
+            create CalculatorWithHistory
+            input_handler -> CalculatorWithHistory : new CalculatorWithHistory()
+            input_handler -> CalculatorWithHistory : e.g. sin(x)
+            alt ValueError
+                CalculatorWithHistory --> input_handler : raises
+                input_handler --> gui : propagates
+                gui -> User : show error in display (red, auto-clears)
+            end
+            CalculatorWithHistory --> input_handler : result
+            input_handler --> gui : (result, calc)
+            gui -> User : update display + history label
+        else Mode toggle button pressed
+            gui -> ModeManager : set_mode("normal" | "scientific")
+            gui -> gui : refresh layout (swap button frame)
+            gui -> User : updated window
+        end
+    end
+else CLI mode (sys.argv has arguments)
     User -> main : python -m src OPERAND_A OPERATOR OPERAND_B
     main -> cli : cli_main()
     cli -> cli : build_parser().parse_args()

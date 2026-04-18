@@ -1,3 +1,4 @@
+import os
 import sys
 
 from src.cli import main as cli_main
@@ -56,9 +57,21 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # When command-line arguments are present (beyond the module name itself),
-    # delegate to the CLI handler.  Otherwise fall back to interactive mode.
-    if len(sys.argv) > 1:
+    # When the --gui flag is present, or the CALCULATOR_GUI environment variable
+    # is set to "1", launch the tkinter GUI.  When other command-line arguments
+    # are present, delegate to the CLI handler.  Otherwise fall back to the
+    # interactive mode.
+    _gui_requested = (
+        "--gui" in sys.argv
+        or os.environ.get("CALCULATOR_GUI", "0") == "1"
+    )
+
+    if _gui_requested:
+        from src.gui import CalculatorGUI
+
+        _app = CalculatorGUI()
+        _app.run()
+    elif len(sys.argv) > 1:
         cli_main()
     else:
         main()

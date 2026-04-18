@@ -200,6 +200,49 @@ class "__main__" as main_module <<module>> {
     +main() : None
 }
 
+class "gui" as gui_module <<module>> {
+}
+
+class CalculatorGUI {
+    -_root : tk.Tk
+    -_mode_manager : ModeManager
+    -_current_input : str
+    -_first_operand : float | None
+    -_operator : str | None
+    -_awaiting_second : bool
+    -_sci_function : str | None
+    -_sci_awaiting_arg : bool
+    -_display_var : tk.StringVar
+    -_history_var : tk.StringVar
+    +__init__() : None
+    +run() : None
+    -_build_display() : None
+    -_build_history_area() : None
+    -_build_mode_bar() : None
+    -_build_normal_buttons() : None
+    -_build_scientific_buttons() : None
+    -_refresh_mode_layout() : None
+    -_on_mode_switch(mode_name: str) : None
+    -_on_normal_action(action: str) : None
+    -_append_digit(digit: str) : None
+    -_set_operator(operator: str) : None
+    -_negate_display() : None
+    -_apply_percent() : None
+    -_execute_normal(chain: bool) : None
+    -_on_sci_function(func_name: str) : None
+    -_on_sci_action(action: str) : None
+    -_execute_scientific() : None
+    -_clear_state() : None
+    -_show_error(message: str) : None
+    -_format_number(value: float) : str
+}
+
+note right of CalculatorGUI
+    Self-contained GUI; no other module imports it.
+    Dispatches via run_calculation / run_unary_calculation.
+    Mode tracked by owned ModeManager instance.
+end note
+
 dispatcher_module ..> CalculatorWithHistory : imports / instantiates
 cli_module ..> parser_module : imports (parse_input)
 cli_module ..> dispatcher_module : imports (run_calculation)
@@ -208,8 +251,13 @@ main_module ..> parser_module : imports (BINARY_OPERATORS)
 main_module ..> dispatcher_module : imports (run_calculation, run_unary_calculation)
 main_module ..> cli_module : delegates CLI mode
 main_module ..> ModeManager : instantiates
+main_module ..> gui_module : conditional import (--gui flag)
 retry_handler ..> parser_module : imports (BINARY_OPERATORS, parse_operand)
 retry_handler ..> scientific_parser_module : imports (parse_unary_function)
+gui_module *-- CalculatorGUI : contains
+CalculatorGUI *-- ModeManager : owns
+CalculatorGUI ..> dispatcher_module : imports (run_calculation, run_unary_calculation)
+CalculatorGUI ..> parser_module : imports (BINARY_OPERATORS, UNARY_FUNCTIONS)
 
 ArithmeticOperations ..> logger_module : get_logger (error logging)
 AdvancedOperations ..> logger_module : get_logger (error logging)
