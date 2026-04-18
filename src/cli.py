@@ -1,8 +1,7 @@
-"""CLI mode for the calculator.
+"""Interaction layer — CLI mode.
 
-Parses command-line arguments using argparse and dispatches the requested
-operation to the Calculator.  Intended to be invoked when ``sys.argv``
-contains arguments beyond the module name.
+Handles command-line argument parsing and validation. Delegates calculation
+to dispatch() from input_loop, which invokes the Calculator class.
 
 Typical usage::
 

@@ -1,3 +1,10 @@
+"""Entry point.
+
+Routes execution to either CLI mode (interaction layer — cli.py) or
+interactive mode (interaction layer — input_loop.py) based on
+command-line arguments.
+"""
+
 import sys
 from typing import Optional
 

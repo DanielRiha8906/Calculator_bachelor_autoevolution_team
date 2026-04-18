@@ -1,4 +1,7 @@
-"""Error logging module for the calculator.
+"""Interaction layer service — error logging.
+
+Records and persists error events for auditing and debugging. Part of the
+interaction layer; has no direct role in arithmetic computation.
 
 Provides a dedicated :class:`ErrorLogger` for recording categorised error
 events to both an in-memory list and a persistent log file.  Errors are

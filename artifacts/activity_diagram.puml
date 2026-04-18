@@ -3,124 +3,138 @@ title Calculator — Activity Diagram
 
 start
 
-if (CLI arguments present? (sys.argv[1:])) then (yes)
-  :Parse arguments with argparse (run_cli);
-  if (Operation recognised in OPERATIONS?) then (no)
-    :Print error to stderr;
-    :Exit with code 2;
-    stop
-  else (yes)
-  endif
-  if (Operand count correct?) then (no)
-    :Print error to stderr;
-    :Exit with code 2;
-    stop
-  else (yes)
-  endif
-  if (All operands parse as float?) then (no)
-    :Print error to stderr;
-    :Exit with code 2;
-    stop
-  else (yes)
-  endif
-  :Create Calculator instance;
-  :dispatch(operation, operands, calc);
-  if (ValueError raised?) then (yes)
-    :Print error to stderr;
-    :Exit with code 2;
-    stop
-  else (no)
-    :Print result to stdout;
-    stop
-  endif
-else (no)
-endif
+partition "Interaction Layer" {
+  if (CLI arguments present? (sys.argv[1:])) then (yes)
+    :Parse arguments with argparse (run_cli);
+    if (Operation recognised in OPERATIONS?) then (no)
+      :Print error to stderr;
+      :Exit with code 2;
+      stop
+    else (yes)
+    endif
+    if (Operand count correct?) then (no)
+      :Print error to stderr;
+      :Exit with code 2;
+      stop
+    else (yes)
+    endif
+    if (All operands parse as float?) then (no)
+      :Print error to stderr;
+      :Exit with code 2;
+      stop
+    else (yes)
+    endif
+}
 
-:Create Calculator instance;
-note right: OperationHistory created; history.txt cleared
+partition "Calculation Layer" {
+    :Create Calculator instance;
+    :dispatch(operation, operands, calc);
+}
 
-repeat
-  :Print operation menu (print_menu);
-  :attempt = 1;
-  repeat
-    :Prompt user for operation (get_operation);
-    if (User typed "exit"?) then (yes)
-      :Print "Goodbye!";
+partition "Interaction Layer" {
+    if (ValueError raised?) then (yes)
+      :Print error to stderr;
+      :Exit with code 2;
       stop
     else (no)
-    endif
-    :validate_operation(choice);
-    if (Valid operation?) then (yes)
-      :Use operation;
-      break
-    else (no)
-      :Print error + attempt counter message;
-      :attempt = attempt + 1;
-    endif
-  repeat while (attempt <= MAX_RETRY_ATTEMPTS?) is (yes)
-  if (Retries exceeded?) then (yes)
-    :Print "Session terminated due to too many invalid operation entries.";
-    stop
-  else (no)
-  endif
-
-  if (Operation is "history"?) then (yes)
-    :print_history(history);
-    if (history entries exist?) then (yes)
-      :Print each entry;
-    else (no)
-      :Print "No operations recorded in this session.";
+      :Print result to stdout;
+      stop
     endif
   else (no)
   endif
-  if (Operation is "history"?) then (yes)
-    :continue;
-  else (no)
-  endif
 
-  :Look up operand_count from OPERATIONS;
+  :Create Calculator instance;
+  note right: OperationHistory created; history.txt cleared
 
-  :operand_index = 1;
-  :all_operands_ok = true;
-  while (operand_index <= operand_count?) is (yes)
+  repeat
+    :Print operation menu (print_menu);
     :attempt = 1;
     repeat
-      :Prompt user for operand N;
-      :validate_operand(raw);
-      if (Valid numeric value?) then (yes)
-        :Append float to operands list;
+      :Prompt user for operation (get_operation);
+      if (User typed "exit"?) then (yes)
+        :Print "Goodbye!";
+        stop
+      else (no)
+      endif
+      :validate_operation(choice);
+      if (Valid operation?) then (yes)
+        :Use operation;
         break
       else (no)
         :Print error + attempt counter message;
         :attempt = attempt + 1;
       endif
     repeat while (attempt <= MAX_RETRY_ATTEMPTS?) is (yes)
-    if (Retries exceeded for this operand?) then (yes)
-      :Print "Maximum retry attempts reached. Returning to menu.";
-      :all_operands_ok = false;
-      break
+    if (Retries exceeded?) then (yes)
+      :Print "Session terminated due to too many invalid operation entries.";
+      stop
     else (no)
-      :operand_index = operand_index + 1;
     endif
-  endwhile
 
-  if (all_operands_ok?) then (no)
-    :Print "Returning to the main menu.";
-  else (yes)
-    group try
-      :dispatch(operation, operands, calc);
+    if (Operation is "history"?) then (yes)
+      :print_history(history);
+      if (history entries exist?) then (yes)
+        :Print each entry;
+      else (no)
+        :Print "No operations recorded in this session.";
+      endif
+    else (no)
+    endif
+    if (Operation is "history"?) then (yes)
+      :continue;
+    else (no)
+    endif
+
+    :Look up operand_count from OPERATIONS;
+
+    :operand_index = 1;
+    :all_operands_ok = true;
+    while (operand_index <= operand_count?) is (yes)
+      :attempt = 1;
+      repeat
+        :Prompt user for operand N;
+        :validate_operand(raw);
+        if (Valid numeric value?) then (yes)
+          :Append float to operands list;
+          break
+        else (no)
+          :Print error + attempt counter message;
+          :attempt = attempt + 1;
+        endif
+      repeat while (attempt <= MAX_RETRY_ATTEMPTS?) is (yes)
+      if (Retries exceeded for this operand?) then (yes)
+        :Print "Maximum retry attempts reached. Returning to menu.";
+        :all_operands_ok = false;
+        break
+      else (no)
+        :operand_index = operand_index + 1;
+      endif
+    endwhile
+
+    if (all_operands_ok?) then (no)
+      :Print "Returning to the main menu.";
+    else (yes)
+}
+
+partition "Calculation Layer" {
+      group try
+        :dispatch(operation, operands, calc);
+      end group
+}
+
+partition "Interaction Layer" {
       :Print Result;
       :history.record_operation(operation, operands, result);
       :Append entry to history.txt;
-    end group
-    if (ValueError raised?) then (yes)
-      :Log error to ErrorLogger with category and context;
-      :Print "Error: <message>";
-    else (no)
+      if (ValueError raised?) then (yes)
+        :Log error to ErrorLogger with category and context;
+        :Print "Error: <message>";
+      else (no)
+      endif
     endif
-  endif
 
-repeat while (loop continues) is (yes)
+  repeat while (loop continues) is (yes)
+}
 
 stop
 @enduml
