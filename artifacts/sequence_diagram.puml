@@ -2,6 +2,29 @@
 
 title Calculator Sequence — Typical Interaction
 
+' -----------------------------------------------------------------------
+' Entry-point dispatch (src/__main__.py)
+' -----------------------------------------------------------------------
+== Entry Point — src/__main__.py main() ==
+
+actor User as ep_user
+participant "src/__main__\nmain()" as entry
+
+ep_user -> entry : python -m src [--gui]
+note over entry : calc = Calculator()
+alt "--gui" in sys.argv
+    note over entry : import tkinter as tk\nimport GuiCalculator (conditional)
+    entry -> entry : root = tk.Tk()
+    entry -> entry : GuiCalculator(root, calc).run()\n[enters Tk event loop — see GUI Mode section]
+else default (no --gui flag)
+    entry -> entry : run_session(calc)\n[enters interactive CLI session — see below]
+end
+
+' -----------------------------------------------------------------------
+' Interactive CLI session (InputHandler)
+' -----------------------------------------------------------------------
+== Interactive CLI Session (InputHandler / run_session) ==
+
 actor User
 participant "__main__" as main
 participant "InputHandler" as handler
