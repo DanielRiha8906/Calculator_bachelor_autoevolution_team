@@ -204,3 +204,26 @@ Risks: Low. All changes are documentation and diagram annotations only. No logic
 Tests passed: 616/616
 
 Duration: 398.4s | Cost: $1.154762 USD | Turns: 16
+
+## Run: Operations Subpackage Refactor — Modular Calculation Layer (exp/structured-team)
+
+Branch: exp/structured-team
+PR target: exp/structured-team
+
+Files changed:
+- src/operations/__init__.py (created) — empty package initializer for the operations subpackage; no public exports
+- src/operations/arithmetic.py (created) — add, subtract, multiply, divide with ValueError guard on divide
+- src/operations/exponents.py (created) — power, factorial, square, cube with isinstance and non-negativity guards on factorial
+- src/operations/roots.py (created) — square_root, cube_root with non-negativity guard on square_root
+- src/operations/logarithmic.py (created) — log (base-10) and ln (natural) with positivity guards
+- src/calculator.py (modified) — updated module docstring to reference submodules; removed direct math import; imports four submodules; all twelve Calculator methods now delegate to the corresponding submodule function
+- src/__init__.py (modified) — added comment noting that operations subpackage is internal
+- artifacts/class_diagram.puml (modified) — added operations package with four module classes; added delegation arrows from Calculator to each submodule; updated note on Calculator
+
+Purpose: Extract arithmetic logic from Calculator methods into a structured operations subpackage to make the calculation layer more modular and independently testable. Calculator retains full backward-compatible public API as a delegation wrapper.
+
+Risks: Low. Public API of Calculator is unchanged. All delegation is straightforward one-to-one. No new external dependencies introduced. All validation logic moved into the leaf operation functions.
+
+Tests passed: 616/616
+
+Duration: 437.8s | Cost: $1.085196 USD | Turns: 12
