@@ -1,0 +1,2 @@
+Task:
+- Redesign the calculator GUI to look modern, inspired by the iOS calculator — black background, round flat buttons, orange color for operator buttons, and a large display at the top showing the result.

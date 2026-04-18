@@ -1,0 +1,25 @@
+Task:
+- Fully redesign GuiCalculator in gui.py to look like a modern iOS-style calculator. This is a visual redesign, not a restyle of existing widgets — rebuild the layout from scratch inside GuiCalculator while keeping all calculation logic untouched.
+
+Layout (top to bottom):
+1. Result display — full-width Label, right-aligned, black background (#000000), white text (#FFFFFF), font size 32 bold monospaced. Shows current result or "0" on start.
+2. Mode toggle — small row of two flat buttons ("Normal" / "Scientific") above the button grid, dark grey, accent-highlighted for the active mode.
+3. Button grid — 4 columns, rows determined by the current mode's operation count. Buttons are square (equal width and height via grid weight), flat relief, no border.
+
+Button color groups (set bg and activebackground on each):
+- Operators (add, subtract, multiply, divide): bg=#FF9500, fg=#FFFFFF, activebackground=#FFB143
+- Scientific / utility ops (all others in scientific mode): bg=#1C1C1E, fg=#FFFFFF, activebackground=#2C2C2E
+- Standard ops in normal mode: bg=#333333, fg=#FFFFFF, activebackground=#4D4D4D
+
+Button labels must be symbols, not descriptions. Use this mapping (add others as appropriate):
+  add→"+", subtract→"−", multiply→"×", divide→"÷", sqrt→"√", square→"x²", cube→"x³", power→"xʸ", factorial→"n!", log→"log", ln→"ln", sin→"sin", cos→"cos", tan→"tan", pi→"π", e→"e"
+
+All color and font constants must be defined in a single _THEME dict at the top of gui.py.
+
+The window background, all frames, and all non-button widgets must explicitly set bg from _THEME — tkinter does not inherit colors automatically.
+
+Hover effect: bind <Enter> and <Leave> on every button to swap between its default bg and a lighter shade defined in _THEME.
+
+Do not modify: Calculator, OperationDispatcher, History, Mode, BaseMode, OPERATIONS, or any file outside gui.py.
+
+Update relevant tests and development artifacts to reflect the changes.
