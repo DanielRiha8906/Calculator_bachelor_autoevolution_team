@@ -27,7 +27,7 @@ Risks: The arity=0 approach for pi/e constants is novel in this registry; dispat
 
 Test results: 1180 passed, 0 failed.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 886.3s | Cost: $2.460566 USD | Turns: 23
 
 ---
 
