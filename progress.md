@@ -106,4 +106,4 @@ Duration: 536.2s | Cost: $1.399869 USD | Turns: 15
 - Tests passed: Yes (802 passed, 0 failed) — includes 183 new tests in tests/test_parser.py and tests/test_dispatcher.py
 - Branch: task/issue-88-logic-separation
 - Intended merge/PR target: exp/naive-team
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
