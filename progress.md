@@ -1,3 +1,44 @@
+## Run: Issue #93 — Calculator Modularization
+
+Branch: task/issue-93-modularization
+PR target: exp/expert-team
+
+Files changed:
+- src/core/__init__.py — new; re-exports Calculator from .calculator
+- src/core/calculator.py — new; exact copy of former src/calculator.py (Calculator class)
+- src/operations/__init__.py — new; merges NORMAL_OPERATIONS and SCIENTIFIC_OPERATIONS into unified OPERATIONS dict
+- src/operations/normal.py — new; NORMAL_OPERATIONS dict (formerly OPERATIONS in src/operations.py)
+- src/operations/scientific.py — new; empty SCIENTIFIC_OPERATIONS dict reserved for future use
+- src/shared/__init__.py — new; re-exports OperationDispatcher and Logger
+- src/shared/dispatcher.py — new; copy of former src/dispatcher.py with import updated to ..core.calculator
+- src/shared/logger.py — new; exact copy of former src/logger.py
+- src/session/__init__.py — new; re-exports InputHandler and run_session
+- src/session/history.py — new; exact copy of former src/history.py
+- src/session/input_handler.py — new; copy of former src/input_handler.py with imports updated to new subpackage paths
+- src/interface/__init__.py — new; re-exports CliDispatcher
+- src/interface/cli.py — new; copy of former src/cli.py with imports updated to new subpackage paths
+- src/__init__.py — updated imports to point to new module locations (core, interface, shared, operations)
+- src/__main__.py — updated imports: calculator->core, input_handler->session
+- src/calculator.py — converted to backwards-compatibility shim (re-exports from .core.calculator)
+- src/operations.py — converted to backwards-compatibility shim (superseded by operations/ package)
+- src/dispatcher.py — converted to backwards-compatibility shim (re-exports from .shared.dispatcher)
+- src/logger.py — converted to backwards-compatibility shim (re-exports from .shared.logger)
+- src/history.py — converted to backwards-compatibility shim (re-exports from .session.history)
+- src/input_handler.py — converted to backwards-compatibility shim (re-exports from .session.input_handler)
+- src/cli.py — converted to backwards-compatibility shim (re-exports from .interface.cli)
+- artifacts/class_diagram.puml — updated module path notes to reflect new subpackage locations
+- artifacts/sequence_diagram.puml — updated OPERATIONS boundary label to new package path
+
+Purpose: Reorganize the flat src/ module structure into four primary subpackages (core, operations, session, interface) plus a shared utilities subpackage, while maintaining full backwards compatibility via shim files at the old flat paths.
+
+Risks: Low. All existing behavior preserved; old import paths continue to work via shim re-exports. The flat src/operations.py shim is unreachable (package directory takes precedence) but harmless. The Architect's plan called for deleting old files — shims were used instead because test files import from old flat paths (src.calculator, src.cli, etc.) and cannot be modified.
+
+Test results: 861 passed, 0 failed, 0 skipped (python -m pytest; includes 146 new modular structure tests)
+
+Duration: 676.0s | Cost: $1.887215 USD | Turns: 15
+
+---
+
 ## Run: Issue #64 — V1 Task 9 - Session History
 
 Branch: task/issue-64-history

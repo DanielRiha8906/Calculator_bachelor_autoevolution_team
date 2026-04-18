@@ -1,5 +1,5 @@
-from .calculator import Calculator
-from .input_handler import run_session
+from .core import Calculator
+from .session import run_session
 
 
 def main():

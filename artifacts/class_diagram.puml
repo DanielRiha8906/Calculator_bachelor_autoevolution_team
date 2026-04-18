@@ -26,7 +26,7 @@ class History {
 }
 
 note top of History
-    Module: src/history.py
+    Module: src/session/history.py
     Session-scoped operation tracker.
     Formats entries as operation(arg1, arg2, ...) = result.
     Persists to file on session end.
@@ -43,7 +43,7 @@ class Logger {
 }
 
 note top of Logger
-    Module: src/logger.py
+    Module: src/shared/logger.py
     Centralized file-based error logger.
     Appends plain-text lines to error.log.
     WARNING level: unsupported operations.
@@ -52,14 +52,16 @@ end note
 
 note as OPERATIONS_NOTE
     <b>OPERATIONS</b> : dict[str, dict]
-    Module-level constant in src/operations.py
+    Composed in src/operations/__init__.py
+    from NORMAL_OPERATIONS (src/operations/normal.py)
+    and SCIENTIFIC_OPERATIONS (src/operations/scientific.py).
     Maps operation keys to dispatch metadata:
     add, subtract, multiply, divide, power (arity=2)
     factorial (arity=1, coerce=int)
     square, cube, square_root, cube_root,
     log10, ln (arity=1, coerce=float)
     Each entry: { method, arity, label [, coerce] }
-    Imported by input_handler.py and cli.py.
+    Imported by session/input_handler.py and interface/cli.py.
 end note
 
 class OperationDispatcher {
@@ -70,7 +72,7 @@ class OperationDispatcher {
 }
 
 note top of OperationDispatcher
-    Module: src/dispatcher.py
+    Module: src/shared/dispatcher.py
     Centralises operand coercion and method dispatch.
     Used by both InputHandler and CliDispatcher.
     No I/O or Logger dependency — callers handle errors.
@@ -90,14 +92,15 @@ class InputHandler {
 }
 
 note top of InputHandler
-    Module: src/input_handler.py
+    Module: src/session/input_handler.py
+    (shim: src/input_handler.py for backwards compat)
     Drives an interactive calculator REPL session.
     Re-exports OPERATIONS for backwards compatibility.
 end note
 
 note as RUN_SESSION_NOTE
     <b>run_session</b>(calculator: Calculator, input_fn: Callable | None, logger: Logger | None): None
-    Free function in src/input_handler.py
+    Free function in src/session/input_handler.py
     Convenience entry point: creates an InputHandler
     and calls handler.run()
 end note
@@ -114,7 +117,7 @@ class CliDispatcher {
 }
 
 note top of CliDispatcher
-    Module: src/cli.py
+    Module: src/interface/cli.py
     Parses CLI args, validates operands,
     dispatches to Calculator, prints result
     to stdout or error to stderr.
