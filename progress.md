@@ -177,4 +177,4 @@ Tests passed: 513/513
 Branch: task/issue-66-error-logging
 Merge target: exp/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 509.7s | Cost: $1.258862 USD | Turns: 12
