@@ -23,11 +23,18 @@ end note
 
 class InputLoop <<module>> {
   +OPERATIONS : dict
+  +MAX_RETRY_ATTEMPTS : int
   +print_menu() : None
-  +get_operation(input_fn: Callable) : str | None
-  +get_operands(count: int, input_fn: Callable) : list[float]
+  +get_operation(input_fn: Callable, retry_limit: int) : str | None
+  +get_operands(count: int, input_fn: Callable, retry_limit: int) : list[float] | None
   +dispatch(operation: str, operands: list, calc: Calculator) : float
   +run_loop(input_fn: Callable) : None
+}
+
+class Validation <<module>> {
+  +VALID_OPERATIONS : frozenset[str]
+  +validate_operation(op: str) : tuple[bool, str]
+  +validate_operand(raw: str) : tuple[bool, float, str]
 }
 
 class Main <<module>> {
@@ -40,6 +47,7 @@ class CLI <<module>> {
 }
 
 InputLoop --> Calculator : uses
+InputLoop --> Validation : validate_operation / validate_operand
 Main --> InputLoop : calls run_loop()
 Main --> CLI : calls run_cli()
 CLI --> OPERATIONS : reads operand count

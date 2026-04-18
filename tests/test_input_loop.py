@@ -55,11 +55,12 @@ def test_get_operation_exit_returns_none() -> None:
 def test_get_operation_invalid_prints_error_and_returns_sentinel(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """An unrecognised key must print an error and return '__invalid__'."""
-    result = get_operation(input_fn=lambda _prompt: "nonsense")
-    assert result == "__invalid__"
+    """An unrecognised key must print error and exhaust retries, returning '__max_retries_exceeded__'."""
+    inputs = iter(["nonsense", "nonsense", "nonsense"])
+    result = get_operation(input_fn=lambda _prompt: next(inputs))
+    assert result == "__max_retries_exceeded__"
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
 
 
 # ---------------------------------------------------------------------------
@@ -75,10 +76,15 @@ def test_get_operands_two_values_returns_floats() -> None:
     assert all(isinstance(v, float) for v in result)
 
 
-def test_get_operands_non_numeric_raises_value_error() -> None:
-    """A non-numeric input must raise ValueError."""
-    with pytest.raises(ValueError):
-        get_operands(1, input_fn=lambda _prompt: "abc")
+def test_get_operands_non_numeric_exhausts_retries_returns_none(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A non-numeric input exhausts retries and returns None."""
+    inputs = iter(["abc", "abc", "abc"])
+    result = get_operands(1, input_fn=lambda _prompt: next(inputs))
+    assert result is None
+    captured = capsys.readouterr()
+    assert "Maximum retry attempts reached" in captured.out
 
 
 # ---------------------------------------------------------------------------
@@ -126,22 +132,23 @@ def test_run_loop_add_then_exit(capsys: pytest.CaptureFixture[str]) -> None:
 def test_run_loop_invalid_operation_shows_error_and_continues(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """An invalid operation key must show an error and not crash the loop."""
+    """An invalid operation with retry then exit must show error and exit."""
     inputs = iter(["nonsense", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
     assert "Goodbye" in captured.out
 
 
 def test_run_loop_non_numeric_operand_shows_error_and_continues(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A non-numeric operand must show an error message and continue the loop."""
-    inputs = iter(["add", "abc", "exit"])
+    """A non-numeric operand with retry then valid operands must show error and continue."""
+    inputs = iter(["add", "abc", "3", "4", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert "Error" in captured.out
+    assert "Error" in captured.out or "numeric" in captured.out
+    assert "Result: 7" in captured.out
     assert "Goodbye" in captured.out
 
 
@@ -224,21 +231,23 @@ def test_get_operation_case_insensitive_mixed() -> None:
 def test_get_operation_empty_string_returns_sentinel(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """An empty string is not a valid operation and must return '__invalid__'."""
-    result = get_operation(input_fn=lambda _prompt: "")
-    assert result == "__invalid__"
+    """An empty string exhausts retries and returns '__max_retries_exceeded__'."""
+    inputs = iter(["", "", ""])
+    result = get_operation(input_fn=lambda _prompt: next(inputs))
+    assert result == "__max_retries_exceeded__"
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
 
 
 def test_get_operation_whitespace_only_returns_sentinel(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Whitespace-only input collapses to '' after strip and must return '__invalid__'."""
-    result = get_operation(input_fn=lambda _prompt: "   ")
-    assert result == "__invalid__"
+    """Whitespace-only input exhausts retries and returns '__max_retries_exceeded__'."""
+    inputs = iter(["   ", "   ", "   "])
+    result = get_operation(input_fn=lambda _prompt: next(inputs))
+    assert result == "__max_retries_exceeded__"
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
 
 
 def test_get_operation_exit_case_insensitive() -> None:
@@ -315,16 +324,26 @@ def test_get_operands_whitespace_around_number_accepted() -> None:
     assert math.isclose(result[0], 3.14)
 
 
-def test_get_operands_empty_string_raises_value_error() -> None:
-    """An empty string must raise ValueError (not parseable as float)."""
-    with pytest.raises(ValueError):
-        get_operands(1, input_fn=lambda _prompt: "")
+def test_get_operands_empty_string_exhausts_retries_returns_none(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty string exhausts retries and returns None."""
+    inputs = iter(["", "", ""])
+    result = get_operands(1, input_fn=lambda _prompt: next(inputs))
+    assert result is None
+    captured = capsys.readouterr()
+    assert "Maximum retry attempts reached" in captured.out
 
 
-def test_get_operands_none_like_string_raises_value_error() -> None:
-    """The string 'None' must raise ValueError as it is not numeric."""
-    with pytest.raises(ValueError):
-        get_operands(1, input_fn=lambda _prompt: "None")
+def test_get_operands_none_like_string_exhausts_retries_returns_none(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The string 'None' exhausts retries and returns None."""
+    inputs = iter(["None", "None", "None"])
+    result = get_operands(1, input_fn=lambda _prompt: next(inputs))
+    assert result is None
+    captured = capsys.readouterr()
+    assert "Maximum retry attempts reached" in captured.out
 
 
 def test_get_operands_multiple_values_sequence() -> None:
@@ -662,20 +681,20 @@ def test_run_loop_multiple_valid_operations(capsys: pytest.CaptureFixture[str]) 
 def test_run_loop_whitespace_input_for_operation(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Whitespace-only operation input must show unknown-operation error and continue."""
+    """Whitespace-only operation input retries then valid input or exit continues."""
     inputs = iter(["   ", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
     assert "Goodbye" in captured.out
 
 
 def test_run_loop_empty_operation_input(capsys: pytest.CaptureFixture[str]) -> None:
-    """Empty string operation input must show unknown-operation error and continue."""
+    """Empty string operation input retries then exit continues."""
     inputs = iter(["", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert "Unknown operation" in captured.out
+    assert "Invalid operation" in captured.out
     assert "Goodbye" in captured.out
 
 
@@ -752,13 +771,12 @@ def test_run_loop_unary_operations_all_produce_results(
 def test_run_loop_multiple_invalid_then_valid(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Several invalid inputs in a row must not break the loop; valid op still works."""
-    inputs = iter(["bad1", "bad2", "bad3", "add", "2", "3", "exit"])
+    """Three invalid operations exhaust retries and terminate session."""
+    inputs = iter(["bad1", "bad2", "bad3"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert captured.out.count("Unknown operation") == 3
-    assert "5" in captured.out
-    assert "Goodbye" in captured.out
+    assert "Invalid operation" in captured.out
+    assert "Session terminated due to too many invalid operation entries" in captured.out
 
 
 def test_run_loop_result_line_format(capsys: pytest.CaptureFixture[str]) -> None:

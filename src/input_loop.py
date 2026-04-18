@@ -10,6 +10,10 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .validation import validate_operation, validate_operand
+
+# Maximum number of re-prompt attempts before the loop is terminated.
+MAX_RETRY_ATTEMPTS: int = 3
 
 # Maps string keys to (display_label, operand_count).
 # operand_count == 1 for unary operations, 2 for binary operations.
@@ -37,46 +41,72 @@ def print_menu() -> None:
     print("  exit         - Quit the calculator")
 
 
-def get_operation(input_fn: Callable[[str], str] = input) -> str | None:
-    """Prompt the user to choose an operation.
+def get_operation(
+    input_fn: Callable[[str], str] = input,
+    retry_limit: int = MAX_RETRY_ATTEMPTS,
+) -> str | None:
+    """Prompt the user to choose an operation, with bounded retry attempts.
 
     Args:
         input_fn: Callable used to read user input.  Defaults to the
             built-in ``input``.
+        retry_limit: Maximum number of attempts before giving up.  Defaults
+            to :data:`MAX_RETRY_ATTEMPTS`.
 
     Returns:
-        The operation key string if valid, or ``None`` if the user typed
-        "exit".  If the input is unrecognised the function prints an error
-        message and returns the sentinel string ``"__invalid__"``.
+        The operation key string on success, ``None`` if the user typed
+        "exit", or the sentinel string ``"__max_retries_exceeded__"`` when
+        the user exhausts all allowed attempts without supplying a valid
+        operation.
     """
-    choice = input_fn("Enter operation: ").strip().lower()
-    if choice == "exit":
-        return None
-    if choice in OPERATIONS:
-        return choice
-    print(f"Unknown operation: '{choice}'. Type a valid operation key or 'exit'.")
-    return "__invalid__"
+    for attempt in range(1, retry_limit + 1):
+        choice = input_fn("Enter operation: ").strip().lower()
+        if choice == "exit":
+            return None
+        valid, error_msg = validate_operation(choice)
+        if valid:
+            return choice
+        print(f"{error_msg}")
+        print(f"Please try again. (Attempt {attempt} of {retry_limit})")
+
+    print("Maximum retry attempts reached. Terminating session.")
+    return "__max_retries_exceeded__"
 
 
-def get_operands(count: int, input_fn: Callable[[str], str] = input) -> list[float]:
-    """Prompt the user to enter ``count`` numeric operands.
+def get_operands(
+    count: int,
+    input_fn: Callable[[str], str] = input,
+    retry_limit: int = MAX_RETRY_ATTEMPTS,
+) -> list[float] | None:
+    """Prompt the user to enter ``count`` numeric operands, with bounded retries.
 
     Args:
         count: Number of operands to collect.
         input_fn: Callable used to read user input.  Defaults to the
             built-in ``input``.
+        retry_limit: Maximum number of attempts per operand before giving up.
+            Defaults to :data:`MAX_RETRY_ATTEMPTS`.
 
     Returns:
-        A list of ``float`` values entered by the user.
-
-    Raises:
-        ValueError: If any entered value cannot be converted to float.
+        A list of ``float`` values entered by the user on success, or ``None``
+        if the retry limit was exceeded for any individual operand.
     """
     operands: list[float] = []
     for i in range(count):
         label = f"operand {i + 1}" if count > 1 else "operand"
-        raw = input_fn(f"Enter {label}: ").strip()
-        operands.append(float(raw))
+        value: float | None = None
+        for attempt in range(1, retry_limit + 1):
+            raw = input_fn(f"Enter {label}: ").strip()
+            valid, parsed, error_msg = validate_operand(raw)
+            if valid:
+                value = parsed
+                break
+            print(f"{error_msg}")
+            print(f"Please enter a number. (Attempt {attempt} of {retry_limit})")
+        if value is None:
+            print(f"Maximum retry attempts reached for {label}. Returning to menu.")
+            return None
+        operands.append(value)
     return operands
 
 
@@ -154,13 +184,18 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
             print("Goodbye!")
             break
 
-        if operation == "__invalid__":
-            continue
+        if operation == "__max_retries_exceeded__":
+            print("Session terminated due to too many invalid operation entries.")
+            break
 
         _, operand_count = OPERATIONS[operation]
 
+        operands = get_operands(operand_count, input_fn)
+        if operands is None:
+            print("Returning to the main menu.")
+            continue
+
         try:
-            operands = get_operands(operand_count, input_fn)
             result = dispatch(operation, operands, calc)
             print(f"Result: {result}")
         except ValueError as exc:

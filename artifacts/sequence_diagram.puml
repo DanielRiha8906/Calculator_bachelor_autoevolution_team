@@ -5,6 +5,7 @@ participant User
 participant Main
 participant CLI
 participant InputLoop
+participant Validation
 participant Calculator
 
 == CLI mode (e.g. python -m src add 3 5) ==
@@ -35,15 +36,21 @@ end
 User -> Main : sys.argv = []
 Main -> InputLoop : run_loop()
 
-loop until "exit"
+loop until "exit" or max retries exceeded
 
   InputLoop -> User : print_menu()
-  User -> InputLoop : get_operation() => "divide"
+  User -> InputLoop : get_operation() — attempt 1 => "divide"
+  InputLoop -> Validation : validate_operation("divide")
+  Validation --> InputLoop : (True, "")
   InputLoop -> InputLoop : look up operand_count = 2
   InputLoop -> User : get_operands(2) — prompt operand 1
   User -> InputLoop : "10"
+  InputLoop -> Validation : validate_operand("10")
+  Validation --> InputLoop : (True, 10.0, "")
   InputLoop -> User : get_operands(2) — prompt operand 2
   User -> InputLoop : "2"
+  InputLoop -> Validation : validate_operand("2")
+  Validation --> InputLoop : (True, 2.0, "")
   InputLoop -> Calculator : dispatch("divide", [10.0, 2.0])
   Calculator -> Calculator : divide(10.0, 2.0) — b != 0, returns 5.0
   Calculator --> InputLoop : return 5.0
@@ -52,15 +59,64 @@ loop until "exit"
   alt Error path (b == 0)
     InputLoop -> User : print_menu()
     User -> InputLoop : get_operation() => "divide"
+    InputLoop -> Validation : validate_operation("divide")
+    Validation --> InputLoop : (True, "")
     InputLoop -> InputLoop : look up operand_count = 2
     InputLoop -> User : get_operands(2) — prompt operand 1
     User -> InputLoop : "10"
+    InputLoop -> Validation : validate_operand("10")
+    Validation --> InputLoop : (True, 10.0, "")
     InputLoop -> User : get_operands(2) — prompt operand 2
     User -> InputLoop : "0"
+    InputLoop -> Validation : validate_operand("0")
+    Validation --> InputLoop : (True, 0.0, "")
     InputLoop -> Calculator : dispatch("divide", [10.0, 0.0])
     Calculator -> Calculator : divide(10.0, 0.0) — b == 0, raises ValueError
     Calculator --> InputLoop : raise ValueError("Division by zero is not allowed")
     InputLoop -> User : print("Error: Division by zero is not allowed")
+  end
+
+  alt Retry path — invalid operation (up to MAX_RETRY_ATTEMPTS times)
+    InputLoop -> User : print_menu()
+    User -> InputLoop : get_operation() — attempt 1 => "badop"
+    InputLoop -> Validation : validate_operation("badop")
+    Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
+    InputLoop -> User : print error + "(Attempt 1 of 3)"
+    User -> InputLoop : get_operation() — attempt 2 => "alsowrong"
+    InputLoop -> Validation : validate_operation("alsowrong")
+    Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
+    InputLoop -> User : print error + "(Attempt 2 of 3)"
+    User -> InputLoop : get_operation() — attempt 3 => "stillwrong"
+    InputLoop -> Validation : validate_operation("stillwrong")
+    Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
+    InputLoop -> User : print error + "(Attempt 3 of 3)"
+    InputLoop -> User : print("Maximum retry attempts reached. Terminating session.")
+    InputLoop --> InputLoop : return "__max_retries_exceeded__"
+    InputLoop -> User : print("Session terminated due to too many invalid operation entries.")
+  end
+
+  alt Retry path — invalid operand (up to MAX_RETRY_ATTEMPTS times per operand)
+    InputLoop -> User : print_menu()
+    User -> InputLoop : get_operation() => "add"
+    InputLoop -> Validation : validate_operation("add")
+    Validation --> InputLoop : (True, "")
+    InputLoop -> InputLoop : look up operand_count = 2
+    InputLoop -> User : get_operands(2) — prompt operand 1
+    User -> InputLoop : "abc"
+    InputLoop -> Validation : validate_operand("abc")
+    Validation --> InputLoop : (False, 0.0, "Invalid operand. Please enter a numeric value.")
+    InputLoop -> User : print error + "(Attempt 1 of 3)"
+    User -> InputLoop : "xyz"
+    InputLoop -> Validation : validate_operand("xyz")
+    Validation --> InputLoop : (False, 0.0, "Invalid operand. Please enter a numeric value.")
+    InputLoop -> User : print error + "(Attempt 2 of 3)"
+    User -> InputLoop : "???"
+    InputLoop -> Validation : validate_operand("???")
+    Validation --> InputLoop : (False, 0.0, "Invalid operand. Please enter a numeric value.")
+    InputLoop -> User : print error + "(Attempt 3 of 3)"
+    InputLoop -> User : print("Maximum retry attempts reached for operand 1. Returning to menu.")
+    InputLoop --> InputLoop : return None from get_operands
+    InputLoop -> User : print("Returning to the main menu.")
   end
 
 end
