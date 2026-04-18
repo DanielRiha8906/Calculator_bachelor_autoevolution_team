@@ -114,6 +114,7 @@ repeat
       :Append entry to history.txt;
     end group
     if (ValueError raised?) then (yes)
+      :Log error to ErrorLogger with category and context;
       :Print "Error: <message>";
     else (no)
     endif

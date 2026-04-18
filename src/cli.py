@@ -17,6 +17,12 @@ import argparse
 import sys
 
 from .calculator import Calculator
+from .error_logger import (
+    CALCULATION_ERROR,
+    INVALID_INPUT,
+    UNEXPECTED_ERROR,
+    ErrorLogger,
+)
 from .history import OperationHistory
 from .input_loop import OPERATIONS, dispatch
 
@@ -71,6 +77,7 @@ def run_cli(history: OperationHistory | None = None) -> None:
     """
     if history is None:
         history = OperationHistory()
+    error_logger = ErrorLogger()
 
     parser = _build_parser()
     args = parser.parse_args()
@@ -112,6 +119,19 @@ def run_cli(history: OperationHistory | None = None) -> None:
     try:
         result = dispatch(operation, operands, calc)
     except ValueError as exc:
+        lower_msg = str(exc).lower()
+        if "division by zero" in lower_msg or "zero" in lower_msg:
+            category = CALCULATION_ERROR
+        elif "invalid" in lower_msg:
+            category = INVALID_INPUT
+        else:
+            category = CALCULATION_ERROR
+        context: dict = {  # type: ignore[type-arg]
+            "operation": operation,
+            "operands": operands,
+            "error": str(exc),
+        }
+        error_logger.log_error(category, str(exc), context)
         print(f"error: {exc}", file=sys.stderr)
         sys.exit(2)
 
