@@ -385,4 +385,4 @@ Files changed:
 Risks: GUI tests require a display; 76 skipped in headless CI (expected). No logic changes.
 Tests: 1219 passed, 76 skipped, 0 failed.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 681.9s | Cost: $1.685091 USD | Turns: 14
