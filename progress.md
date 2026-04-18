@@ -117,3 +117,13 @@ Duration: 536.2s | Cost: $1.399869 USD | Turns: 15
 - Branch: task/issue-88-logic-separation
 - Intended merge/PR target: exp/naive-team
 Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
+
+## Run Summary — Issue #94: Documentation (Naive/team)
+
+- Files changed: README.md (complete rewrite)
+- Purpose: Replace single-line placeholder README with comprehensive documentation covering project overview, installation, CLI and interactive usage examples, API reference for all public classes and functions, architecture overview with module layout, developer guide, and research/thesis context
+- Risks: None — documentation only; no source or test code modified
+- Tests passed: Yes (no tests affected)
+- Branch: exp/naive-team
+- Intended merge/PR target: exp/naive-team
+- Duration: PENDING | Cost: PENDING | Turns: PENDING
