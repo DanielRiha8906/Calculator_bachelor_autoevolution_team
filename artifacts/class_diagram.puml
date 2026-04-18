@@ -80,7 +80,44 @@ package "Interaction Layer" {
   }
 
   class Main <<module>> {
-    +main() : None
+    +main(argv: list[str] | None) : None
+  }
+
+  class OperandInputWidget {
+    -_label : tk.Label
+    -_entry : tk.Entry
+    +__init__(parent: tk.Widget, label_text: str, row: int) : None
+    +get_value() : float
+    +clear() : None
+    +set_visible(visible: bool) : None
+  }
+
+  class CalculatorGUI {
+    -_calc : Calculator
+    -_history : OperationHistory
+    -_error_logger : ErrorLogger
+    -_current_mode : Mode
+    -_selected_operation : str | None
+    -_root : tk.Tk
+    -_operation_buttons : list[tk.Button]
+    -_operand_widgets : list[OperandInputWidget]
+    -_result_var : tk.StringVar
+    -_error_var : tk.StringVar
+    +__init__() : None
+    +run() : None
+    -_create_mode_selector_frame() : None
+    -_create_operation_selector_frame() : None
+    -_create_input_frame() : None
+    -_create_result_frame() : None
+    -_create_history_frame() : None
+    -_on_mode_changed(new_mode: Mode) : None
+    -_on_mode_changed_from_radio() : None
+    -_on_operation_selected(operation: str) : None
+    -_perform_calculation() : None
+    -_update_operation_buttons() : None
+    -_refresh_history_display() : None
+    -_clear_operand_inputs() : None
+    -_show_error(message: str) : None
   }
 
   class CLI <<module>> {
@@ -133,6 +170,14 @@ InputLoop --> Mode : uses for menu / validation / mode-switch
 Validation --> Mode : uses for mode-scoped validation
 Main --> InputLoop : calls run_loop()
 Main --> CLI : calls run_cli()
+Main --> CalculatorGUI : creates / calls run() when --gui
+
+CalculatorGUI --> Calculator : uses via dispatch()
+CalculatorGUI --> OperationHistory : creates / records history
+CalculatorGUI --> ErrorLogger : creates / logs errors
+CalculatorGUI --> Mode : uses get_operations_for_mode()
+CalculatorGUI --> InputLoop : calls dispatch()
+CalculatorGUI *-- OperandInputWidget : contains two instances
 CLI --> OPERATIONS : reads operand count
 CLI --> Calculator : creates instance
 CLI --> InputLoop : calls dispatch()
