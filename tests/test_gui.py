@@ -1170,6 +1170,636 @@ class TestCalculatorGUIIntegration:
 # ============================================================================
 
 
+# ============================================================================
+# CalculatorGUI._make_button — Button creation with styling
+# ============================================================================
+
+
+class TestCalculatorGUIMakeButton:
+    """Tests for CalculatorGUI._make_button method with flat styling."""
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_creates_button_with_text(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should create a Button with given text."""
+        gui = gui_with_mocks
+        mock_btn = mock.MagicMock()
+        mock_button_class.return_value = mock_btn
+
+        result = gui._make_button(
+            mock.MagicMock(), "5", lambda: None, bg="#333333", fg="#ffffff"
+        )
+
+        assert result == mock_btn
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_sets_borderwidth_zero(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should set borderwidth=0 for flat buttons."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        gui._make_button(
+            mock.MagicMock(), "+", lambda: None, bg="#ff9500", fg="#ffffff"
+        )
+
+        # Verify Button was called with borderwidth=0
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("borderwidth") == 0
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_sets_highlightthickness_zero(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should set highlightthickness=0 for flat buttons."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        gui._make_button(
+            mock.MagicMock(), "C", lambda: None, bg="#a5a5a5", fg="#ffffff"
+        )
+
+        # Verify Button was called with highlightthickness=0
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("highlightthickness") == 0
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_sets_relief_flat(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should set relief=tk.FLAT for no bevel."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        gui._make_button(
+            mock.MagicMock(), "=", lambda: None, bg="#ff9500", fg="#ffffff"
+        )
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert "relief" in call_kwargs
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_respects_background_color(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should use provided bg parameter."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        bg_color = "#ff9500"
+        gui._make_button(mock.MagicMock(), "op", lambda: None, bg=bg_color)
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("bg") == bg_color
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_respects_foreground_color(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should use provided fg parameter."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        fg_color = "#ffffff"
+        gui._make_button(mock.MagicMock(), "2", lambda: None, fg=fg_color)
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("fg") == fg_color
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_sets_active_colors(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should set activebackground and activeforeground."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        bg_color = "#333333"
+        fg_color = "#ffffff"
+        gui._make_button(
+            mock.MagicMock(), "7", lambda: None, bg=bg_color, fg=fg_color
+        )
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("activebackground") == bg_color
+        assert call_kwargs.get("activeforeground") == fg_color
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_passes_command(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should attach command callback."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        cmd = lambda: print("clicked")
+        gui._make_button(mock.MagicMock(), "9", cmd)
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("command") == cmd
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_sets_padding(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should set padx and pady for spacing."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        gui._make_button(mock.MagicMock(), "3", lambda: None)
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert "padx" in call_kwargs
+        assert "pady" in call_kwargs
+
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_make_button_default_colors_are_button_colors(
+        self, mock_font_class, mock_button_class, gui_with_mocks
+    ):
+        """_make_button should default to numeric button colors."""
+        gui = gui_with_mocks
+        mock_button_class.return_value = mock.MagicMock()
+
+        # Call with default colors
+        gui._make_button(mock.MagicMock(), "1", lambda: None)
+
+        call_kwargs = mock_button_class.call_args[1]
+        assert call_kwargs.get("bg") == "#333333"  # _BTN_BG
+        assert call_kwargs.get("fg") == "#ffffff"  # _BTN_FG
+
+
+# ============================================================================
+# CalculatorGUI._build_display — Display configuration with padding
+# ============================================================================
+
+
+class TestCalculatorGUIBuildDisplay:
+    """Tests for CalculatorGUI._build_display display panel creation."""
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_creates_frame_with_padx_zero(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display should pack frame with padx=0."""
+        gui = gui_with_mocks
+        mock_frame_instance = mock.MagicMock()
+        mock_frame.return_value = mock_frame_instance
+
+        with mock.patch("src.gui.tk.Frame", mock_frame):
+            gui._build_display()
+
+        # Verify Frame.pack was called with padx=0
+        mock_frame_instance.pack.assert_called()
+        call_kwargs = mock_frame_instance.pack.call_args[1]
+        assert call_kwargs.get("padx") == 0
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_frame_has_black_background(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display should create frame with black background."""
+        gui = gui_with_mocks
+        mock_frame_instance = mock.MagicMock()
+        mock_frame.return_value = mock_frame_instance
+
+        with mock.patch("src.gui.tk.Frame", mock_frame):
+            gui._build_display()
+
+        # Verify Frame was created with bg=#000000
+        call_kwargs = mock_frame.call_args[1]
+        assert call_kwargs.get("bg") == "#000000"  # _DISPLAY_BG
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_label_has_white_text(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display label should have white foreground."""
+        gui = gui_with_mocks
+        mock_label_instance = mock.MagicMock()
+        mock_label.return_value = mock_label_instance
+
+        with mock.patch("src.gui.tk.Label", mock_label):
+            gui._build_display()
+
+        # Verify Label was created with fg=#ffffff
+        call_kwargs = mock_label.call_args[1]
+        assert call_kwargs.get("fg") == "#ffffff"  # _DISPLAY_FG
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_label_has_internal_padding(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display label should have padx and pady for internal padding."""
+        gui = gui_with_mocks
+        mock_label_instance = mock.MagicMock()
+        mock_label.return_value = mock_label_instance
+
+        with mock.patch("src.gui.tk.Label", mock_label):
+            gui._build_display()
+
+        call_kwargs = mock_label.call_args[1]
+        # Both padx and pady should be set for internal padding
+        assert "padx" in call_kwargs
+        assert "pady" in call_kwargs
+        assert call_kwargs.get("padx") > 0
+        assert call_kwargs.get("pady") > 0
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_font_is_large(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display should use a large font size."""
+        gui = gui_with_mocks
+        mock_label_instance = mock.MagicMock()
+        mock_label.return_value = mock_label_instance
+        mock_font.return_value = mock.MagicMock()
+
+        with mock.patch("src.gui.tk.Label", mock_label), \
+             mock.patch("src.gui.tkfont.Font", mock_font):
+            gui._build_display()
+
+        # Font should be created with size 32
+        if mock_font.call_args:
+            call_kwargs = mock_font.call_args[1]
+            assert call_kwargs.get("size") == 32
+
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.font.Font")
+    def test_build_display_creates_string_var(
+        self, mock_font, mock_label, mock_stringvar, mock_frame, gui_with_mocks
+    ):
+        """_build_display should create a StringVar for display content."""
+        gui = gui_with_mocks
+
+        with mock.patch("src.gui.tk.StringVar", mock_stringvar):
+            gui._build_display()
+
+        mock_stringvar.assert_called()
+        call_kwargs = mock_stringvar.call_args[1]
+        assert call_kwargs.get("value") == "0"
+
+
+# ============================================================================
+# Color constant verification for normal mode buttons
+# ============================================================================
+
+
+class TestCalculatorGUIColorConstantsNormalMode:
+    """Tests for color assignments in normal-mode button grid."""
+
+    def test_numeric_buttons_use_dark_gray_color(self, gui_with_mocks):
+        """Numeric buttons (0-9, .) should use _BTN_BG (#333333)."""
+        gui = gui_with_mocks
+
+        # Simulate building and check button colors in the layout data
+        from src.gui import _BTN_BG
+
+        numeric_buttons = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
+
+        # Build normal frame and verify button colors
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            # Extract all calls to _make_button and verify numeric buttons get correct color
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in numeric_buttons:
+                    assert kwargs.get("bg") == _BTN_BG
+
+    def test_operator_buttons_use_orange_color(self, gui_with_mocks):
+        """Operator buttons (+, -, *, /, =) should use orange (#ff9500)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_OP_BG, _BTN_EQUAL_BG
+
+        operator_buttons = ["+", "-", "*", "/"]
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in operator_buttons:
+                    assert kwargs.get("bg") == _BTN_OP_BG
+                elif button_label == "=":
+                    assert kwargs.get("bg") == _BTN_EQUAL_BG
+
+    def test_clear_utility_buttons_use_light_gray(self, gui_with_mocks):
+        """Utility buttons (C, +/-, %) should use light gray (#a5a5a5)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_CLEAR_BG
+
+        clear_buttons = ["C", "+/-", "%"]
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in clear_buttons:
+                    assert kwargs.get("bg") == _BTN_CLEAR_BG
+
+
+# ============================================================================
+# Color constant verification for scientific mode buttons
+# ============================================================================
+
+
+class TestCalculatorGUIColorConstantsScientificMode:
+    """Tests for color assignments in scientific-mode button grid."""
+
+    def test_scientific_function_buttons_use_blue(self, gui_with_mocks):
+        """Scientific function buttons should use blue (#2a5298)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_SCI_BG
+        from src.parser import UNARY_FUNCTIONS
+
+        sci_functions = list(UNARY_FUNCTIONS.keys())
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in sci_functions:
+                    assert kwargs.get("bg") == _BTN_SCI_BG
+
+    def test_scientific_numeric_buttons_use_dark_gray(self, gui_with_mocks):
+        """Numeric buttons in scientific mode should use dark gray (#333333)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_BG
+
+        numeric_buttons = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in numeric_buttons:
+                    assert kwargs.get("bg") == _BTN_BG
+
+    def test_scientific_clear_buttons_use_light_gray(self, gui_with_mocks):
+        """Clear buttons in scientific mode should use light gray (#a5a5a5)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_CLEAR_BG
+
+        clear_buttons = ["C", "+/-"]
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label in clear_buttons:
+                    assert kwargs.get("bg") == _BTN_CLEAR_BG
+
+    def test_scientific_equals_button_uses_orange(self, gui_with_mocks):
+        """Equals button in scientific mode should use orange (#ff9500)."""
+        gui = gui_with_mocks
+
+        from src.gui import _BTN_EQUAL_BG
+
+        with mock.patch.object(gui, "_make_button") as mock_make_button:
+            mock_make_button.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            for call in mock_make_button.call_args_list:
+                args, kwargs = call
+                button_label = args[1] if len(args) > 1 else kwargs.get("text")
+                if button_label == "=":
+                    assert kwargs.get("bg") == _BTN_EQUAL_BG
+
+
+# ============================================================================
+# Window background color verification
+# ============================================================================
+
+
+class TestCalculatorGUIWindowBackground:
+    """Tests for window background color configuration."""
+
+    @mock.patch("tkinter.Tk")
+    @mock.patch("tkinter.Frame")
+    @mock.patch("tkinter.StringVar")
+    @mock.patch("tkinter.Label")
+    @mock.patch("tkinter.Button")
+    @mock.patch("tkinter.font.Font")
+    def test_window_background_is_black(
+        self, mock_font, mock_button, mock_label, mock_stringvar,
+        mock_frame, mock_tk_class
+    ):
+        """CalculatorGUI root window should have black background (#000000)."""
+        from src.gui import _WINDOW_BG
+
+        mock_root = mock.MagicMock()
+        mock_tk_class.return_value = mock_root
+
+        with mock.patch("src.gui.tk.Tk", mock_tk_class):
+            gui = CalculatorGUI()
+
+        # Verify configure was called with bg=_WINDOW_BG
+        mock_root.configure.assert_called()
+        call_kwargs = mock_root.configure.call_args[1]
+        assert call_kwargs.get("bg") == _WINDOW_BG
+        assert _WINDOW_BG == "#000000"
+
+
+# ============================================================================
+# CalculatorGUI._build_normal_buttons — Normal button grid styling
+# ============================================================================
+
+
+class TestCalculatorGUIBuildNormalButtons:
+    """Tests for normal-mode button grid creation and styling."""
+
+    def test_build_normal_buttons_creates_all_numeric_buttons(self, gui_with_mocks):
+        """_build_normal_buttons should create buttons for all digits 0-9."""
+        gui = gui_with_mocks
+
+        digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for digit in digits:
+                assert digit in created_labels
+
+    def test_build_normal_buttons_creates_all_operators(self, gui_with_mocks):
+        """_build_normal_buttons should create buttons for +, -, *, /, =."""
+        gui = gui_with_mocks
+
+        operators = ["+", "-", "*", "/", "="]
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for op in operators:
+                assert op in created_labels
+
+    def test_build_normal_buttons_creates_utility_buttons(self, gui_with_mocks):
+        """_build_normal_buttons should create C, +/-, % buttons."""
+        gui = gui_with_mocks
+
+        utilities = ["C", "+/-", "%"]
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for util in utilities:
+                assert util in created_labels
+
+    def test_build_normal_buttons_frame_has_window_background(self, gui_with_mocks):
+        """Normal buttons frame should have black background."""
+        gui = gui_with_mocks
+
+        from src.gui import _WINDOW_BG
+
+        with mock.patch("src.gui.tk.Frame") as mock_frame:
+            mock_frame.return_value = mock.MagicMock()
+            gui._build_normal_buttons()
+
+            # Verify Frame was created with bg=_WINDOW_BG
+            call_kwargs = mock_frame.call_args[1]
+            assert call_kwargs.get("bg") == _WINDOW_BG
+
+
+# ============================================================================
+# CalculatorGUI._build_scientific_buttons — Scientific button grid styling
+# ============================================================================
+
+
+class TestCalculatorGUIBuildScientificButtons:
+    """Tests for scientific-mode button grid creation and styling."""
+
+    def test_build_scientific_buttons_creates_all_functions(self, gui_with_mocks):
+        """_build_scientific_buttons should create buttons for all UNARY_FUNCTIONS."""
+        gui = gui_with_mocks
+
+        from src.parser import UNARY_FUNCTIONS
+
+        functions = list(UNARY_FUNCTIONS.keys())
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for func in functions:
+                assert func in created_labels
+
+    def test_build_scientific_buttons_creates_numeric_buttons(self, gui_with_mocks):
+        """_build_scientific_buttons should create buttons for 0-9 and decimal."""
+        gui = gui_with_mocks
+
+        digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for digit in digits:
+                assert digit in created_labels
+
+    def test_build_scientific_buttons_creates_clear_buttons(self, gui_with_mocks):
+        """_build_scientific_buttons should create C, +/-, = buttons."""
+        gui = gui_with_mocks
+
+        special = ["C", "+/-", "="]
+
+        with mock.patch.object(gui, "_make_button") as mock_make:
+            mock_make.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            created_labels = [
+                call[0][1] for call in mock_make.call_args_list
+                if len(call[0]) > 1
+            ]
+            for btn in special:
+                assert btn in created_labels
+
+    def test_build_scientific_buttons_frame_has_window_background(self, gui_with_mocks):
+        """Scientific buttons frame should have black background."""
+        gui = gui_with_mocks
+
+        from src.gui import _WINDOW_BG
+
+        with mock.patch("src.gui.tk.Frame") as mock_frame:
+            mock_frame.return_value = mock.MagicMock()
+            gui._build_scientific_buttons()
+
+            # Verify Frame was created with bg=_WINDOW_BG
+            call_kwargs = mock_frame.call_args[1]
+            assert call_kwargs.get("bg") == _WINDOW_BG
+
+
 class TestMainGUIFlag:
     """Tests for __main__.py GUI launch via --gui flag and env var."""
 

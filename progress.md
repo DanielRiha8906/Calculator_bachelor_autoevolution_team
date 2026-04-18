@@ -1,3 +1,13 @@
+## Run: 2026-04-18
+
+- Files changed: src/gui.py, tests/test_gui.py, artifacts/class_diagram.puml
+- Purpose: Redesign calculator GUI to iOS-inspired aesthetic — black background, orange operator buttons, flat borderless buttons, large display
+- Risks: Purely visual change; no logic modified; cross-platform font/color rendering may vary
+- Tests passed: Yes (1362 passed, 0 failed)
+- Branch: task/issue-127-modern-gui-design
+- Intended merge/PR target: exp/naive-team
+- Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: 2026-04-17
 
 - Files changed: tests/test_calculator.py

@@ -241,6 +241,10 @@ note right of CalculatorGUI
     Self-contained GUI; no other module imports it.
     Dispatches via run_calculation / run_unary_calculation.
     Mode tracked by owned ModeManager instance.
+    iOS-inspired palette: pure-black window/display (#000000),
+    dark-gray numeric buttons (#333333), orange operators (#ff9500),
+    light-gray utility buttons (#a5a5a5). Buttons are flat with
+    no border or highlight ring (borderwidth=0, highlightthickness=0).
 end note
 
 dispatcher_module ..> CalculatorWithHistory : imports / instantiates
