@@ -97,3 +97,13 @@ Duration: 523.4s | Cost: $1.473231 USD | Turns: 12
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
 Duration: 536.2s | Cost: $1.399869 USD | Turns: 15
+
+## Run Summary — Issue #88: Logic Separation (Naive/team)
+
+- Files changed: src/parser.py (created), src/dispatcher.py (created), src/input_handler.py (converted to backwards-compatible re-export shim), src/cli.py (modified), src/retry_handler.py (modified), src/__main__.py (modified), artifacts/class_diagram.puml (modified)
+- Purpose: Structural refactor splitting src/input_handler.py into two modules: src/parser.py (pure parsing logic, no I/O, no class instantiation) and src/dispatcher.py (dispatch logic instantiating CalculatorWithHistory); all callers updated to import from the correct new module; input_handler.py retained as a shim re-exporting all public names for backwards compatibility with existing tests
+- Risks: Low — purely structural, no behavioral change; input_handler.py shim preserves all existing test imports; new modules have full type hints and docstrings; class diagram updated to reflect new module boundaries
+- Tests passed: Yes (802 passed, 0 failed) — includes 183 new tests in tests/test_parser.py and tests/test_dispatcher.py
+- Branch: task/issue-88-logic-separation
+- Intended merge/PR target: exp/naive-team
+Duration: 625.4s | Cost: $1.603886 USD | Turns: 16

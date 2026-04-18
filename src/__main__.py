@@ -1,7 +1,8 @@
 import sys
 
 from src.cli import main as cli_main
-from src.input_handler import BINARY_OPERATORS, run_calculation
+from src.dispatcher import run_calculation
+from src.parser import BINARY_OPERATORS
 from src.retry_handler import get_input_with_retries
 
 
