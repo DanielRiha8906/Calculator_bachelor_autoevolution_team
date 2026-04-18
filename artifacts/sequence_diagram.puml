@@ -70,9 +70,8 @@ actor User as cli_user
 participant "main.py\nmain()" as cli_main
 participant "CliDispatcher" as dispatcher
 participant "OperationDispatcher" as cli_op_disp
-boundary "OPERATIONS\n(src/operations.py)" as cli_ops
+boundary "OPERATIONS\n(src/operations/__init__.py)" as cli_ops
 participant "Calculator" as cli_calc
-participant "Logger" as cli_log
 
 cli_user -> cli_main : python main.py add 5 7
 cli_main -> cli_calc : calc = Calculator()

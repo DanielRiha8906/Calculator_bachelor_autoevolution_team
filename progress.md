@@ -1,3 +1,27 @@
+## Run: Issue #96 — Documentation for Calculator Application
+
+Branch: exp/expert-team
+PR target: exp/expert-team
+
+Files changed:
+- README.md — overwritten; project overview, installation, both usage modes with examples, session file descriptions, troubleshooting quick-reference, links to extended docs
+- docs/ARCHITECTURE.md — new; module layout tree, sub-package responsibilities, data flow for both modes, operation registry design, session vs CLI comparison table, error handling strategy, backward compatibility notes, diagram references
+- docs/MODULES.md — new; per-module reference for Calculator, OperationDispatcher, InputHandler, CliDispatcher, Logger, History, and OPERATIONS registry; includes public interfaces, error conditions, and used-by annotations
+- docs/OPERATIONS_REFERENCE.md — new; one section per operation with key, method, arity, operand type, return type, behavior, error conditions, and CLI examples; grouped by arithmetic, power/root, logarithmic, and special categories
+- docs/SESSION_BEHAVIOR.md — new; InputHandler overview, full session flow, MAX_RETRIES retry logic for operations and operands, menu display format, operand collection, history tracking with format examples, file output descriptions, error handling table
+- docs/TROUBLESHOOTING.md — new; session/REPL problems, CLI exit codes and error message table, error interpretation, error.log format and management, development guidance for adding operations
+- artifacts/sequence_diagram.puml — fixed stale cli_log participant declaration (removed) and updated OPERATIONS boundary label from src/operations.py to src/operations/__init__.py
+
+Purpose: Produce comprehensive, accurate documentation for the calculator application, derived exclusively from reading the actual source code. All file paths, class names, method signatures, error messages, and behavioral descriptions verified against implementation.
+
+Risks: None. No Python source files were modified. Only documentation files and one PlantUML diagram correction were written.
+
+Test results: No source changes; existing test suite unaffected.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #93 — Calculator Modularization
 
 Branch: task/issue-93-modularization
