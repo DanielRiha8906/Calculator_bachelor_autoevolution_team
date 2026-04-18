@@ -200,4 +200,4 @@ Risks: File I/O in Logger is non-blocking; errors in logging do not propagate. L
 
 Test results: 559 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 592.5s | Cost: $1.483705 USD | Turns: 13
