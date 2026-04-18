@@ -312,4 +312,4 @@ Risks: Low. GUI layer only; no calculation logic changed. Unicode symbol renderi
 
 Tests: 121 passed, 0 failed, 0 skipped (python -m pytest tests/test_gui.py -v)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 383.3s | Cost: $1.007749 USD | Turns: 14
