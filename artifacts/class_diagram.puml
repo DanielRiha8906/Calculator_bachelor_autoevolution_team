@@ -19,9 +19,36 @@ package "Calculation Layer" {
     +ln(x: float) : float
   }
 
+  package "operations" {
+    class arithmetic <<module>> {
+      +add(a: float, b: float) : float
+      +subtract(a: float, b: float) : float
+      +multiply(a: float, b: float) : float
+      +divide(a: float, b: float) : float
+    }
+
+    class exponents <<module>> {
+      +power(base: float, exponent: float) : float
+      +factorial(n: int) : int
+      +square(x: float) : float
+      +cube(x: float) : float
+    }
+
+    class roots <<module>> {
+      +square_root(x: float) : float
+      +cube_root(x: float) : float
+    }
+
+    class logarithmic <<module>> {
+      +log(x: float) : float
+      +ln(x: float) : float
+    }
+  }
+
   note right of Calculator
-    Uses math.factorial, math.sqrt,
-    math.cbrt, math.log10, math.log
+    Delegation wrapper — all methods
+    forward to the operations subpackage.
+    Public API is unchanged.
   end note
 }
 
@@ -83,6 +110,11 @@ package "Interaction Layer" {
     No third-party dependencies.
   end note
 }
+
+Calculator --> arithmetic : delegates add/subtract/multiply/divide
+Calculator --> exponents : delegates power/factorial/square/cube
+Calculator --> roots : delegates square_root/cube_root
+Calculator --> logarithmic : delegates log/ln
 
 InputLoop --> Calculator : uses
 InputLoop --> Validation : validate_operation / validate_operand
