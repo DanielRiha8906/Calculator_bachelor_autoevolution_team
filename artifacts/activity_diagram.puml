@@ -4,6 +4,12 @@ title Calculator — Activity Diagram
 start
 
 partition "Interaction Layer" {
+  if ("--gui" in sys.argv?) then (yes)
+    :Create CalculatorGUI();
+    :gui.run() — enter tkinter mainloop;
+    stop
+  else (no)
+  endif
   if (CLI arguments present? (sys.argv[1:])) then (yes)
     :Parse arguments with argparse (run_cli);
     if (Operation recognised in OPERATIONS?) then (no)

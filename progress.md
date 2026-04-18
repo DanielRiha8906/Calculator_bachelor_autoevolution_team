@@ -274,3 +274,24 @@ Risks: Signature changes to print_menu() and get_operation() break callers that 
 Tests: 1047 tests pass, 0 failures.
 
 Duration: 782.1s | Cost: $1.989335 USD | Turns: 14
+
+## Run: Issue #101 — GUI (V1 Task 15, exp/structured-team)
+
+Branch: task/issue-101-gui-tkinter
+PR target: exp/structured-team
+
+Files changed:
+- src/gui.py: new module implementing CalculatorGUI (tkinter window with mode selector, operation buttons, operand entry fields, result display, history listbox, error display) and OperandInputWidget helper; delegates all arithmetic to existing dispatch()/Calculator; logs errors via ErrorLogger
+- src/__main__.py: added --gui flag support with lazy import of CalculatorGUI before existing CLI/interactive routing
+- artifacts/class_diagram.puml: added CalculatorGUI and OperandInputWidget classes with relationships
+- artifacts/activity_diagram.puml: added --gui branch in startup activity flow
+- artifacts/sequence_diagram.puml: added GUI mode scenario section
+- tests/test_gui.py: 65 new tests covering OperandInputWidget, GUI initialization, mode selection, operation selection, calculation execution, history display, error handling, and integration with Calculator
+
+Purpose: Add a tkinter GUI that exposes all calculator functionality (simple and scientific modes, session history) while keeping CLI and interactive modes unchanged.
+
+Risks: tkinter is not available on headless CI; mitigated by mocking tkinter in all tests. GUI is only imported lazily when --gui flag is passed, so headless environments are unaffected.
+
+Tests: 1112 total (1047 pre-existing + 65 new), all pass, 0 failures.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
