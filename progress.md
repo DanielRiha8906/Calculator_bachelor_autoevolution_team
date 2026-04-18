@@ -387,6 +387,6 @@ Risks: Layout uses explicit bg from _THEME everywhere to avoid tkinter color inh
 
 Test results: 1326 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 632.1s | Cost: $1.406248 USD | Turns: 18
 
 ---
