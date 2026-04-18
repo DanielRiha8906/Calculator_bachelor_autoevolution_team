@@ -17,6 +17,7 @@ import argparse
 import sys
 
 from .calculator import Calculator
+from .history import OperationHistory
 from .input_loop import OPERATIONS, dispatch
 
 
@@ -49,25 +50,36 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def run_cli() -> None:
+def run_cli(history: OperationHistory | None = None) -> None:
     """Parse CLI arguments, validate them, run the operation, and print the result.
 
     Validates that:
-    - The operation is a recognised key in :data:`~src.input_loop.OPERATIONS`.
+    - The operation is a recognised key in :data:`~src.input_loop.OPERATIONS`
+      and is not a meta-command (e.g. ``"history"``).
     - The number of operands supplied matches the expected operand count.
     - Every operand can be parsed as a :class:`float`.
 
     On any validation failure the error message is written to *stderr* and
     the process exits with code ``2``.  On success the numeric result is
-    printed to *stdout* and the process exits normally (code ``0``).
+    printed to *stdout*, the operation is recorded in *history*, and the
+    process exits normally (code ``0``).
+
+    Args:
+        history: :class:`~src.history.OperationHistory` instance used to
+            record the successful operation.  When ``None`` (the default) a
+            new instance is created internally.
     """
+    if history is None:
+        history = OperationHistory()
+
     parser = _build_parser()
     args = parser.parse_args()
 
     operation: str = args.operation
 
-    if operation not in OPERATIONS:
-        valid = ", ".join(OPERATIONS.keys())
+    # Exclude meta-commands (0 operands) from CLI dispatch.
+    if operation not in OPERATIONS or OPERATIONS[operation][1] == 0:
+        valid = ", ".join(k for k, (_, c) in OPERATIONS.items() if c > 0)
         print(
             f"error: unknown operation '{operation}'. Valid operations are: {valid}",
             file=sys.stderr,
@@ -103,4 +115,5 @@ def run_cli() -> None:
         print(f"error: {exc}", file=sys.stderr)
         sys.exit(2)
 
+    history.record_operation(operation, operands, result)
     print(result)

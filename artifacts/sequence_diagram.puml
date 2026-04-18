@@ -5,6 +5,7 @@ participant User
 participant Main
 participant CLI
 participant InputLoop
+participant OperationHistory
 participant Validation
 participant Calculator
 
@@ -12,6 +13,7 @@ participant Calculator
 
 User -> Main : sys.argv = ["add", "3", "5"]
 Main -> CLI : run_cli()
+CLI -> OperationHistory : create OperationHistory() — clears history.txt
 CLI -> CLI : _build_parser() — build argparse parser
 CLI -> CLI : validate operation in OPERATIONS
 CLI -> CLI : validate operand count == 2
@@ -21,6 +23,10 @@ CLI -> InputLoop : dispatch("add", [3.0, 5.0], calc)
 InputLoop -> Calculator : add(3.0, 5.0)
 Calculator --> InputLoop : return 8.0
 InputLoop --> CLI : return 8.0
+CLI -> OperationHistory : record_operation("add", [3.0, 5.0], 8.0)
+OperationHistory -> OperationHistory : _format_entry → "3.0 add 5.0 = 8.0"
+OperationHistory --> OperationHistory : append to _history
+OperationHistory --> OperationHistory : write to history.txt
 CLI -> User : print("8.0")
 
 alt CLI error path (unknown operation)
@@ -35,6 +41,7 @@ end
 
 User -> Main : sys.argv = []
 Main -> InputLoop : run_loop()
+InputLoop -> OperationHistory : create OperationHistory() — clears history.txt
 
 loop until "exit" or max retries exceeded
 
@@ -55,6 +62,10 @@ loop until "exit" or max retries exceeded
   Calculator -> Calculator : divide(10.0, 2.0) — b != 0, returns 5.0
   Calculator --> InputLoop : return 5.0
   InputLoop -> User : print("Result: 5.0")
+  InputLoop -> OperationHistory : record_operation("divide", [10.0, 2.0], 5.0)
+  OperationHistory -> OperationHistory : _format_entry → "10.0 divide 2.0 = 5.0"
+  OperationHistory --> OperationHistory : append to _history
+  OperationHistory --> OperationHistory : write to history.txt
 
   alt Error path (b == 0)
     InputLoop -> User : print_menu()
@@ -117,6 +128,17 @@ loop until "exit" or max retries exceeded
     InputLoop -> User : print("Maximum retry attempts reached for operand 1. Returning to menu.")
     InputLoop --> InputLoop : return None from get_operands
     InputLoop -> User : print("Returning to the main menu.")
+  end
+
+  alt History command
+    InputLoop -> User : print_menu()
+    User -> InputLoop : get_operation() => "history"
+    InputLoop -> Validation : validate_operation("history")
+    Validation --> InputLoop : (True, "")
+    InputLoop -> OperationHistory : get_history()
+    OperationHistory --> InputLoop : list of entry strings
+    InputLoop -> User : print each entry (or "No operations recorded in this session.")
+    InputLoop --> InputLoop : continue loop
   end
 
 end

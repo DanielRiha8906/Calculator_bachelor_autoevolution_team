@@ -132,3 +132,28 @@ Branch: task/issue-60-retry-logic
 Merge target: exp/structured-team
 
 Duration: 457.7s | Cost: $1.235659 USD | Turns: 12
+
+## Run: Issue — V1 Task 9 - Operation History (exp/structured-team)
+
+Files changed:
+- src/history.py (created) — new OperationHistory class; clears/creates history.txt on init; records successful ops to memory list and file; formats binary as "a op b = result" and unary as "op(a) = result"
+- src/input_loop.py (modified) — imported OperationHistory; added "history" entry (0 operands) to OPERATIONS; added print_history() helper; updated run_loop() with optional history parameter; handles "history" command with continue; records successful dispatch results
+- src/cli.py (modified) — imported OperationHistory; added optional history parameter to run_cli(); excludes 0-operand meta-commands from CLI dispatch; records successful operations
+- src/validation.py (modified) — added "history" to VALID_OPERATIONS frozenset to match updated OPERATIONS dict
+- artifacts/class_diagram.puml (modified) — added OperationHistory class; updated InputLoop and CLI signatures; added dependency arrows
+- artifacts/sequence_diagram.puml (modified) — added OperationHistory participant; added recording sequences for CLI and interactive modes; added history command alt block
+- artifacts/activity_diagram.puml (modified) — added history.txt cleared note at session start; added "history" command branch; added record_operation and file-write step after successful dispatch
+
+Purpose: Implement persistent per-session operation history tracking. Successful calculator operations are recorded in memory and appended to history.txt; users can type "history" in interactive mode to review the session log.
+
+Risks: history.txt is written to CWD — tests that create OperationHistory will create this file in the test runner's working directory. VALID_OPERATIONS in validation.py and OPERATIONS in input_loop.py must stay in sync.
+
+Notes (for Architect/Tester):
+- Ambiguity resolved: the architect specified creating OperationHistory in main() and passing it to run_loop(history=history_instance). Three existing tests asserted run_loop() is called with no arguments (exact signature check). To preserve the existing test contract, OperationHistory creation was moved into run_loop() (using the existing history=None default). main() calls run_loop() without arguments, as before. The history parameter on run_loop() remains fully usable for injection in tests or by callers.
+
+Tests passed: 450/450
+
+Branch: exp/structured-team
+Merge target: exp/structured-team
+
+Duration: 687.0s | Cost: $1.789463 USD | Turns: 17

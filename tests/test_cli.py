@@ -725,3 +725,164 @@ def test_main_with_explicit_argv_overrides_sys_argv(
 
     # Should use the explicit argv, not sys.argv[1:]
     mock_run_cli.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# run_cli history recording tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_cli_records_operation_in_history(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must record the operation in a provided OperationHistory."""
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        monkeypatch.setattr(sys, "argv", ["src", "add", "3", "5"])
+        run_cli(history=history)
+
+        captured = capsys.readouterr()
+        assert "8" in captured.out
+
+        # Verify operation was recorded
+        recorded = history.get_history()
+        assert len(recorded) == 1
+        assert "3.0 add 3.0 = 5.0" not in recorded[0]  # Different operation
+        assert "add" in recorded[0]
+
+
+def test_run_cli_records_operation_with_floats(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must record operations with float operands."""
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        monkeypatch.setattr(sys, "argv", ["src", "add", "1.5", "2.5"])
+        run_cli(history=history)
+
+        recorded = history.get_history()
+        assert len(recorded) == 1
+        assert "1.5 add 2.5 = 4.0" in recorded[0]
+
+
+def test_run_cli_records_unary_operation(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must record unary operations in correct format."""
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        monkeypatch.setattr(sys, "argv", ["src", "square", "4"])
+        run_cli(history=history)
+
+        recorded = history.get_history()
+        assert len(recorded) == 1
+        assert "square(4.0) = 16.0" in recorded[0]
+
+
+def test_run_cli_records_operation_to_file(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must write operation to history.txt file."""
+    import tempfile
+    import os
+    from pathlib import Path
+    from src.history import OperationHistory, HISTORY_FILE
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        monkeypatch.setattr(sys, "argv", ["src", "multiply", "6", "7"])
+        run_cli(history=history)
+
+        history_file = Path(tmpdir) / HISTORY_FILE
+        content = history_file.read_text(encoding="utf-8")
+        assert "6.0 multiply 7.0 = 42.0" in content
+
+
+def test_run_cli_does_not_record_on_calculation_error(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must not record failed operations (e.g., division by zero)."""
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        monkeypatch.setattr(sys, "argv", ["src", "divide", "10", "0"])
+        with pytest.raises(SystemExit) as exc_info:
+            run_cli(history=history)
+
+        assert exc_info.value.code == 2
+
+        # History should be empty
+        recorded = history.get_history()
+        assert len(recorded) == 0
+
+
+def test_run_cli_does_not_record_on_validation_error(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must not record on validation failures (bad operand count)."""
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+
+        # Wrong operand count: 'add' requires 2, provide 1
+        monkeypatch.setattr(sys, "argv", ["src", "add", "5"])
+        with pytest.raises(SystemExit) as exc_info:
+            run_cli(history=history)
+
+        assert exc_info.value.code == 2
+
+        # History should be empty
+        recorded = history.get_history()
+        assert len(recorded) == 0
+
+
+def test_run_cli_creates_history_if_none_provided(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must create its own OperationHistory if none is provided."""
+    import tempfile
+    import os
+    from pathlib import Path
+    from src.history import HISTORY_FILE
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+
+        monkeypatch.setattr(sys, "argv", ["src", "add", "2", "3"])
+        run_cli(history=None)
+
+        captured = capsys.readouterr()
+        assert "5" in captured.out
+
+        # File must be created even without explicit history
+        history_file = Path(tmpdir) / HISTORY_FILE
+        assert history_file.exists()

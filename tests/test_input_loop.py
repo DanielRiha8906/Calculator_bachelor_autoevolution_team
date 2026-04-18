@@ -824,3 +824,175 @@ def test_main_runs_and_exits(capsys: pytest.CaptureFixture[str]) -> None:
         main_module.main(argv=[])
 
     mock_run_loop.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# history command – integration tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_loop_history_command_in_operations_dict() -> None:
+    """'history' must be a key in OPERATIONS with operand count 0."""
+    assert "history" in OPERATIONS
+    label, operand_count = OPERATIONS["history"]
+    assert operand_count == 0
+    assert label is not None and len(label) > 0
+
+
+def test_run_loop_history_command_displays_empty_message(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """history command with no operations must display 'No operations' message."""
+    from src.history import OperationHistory
+
+    history = OperationHistory()
+    inputs = iter(["history", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+    captured = capsys.readouterr()
+    assert "No operations recorded" in captured.out or "No operations" in captured.out
+
+
+def test_run_loop_history_command_displays_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """history command must display recorded operations."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["add", "2", "3", "history", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        # After the add operation, 'history' command should display it
+        assert "2.0 add 3.0 = 5.0" in captured.out or "2" in captured.out
+
+
+def test_run_loop_history_command_continues_loop(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After viewing history, loop must continue and accept more operations."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        # Add operation, then history, then another operation, then exit
+        inputs = iter(["add", "1", "1", "history", "multiply", "2", "3", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        # Both operations must appear in output
+        assert "2" in captured.out  # 1 + 1 = 2
+        assert "6" in captured.out  # 2 * 3 = 6
+        assert "Goodbye" in captured.out
+
+
+def test_run_loop_history_command_before_any_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """history command on empty history must show appropriate message."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["history", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "No operations" in captured.out or "empty" in captured.out.lower()
+
+
+def test_run_loop_records_operation_on_successful_calculation(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Successful operation must be recorded in history."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["add", "10", "5", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+
+        # Verify history was recorded
+        recorded = history.get_history()
+        assert len(recorded) == 1
+        assert "10.0 add 5.0 = 15.0" in recorded[0]
+
+
+def test_run_loop_does_not_record_operation_on_calculator_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Failed operations (e.g., division by zero) must not be recorded."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["divide", "1", "0", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+
+        # History should be empty because division by zero failed
+        recorded = history.get_history()
+        assert len(recorded) == 0
+
+
+def test_run_loop_records_multiple_operations_in_order(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Multiple operations must be recorded in chronological order."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter([
+            "add", "1", "2",
+            "multiply", "3", "4",
+            "square", "5",
+            "exit"
+        ])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+
+        recorded = history.get_history()
+        assert len(recorded) == 3
+        assert "1.0 add 2.0 = 3.0" in recorded[0]
+        assert "3.0 multiply 4.0 = 12.0" in recorded[1]
+        assert "square(5.0) = 25.0" in recorded[2]
+
+
+def test_run_loop_history_command_with_multiple_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """history command must display all recorded operations."""
+    from src.history import OperationHistory
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter([
+            "add", "5", "3",
+            "subtract", "10", "2",
+            "history",
+            "exit"
+        ])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+
+        # Both operations should be displayed by history command
+        assert "5.0 add 3.0 = 8.0" in captured.out
+        assert "10.0 subtract 2.0 = 8.0" in captured.out

@@ -22,6 +22,7 @@ VALID_OPERATIONS: frozenset[str] = frozenset({
     "cube_root",
     "log",
     "ln",
+    "history",
 })
 
 
