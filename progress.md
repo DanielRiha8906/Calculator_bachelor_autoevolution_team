@@ -122,4 +122,4 @@ Risks: Low. New InputValidator module is decoupled from I/O; legacy get_operatio
 
 All 497 tests pass (273 new tests added).
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 513.1s | Cost: $1.217037 USD | Turns: 15
