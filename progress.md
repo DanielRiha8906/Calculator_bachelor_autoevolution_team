@@ -1,3 +1,22 @@
+## Run: Issue #61 — V1 Task 8 - Retry Logic
+
+Branch: task/issue-61-retry-logic
+PR target: exp/expert-team
+
+Files changed:
+- src/input_handler.py — added MAX_RETRIES: int = 5 module constant; modified InputHandler.run() to track op_attempts counter and terminate session with "Too many invalid attempts. Ending session." after 5 consecutive invalid operation inputs, resetting counter on valid op; rewrote InputHandler._prompt_operands() to retry each operand prompt up to MAX_RETRIES times with per-attempt error messages, raising ValueError("Too many invalid attempts for operand. Ending session.") after exhaustion
+- artifacts/activity_diagram.puml — updated to reflect new retry counter nodes, MAX_RETRIES exit paths for both operation selection and operand input, and counter-reset logic
+
+Purpose: Add input validation with retry logic to the interactive calculator mode — invalid operations and operands can be retried up to 5 times before the session terminates gracefully. CLI mode already fails fast and required no changes.
+
+Risks: Low. Changes are scoped to InputHandler in input_handler.py. Public API signatures unchanged. StopIteration handling added for backward compatibility with existing iterator-based tests.
+
+Test results: 438 passed, 0 failed, 0 skipped (python -m pytest) — includes 37 new tests in tests/test_input_handler_retry.py covering boundary conditions, counter reset, error message content, and edge cases.
+
+Duration: 680.9s | Cost: $1.560313 USD | Turns: 23
+
+---
+
 ## Run: Issue #58 — CLI mode for Calculator
 
 Branch: task/issue-58-cli-mode
