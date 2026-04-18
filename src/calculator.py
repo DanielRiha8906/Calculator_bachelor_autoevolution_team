@@ -1,4 +1,7 @@
+import logging
 import math
+
+from src.logger import get_logger
 
 
 class Calculator:
@@ -12,6 +15,10 @@ class Calculator:
         return a * b
 
     def divide(self, a, b):
+        logger = get_logger(__name__)
+        if b == 0:
+            logger.error(f"Division by zero: {a} / {b}")
+            raise ZeroDivisionError("division by zero")
         return a / b
 
     def factorial(self, n: int) -> int:
@@ -26,9 +33,12 @@ class Calculator:
         Raises:
             ValueError: If n is not an integer or if n is negative.
         """
+        logger = get_logger(__name__)
         if not isinstance(n, int):
+            logger.error(f"factorial({n!r}) failed: expected int, got {type(n).__name__!r}")
             raise ValueError(f"factorial requires a non-negative integer, got {type(n).__name__!r}")
         if n < 0:
+            logger.error(f"factorial({n}) failed: negative integer")
             raise ValueError(f"factorial is not defined for negative integers, got {n}")
         return math.factorial(n)
 
@@ -66,7 +76,9 @@ class Calculator:
         Raises:
             ValueError: If x is negative.
         """
+        logger = get_logger(__name__)
         if x < 0:
+            logger.error(f"square_root({x}) failed: negative number")
             raise ValueError(f"square_root requires a non-negative number, got {x}")
         return math.sqrt(x)
 
@@ -106,7 +118,9 @@ class Calculator:
         Raises:
             ValueError: If x is zero or negative.
         """
+        logger = get_logger(__name__)
         if x <= 0:
+            logger.error(f"log({x}) failed: non-positive number")
             raise ValueError(f"log requires a positive number, got {x}")
         return math.log10(x)
 
@@ -122,7 +136,9 @@ class Calculator:
         Raises:
             ValueError: If x is zero or negative.
         """
+        logger = get_logger(__name__)
         if x <= 0:
+            logger.error(f"ln({x}) failed: non-positive number")
             raise ValueError(f"ln requires a positive number, got {x}")
         return math.log(x)
 

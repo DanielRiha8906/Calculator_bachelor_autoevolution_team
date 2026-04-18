@@ -5,7 +5,10 @@ map operator symbols to Calculator method names, and execute calculations
 through the CalculatorWithHistory class without using eval() or exec().
 """
 
+import logging
+
 from src.calculator_with_history import CalculatorWithHistory
+from src.logger import get_logger
 
 BINARY_OPERATORS: dict[str, str] = {
     "+": "add",
@@ -27,9 +30,11 @@ def parse_operand(raw: str) -> float:
     Raises:
         ValueError: If the string cannot be parsed as a float.
     """
+    logger = get_logger(__name__)
     try:
         return float(raw.strip())
     except ValueError:
+        logger.error(f"parse_operand({raw!r}) failed: cannot convert to float")
         raise ValueError(
             f"Invalid operand {raw!r}: expected a numeric value, e.g. '3' or '2.5'."
         )
@@ -56,9 +61,11 @@ def parse_input(
     a = parse_operand(operand_a)
     b = parse_operand(operand_b)
 
+    logger = get_logger(__name__)
     stripped_op = operator.strip()
     if stripped_op not in BINARY_OPERATORS:
         supported = ", ".join(repr(op) for op in BINARY_OPERATORS)
+        logger.error(f"parse_input: unsupported operator {operator!r}")
         raise ValueError(
             f"Unsupported operator {operator!r}. Supported operators are: {supported}."
         )

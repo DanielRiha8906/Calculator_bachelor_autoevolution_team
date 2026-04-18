@@ -11,9 +11,11 @@ Exit codes:
 """
 
 import argparse
+import logging
 import sys
 
 from src.input_handler import parse_input, run_calculation
+from src.logger import get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -72,6 +74,7 @@ def main(argv: list[str] | None = None) -> None:
     Args:
         argv: Argument list to parse.  Defaults to sys.argv[1:] when None.
     """
+    logger = get_logger(__name__)
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -79,6 +82,7 @@ def main(argv: list[str] | None = None) -> None:
         a, b, method_name = parse_input(args.operand_a, args.operand_b, args.operator)
         result, calc = run_calculation(a, b, method_name)
     except (ValueError, ZeroDivisionError) as exc:
+        logger.error(f"Calculation failed: {type(exc).__name__}: {exc}")
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 

@@ -5,6 +5,15 @@ skinparam classFontStyle bold
 skinparam ArrowColor #444444
 skinparam ClassBorderColor #444444
 
+class "logger" as logger_module <<module>> {
+    +get_logger(name: str) : logging.Logger
+}
+
+note right of logger_module
+    Returns a Logger with NullHandler.
+    All modules use this for error logging.
+end note
+
 class Calculator {
     +add(a: float, b: float) : float
     +subtract(a: float, b: float) : float
@@ -90,5 +99,10 @@ main_module ..> retry_handler : imports / calls
 main_module ..> input_handler : imports (BINARY_OPERATORS, run_calculation)
 main_module ..> cli_module : delegates CLI mode
 retry_handler ..> input_handler : imports (BINARY_OPERATORS, parse_operand)
+
+Calculator ..> logger_module : get_logger (error logging)
+CalculatorWithHistory ..> logger_module : get_logger (error logging)
+input_handler ..> logger_module : get_logger (error logging)
+cli_module ..> logger_module : get_logger (error logging)
 
 @enduml
