@@ -30,6 +30,37 @@ from .mode import Mode, get_operations_for_mode
 
 
 # ---------------------------------------------------------------------------
+# Color constants
+# ---------------------------------------------------------------------------
+
+COLORS: dict[str, str] = {
+    "background": "#000000",
+    "standard_button": "#333333",
+    "operator_button": "#FF9500",
+    "utility_button": "#A5A5A5",
+    "text": "white",
+}
+
+# ---------------------------------------------------------------------------
+# Unicode display labels for operations
+# ---------------------------------------------------------------------------
+
+_OPERATION_LABELS: dict[str, str] = {
+    "add": "+",
+    "subtract": "\u2212",
+    "multiply": "\u00D7",
+    "divide": "\u00F7",
+    "power": "x\u02B8",
+    "factorial": "n!",
+    "square": "x\u00B2",
+    "cube": "x\u00B3",
+    "square_root": "\u221A",
+    "cube_root": "\u221B",
+    "ln": "ln",
+    "log": "log",
+}
+
+# ---------------------------------------------------------------------------
 # Helper widget
 # ---------------------------------------------------------------------------
 
@@ -47,10 +78,22 @@ class OperandInputWidget:
     """
 
     def __init__(self, parent: tk.Widget, label_text: str, row: int) -> None:
-        self._label = tk.Label(parent, text=label_text)
+        self._label = tk.Label(
+            parent,
+            text=label_text,
+            bg=COLORS["background"],
+            fg=COLORS["text"],
+        )
         self._label.grid(row=row, column=0, padx=6, pady=4, sticky="e")
 
-        self._entry = tk.Entry(parent, width=20)
+        self._entry = tk.Entry(
+            parent,
+            width=20,
+            bg=COLORS["standard_button"],
+            fg=COLORS["text"],
+            insertbackground=COLORS["text"],
+            relief="flat",
+        )
         self._entry.grid(row=row, column=1, padx=6, pady=4, sticky="w")
 
     def get_value(self) -> float:
@@ -118,6 +161,7 @@ class CalculatorGUI:
         self._root = tk.Tk()
         self._root.title("Calculator")
         self._root.resizable(False, False)
+        self._root.configure(bg=COLORS["background"])
 
         # Operation buttons are stored so they can be rebuilt on mode change.
         self._operation_buttons: list[tk.Button] = []
@@ -128,6 +172,10 @@ class CalculatorGUI:
         # Result and error label variable.
         self._result_var = tk.StringVar(value="")
         self._error_var = tk.StringVar(value="")
+
+        # Tab button references for mode selector — populated in
+        # _create_mode_selector_frame().
+        self._mode_tab_buttons: dict[Mode, tk.Button] = {}
 
         # Build UI sections top to bottom.
         self._create_mode_selector_frame()
@@ -144,36 +192,53 @@ class CalculatorGUI:
     # ------------------------------------------------------------------
 
     def _create_mode_selector_frame(self) -> None:
-        """Create the Normal / Scientific mode toggle buttons."""
-        frame = tk.LabelFrame(self._root, text="Mode", padx=8, pady=6)
+        """Create the Normal / Scientific mode toggle tab buttons."""
+        frame = tk.Frame(self._root, bg=COLORS["background"])
         frame.pack(fill="x", padx=10, pady=(10, 4))
 
-        self._mode_var = tk.StringVar(value=self._current_mode.value)
-
         for mode in Mode:
-            btn = tk.Radiobutton(
+            is_active = mode == self._current_mode
+            bg_color = COLORS["operator_button"] if is_active else COLORS["standard_button"]
+            btn = tk.Button(
                 frame,
                 text=mode.value.capitalize(),
-                variable=self._mode_var,
-                value=mode.value,
-                command=self._on_mode_changed_from_radio,
+                bg=bg_color,
+                fg=COLORS["text"],
+                relief="flat",
+                borderwidth=0,
+                padx=16,
+                pady=6,
+                font=("TkDefaultFont", 11),
+                command=lambda m=mode: self._on_mode_changed(m),
             )
-            btn.pack(side="left", padx=8)
+            btn.pack(side="left", padx=4)
+            self._mode_tab_buttons[mode] = btn
 
     def _create_operation_selector_frame(self) -> None:
-        """Create the scrollable frame that holds operation buttons."""
-        self._ops_outer_frame = tk.LabelFrame(
-            self._root, text="Operation", padx=8, pady=6
+        """Create the frame that holds operation buttons."""
+        self._ops_outer_frame = tk.Frame(
+            self._root,
+            bg=COLORS["background"],
+            padx=8,
+            pady=6,
         )
         self._ops_outer_frame.pack(fill="x", padx=10, pady=4)
 
         # Inner frame whose children are the actual buttons.
-        self._ops_inner_frame = tk.Frame(self._ops_outer_frame)
+        self._ops_inner_frame = tk.Frame(
+            self._ops_outer_frame,
+            bg=COLORS["background"],
+        )
         self._ops_inner_frame.pack()
 
     def _create_input_frame(self) -> None:
         """Create the operand entry fields (up to two)."""
-        frame = tk.LabelFrame(self._root, text="Operands", padx=8, pady=6)
+        frame = tk.Frame(
+            self._root,
+            bg=COLORS["background"],
+            padx=8,
+            pady=6,
+        )
         frame.pack(fill="x", padx=10, pady=4)
 
         # Pre-create two operand widgets; visibility is toggled by
@@ -191,6 +256,11 @@ class CalculatorGUI:
             command=self._perform_calculation,
             state="disabled",
             width=14,
+            bg=COLORS["utility_button"],
+            fg=COLORS["background"],
+            relief="flat",
+            borderwidth=0,
+            font=("TkDefaultFont", 11),
         )
         self._calc_button.grid(
             row=len(labels), column=0, columnspan=2, pady=(8, 2)
@@ -198,31 +268,44 @@ class CalculatorGUI:
 
     def _create_result_frame(self) -> None:
         """Create the result display label."""
-        frame = tk.LabelFrame(self._root, text="Result", padx=8, pady=6)
+        frame = tk.Frame(
+            self._root,
+            bg=COLORS["background"],
+            padx=8,
+            pady=6,
+        )
         frame.pack(fill="x", padx=10, pady=4)
 
         result_label = tk.Label(
             frame,
             textvariable=self._result_var,
-            font=("TkFixedFont", 13, "bold"),
-            anchor="center",
+            font=("TkFixedFont", 24, "bold"),
+            anchor="e",
             width=35,
+            bg=COLORS["background"],
+            fg=COLORS["text"],
         )
-        result_label.pack()
+        result_label.pack(fill="x")
 
         error_label = tk.Label(
             frame,
             textvariable=self._error_var,
             fg="red",
-            anchor="center",
+            anchor="e",
             width=35,
             wraplength=300,
+            bg=COLORS["background"],
         )
-        error_label.pack()
+        error_label.pack(fill="x")
 
     def _create_history_frame(self) -> None:
         """Create the scrollable history listbox."""
-        frame = tk.LabelFrame(self._root, text="History", padx=8, pady=6)
+        frame = tk.Frame(
+            self._root,
+            bg=COLORS["background"],
+            padx=8,
+            pady=6,
+        )
         frame.pack(fill="both", expand=True, padx=10, pady=(4, 10))
 
         scrollbar = tk.Scrollbar(frame, orient="vertical")
@@ -234,6 +317,12 @@ class CalculatorGUI:
             width=50,
             yscrollcommand=scrollbar.set,
             selectmode="browse",
+            bg=COLORS["standard_button"],
+            fg=COLORS["text"],
+            selectbackground=COLORS["operator_button"],
+            selectforeground=COLORS["text"],
+            relief="flat",
+            borderwidth=0,
         )
         self._history_listbox.pack(side="left", fill="both", expand=True)
         scrollbar.config(command=self._history_listbox.yview)
@@ -241,12 +330,6 @@ class CalculatorGUI:
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
-
-    def _on_mode_changed_from_radio(self) -> None:
-        """Read the radio-button variable and delegate to _on_mode_changed."""
-        mode_value = self._mode_var.get()
-        new_mode = Mode(mode_value)
-        self._on_mode_changed(new_mode)
 
     def _on_mode_changed(self, new_mode: Mode) -> None:
         """Switch to *new_mode* and rebuild the operation buttons.
@@ -264,6 +347,7 @@ class CalculatorGUI:
         for widget in self._operand_widgets:
             widget.set_visible(False)
         self._update_operation_buttons()
+        self._update_mode_tabs()
 
     def _on_operation_selected(self, operation: str) -> None:
         """Update UI when the user selects an operation.
@@ -353,11 +437,47 @@ class CalculatorGUI:
     # UI update helpers
     # ------------------------------------------------------------------
 
+    def _get_button_color(self, operation_key: str) -> str:
+        """Return the background color for an operation button.
+
+        Colors are assigned by operation category:
+
+        * Operators (``add``, ``subtract``, ``multiply``, ``divide``): orange.
+        * Utility (``=``, ``backspace``, ``C``): grey.
+        * All others (digits, scientific operations): dark grey.
+
+        Args:
+            operation_key: A key from :data:`~src.input_loop.OPERATIONS`.
+
+        Returns:
+            A hex color string from :data:`COLORS`.
+        """
+        operator_keys = {"add", "subtract", "multiply", "divide"}
+        utility_keys = {"=", "backspace", "C"}
+        if operation_key in operator_keys:
+            return COLORS["operator_button"]
+        if operation_key in utility_keys:
+            return COLORS["utility_button"]
+        return COLORS["standard_button"]
+
+    def _update_mode_tabs(self) -> None:
+        """Refresh tab button styling to reflect the currently active mode.
+
+        The active mode tab is highlighted in orange; inactive tabs revert to
+        dark grey.
+        """
+        for mode, btn in self._mode_tab_buttons.items():
+            if mode == self._current_mode:
+                btn.configure(bg=COLORS["operator_button"])
+            else:
+                btn.configure(bg=COLORS["standard_button"])
+
     def _update_operation_buttons(self) -> None:
         """Rebuild the operation button grid for the current mode.
 
         Destroys all existing buttons and creates new ones for the
-        operations permitted by :attr:`_current_mode`.
+        operations permitted by :attr:`_current_mode`.  Buttons are
+        color-coded by category and use Unicode symbols where available.
         """
         # Destroy existing buttons.
         for btn in self._operation_buttons:
@@ -375,12 +495,22 @@ class CalculatorGUI:
         # Lay out buttons in a grid with up to 3 columns.
         columns = 3
         for idx, op_key in enumerate(ordered_ops):
-            label_text, _ = OPERATIONS[op_key]
+            default_label, _ = OPERATIONS[op_key]
+            display_label = _OPERATION_LABELS.get(op_key, default_label)
+            bg_color = self._get_button_color(op_key)
             row, col = divmod(idx, columns)
             btn = tk.Button(
                 self._ops_inner_frame,
-                text=label_text,
-                width=22,
+                text=display_label,
+                width=8,
+                height=2,
+                bg=bg_color,
+                fg=COLORS["text"],
+                activebackground=COLORS["operator_button"],
+                activeforeground=COLORS["text"],
+                relief="flat",
+                borderwidth=0,
+                font=("TkDefaultFont", 13),
                 command=lambda k=op_key: self._on_operation_selected(k),
             )
             btn.grid(row=row, column=col, padx=4, pady=3, sticky="ew")

@@ -295,3 +295,21 @@ Risks: tkinter is not available on headless CI; mitigated by mocking tkinter in 
 Tests: 1112 total (1047 pre-existing + 65 new), all pass, 0 failures.
 
 Duration: 582.4s | Cost: $1.315426 USD | Turns: 14
+
+## Run: Issue #128 — V1 Task 17 - Redesign - Structured/team
+
+Branch: task/issue-128-ios-calculator-redesign
+PR target: exp/structured-team
+
+Files changed:
+- src/gui.py: redesigned GUI with iOS-inspired dark theme; added COLORS dict (#000000/#333333/#FF9500/#A5A5A5) and _OPERATION_LABELS dict with Unicode symbols; replaced LabelFrame+Radiobutton mode selector with flat button-based tab toggle; rewrote result frame with 24pt bold right-aligned white text; removed scrollbar from operation selector; added _get_button_color() and _update_mode_tabs() helpers; all operation buttons now use relief="flat", borderwidth=0, Unicode labels, and category-based coloring; removed _on_mode_changed_from_radio()
+- tests/test_gui.py: added 56 new tests across 10 test classes covering color assignment, result display styling, mode tab appearance, button Unicode symbols, flat button design, _get_button_color() logic, _update_mode_tabs(), COLORS dict, _OPERATION_LABELS dict, and window background
+- artifacts/class_diagram.puml: added Colors <<constant>> class, updated CalculatorGUI with new methods and attributes
+
+Purpose: Transform the tkinter calculator GUI into a modern iOS-inspired dark interface with black background, color-coded buttons, large right-aligned result display, and tab-style mode toggle — without touching any calculation logic.
+
+Risks: Low. GUI layer only; no calculation logic changed. Unicode symbol rendering depends on system font support. tkinter flat buttons may appear slightly different across platforms.
+
+Tests: 121 passed, 0 failed, 0 skipped (python -m pytest tests/test_gui.py -v)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

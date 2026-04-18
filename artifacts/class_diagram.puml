@@ -53,6 +53,14 @@ package "Calculation Layer" {
 }
 
 package "Interaction Layer" {
+  class Colors <<constant>> {
+    BACKGROUND = #000000
+    STANDARD_BUTTON = #333333
+    OPERATOR_BUTTON = #FF9500
+    UTILITY_BUTTON = #A5A5A5
+    TEXT = white
+  }
+
   class Mode <<enum>> {
     NORMAL
     SCIENTIFIC
@@ -103,6 +111,7 @@ package "Interaction Layer" {
     -_operand_widgets : list[OperandInputWidget]
     -_result_var : tk.StringVar
     -_error_var : tk.StringVar
+    -_mode_tab_buttons : dict[Mode, tk.Button]
     +__init__() : None
     +run() : None
     -_create_mode_selector_frame() : None
@@ -111,9 +120,10 @@ package "Interaction Layer" {
     -_create_result_frame() : None
     -_create_history_frame() : None
     -_on_mode_changed(new_mode: Mode) : None
-    -_on_mode_changed_from_radio() : None
     -_on_operation_selected(operation: str) : None
     -_perform_calculation() : None
+    -_get_button_color(operation_key: str) : str
+    -_update_mode_tabs() : None
     -_update_operation_buttons() : None
     -_refresh_history_display() : None
     -_clear_operand_inputs() : None
@@ -172,6 +182,7 @@ Main --> InputLoop : calls run_loop()
 Main --> CLI : calls run_cli()
 Main --> CalculatorGUI : creates / calls run() when --gui
 
+CalculatorGUI --> Colors : uses for styling
 CalculatorGUI --> Calculator : uses via dispatch()
 CalculatorGUI --> OperationHistory : creates / records history
 CalculatorGUI --> ErrorLogger : creates / logs errors

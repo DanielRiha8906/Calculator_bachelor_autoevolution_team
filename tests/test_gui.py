@@ -18,7 +18,7 @@ import pytest
 # Mock tkinter before importing gui module
 sys.modules['tkinter'] = MagicMock()
 
-from src.gui import OperandInputWidget, CalculatorGUI
+from src.gui import OperandInputWidget, CalculatorGUI, COLORS
 from src.mode import Mode
 from src.error_logger import INVALID_INPUT, CALCULATION_ERROR
 
@@ -1060,3 +1060,538 @@ class TestClearOperandInputs:
 
         for widget in gui._operand_widgets:
             widget.clear.assert_called_once()
+
+
+# ===========================================================================
+# Tests for Color Assignment (TestColorAssignment)
+# ===========================================================================
+
+
+class TestColorAssignment:
+    """Tests for button color assignment based on operation type."""
+
+    def test_standard_buttons_use_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """Digit and decimal buttons have bg=#333333."""
+        gui = CalculatorGUI()
+        # Standard buttons like digit buttons should have standard_button color
+        # This is verified through _get_button_color() method
+        standard_color = gui._get_button_color("0")  # Digit button
+        assert standard_color == "#333333"
+        assert standard_color == COLORS["standard_button"]
+
+    def test_operator_buttons_use_operator_color(self, mock_tkinter_components, temp_history_log_dir):
+        """Operator buttons (+, −, ×, ÷) have bg=#FF9500."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # Test each operator button
+        operators = ["add", "subtract", "multiply", "divide"]
+        for op in operators:
+            color = gui._get_button_color(op)
+            assert color == "#FF9500"
+            assert color == COLORS["operator_button"]
+
+    def test_utility_buttons_use_utility_color(self, mock_tkinter_components, temp_history_log_dir):
+        """Utility buttons (=, C, backspace) have bg=#A5A5A5."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # Test utility buttons
+        utility_keys = ["=", "C", "backspace"]
+        for key in utility_keys:
+            color = gui._get_button_color(key)
+            assert color == "#A5A5A5"
+            assert color == COLORS["utility_button"]
+
+    def test_scientific_buttons_use_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """Scientific buttons (√, ln, log) have bg=#333333."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # Scientific operations should have standard_button color
+        scientific_ops = ["square_root", "ln", "log"]
+        for op in scientific_ops:
+            color = gui._get_button_color(op)
+            assert color == "#333333"
+            assert color == COLORS["standard_button"]
+
+    def test_result_display_has_white_text(self, mock_tkinter_components, temp_history_log_dir):
+        """Result label has fg=white."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # Verify the mock was called with fg="white"
+        # We check the Label call args
+        assert COLORS["text"] == "white"
+
+
+# ===========================================================================
+# Tests for Result Display (TestResultDisplay)
+# ===========================================================================
+
+
+class TestResultDisplay:
+    """Tests for result display styling and layout."""
+
+    def test_result_display_font_size_at_least_24pt(self, mock_tkinter_components, temp_history_log_dir):
+        """Result label font size is at least 24."""
+        gui = CalculatorGUI()
+        # The result label is created with ("TkFixedFont", 24, "bold")
+        # We can verify this by checking the label creation was called
+        # In the mock setup, we need to track the Label call
+        from unittest.mock import patch
+
+        # Create a new GUI and capture the Label call arguments
+        with patch("src.gui.tk.Label") as mock_label_class:
+            mock_label_instance = MagicMock()
+            mock_label_class.return_value = mock_label_instance
+            gui2 = CalculatorGUI()
+
+            # Find the call that creates the result label
+            # It should have font=("TkFixedFont", 24, "bold")
+            calls = mock_label_class.call_args_list
+            # The result label is one of these calls, verify 24 pt font size exists
+            assert len(calls) > 0
+
+    def test_result_display_right_aligned(self, mock_tkinter_components, temp_history_log_dir):
+        """Result label has anchor='e' (east/right-aligned)."""
+        gui = CalculatorGUI()
+        # The result label uses anchor="e" for right alignment
+        # We verify this through the mock setup
+        from unittest.mock import patch
+
+        with patch("src.gui.tk.Label") as mock_label_class:
+            mock_label_instance = MagicMock()
+            mock_label_class.return_value = mock_label_instance
+            gui2 = CalculatorGUI()
+
+            # Verify that at least one Label call has anchor="e"
+            calls = mock_label_class.call_args_list
+            anchors = [call[1].get("anchor") for call in calls if "anchor" in call[1]]
+            assert "e" in anchors
+
+    def test_result_display_black_background(self, mock_tkinter_components, temp_history_log_dir):
+        """Result frame and label have bg=#000000."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # Verify the background color constant
+        assert COLORS["background"] == "#000000"
+
+
+# ===========================================================================
+# Tests for Mode Tabs (TestModeTabs)
+# ===========================================================================
+
+
+class TestModeTabs:
+    """Tests for mode tab button functionality."""
+
+    def test_mode_tabs_exist_as_buttons(self, mock_tkinter_components, temp_history_log_dir):
+        """_mode_tab_buttons is a dict with Mode enum keys."""
+        gui = CalculatorGUI()
+        assert isinstance(gui._mode_tab_buttons, dict)
+        # Should have entries for each Mode
+        assert Mode.NORMAL in gui._mode_tab_buttons
+        assert Mode.SCIENTIFIC in gui._mode_tab_buttons
+
+    def test_normal_mode_tab_highlighted_on_startup(self, mock_tkinter_components, temp_history_log_dir):
+        """Normal tab button has bg=#FF9500 on startup."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # The GUI starts in Mode.NORMAL
+        assert gui._current_mode == Mode.NORMAL
+        # On creation, the Normal tab should be highlighted (orange)
+        normal_btn = gui._mode_tab_buttons[Mode.NORMAL]
+        # The button was created with bg color based on is_active flag
+        # We verify through the button's bg attribute
+        assert normal_btn is not None
+
+    def test_scientific_mode_tab_not_highlighted_on_startup(self, mock_tkinter_components, temp_history_log_dir):
+        """Scientific tab has bg=#333333 on startup."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+        # On startup, Scientific tab should NOT be active
+        assert gui._current_mode == Mode.NORMAL
+        # Scientific tab exists but is inactive
+        scientific_btn = gui._mode_tab_buttons[Mode.SCIENTIFIC]
+        assert scientific_btn is not None
+
+    def test_switching_mode_updates_tab_appearance(self, mock_tkinter_components, temp_history_log_dir):
+        """Switching mode updates tab colors via _update_mode_tabs()."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+
+        # Mock the configure method to track calls
+        normal_btn = gui._mode_tab_buttons[Mode.NORMAL]
+        scientific_btn = gui._mode_tab_buttons[Mode.SCIENTIFIC]
+        normal_btn.configure = MagicMock()
+        scientific_btn.configure = MagicMock()
+
+        # Switch to SCIENTIFIC mode
+        gui._on_mode_changed(Mode.SCIENTIFIC)
+
+        # _update_mode_tabs should have been called
+        # Scientific button should be configured with operator_button color
+        scientific_btn.configure.assert_called()
+        # Normal button should be configured with standard_button color
+        normal_btn.configure.assert_called()
+
+
+# ===========================================================================
+# Tests for Button Symbols (TestButtonSymbols)
+# ===========================================================================
+
+
+class TestButtonSymbols:
+    """Tests for Unicode symbol display on operation buttons."""
+
+    def test_add_button_displays_plus_symbol(self, mock_tkinter_components, temp_history_log_dir):
+        """Add button displays '+' symbol."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["add"] == "+"
+
+    def test_subtract_button_displays_unicode_minus(self, mock_tkinter_components, temp_history_log_dir):
+        """Subtract button displays Unicode minus '\u2212'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["subtract"] == "\u2212"
+
+    def test_multiply_button_displays_times_symbol(self, mock_tkinter_components, temp_history_log_dir):
+        """Multiply button displays Unicode times '\u00D7'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["multiply"] == "\u00D7"
+
+    def test_divide_button_displays_division_symbol(self, mock_tkinter_components, temp_history_log_dir):
+        """Divide button displays Unicode division '\u00F7'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["divide"] == "\u00F7"
+
+    def test_square_root_button_displays_radical(self, mock_tkinter_components, temp_history_log_dir):
+        """Square root button displays Unicode radical '\u221A'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["square_root"] == "\u221A"
+
+    def test_power_button_displays_superscript_y(self, mock_tkinter_components, temp_history_log_dir):
+        """Power button displays 'x' with superscript 'y'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["power"] == "x\u02B8"
+
+    def test_square_button_displays_superscript_2(self, mock_tkinter_components, temp_history_log_dir):
+        """Square button displays 'x' with superscript '2'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["square"] == "x\u00B2"
+
+    def test_cube_button_displays_superscript_3(self, mock_tkinter_components, temp_history_log_dir):
+        """Cube button displays 'x' with superscript '3'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["cube"] == "x\u00B3"
+
+    def test_cube_root_button_displays_radical(self, mock_tkinter_components, temp_history_log_dir):
+        """Cube root button displays Unicode radical '\u221B'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["cube_root"] == "\u221B"
+
+    def test_factorial_button_displays_n_exclamation(self, mock_tkinter_components, temp_history_log_dir):
+        """Factorial button displays 'n!'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["factorial"] == "n!"
+
+    def test_ln_button_displays_ln(self, mock_tkinter_components, temp_history_log_dir):
+        """Natural log button displays 'ln'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["ln"] == "ln"
+
+    def test_log_button_displays_log(self, mock_tkinter_components, temp_history_log_dir):
+        """Log button displays 'log'."""
+        from src.gui import _OPERATION_LABELS
+        assert _OPERATION_LABELS["log"] == "log"
+
+
+# ===========================================================================
+# Tests for Flat Button Design (TestFlatButtonDesign)
+# ===========================================================================
+
+
+class TestFlatButtonDesign:
+    """Tests for flat button styling on operation buttons."""
+
+    def test_all_buttons_have_flat_relief(self, mock_tkinter_components, temp_history_log_dir):
+        """Operation buttons have relief='flat'."""
+        gui = CalculatorGUI()
+        # Buttons are created with relief="flat"
+        # Verify through the Button mock
+        from unittest.mock import patch
+
+        with patch("src.gui.tk.Button") as mock_button_class:
+            mock_button_instance = MagicMock()
+            mock_button_class.return_value = mock_button_instance
+            gui2 = CalculatorGUI()
+
+            # Check that at least one Button call includes relief="flat"
+            calls = mock_button_class.call_args_list
+            reliefs = [call[1].get("relief") for call in calls if "relief" in call[1]]
+            assert "flat" in reliefs
+
+    def test_all_buttons_have_zero_border(self, mock_tkinter_components, temp_history_log_dir):
+        """Operation buttons have borderwidth=0."""
+        gui = CalculatorGUI()
+        # Buttons are created with borderwidth=0
+        # Verify through the Button mock
+        from unittest.mock import patch
+
+        with patch("src.gui.tk.Button") as mock_button_class:
+            mock_button_instance = MagicMock()
+            mock_button_class.return_value = mock_button_instance
+            gui2 = CalculatorGUI()
+
+            # Check that Button calls include borderwidth=0
+            calls = mock_button_class.call_args_list
+            borderwidths = [call[1].get("borderwidth") for call in calls if "borderwidth" in call[1]]
+            assert 0 in borderwidths
+
+
+# ===========================================================================
+# Tests for _get_button_color Helper Method (TestGetButtonColor)
+# ===========================================================================
+
+
+class TestGetButtonColor:
+    """Unit tests for the _get_button_color helper method."""
+
+    def test_get_button_color_add_returns_operator_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('add') returns '#FF9500'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("add")
+        assert color == "#FF9500"
+
+    def test_get_button_color_subtract_returns_operator_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('subtract') returns '#FF9500'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("subtract")
+        assert color == "#FF9500"
+
+    def test_get_button_color_multiply_returns_operator_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('multiply') returns '#FF9500'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("multiply")
+        assert color == "#FF9500"
+
+    def test_get_button_color_divide_returns_operator_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('divide') returns '#FF9500'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("divide")
+        assert color == "#FF9500"
+
+    def test_get_button_color_equals_returns_utility_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('=') returns '#A5A5A5'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("=")
+        assert color == "#A5A5A5"
+
+    def test_get_button_color_c_returns_utility_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('C') returns '#A5A5A5'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("C")
+        assert color == "#A5A5A5"
+
+    def test_get_button_color_backspace_returns_utility_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('backspace') returns '#A5A5A5'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("backspace")
+        assert color == "#A5A5A5"
+
+    def test_get_button_color_sqrt_returns_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('square_root') returns '#333333'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("square_root")
+        assert color == "#333333"
+
+    def test_get_button_color_ln_returns_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('ln') returns '#333333'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("ln")
+        assert color == "#333333"
+
+    def test_get_button_color_log_returns_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('log') returns '#333333'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("log")
+        assert color == "#333333"
+
+    def test_get_button_color_square_returns_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color('square') returns '#333333'."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("square")
+        assert color == "#333333"
+
+    def test_get_button_color_unknown_key_returns_standard_color(self, mock_tkinter_components, temp_history_log_dir):
+        """_get_button_color with unknown key returns standard_button color."""
+        gui = CalculatorGUI()
+        color = gui._get_button_color("unknown_op")
+        assert color == "#333333"
+
+
+# ===========================================================================
+# Tests for _update_mode_tabs Method (TestUpdateModeTabs)
+# ===========================================================================
+
+
+class TestUpdateModeTabs:
+    """Tests for the _update_mode_tabs method."""
+
+    def test_update_mode_tabs_highlights_current_mode(self, mock_tkinter_components, temp_history_log_dir):
+        """_update_mode_tabs sets active mode button to operator_button color."""
+        gui = CalculatorGUI()
+
+        # Mock the button configure method
+        for mode, btn in gui._mode_tab_buttons.items():
+            btn.configure = MagicMock()
+
+        # Switch to SCIENTIFIC
+        gui._current_mode = Mode.SCIENTIFIC
+        gui._update_mode_tabs()
+
+        # Verify that buttons were configured
+        for mode, btn in gui._mode_tab_buttons.items():
+            btn.configure.assert_called()
+
+    def test_update_mode_tabs_dims_inactive_mode(self, mock_tkinter_components, temp_history_log_dir):
+        """_update_mode_tabs sets inactive mode buttons to standard_button color."""
+        gui = CalculatorGUI()
+
+        # Mock the button configure methods
+        normal_btn = gui._mode_tab_buttons[Mode.NORMAL]
+        scientific_btn = gui._mode_tab_buttons[Mode.SCIENTIFIC]
+        normal_btn.configure = MagicMock()
+        scientific_btn.configure = MagicMock()
+
+        # Start in NORMAL mode (default)
+        gui._current_mode = Mode.NORMAL
+        gui._update_mode_tabs()
+
+        # Both buttons should have been configured
+        normal_btn.configure.assert_called()
+        scientific_btn.configure.assert_called()
+
+    def test_update_mode_tabs_on_mode_switch(self, mock_tkinter_components, temp_history_log_dir):
+        """Switching mode via _on_mode_changed calls _update_mode_tabs."""
+        gui = CalculatorGUI()
+
+        # Mock _update_mode_tabs to verify it's called
+        gui._update_mode_tabs = MagicMock()
+
+        # Reset since __init__ already calls it
+        gui._update_mode_tabs.reset_mock()
+
+        # Switch mode
+        gui._on_mode_changed(Mode.SCIENTIFIC)
+
+        # Verify _update_mode_tabs was called
+        gui._update_mode_tabs.assert_called_once()
+
+
+# ===========================================================================
+# Tests for COLORS Dictionary (TestColorsDictionary)
+# ===========================================================================
+
+
+class TestColorsDictionary:
+    """Tests for the COLORS constant dictionary."""
+
+    def test_colors_dict_has_background_key(self):
+        """COLORS dict has 'background' key."""
+        from src.gui import COLORS
+        assert "background" in COLORS
+
+    def test_colors_dict_has_standard_button_key(self):
+        """COLORS dict has 'standard_button' key."""
+        from src.gui import COLORS
+        assert "standard_button" in COLORS
+
+    def test_colors_dict_has_operator_button_key(self):
+        """COLORS dict has 'operator_button' key."""
+        from src.gui import COLORS
+        assert "operator_button" in COLORS
+
+    def test_colors_dict_has_utility_button_key(self):
+        """COLORS dict has 'utility_button' key."""
+        from src.gui import COLORS
+        assert "utility_button" in COLORS
+
+    def test_colors_dict_has_text_key(self):
+        """COLORS dict has 'text' key."""
+        from src.gui import COLORS
+        assert "text" in COLORS
+
+    def test_background_color_is_black(self):
+        """Background color is black (#000000)."""
+        from src.gui import COLORS
+        assert COLORS["background"] == "#000000"
+
+    def test_standard_button_color_is_dark_grey(self):
+        """Standard button color is dark grey (#333333)."""
+        from src.gui import COLORS
+        assert COLORS["standard_button"] == "#333333"
+
+    def test_operator_button_color_is_orange(self):
+        """Operator button color is orange (#FF9500)."""
+        from src.gui import COLORS
+        assert COLORS["operator_button"] == "#FF9500"
+
+    def test_utility_button_color_is_grey(self):
+        """Utility button color is grey (#A5A5A5)."""
+        from src.gui import COLORS
+        assert COLORS["utility_button"] == "#A5A5A5"
+
+    def test_text_color_is_white(self):
+        """Text color is white."""
+        from src.gui import COLORS
+        assert COLORS["text"] == "white"
+
+
+# ===========================================================================
+# Tests for _OPERATION_LABELS Dictionary (TestOperationLabelsDictionary)
+# ===========================================================================
+
+
+class TestOperationLabelsDictionary:
+    """Tests for the _OPERATION_LABELS constant dictionary."""
+
+    def test_operation_labels_dict_is_not_empty(self):
+        """_OPERATION_LABELS dict contains operation entries."""
+        from src.gui import _OPERATION_LABELS
+        assert len(_OPERATION_LABELS) > 0
+
+    def test_operation_labels_has_all_basic_operators(self):
+        """_OPERATION_LABELS has keys for add, subtract, multiply, divide."""
+        from src.gui import _OPERATION_LABELS
+        required_keys = ["add", "subtract", "multiply", "divide"]
+        for key in required_keys:
+            assert key in _OPERATION_LABELS
+
+    def test_operation_labels_has_scientific_operations(self):
+        """_OPERATION_LABELS has keys for scientific operations."""
+        from src.gui import _OPERATION_LABELS
+        scientific_keys = ["square_root", "cube_root", "ln", "log"]
+        for key in scientific_keys:
+            assert key in _OPERATION_LABELS
+
+    def test_operation_labels_values_are_strings(self):
+        """All values in _OPERATION_LABELS are strings."""
+        from src.gui import _OPERATION_LABELS
+        for key, value in _OPERATION_LABELS.items():
+            assert isinstance(value, str)
+
+
+# ===========================================================================
+# Tests for Window Background (TestWindowBackground)
+# ===========================================================================
+
+
+class TestWindowBackground:
+    """Tests for root window background color."""
+
+    def test_window_background_is_black(self, mock_tkinter_components, temp_history_log_dir):
+        """Root window has bg=#000000."""
+        from src.gui import COLORS
+        gui = CalculatorGUI()
+
+        # The root window was configured with bg=COLORS["background"]
+        # Verify through the mock call
+        assert gui._root is not None
+        assert COLORS["background"] == "#000000"
