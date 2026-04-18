@@ -87,7 +87,7 @@ def test_run_loop_logs_negative_sqrt_error(
     """run_loop must log square root of negative number error."""
     os.chdir(tmp_path)
 
-    inputs = iter(["square_root", "-4", "exit"])
+    inputs = iter(["mode scientific", "square_root", "-4", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
 
     log_file = Path("error.log")
@@ -266,7 +266,7 @@ def test_error_logging_categorizes_negative_sqrt(
     """Negative square root must be categorized as CALCULATION_ERROR."""
     os.chdir(tmp_path)
 
-    inputs = iter(["square_root", "-9", "exit"])
+    inputs = iter(["mode scientific", "square_root", "-9", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
 
     log_file = Path("error.log")
@@ -282,7 +282,7 @@ def test_error_logging_multiple_entries_append(
 
     inputs = iter([
         "divide", "1", "0",
-        "square_root", "-1",
+        "mode scientific", "square_root", "-1",
         "exit"
     ])
     run_loop(input_fn=lambda _prompt: next(inputs))
@@ -355,7 +355,7 @@ def test_error_logging_preserves_newlines(
 
     inputs = iter([
         "divide", "1", "0",
-        "log", "0",
+        "mode scientific", "log", "0",
         "exit"
     ])
     run_loop(input_fn=lambda _prompt: next(inputs))
@@ -406,7 +406,7 @@ def test_error_logging_negative_factorial_logged(
     """Negative factorial must be logged as CALCULATION_ERROR."""
     os.chdir(tmp_path)
 
-    inputs = iter(["factorial", "-5", "exit"])
+    inputs = iter(["mode scientific", "factorial", "-5", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
 
     log_file = Path("error.log")
@@ -421,7 +421,7 @@ def test_error_logging_log_of_zero_logged(
     """log(0) must be logged as CALCULATION_ERROR."""
     os.chdir(tmp_path)
 
-    inputs = iter(["log", "0", "exit"])
+    inputs = iter(["mode scientific", "log", "0", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
 
     log_file = Path("error.log")

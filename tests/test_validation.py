@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 from src.validation import validate_operation, validate_operand, VALID_OPERATIONS
+from src.mode import Mode
 
 
 # ---------------------------------------------------------------------------
@@ -292,3 +293,222 @@ class TestValidateOperand:
         valid, value, error_msg = validate_operand("xyz")
         assert valid is False
         assert "numeric" in error_msg or "number" in error_msg
+
+
+# ---------------------------------------------------------------------------
+# validate_operation with mode parameter
+# ---------------------------------------------------------------------------
+
+
+class TestValidateOperationWithMode:
+    """Tests for validate_operation() with the mode parameter."""
+
+    def test_no_mode_accepts_add(self) -> None:
+        """validate_operation('add', mode=None) must return (True, '')."""
+        valid, error_msg = validate_operation("add", mode=None)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_no_mode_accepts_all_valid_operations(self) -> None:
+        """validate_operation with mode=None must accept all VALID_OPERATIONS."""
+        for op in VALID_OPERATIONS:
+            valid, error_msg = validate_operation(op, mode=None)
+            assert valid is True, f"Operation '{op}' should be valid with mode=None"
+            assert error_msg == ""
+
+    def test_no_mode_accepts_history(self) -> None:
+        """validate_operation('history', mode=None) must return (True, '')."""
+        valid, error_msg = validate_operation("history", mode=None)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_no_mode_rejects_unknown_operation(self) -> None:
+        """validate_operation('bogus', mode=None) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("bogus", mode=None)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_accepts_add(self) -> None:
+        """validate_operation('add', mode=NORMAL) must return (True, '')."""
+        valid, error_msg = validate_operation("add", mode=Mode.NORMAL)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_normal_mode_accepts_subtract(self) -> None:
+        """validate_operation('subtract', mode=NORMAL) must return (True, '')."""
+        valid, error_msg = validate_operation("subtract", mode=Mode.NORMAL)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_normal_mode_accepts_multiply(self) -> None:
+        """validate_operation('multiply', mode=NORMAL) must return (True, '')."""
+        valid, error_msg = validate_operation("multiply", mode=Mode.NORMAL)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_normal_mode_accepts_divide(self) -> None:
+        """validate_operation('divide', mode=NORMAL) must return (True, '')."""
+        valid, error_msg = validate_operation("divide", mode=Mode.NORMAL)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_normal_mode_rejects_power(self) -> None:
+        """validate_operation('power', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("power", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_factorial(self) -> None:
+        """validate_operation('factorial', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("factorial", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_square(self) -> None:
+        """validate_operation('square', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("square", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_log(self) -> None:
+        """validate_operation('log', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("log", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_ln(self) -> None:
+        """validate_operation('ln', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("ln", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_square_root(self) -> None:
+        """validate_operation('square_root', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("square_root", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_cube_root(self) -> None:
+        """validate_operation('cube_root', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("cube_root", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_rejects_cube(self) -> None:
+        """validate_operation('cube', mode=NORMAL) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("cube", mode=Mode.NORMAL)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_scientific_mode_accepts_add(self) -> None:
+        """validate_operation('add', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("add", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_power(self) -> None:
+        """validate_operation('power', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("power", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_factorial(self) -> None:
+        """validate_operation('factorial', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("factorial", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_square(self) -> None:
+        """validate_operation('square', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("square", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_cube(self) -> None:
+        """validate_operation('cube', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("cube", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_square_root(self) -> None:
+        """validate_operation('square_root', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("square_root", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_cube_root(self) -> None:
+        """validate_operation('cube_root', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("cube_root", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_log(self) -> None:
+        """validate_operation('log', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("log", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_accepts_ln(self) -> None:
+        """validate_operation('ln', mode=SCIENTIFIC) must return (True, '')."""
+        valid, error_msg = validate_operation("ln", mode=Mode.SCIENTIFIC)
+        assert valid is True
+        assert error_msg == ""
+
+    def test_scientific_mode_rejects_unknown_operation(self) -> None:
+        """validate_operation('bogus', mode=SCIENTIFIC) must return (False, error_msg)."""
+        valid, error_msg = validate_operation("bogus", mode=Mode.SCIENTIFIC)
+        assert valid is False
+        assert error_msg != ""
+
+    def test_normal_mode_error_message_lists_valid_operations(self) -> None:
+        """Normal mode error message must list the 4 valid operations."""
+        valid, error_msg = validate_operation("power", mode=Mode.NORMAL)
+        assert valid is False
+        # Error should mention valid operations
+        assert "add" in error_msg or "Valid operations" in error_msg
+
+    def test_scientific_mode_error_message_lists_valid_operations(self) -> None:
+        """Scientific mode error message must list valid operations."""
+        valid, error_msg = validate_operation("bogus", mode=Mode.SCIENTIFIC)
+        assert valid is False
+        # Error should mention at least some valid operations
+        assert any(op in error_msg for op in ["add", "power", "factorial"])
+
+    def test_mode_none_backward_compatibility(self) -> None:
+        """validate_operation with mode=None must match pre-mode behavior."""
+        # All VALID_OPERATIONS should be accepted
+        for op in VALID_OPERATIONS:
+            valid, _ = validate_operation(op, mode=None)
+            assert valid is True
+
+    def test_normal_mode_only_four_operations(self) -> None:
+        """NORMAL mode should accept exactly 4 operations."""
+        from src.mode import get_normal_operations
+        normal_ops = get_normal_operations()
+
+        accepted_count = 0
+        for op in ["add", "subtract", "multiply", "divide", "power", "factorial",
+                  "square", "cube", "square_root", "cube_root", "log", "ln"]:
+            valid, _ = validate_operation(op, mode=Mode.NORMAL)
+            if valid:
+                accepted_count += 1
+
+        assert accepted_count == 4, f"NORMAL mode should accept 4 ops, accepted {accepted_count}"
+
+    def test_scientific_mode_twelve_operations(self) -> None:
+        """SCIENTIFIC mode should accept exactly 12 operations."""
+        from src.mode import get_scientific_operations
+
+        ops_to_test = [
+            "add", "subtract", "multiply", "divide",
+            "power", "factorial", "square", "cube",
+            "square_root", "cube_root", "log", "ln"
+        ]
+
+        accepted_count = 0
+        for op in ops_to_test:
+            valid, _ = validate_operation(op, mode=Mode.SCIENTIFIC)
+            if valid:
+                accepted_count += 1
+
+        assert accepted_count == 12, f"SCIENTIFIC mode should accept 12 ops, accepted {accepted_count}"

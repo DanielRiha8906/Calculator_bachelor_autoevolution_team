@@ -10,8 +10,11 @@ import.  Both :mod:`src.input_loop` and :mod:`src.cli` may import from here.
 
 from __future__ import annotations
 
+from .mode import Mode, get_operations_for_mode
+
 # Mirrors the OPERATIONS keys defined in src/input_loop.py.
 # Must be kept in sync whenever input_loop.OPERATIONS is changed.
+# Used as the default (all-operations) set when no mode is provided.
 VALID_OPERATIONS: frozenset[str] = frozenset({
     "add",
     "subtract",
@@ -29,20 +32,37 @@ VALID_OPERATIONS: frozenset[str] = frozenset({
 })
 
 
-def validate_operation(operation: str) -> tuple[bool, str]:
+def validate_operation(
+    operation: str,
+    mode: Mode | None = None,
+) -> tuple[bool, str]:
     """Validate that *operation* is a recognised calculator operation.
+
+    When *mode* is ``None`` the validation is performed against the full set
+    of known operations (``VALID_OPERATIONS``), which preserves existing
+    behaviour for CLI callers and tests that do not pass a mode.
+
+    When *mode* is provided the validation is restricted to the operations
+    available in that mode (via :func:`~src.mode.get_operations_for_mode`).
 
     Args:
         operation: The raw operation string supplied by the user.
+        mode: Optional :class:`~src.mode.Mode` value.  When given, only
+            operations valid for that mode are accepted.
 
     Returns:
         A two-tuple ``(valid, error_message)``.  When *valid* is ``True``
         the operation is accepted and *error_message* is an empty string.
         When *valid* is ``False`` *error_message* describes the problem.
     """
-    if operation in VALID_OPERATIONS:
+    if mode is None:
+        allowed = VALID_OPERATIONS
+    else:
+        allowed = get_operations_for_mode(mode)
+
+    if operation in allowed:
         return (True, "")
-    valid_list = ", ".join(sorted(VALID_OPERATIONS))
+    valid_list = ", ".join(sorted(allowed))
     return (False, f"Invalid operation. Valid operations are: {valid_list}")
 
 

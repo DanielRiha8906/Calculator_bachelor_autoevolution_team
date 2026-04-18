@@ -248,3 +248,29 @@ Risks: None; documentation-only change. No source code, tests, or existing inter
 Tests: N/A — documentation-only change; no new code introduced.
 
 Duration: 384.9s | Cost: $0.928655 USD | Turns: 11
+
+## Run: Issue #98 — V1 Task 14 - Scientific Mode (task/issue-98-scientific-mode)
+
+Branch: task/issue-98-scientific-mode
+PR target: exp/structured-team
+
+Files changed:
+- src/mode.py (created) — Mode enum (NORMAL/SCIENTIFIC) with operation frozensets and get_operations_for_mode() helper
+- src/validation.py (modified) — validate_operation() gains optional mode parameter; mode=None preserves CLI compatibility
+- src/input_loop.py (modified) — print_menu(), get_operation() are mode-aware; handle_mode_switch() added; run_loop() initializes NORMAL mode, switches on command, prefixes results with [Normal]>/[Scientific]>
+- artifacts/class_diagram.puml (modified) — Mode enum added, dependency arrows from InputLoop and Validation to Mode, updated method signatures
+- artifacts/activity_diagram.puml (modified) — mode initialization and mode-switch decision branch added to interactive flow
+- artifacts/sequence_diagram.puml (modified) — Mode participant added, mode-switch alt block added
+- tests/test_mode.py (created) — 56 tests for Mode enum and operation set functions
+- tests/test_validation.py (modified) — 32 new tests for mode-aware validate_operation()
+- tests/test_input_loop.py (modified) — 50 new tests for handle_mode_switch, mode-aware print_menu/get_operation, run_loop integration
+- tests/test_error_logging_integration.py (modified) — updated for mode parameter changes
+- tests/test_retry_logic.py (modified) — updated for mode parameter changes
+
+Purpose: Add scientific mode with 12 operations and normal mode with 4 basic operations; allow user to switch modes in interactive session via "mode scientific" / "mode normal" commands.
+
+Risks: Signature changes to print_menu() and get_operation() break callers that do not pass mode; mitigated by default parameters preserving backward compatibility. CLI mode unaffected.
+
+Tests: 1047 tests pass, 0 failures.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

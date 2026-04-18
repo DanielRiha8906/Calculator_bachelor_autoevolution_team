@@ -6,6 +6,7 @@ box "Interaction Layer" #LightBlue
   participant Main
   participant CLI
   participant InputLoop
+  participant Mode
   participant OperationHistory
   participant Validation
   participant ErrorLogger
@@ -55,12 +56,17 @@ User -> Main : sys.argv = []
 Main -> InputLoop : run_loop()
 InputLoop -> OperationHistory : create OperationHistory() — clears history.txt
 InputLoop -> ErrorLogger : create ErrorLogger() — opens error.log in append mode
+InputLoop -> Mode : initialize current_mode = Mode.NORMAL
 
 loop until "exit" or max retries exceeded
 
-  InputLoop -> User : print_menu()
+  InputLoop -> Mode : get_operations_for_mode(current_mode)
+  Mode --> InputLoop : frozenset of allowed operations
+  InputLoop -> User : print_menu(current_mode) — mode-scoped operation list
   User -> InputLoop : get_operation() — attempt 1 => "divide"
-  InputLoop -> Validation : validate_operation("divide")
+  InputLoop -> Validation : validate_operation("divide", current_mode)
+  Validation -> Mode : get_operations_for_mode(current_mode)
+  Mode --> Validation : frozenset of allowed operations
   Validation --> InputLoop : (True, "")
   InputLoop -> InputLoop : look up operand_count = 2
   InputLoop -> User : get_operands(2) — prompt operand 1
@@ -79,6 +85,15 @@ loop until "exit" or max retries exceeded
   OperationHistory -> OperationHistory : _format_entry → "10.0 divide 2.0 = 5.0"
   OperationHistory --> OperationHistory : append to _history
   OperationHistory --> OperationHistory : write to history.txt
+
+  alt Mode-switch command
+    InputLoop -> User : print_menu(current_mode)
+    User -> InputLoop : get_operation() => "mode scientific"
+    InputLoop -> InputLoop : handle_mode_switch("mode scientific", current_mode)
+    InputLoop -> InputLoop : current_mode = Mode.SCIENTIFIC
+    InputLoop -> User : print("Switched to Scientific mode.")
+    InputLoop --> InputLoop : continue loop
+  end
 
   alt Error path (b == 0)
     InputLoop -> User : print_menu()
@@ -122,17 +137,19 @@ loop until "exit" or max retries exceeded
   end
 
   alt Retry path — invalid operation (up to MAX_RETRY_ATTEMPTS times)
-    InputLoop -> User : print_menu()
+    InputLoop -> User : print_menu(current_mode)
     User -> InputLoop : get_operation() — attempt 1 => "badop"
-    InputLoop -> Validation : validate_operation("badop")
+    InputLoop -> Validation : validate_operation("badop", current_mode)
+    Validation -> Mode : get_operations_for_mode(current_mode)
+    Mode --> Validation : frozenset of allowed operations
     Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
     InputLoop -> User : print error + "(Attempt 1 of 3)"
     User -> InputLoop : get_operation() — attempt 2 => "alsowrong"
-    InputLoop -> Validation : validate_operation("alsowrong")
+    InputLoop -> Validation : validate_operation("alsowrong", current_mode)
     Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
     InputLoop -> User : print error + "(Attempt 2 of 3)"
     User -> InputLoop : get_operation() — attempt 3 => "stillwrong"
-    InputLoop -> Validation : validate_operation("stillwrong")
+    InputLoop -> Validation : validate_operation("stillwrong", current_mode)
     Validation --> InputLoop : (False, "Invalid operation. Valid operations are: ...")
     InputLoop -> User : print error + "(Attempt 3 of 3)"
     InputLoop -> User : print("Maximum retry attempts reached. Terminating session.")
