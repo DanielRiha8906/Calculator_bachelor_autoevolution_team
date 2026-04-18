@@ -6,7 +6,7 @@ actor User
 participant "__main__" as main
 participant "InputHandler" as handler
 participant "OperationDispatcher" as op_disp
-boundary "OPERATIONS\n(src/operations.py)" as ops
+boundary "OPERATIONS\n(src/operations/__init__.py)" as ops
 participant "Calculator" as calc
 participant "Logger" as log
 
