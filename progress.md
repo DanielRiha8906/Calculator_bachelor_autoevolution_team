@@ -109,3 +109,17 @@ Purpose: Add CLI mode allowing the calculator to be invoked as `python -m calcul
 Risks: Low. Changes isolated to new src/cli.py and minimal entry-point routing in __main__.py. No existing modules modified. All 371 tests pass.
 
 Duration: 541.1s | Cost: $1.146451 USD | Turns: 14
+
+---
+
+Branch: task/issue-60-retry-logic | Target: exp/structured-team | Issue: #60 V1 Task 8 - Retry Logic
+
+Files changed: src/input_validator.py (created), src/input_loop.py (modified), tests/test_input_validator.py (created), tests/test_input_loop.py (modified), artifacts/activity_retry_logic.puml (created), artifacts/sequence_interactive_flow_with_retry.puml (created)
+
+Purpose: Add input validation with retry logic to guided interactive mode. Users get up to 3 retries on invalid operation or operand input before the session terminates. CLI mode behavior unchanged (fail-fast with non-zero exit).
+
+Risks: Low. New InputValidator module is decoupled from I/O; legacy get_operation/get_operands functions preserved. Sentinel values (__max_retries__, None) tested for collision safety. Retry counters are function-local so no state bleed between phases.
+
+All 497 tests pass (273 new tests added).
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,0 +1,76 @@
+@startuml
+title Calculator — Retry Logic Activity Diagram
+
+start
+
+:Create Calculator instance;
+:Print operation menu (print_menu);
+
+partition "get_operation_interactive" {
+  :attempts = 0;
+  while (attempts < MAX_RETRY_ATTEMPTS?) is (yes)
+    :Prompt user for operation;
+    if (choice == "exit"?) then (yes)
+      :return None;
+      stop
+    else (no)
+    endif
+    if (choice in OPERATIONS?) then (yes)
+      :return operation key;
+    else (no)
+      :Print InvalidOperationError message;
+      :attempts += 1;
+    endif
+  endwhile (no)
+  :return "__max_retries__";
+}
+
+if (operation == None?) then (yes)
+  :Print "Goodbye!";
+  stop
+else (no)
+endif
+
+if (operation == "__max_retries__"?) then (yes)
+  :Print "Maximum number of retries exceeded. Session ended.";
+  stop
+else (no)
+endif
+
+:Look up operand_count from OPERATIONS;
+
+partition "get_operands_interactive" {
+  :attempts = 0;
+  while (attempts < MAX_RETRY_ATTEMPTS?) is (yes)
+    :Collect all operand inputs;
+    if (All operands parse as float?) then (yes)
+      :return list[float];
+    else (no)
+      :Print InvalidOperandError message;
+      :attempts += 1;
+    endif
+  endwhile (no)
+  :return None;
+}
+
+if (operands == None?) then (yes)
+  :Print "Maximum number of retries exceeded. Session ended.";
+  stop
+else (no)
+endif
+
+group try
+  :dispatch(operation, operands, calc);
+  :Print "Result: <value>";
+end group
+
+if (ValueError raised?) then (yes)
+  :Print "Error: <message>";
+else (no)
+endif
+
+:Loop back to menu;
+:Print operation menu (print_menu);
+
+stop
+@enduml

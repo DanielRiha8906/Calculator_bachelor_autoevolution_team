@@ -15,7 +15,9 @@ from src.input_loop import (
     OPERATIONS,
     dispatch,
     get_operands,
+    get_operands_interactive,
     get_operation,
+    get_operation_interactive,
     print_menu,
     run_loop,
 )
@@ -137,12 +139,20 @@ def test_run_loop_invalid_operation_shows_error_and_continues(
 def test_run_loop_non_numeric_operand_shows_error_and_continues(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A non-numeric operand must show an error message and continue the loop."""
-    inputs = iter(["add", "abc", "exit"])
+    """A non-numeric operand must show an error message and continue the loop.
+
+    Sequence for binary 'add':
+    1. "add" - operation
+    2. "abc", "5" - first operand attempt (fails)
+    3. "5", "10" - second operand attempt (succeeds)
+    4. "exit" - exit
+    """
+    inputs = iter(["add", "abc", "5", "5", "10", "exit"])
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
     assert "Error" in captured.out
     assert "Goodbye" in captured.out
+    assert "15" in captured.out
 
 
 def test_run_loop_calculator_error_shows_error_and_continues(
@@ -752,13 +762,16 @@ def test_run_loop_unary_operations_all_produce_results(
 def test_run_loop_multiple_invalid_then_valid(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Several invalid inputs in a row must not break the loop; valid op still works."""
-    inputs = iter(["bad1", "bad2", "bad3", "add", "2", "3", "exit"])
+    """After MAX_RETRY_ATTEMPTS invalid operations, session ends without a result."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # Send exactly MAX_RETRY_ATTEMPTS invalid operations to exhaust retries
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
     run_loop(input_fn=lambda _prompt: next(inputs))
     captured = capsys.readouterr()
-    assert captured.out.count("Unknown operation") == 3
-    assert "5" in captured.out
-    assert "Goodbye" in captured.out
+    assert captured.out.count("Error") == MAX_RETRY_ATTEMPTS
+    assert "Maximum number of retries exceeded. Session ended." in captured.out
+    assert "Goodbye" not in captured.out
 
 
 def test_run_loop_result_line_format(capsys: pytest.CaptureFixture[str]) -> None:
@@ -806,3 +819,524 @@ def test_main_runs_and_exits(capsys: pytest.CaptureFixture[str]) -> None:
         main_module.main(argv=[])
 
     mock_run_loop.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# get_operation_interactive — happy path
+# ---------------------------------------------------------------------------
+
+
+def test_get_operation_interactive_valid_key_first_try() -> None:
+    """A valid operation key on the first try must be returned."""
+    result = get_operation_interactive(input_fn=lambda _prompt: "add")
+    assert result == "add"
+
+
+def test_get_operation_interactive_exit_returns_none() -> None:
+    """Typing 'exit' on the first try must return None without consuming retries."""
+    result = get_operation_interactive(input_fn=lambda _prompt: "exit")
+    assert result is None
+
+
+def test_get_operation_interactive_case_insensitive() -> None:
+    """Uppercase input must be matched case-insensitively."""
+    result = get_operation_interactive(input_fn=lambda _prompt: "ADD")
+    assert result == "add"
+
+
+def test_get_operation_interactive_whitespace_stripped() -> None:
+    """Input with surrounding whitespace must be accepted."""
+    result = get_operation_interactive(input_fn=lambda _prompt: "  multiply  ")
+    assert result == "multiply"
+
+
+@pytest.mark.parametrize("key", list(OPERATIONS.keys()))
+def test_get_operation_interactive_each_valid_key(key: str) -> None:
+    """Every valid OPERATIONS key must be accepted on first try."""
+    result = get_operation_interactive(input_fn=lambda _prompt: key)
+    assert result == key
+
+
+# ---------------------------------------------------------------------------
+# get_operation_interactive — retry on invalid, then success
+# ---------------------------------------------------------------------------
+
+
+def test_get_operation_interactive_one_invalid_then_valid() -> None:
+    """One invalid operation then a valid one must eventually return the valid key."""
+    inputs = iter(["bogus", "add"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result == "add"
+
+
+def test_get_operation_interactive_two_invalid_then_valid() -> None:
+    """Two invalid operations followed by a valid one must return the valid key."""
+    inputs = iter(["bad1", "bad2", "subtract"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result == "subtract"
+
+
+def test_get_operation_interactive_prints_error_on_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An invalid operation must print an error message."""
+    inputs = iter(["nonsense", "add"])
+    get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Error" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# get_operation_interactive — max retries exhausted
+# ---------------------------------------------------------------------------
+
+
+def test_get_operation_interactive_max_retries_exhausted_returns_sentinel() -> None:
+    """After MAX_RETRY_ATTEMPTS invalid attempts, must return '__max_retries__'."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # Provide exactly MAX_RETRY_ATTEMPTS invalid inputs
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result == "__max_retries__"
+
+
+def test_get_operation_interactive_exactly_at_limit() -> None:
+    """With exactly MAX_RETRY_ATTEMPTS retries, the sentinel is returned."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["invalid"] * MAX_RETRY_ATTEMPTS)
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result == "__max_retries__"
+
+
+def test_get_operation_interactive_one_before_limit_still_retries() -> None:
+    """With MAX_RETRY_ATTEMPTS - 1 invalid, a valid input on the last try succeeds."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # Provide MAX_RETRY_ATTEMPTS - 1 invalid, then 1 valid
+    invalid_count = MAX_RETRY_ATTEMPTS - 1
+    inputs = iter(["bad"] * invalid_count + ["add"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result == "add"
+
+
+def test_get_operation_interactive_exit_does_not_consume_retry(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Typing 'exit' must not consume a retry attempt; return None immediately."""
+    call_count = [0]
+
+    def counting_input(prompt: str) -> str:
+        call_count[0] += 1
+        if call_count[0] == 1:
+            return "invalid"
+        if call_count[0] == 2:
+            return "exit"
+        return "should_not_reach"
+
+    # After 1 invalid + 1 exit, we should see 2 calls (exit does not consume retry)
+    result = counting_input
+    inputs = iter(["invalid", "exit"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    assert result is None
+
+
+def test_get_operation_interactive_prints_error_multiple_times(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Multiple invalid attempts must each print an error message."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
+    get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    # There should be MAX_RETRY_ATTEMPTS error messages
+    error_count = captured.out.count("Error:")
+    assert error_count == MAX_RETRY_ATTEMPTS
+
+
+def test_get_operation_interactive_empty_string_is_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty string input must be treated as invalid and consumed as a retry."""
+    inputs = iter(["", "add"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == "add"
+    assert "Error" in captured.out
+
+
+def test_get_operation_interactive_whitespace_only_is_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Whitespace-only input must be treated as invalid."""
+    inputs = iter(["   ", "multiply"])
+    result = get_operation_interactive(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == "multiply"
+    assert "Error" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# get_operands_interactive — happy path
+# ---------------------------------------------------------------------------
+
+
+def test_get_operands_interactive_single_valid_operand() -> None:
+    """A single valid numeric operand must be returned as a list with one float."""
+    result = get_operands_interactive(1, input_fn=lambda _prompt: "5.0")
+    assert result == [5.0]
+
+
+def test_get_operands_interactive_two_valid_operands() -> None:
+    """Two valid numeric operands must be returned as a list of two floats."""
+    inputs = iter(["10", "20"])
+    result = get_operands_interactive(2, input_fn=lambda _prompt: next(inputs))
+    assert result == [10.0, 20.0]
+
+
+def test_get_operands_interactive_three_valid_operands() -> None:
+    """Three valid operands must be returned as a list of three floats."""
+    inputs = iter(["1.5", "2.5", "3.5"])
+    result = get_operands_interactive(3, input_fn=lambda _prompt: next(inputs))
+    assert result == [1.5, 2.5, 3.5]
+
+
+def test_get_operands_interactive_negative_numbers() -> None:
+    """Negative numeric operands must be accepted."""
+    inputs = iter(["-5.5", "-10"])
+    result = get_operands_interactive(2, input_fn=lambda _prompt: next(inputs))
+    assert result == [-5.5, -10.0]
+
+
+def test_get_operands_interactive_zero() -> None:
+    """Zero must be accepted as a valid operand."""
+    result = get_operands_interactive(1, input_fn=lambda _prompt: "0")
+    assert result == [0.0]
+
+
+def test_get_operands_interactive_returns_list_of_floats() -> None:
+    """The return value must be a list of float instances."""
+    result = get_operands_interactive(1, input_fn=lambda _prompt: "5")
+    assert isinstance(result, list)
+    assert all(isinstance(v, float) for v in result)
+
+
+# ---------------------------------------------------------------------------
+# get_operands_interactive — retry on invalid, then success
+# ---------------------------------------------------------------------------
+
+
+def test_get_operands_interactive_one_invalid_then_valid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """One invalid attempt followed by valid operands must succeed."""
+    inputs = iter(["not_a_number", "5.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [5.0]
+    assert "Error" in captured.out
+
+
+def test_get_operands_interactive_first_of_multiple_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """If the first operand is invalid, the entire attempt fails."""
+    inputs = iter(["abc", "5.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [5.0]
+    assert "Error" in captured.out
+
+
+def test_get_operands_interactive_second_of_multiple_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """If the second operand is invalid in a multi-operand request, entire attempt fails."""
+    inputs = iter(["5.0", "not_a_number", "5.0", "10.0"])
+    result = get_operands_interactive(2, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [5.0, 10.0]
+    assert "Error" in captured.out
+
+
+def test_get_operands_interactive_two_invalid_attempts_then_valid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Two invalid attempts followed by valid operands must succeed."""
+    inputs = iter(["bad1", "bad2", "7.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [7.0]
+    # Should see 2 error messages
+    assert captured.out.count("Error") >= 2
+
+
+# ---------------------------------------------------------------------------
+# get_operands_interactive — max retries exhausted
+# ---------------------------------------------------------------------------
+
+
+def test_get_operands_interactive_max_retries_exhausted_returns_none() -> None:
+    """After MAX_RETRY_ATTEMPTS invalid attempts, must return None."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["invalid"] * MAX_RETRY_ATTEMPTS)
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    assert result is None
+
+
+def test_get_operands_interactive_exactly_at_limit() -> None:
+    """With exactly MAX_RETRY_ATTEMPTS invalid attempts, None is returned."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    assert result is None
+
+
+def test_get_operands_interactive_one_before_limit_succeeds() -> None:
+    """With MAX_RETRY_ATTEMPTS - 1 invalid, a valid attempt on the last try succeeds."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    invalid_count = MAX_RETRY_ATTEMPTS - 1
+    inputs = iter(["bad"] * invalid_count + ["5.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    assert result == [5.0]
+
+
+def test_get_operands_interactive_prints_error_for_each_retry(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Each failed attempt must print an error message."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["invalid"] * MAX_RETRY_ATTEMPTS)
+    get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    # Should see MAX_RETRY_ATTEMPTS error messages
+    error_count = captured.out.count("Error:")
+    assert error_count == MAX_RETRY_ATTEMPTS
+
+
+def test_get_operands_interactive_empty_string_is_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty string operand must be treated as invalid."""
+    inputs = iter(["", "5.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [5.0]
+    assert "Error" in captured.out
+
+
+def test_get_operands_interactive_whitespace_only_is_invalid(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Whitespace-only operand must be treated as invalid."""
+    inputs = iter(["   ", "5.0"])
+    result = get_operands_interactive(1, input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert result == [5.0]
+    assert "Error" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# run_loop — integration with new interactive functions
+# ---------------------------------------------------------------------------
+
+
+def test_run_loop_exit_on_max_retries_operation(capsys: pytest.CaptureFixture[str]) -> None:
+    """Exhausting retries on invalid operations must print the max-retries message."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # Provide MAX_RETRY_ATTEMPTS invalid operations
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Maximum number of retries exceeded. Session ended." in captured.out
+
+
+def test_run_loop_exit_on_max_retries_operands(capsys: pytest.CaptureFixture[str]) -> None:
+    """Exhausting retries on invalid operands must print the max-retries message.
+
+    For binary operation 'add', each attempt needs 2 operand inputs.
+    So for MAX_RETRY_ATTEMPTS retries, we need MAX_RETRY_ATTEMPTS * 2 invalid operands.
+    """
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # Valid operation, then MAX_RETRY_ATTEMPTS attempts of 2 invalid operands each
+    invalid_operand_sequence = ["invalid"] * (MAX_RETRY_ATTEMPTS * 2)
+    inputs = iter(["add"] + invalid_operand_sequence)
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Maximum number of retries exceeded. Session ended." in captured.out
+
+
+def test_run_loop_max_retries_operation_does_not_print_goodbye(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """When max retries on operation is exhausted, 'Goodbye' must NOT be printed."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    inputs = iter(["bad"] * MAX_RETRY_ATTEMPTS)
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    # The session-ended message should appear, but not 'Goodbye'
+    assert "Maximum number of retries exceeded" in captured.out
+    assert "Goodbye" not in captured.out
+
+
+def test_run_loop_max_retries_operands_does_not_print_goodbye(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """When max retries on operands is exhausted, 'Goodbye' must NOT be printed."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # For binary operation 'add', each attempt needs 2 inputs
+    invalid_operand_sequence = ["bad"] * (MAX_RETRY_ATTEMPTS * 2)
+    inputs = iter(["add"] + invalid_operand_sequence)
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Maximum number of retries exceeded" in captured.out
+    assert "Goodbye" not in captured.out
+
+
+def test_run_loop_exit_prints_goodbye_not_max_retries_message(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Typing 'exit' must print 'Goodbye' and NOT print max-retries message."""
+    run_loop(input_fn=lambda _prompt: "exit")
+    captured = capsys.readouterr()
+    assert "Goodbye" in captured.out
+    assert "Maximum number of retries exceeded" not in captured.out
+
+
+def test_run_loop_valid_operation_within_retry_limit_succeeds(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Valid operation within retry limit must complete normally."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    # 1 invalid, then 1 valid operation (within limit), then exit
+    inputs = iter(["bad", "add", "5", "10", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "15" in captured.out
+    assert "Goodbye" in captured.out
+    assert "Maximum number of retries exceeded" not in captured.out
+
+
+def test_run_loop_valid_operand_within_retry_limit_succeeds(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Valid operands within retry limit must complete the calculation.
+
+    For binary operation 'add', the first invalid attempt consumes 2 inputs,
+    then we provide valid operands for a second attempt.
+    """
+    # Valid operation, 1 invalid operand attempt (2 invalid values), then valid operands, then exit
+    inputs = iter(["add", "bad1", "bad2", "5", "10", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "15" in captured.out
+    assert "Goodbye" in captured.out
+    assert "Maximum number of retries exceeded" not in captured.out
+
+
+def test_run_loop_near_retry_limit_operation_succeeds(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """MAX_RETRY_ATTEMPTS - 1 invalid operations, then valid, must succeed."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    invalid_count = MAX_RETRY_ATTEMPTS - 1
+    inputs = iter(["bad"] * invalid_count + ["add", "3", "7", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "10" in captured.out
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_near_retry_limit_operands_succeeds(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """MAX_RETRY_ATTEMPTS - 1 invalid operand attempts, then valid, must succeed."""
+    from src.input_validator import MAX_RETRY_ATTEMPTS
+
+    invalid_count = MAX_RETRY_ATTEMPTS - 1
+    inputs = iter(["add"] + ["bad"] * invalid_count + ["2", "8", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "10" in captured.out
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_mixed_invalid_operations_and_operands(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Multiple invalid operations and operands (within limits) must still work.
+
+    The sequence:
+    1. "bad_op" - invalid operation (retry 1)
+    2. "add" - valid operation, needs 2 operands
+    3. "bad_op1", "bad_op2" - invalid operands (retry 1)
+    4. "multiply" - valid operation, needs 2 operands
+    5. "3", "4" - valid operands
+    6. "exit" - exit
+    """
+    inputs = iter(["bad_op", "add", "bad_op1", "bad_op2", "5", "10", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "15" in captured.out  # 5 + 10
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_continues_after_calculator_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A calculator error (e.g., divide by zero) must NOT trigger retry counting."""
+    inputs = iter(["divide", "1", "0", "add", "5", "5", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Error" in captured.out  # Division error
+    assert "10" in captured.out      # Subsequent operation succeeds
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_all_unary_operations_with_retries(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Unary operations with some invalid attempts must all eventually succeed."""
+    inputs = iter([
+        "bad",
+        "factorial", "5",  # Valid
+        "bad",
+        "square", "3",      # Valid
+        "cube", "2",        # Valid
+        "exit"
+    ])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "120" in captured.out  # 5!
+    assert "9" in captured.out    # 3^2
+    assert "8" in captured.out    # 2^3
+    assert "Goodbye" in captured.out
+
+
+def test_run_loop_result_format_unchanged(capsys: pytest.CaptureFixture[str]) -> None:
+    """Result output format must still be 'Result: <value>'."""
+    inputs = iter(["add", "7", "8", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Result: 15" in captured.out
+
+
+def test_run_loop_error_format_unchanged(capsys: pytest.CaptureFixture[str]) -> None:
+    """Error output format from validation must be 'Error: <message>'."""
+    inputs = iter(["add", "not_a_number", "invalid", "5", "10", "exit"])
+    run_loop(input_fn=lambda _prompt: next(inputs))
+    captured = capsys.readouterr()
+    assert "Error:" in captured.out
+    assert "Goodbye" in captured.out

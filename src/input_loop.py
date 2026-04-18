@@ -10,6 +10,13 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .input_validator import (
+    MAX_RETRY_ATTEMPTS,
+    InvalidOperandError,
+    InvalidOperationError,
+    validate_operation,
+    validate_operands,
+)
 
 # Maps string keys to (display_label, operand_count).
 # operand_count == 1 for unary operations, 2 for binary operations.
@@ -80,6 +87,72 @@ def get_operands(count: int, input_fn: Callable[[str], str] = input) -> list[flo
     return operands
 
 
+def get_operation_interactive(input_fn: Callable[[str], str] = input) -> str | None:
+    """Prompt the user to choose an operation, retrying on invalid input.
+
+    Loops up to :data:`~src.input_validator.MAX_RETRY_ATTEMPTS` times.  On
+    each attempt the raw input is normalised and passed to
+    :func:`~src.input_validator.validate_operation`.  An
+    :exc:`~src.input_validator.InvalidOperationError` causes an error message
+    to be printed and the counter to advance; ``"exit"`` is returned
+    immediately without consuming a retry.
+
+    Args:
+        input_fn: Callable used to read user input.  Defaults to the
+            built-in ``input``.
+
+    Returns:
+        The validated operation key on success, ``None`` when the user types
+        ``"exit"``, or the sentinel string ``"__max_retries__"`` when all
+        retry attempts are exhausted.
+    """
+    attempts: int = 0
+    while attempts < MAX_RETRY_ATTEMPTS:
+        choice = input_fn("Enter operation: ").strip().lower()
+        if choice == "exit":
+            return None
+        try:
+            return validate_operation(choice, OPERATIONS)
+        except InvalidOperationError as exc:
+            print(f"Error: {exc}")
+            attempts += 1
+    return "__max_retries__"
+
+
+def get_operands_interactive(
+    count: int, input_fn: Callable[[str], str] = input
+) -> list[float] | None:
+    """Prompt the user to enter *count* operands, retrying on invalid input.
+
+    Loops up to :data:`~src.input_validator.MAX_RETRY_ATTEMPTS` times.  On
+    each attempt all *count* prompts are issued and the collected strings are
+    passed to :func:`~src.input_validator.validate_operands`.  Any
+    :exc:`~src.input_validator.InvalidOperandError` causes an error message
+    to be printed and the counter to advance.
+
+    Args:
+        count: Number of operands to collect.
+        input_fn: Callable used to read user input.  Defaults to the
+            built-in ``input``.
+
+    Returns:
+        A list of ``float`` values on success, or ``None`` when all retry
+        attempts are exhausted.
+    """
+    attempts: int = 0
+    while attempts < MAX_RETRY_ATTEMPTS:
+        raw_inputs: list[str] = []
+        for i in range(count):
+            label = f"operand {i + 1}" if count > 1 else "operand"
+            raw_inputs.append(input_fn(f"Enter {label}: ").strip())
+        try:
+            return validate_operands(raw_inputs, count)
+        except InvalidOperandError as exc:
+            print(f"Error: {exc}")
+            attempts += 1
+    return None
+
+
 def dispatch(operation: str, operands: list[float], calc: Calculator) -> float:
     """Call the appropriate Calculator method for the given operation.
 
@@ -148,19 +221,25 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
 
     while True:
         print_menu()
-        operation = get_operation(input_fn)
+        operation = get_operation_interactive(input_fn)
 
         if operation is None:
             print("Goodbye!")
             break
 
-        if operation == "__invalid__":
-            continue
+        if operation == "__max_retries__":
+            print("Maximum number of retries exceeded. Session ended.")
+            break
 
         _, operand_count = OPERATIONS[operation]
 
+        operands = get_operands_interactive(operand_count, input_fn)
+
+        if operands is None:
+            print("Maximum number of retries exceeded. Session ended.")
+            break
+
         try:
-            operands = get_operands(operand_count, input_fn)
             result = dispatch(operation, operands, calc)
             print(f"Result: {result}")
         except ValueError as exc:

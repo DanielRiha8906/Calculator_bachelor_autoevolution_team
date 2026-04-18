@@ -1,0 +1,120 @@
+@startuml
+title Calculator — Interactive Flow with Retry Sequence Diagram
+
+participant User
+participant InputLoop
+participant InputValidator
+participant Calculator
+
+== Interactive mode — successful path ==
+
+User -> InputLoop : run_loop()
+InputLoop -> InputLoop : create Calculator()
+
+loop until "exit" or max retries
+
+  InputLoop -> User : print_menu()
+
+  group get_operation_interactive (attempts = 0)
+    InputLoop -> User : prompt "Enter operation:"
+    User -> InputLoop : "divide"
+    InputLoop -> InputValidator : validate_operation("divide", OPERATIONS)
+    InputValidator --> InputLoop : return "divide"
+  end
+
+  InputLoop -> InputLoop : look up operand_count = 2
+
+  group get_operands_interactive (attempts = 0)
+    InputLoop -> User : prompt "Enter operand 1:"
+    User -> InputLoop : "10"
+    InputLoop -> User : prompt "Enter operand 2:"
+    User -> InputLoop : "2"
+    InputLoop -> InputValidator : validate_operands(["10", "2"], 2)
+    InputValidator --> InputLoop : return [10.0, 2.0]
+  end
+
+  InputLoop -> Calculator : dispatch("divide", [10.0, 2.0], calc)
+  Calculator --> InputLoop : return 5.0
+  InputLoop -> User : print("Result: 5.0")
+
+end
+
+== Retry path — invalid operation (exhausts retries) ==
+
+group get_operation_interactive (retries)
+  InputLoop -> User : prompt "Enter operation:"
+  User -> InputLoop : "badop"
+  InputLoop -> InputValidator : validate_operation("badop", OPERATIONS)
+  InputValidator --> InputLoop : raise InvalidOperationError
+  InputLoop -> User : print("Error: Unknown operation: 'badop'...")
+
+  InputLoop -> User : prompt "Enter operation:" (attempt 2)
+  User -> InputLoop : "alsobad"
+  InputLoop -> InputValidator : validate_operation("alsobad", OPERATIONS)
+  InputValidator --> InputLoop : raise InvalidOperationError
+  InputLoop -> User : print("Error: Unknown operation: 'alsobad'...")
+
+  InputLoop -> User : prompt "Enter operation:" (attempt 3)
+  User -> InputLoop : "stillinvalid"
+  InputLoop -> InputValidator : validate_operation("stillinvalid", OPERATIONS)
+  InputValidator --> InputLoop : raise InvalidOperationError
+  InputLoop -> User : print("Error: Unknown operation: 'stillinvalid'...")
+
+  InputLoop -> InputLoop : attempts == MAX_RETRY_ATTEMPTS, return "__max_retries__"
+end
+
+InputLoop -> User : print("Maximum number of retries exceeded. Session ended.")
+InputLoop --> User : return (run_loop ends)
+
+== Retry path — invalid operand (exhausts retries) ==
+
+group get_operation_interactive (success)
+  InputLoop -> User : prompt "Enter operation:"
+  User -> InputLoop : "add"
+  InputLoop -> InputValidator : validate_operation("add", OPERATIONS)
+  InputValidator --> InputLoop : return "add"
+end
+
+group get_operands_interactive (retries)
+  InputLoop -> User : prompt "Enter operand 1:"
+  User -> InputLoop : "abc"
+  InputLoop -> User : prompt "Enter operand 2:"
+  User -> InputLoop : "5"
+  InputLoop -> InputValidator : validate_operands(["abc", "5"], 2)
+  InputValidator --> InputLoop : raise InvalidOperandError
+  InputLoop -> User : print("Error: Invalid operand 'abc'...")
+
+  InputLoop -> User : prompt "Enter operand 1:" (attempt 2)
+  User -> InputLoop : "xyz"
+  InputLoop -> User : prompt "Enter operand 2:"
+  User -> InputLoop : "5"
+  InputLoop -> InputValidator : validate_operands(["xyz", "5"], 2)
+  InputValidator --> InputLoop : raise InvalidOperandError
+  InputLoop -> User : print("Error: Invalid operand 'xyz'...")
+
+  InputLoop -> User : prompt "Enter operand 1:" (attempt 3)
+  User -> InputLoop : "???"
+  InputLoop -> User : prompt "Enter operand 2:"
+  User -> InputLoop : "5"
+  InputLoop -> InputValidator : validate_operands(["???", "5"], 2)
+  InputValidator --> InputLoop : raise InvalidOperandError
+  InputLoop -> User : print("Error: Invalid operand '???'...")
+
+  InputLoop -> InputLoop : attempts == MAX_RETRY_ATTEMPTS, return None
+end
+
+InputLoop -> User : print("Maximum number of retries exceeded. Session ended.")
+InputLoop --> User : return (run_loop ends)
+
+== Exit path ==
+
+group get_operation_interactive
+  InputLoop -> User : prompt "Enter operation:"
+  User -> InputLoop : "exit"
+  InputLoop -> InputLoop : return None
+end
+
+InputLoop -> User : print("Goodbye!")
+InputLoop --> User : return (run_loop ends)
+
+@enduml
