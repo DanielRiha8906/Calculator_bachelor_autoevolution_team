@@ -283,6 +283,103 @@ class CalculatorWithHistory:
             raise
 
     # ------------------------------------------------------------------
+    # Scientific unary operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (in radians), recording the operation in history.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The sine of x.
+        """
+        logger = get_logger(__name__)
+        try:
+            result = self._calculator.sin(x)
+            self._history.append(f"sin({x}) = {result}")
+            return result
+        except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
+            logger.error(f"sin({x}) failed: {type(exc).__name__}: {exc}")
+            raise
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (in radians), recording the operation in history.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The cosine of x.
+        """
+        logger = get_logger(__name__)
+        try:
+            result = self._calculator.cos(x)
+            self._history.append(f"cos({x}) = {result}")
+            return result
+        except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
+            logger.error(f"cos({x}) failed: {type(exc).__name__}: {exc}")
+            raise
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (in radians), recording the operation in history.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The tangent of x.
+        """
+        logger = get_logger(__name__)
+        try:
+            result = self._calculator.tan(x)
+            self._history.append(f"tan({x}) = {result}")
+            return result
+        except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
+            logger.error(f"tan({x}) failed: {type(exc).__name__}: {exc}")
+            raise
+
+    def exp(self, x: float) -> float:
+        """Return e raised to the power of x, recording the operation in history.
+
+        Args:
+            x: The exponent.
+
+        Returns:
+            e ** x.
+        """
+        logger = get_logger(__name__)
+        try:
+            result = self._calculator.exp(x)
+            self._history.append(f"exp({x}) = {result}")
+            return result
+        except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
+            logger.error(f"exp({x}) failed: {type(exc).__name__}: {exc}")
+            raise
+
+    def sqrt(self, x: float) -> float:
+        """Return the square root of x, recording the operation in history.
+
+        Args:
+            x: A non-negative number.
+
+        Returns:
+            The square root of x.
+
+        Raises:
+            ValueError: Propagated for negative x.
+        """
+        logger = get_logger(__name__)
+        try:
+            result = self._calculator.sqrt(x)
+            self._history.append(f"sqrt({x}) = {result}")
+            return result
+        except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
+            logger.error(f"sqrt({x}) failed: {type(exc).__name__}: {exc}")
+            raise
+
+    # ------------------------------------------------------------------
     # History access
     # ------------------------------------------------------------------
 

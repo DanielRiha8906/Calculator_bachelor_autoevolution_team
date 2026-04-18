@@ -21,42 +21,71 @@ if (sys.argv has arguments?) then (yes)
     endif
 else (no)
     |__main__|
-    :Call get_input_with_retries();
+    :Instantiate ModeManager (default: normal);
+    :Print current mode;
+    :Prompt for optional mode command;
 
-    |retry_handler|
-    :Prompt for first operand (with retries);
-    if (retries exhausted?) then (yes)
-        :Print "Maximum retries reached. Operation cancelled.";
-        |__main__|
-        :Return (no output);
-        end
-    else (no)
+    if (user enters 'mode science'?) then (yes)
+        :set_mode("scientific");
+    else if (user enters 'mode normal'?) then (yes)
+        :set_mode("normal");
+    else (no / unrecognised)
     endif
 
-    :Prompt for second operand (with retries);
-    if (retries exhausted?) then (yes)
-        :Print "Maximum retries reached. Operation cancelled.";
-        |__main__|
-        :Return (no output);
-        end
-    else (no)
-    endif
+    if (is_scientific()?) then (yes)
+        :Call get_scientific_unary_input_with_retries();
 
-    :Prompt for operator (with retries);
-    if (retries exhausted?) then (yes)
-        :Print "Maximum retries reached. Operation cancelled.";
-        |__main__|
-        :Return (no output);
-        end
-    else (no)
-    endif
+        |retry_handler|
+        :Prompt for scientific expression e.g. sin(1.57) (with retries);
+        if (retries exhausted?) then (yes)
+            :Print "Maximum retries reached. Operation cancelled.";
+            |__main__|
+            :Return (no output);
+            end
+        else (no)
+        endif
 
-    :Return (first_operand, operator, second_operand);
-    |__main__|
+        :Return (method_name, operand);
+
+        |__main__|
+        :Call run_unary_calculation(operand, method_name);
+    else (no — normal mode)
+        :Call get_input_with_retries();
+
+        |retry_handler|
+        :Prompt for first operand (with retries);
+        if (retries exhausted?) then (yes)
+            :Print "Maximum retries reached. Operation cancelled.";
+            |__main__|
+            :Return (no output);
+            end
+        else (no)
+        endif
+
+        :Prompt for second operand (with retries);
+        if (retries exhausted?) then (yes)
+            :Print "Maximum retries reached. Operation cancelled.";
+            |__main__|
+            :Return (no output);
+            end
+        else (no)
+        endif
+
+        :Prompt for operator (with retries);
+        if (retries exhausted?) then (yes)
+            :Print "Maximum retries reached. Operation cancelled.";
+            |__main__|
+            :Return (no output);
+            end
+        else (no)
+        endif
+
+        :Return (first_operand, operator, second_operand);
+        |__main__|
+        :Lookup method_name via BINARY_OPERATORS;
+        :Call run_calculation(first_operand, second_operand, method_name);
+    endif
 endif
-
-:Lookup method_name via BINARY_OPERATORS;
-:Call run_calculation(first_operand, second_operand, method_name);
 
 |input_handler / CalculatorWithHistory|
 :Instantiate CalculatorWithHistory;

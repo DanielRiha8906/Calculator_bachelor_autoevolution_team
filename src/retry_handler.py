@@ -1,11 +1,14 @@
 """Retry logic for interactive calculator input.
 
 Provides helpers that prompt the user for operands and an operator with
-a configurable number of retries before aborting. All validation reuses
-logic from input_handler so there is no duplication of parsing rules.
+a configurable number of retries before aborting.  Also provides a helper
+for collecting scientific unary function expressions.  All validation
+reuses logic from the parser modules so there is no duplication of parsing
+rules.
 """
 
 from src.parser import BINARY_OPERATORS, parse_operand
+from src.scientific_parser import parse_unary_function
 
 MAX_RETRIES: int = 3
 
@@ -114,3 +117,41 @@ def get_input_with_retries(
         return None
 
     return first_operand, operator, second_operand
+
+
+def get_scientific_unary_input_with_retries(
+    max_retries: int = MAX_RETRIES,
+) -> tuple[str, float] | None:
+    """Collect a scientific unary function call from the user with retry logic.
+
+    Prompts the user to enter an expression of the form ``func(arg)``,
+    e.g. ``sin(1.57)`` or ``log(100)``.  Up to *max_retries* attempts are
+    allowed before the collection is aborted.
+
+    Args:
+        max_retries: Maximum number of attempts before giving up.
+
+    Returns:
+        A ``(method_name, operand)`` tuple on success, or ``None`` if all
+        retries are exhausted.
+    """
+    attempts_left = max_retries
+    while attempts_left > 0:
+        raw = input("Enter scientific expression (e.g. sin(1.57), log(100)): ")
+        if not raw.strip():
+            attempts_left -= 1
+            remaining = attempts_left
+            print(
+                f"Invalid input: expression cannot be empty. "
+                f"{remaining} attempt(s) remaining."
+            )
+            continue
+        try:
+            return parse_unary_function(raw)
+        except ValueError as exc:
+            attempts_left -= 1
+            remaining = attempts_left
+            print(f"Invalid input: {exc} {remaining} attempt(s) remaining.")
+
+    print("Maximum retries reached. Operation cancelled.")
+    return None
