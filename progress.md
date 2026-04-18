@@ -13,7 +13,7 @@ Risks: Low. Changes are scoped to InputHandler in input_handler.py. Public API s
 
 Test results: 438 passed, 0 failed, 0 skipped (python -m pytest) — includes 37 new tests in tests/test_input_handler_retry.py covering boundary conditions, counter reset, error message content, and edge cases.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 680.9s | Cost: $1.560313 USD | Turns: 23
 
 ---
 
