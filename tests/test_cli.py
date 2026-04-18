@@ -886,3 +886,109 @@ def test_run_cli_creates_history_if_none_provided(
         # File must be created even without explicit history
         history_file = Path(tmpdir) / HISTORY_FILE
         assert history_file.exists()
+
+
+# ---------------------------------------------------------------------------
+# error logging integration tests for run_cli
+# ---------------------------------------------------------------------------
+
+
+def test_run_cli_division_by_zero_is_logged(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must log division by zero before exit."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        monkeypatch.setattr(sys, "argv", ["src", "divide", "10", "0"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            run_cli()
+
+        assert exc_info.value.code == 2
+
+        log_file = Path(tmpdir) / "error.log"
+        assert log_file.exists()
+        content = log_file.read_text(encoding="utf-8")
+        assert "CALCULATION_ERROR" in content
+        assert "Division by zero" in content or "zero" in content.lower()
+
+
+def test_run_cli_invalid_operand_count_is_logged(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must exit with error code 2 on invalid operand count."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        monkeypatch.setattr(sys, "argv", ["src", "add", "5"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            run_cli()
+
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        assert "requires" in captured.err or "requires" in captured.err.lower()
+
+
+def test_run_cli_invalid_operation_is_logged(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must exit with error code 2 on unknown operation."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        monkeypatch.setattr(sys, "argv", ["src", "unknown_op", "5", "3"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            run_cli()
+
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        assert "unknown operation" in captured.err or "unknown" in captured.err.lower()
+
+
+def test_run_cli_error_log_file_created_after_error(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must create error.log file when a calculation error occurs."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        monkeypatch.setattr(sys, "argv", ["src", "divide", "5", "0"])
+
+        with pytest.raises(SystemExit):
+            run_cli()
+
+        log_file = Path(tmpdir) / "error.log"
+        assert log_file.exists()
+        assert log_file.stat().st_size > 0
+
+
+def test_run_cli_error_logger_created_by_default(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_cli must create an ErrorLogger instance."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        monkeypatch.setattr(sys, "argv", ["src", "log", "0"])
+
+        with pytest.raises(SystemExit):
+            run_cli()
+
+        log_file = Path(tmpdir) / "error.log"
+        assert log_file.exists()

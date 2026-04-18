@@ -57,15 +57,34 @@ class OperationHistory {
   -_format_entry(op: str, operands: list, result: float) : str
 }
 
+class ErrorLogger {
+  -_history : list[str]
+  -_file_path : str
+  +__init__(file_path: str) : None
+  +log_error(category: str, message: str, context: dict) : None
+  +get_errors() : list[str]
+  -_format_entry(timestamp: str, category: str, message: str, context: dict) : str
+}
+
+class ErrorCategories <<enum>> {
+  INVALID_INPUT
+  UNSUPPORTED_OPERATION
+  CALCULATION_ERROR
+  UNEXPECTED_ERROR
+}
+
 InputLoop --> Calculator : uses
 InputLoop --> Validation : validate_operation / validate_operand
 InputLoop --> OperationHistory : creates / records / prints history
+InputLoop --> ErrorLogger : creates / logs errors
 Main --> InputLoop : calls run_loop()
 Main --> CLI : calls run_cli()
 CLI --> OPERATIONS : reads operand count
 CLI --> Calculator : creates instance
 CLI --> InputLoop : calls dispatch()
 CLI --> OperationHistory : creates / records operation
+CLI --> ErrorLogger : creates / logs errors
+ErrorLogger --> ErrorCategories : uses
 
 note right of CLI
   Uses argparse + sys from stdlib.

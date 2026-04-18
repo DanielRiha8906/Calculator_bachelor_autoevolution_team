@@ -10,6 +10,12 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .error_logger import (
+    CALCULATION_ERROR,
+    INVALID_INPUT,
+    UNEXPECTED_ERROR,
+    ErrorLogger,
+)
 from .history import OperationHistory
 from .validation import validate_operation, validate_operand
 
@@ -175,6 +181,48 @@ def dispatch(operation: str, operands: list[float], calc: Calculator) -> float:
     raise KeyError(f"Unknown operation: '{operation}'")
 
 
+def _categorize_error(
+    exc: Exception,
+    operation: str,
+    operands: list[float],
+) -> tuple[str, dict]:  # type: ignore[type-arg]
+    """Map an exception raised by dispatch to an error category and context.
+
+    ``ValueError`` messages are inspected to choose the most specific
+    category:
+
+    * "division by zero" / "zero" in the message → :data:`CALCULATION_ERROR`
+    * "invalid" in the message → :data:`INVALID_INPUT`
+    * Any other ``ValueError`` → :data:`CALCULATION_ERROR`
+    * Any other exception type → :data:`UNEXPECTED_ERROR`
+
+    Args:
+        exc: The caught exception.
+        operation: The operation key that was being dispatched.
+        operands: The list of operands passed to dispatch.
+
+    Returns:
+        A ``(category_string, context_dict)`` tuple where *context_dict*
+        contains ``operation``, ``operands``, and ``error`` keys.
+    """
+    context: dict = {  # type: ignore[type-arg]
+        "operation": operation,
+        "operands": operands,
+        "error": str(exc),
+    }
+
+    if isinstance(exc, ValueError):
+        lower_msg = str(exc).lower()
+        if "division by zero" in lower_msg or "zero" in lower_msg:
+            return CALCULATION_ERROR, context
+        if "invalid" in lower_msg:
+            return INVALID_INPUT, context
+        # Any other ValueError is still a calculation-level problem.
+        return CALCULATION_ERROR, context
+
+    return UNEXPECTED_ERROR, context
+
+
 def run_loop(
     input_fn: Callable[[str], str] = input,
     history: OperationHistory | None = None,
@@ -206,6 +254,7 @@ def run_loop(
     calc = Calculator()
     if history is None:
         history = OperationHistory()
+    error_logger = ErrorLogger()
 
     while True:
         print_menu()
@@ -235,4 +284,6 @@ def run_loop(
             print(f"Result: {result}")
             history.record_operation(operation, operands, result)
         except ValueError as exc:
+            category, context = _categorize_error(exc, operation, operands)
+            error_logger.log_error(category, str(exc), context)
             print(f"Error: {exc}")

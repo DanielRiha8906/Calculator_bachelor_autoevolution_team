@@ -996,3 +996,81 @@ def test_run_loop_history_command_with_multiple_operations(
         # Both operations should be displayed by history command
         assert "5.0 add 3.0 = 8.0" in captured.out
         assert "10.0 subtract 2.0 = 8.0" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# error logging integration tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_loop_division_by_zero_is_logged(capsys: pytest.CaptureFixture[str]) -> None:
+    """run_loop must log division by zero to error.log."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["divide", "10", "0", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+
+        log_file = Path(tmpdir) / "error.log"
+        assert log_file.exists()
+        content = log_file.read_text(encoding="utf-8")
+        assert "CALCULATION_ERROR" in content
+        assert "Division by zero" in content or "zero" in content.lower()
+
+
+def test_run_loop_invalid_operand_is_logged_or_rejected(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must handle invalid operand input (either reject or log)."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        # Retry limit is 3, so need 3 invalid attempts
+        inputs = iter(["add", "abc", "abc", "abc", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+
+        captured = capsys.readouterr()
+        # Must show error message about non-numeric input or return to menu
+        assert "Error" in captured.out or "numeric" in captured.out.lower() or "Returning" in captured.out
+
+
+def test_run_loop_negative_square_root_is_logged(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must log square root of negative number as CALCULATION_ERROR."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["square_root", "-4", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+
+        log_file = Path(tmpdir) / "error.log"
+        assert log_file.exists()
+        content = log_file.read_text(encoding="utf-8")
+        assert "CALCULATION_ERROR" in content
+
+
+def test_run_loop_creates_error_logger_by_default(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must create an ErrorLogger when none is injected."""
+    import tempfile
+    import os
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["divide", "5", "0", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+
+        log_file = Path(tmpdir) / "error.log"
+        # When an error occurs, the default logger should create the file
+        assert log_file.exists()

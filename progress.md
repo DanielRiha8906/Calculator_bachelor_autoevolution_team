@@ -157,3 +157,24 @@ Branch: exp/structured-team
 Merge target: exp/structured-team
 
 Duration: 687.0s | Cost: $1.789463 USD | Turns: 17
+
+## Run: Issue #66 — V1 Task 10 - Error Logging (task/issue-66-error-logging)
+
+Files changed:
+- src/error_logger.py (created) — new ErrorLogger class; module-level string constants INVALID_INPUT, UNSUPPORTED_OPERATION, CALCULATION_ERROR, UNEXPECTED_ERROR, plus ERROR_CATEGORIES frozenset; __init__ opens log file in append mode; log_error appends formatted entry to in-memory list and file; get_errors returns copy of list; _format_entry produces [TIMESTAMP] [CATEGORY] Message | key=value; key=value format; file I/O failures go to stderr without raising
+- src/input_loop.py (modified) — imported ErrorLogger and category constants; added _categorize_error helper (maps ValueError messages to CALCULATION_ERROR or INVALID_INPUT, other exceptions to UNEXPECTED_ERROR); in run_loop, creates ErrorLogger(); in except ValueError block calls _categorize_error then error_logger.log_error before printing error
+- src/cli.py (modified) — imported ErrorLogger and category constants; in run_cli, creates ErrorLogger(); in except ValueError block after dispatch, categorizes error and calls error_logger.log_error before printing to stderr and exiting with code 2
+- artifacts/class_diagram.puml (modified) — added ErrorLogger class, ErrorCategories enum, and relationship arrows from InputLoop, CLI, and ErrorLogger
+- artifacts/activity_diagram.puml (modified) — added "Log error to ErrorLogger with category and context" step before "Print Error" in the ValueError-raised branch
+- artifacts/sequence_diagram.puml (modified) — added ErrorLogger participant; added error logging sequence in existing div-by-zero alt; added new alt block for invalid-input (square_root negative) error logging flow; added ErrorLogger creation line at run_loop start
+
+Purpose: Implement persistent structured error logging so all ValueError events from dispatch are recorded with timestamp, category, and context rather than silently printed and discarded.
+
+Risks: Low. ErrorLogger I/O failures are swallowed to stderr so they cannot disrupt the calculator loop. error.log is written to CWD and may accumulate between sessions (append mode by design).
+
+Tests passed: 513/513
+
+Branch: task/issue-66-error-logging
+Merge target: exp/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

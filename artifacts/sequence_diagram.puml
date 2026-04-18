@@ -8,6 +8,7 @@ participant InputLoop
 participant OperationHistory
 participant Validation
 participant Calculator
+participant ErrorLogger
 
 == CLI mode (e.g. python -m src add 3 5) ==
 
@@ -42,6 +43,7 @@ end
 User -> Main : sys.argv = []
 Main -> InputLoop : run_loop()
 InputLoop -> OperationHistory : create OperationHistory() — clears history.txt
+InputLoop -> ErrorLogger : create ErrorLogger() — opens error.log in append mode
 
 loop until "exit" or max retries exceeded
 
@@ -84,7 +86,28 @@ loop until "exit" or max retries exceeded
     InputLoop -> Calculator : dispatch("divide", [10.0, 0.0])
     Calculator -> Calculator : divide(10.0, 0.0) — b == 0, raises ValueError
     Calculator --> InputLoop : raise ValueError("Division by zero is not allowed")
+    InputLoop -> InputLoop : _categorize_error(exc, "divide", [10.0, 0.0]) => (CALCULATION_ERROR, context)
+    InputLoop -> ErrorLogger : log_error("CALCULATION_ERROR", "Division by zero is not allowed", context)
+    ErrorLogger -> ErrorLogger : _format_entry(timestamp, category, message, context)
+    ErrorLogger --> ErrorLogger : append to _history
+    ErrorLogger --> ErrorLogger : write entry to error.log
+    ErrorLogger --> InputLoop : return
     InputLoop -> User : print("Error: Division by zero is not allowed")
+  end
+
+  alt Error logging path — invalid input (e.g. square root of negative number)
+    User -> InputLoop : get_operation() => "square_root"
+    InputLoop -> InputLoop : look up operand_count = 1
+    User -> InputLoop : get_operands(1) => [-4.0]
+    InputLoop -> InputLoop : dispatch("square_root", [-4.0], calc)
+    InputLoop -> Calculator : square_root(-4.0)
+    Calculator --> InputLoop : raise ValueError("Square root of a negative number is not allowed")
+    InputLoop -> InputLoop : _categorize_error(exc, "square_root", [-4.0]) => (CALCULATION_ERROR, context)
+    InputLoop -> ErrorLogger : log_error("CALCULATION_ERROR", "Square root ...", context)
+    ErrorLogger --> ErrorLogger : append to _history
+    ErrorLogger --> ErrorLogger : write entry to error.log
+    ErrorLogger --> InputLoop : return
+    InputLoop -> User : print("Error: Square root of a negative number is not allowed")
   end
 
   alt Retry path — invalid operation (up to MAX_RETRY_ATTEMPTS times)
