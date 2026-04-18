@@ -1,8 +1,12 @@
 """Interactive session loop for the Calculator application.
 
-This module provides an operation registry, an InputHandler class that drives a
-REPL-style session, and a convenience function for bootstrapping the session
-from an external entry point.
+This module provides an InputHandler class that drives a REPL-style session,
+and a convenience function for bootstrapping the session from an external
+entry point.
+
+The operation registry (``OPERATIONS``) is defined in ``src/operations.py``
+and imported here; this module re-exports it for backwards compatibility with
+any existing code that imports ``OPERATIONS`` from ``input_handler``.
 """
 
 from __future__ import annotations
@@ -10,78 +14,14 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .dispatcher import OperationDispatcher
 from .history import History
 from .logger import Logger
+from .operations import OPERATIONS
 
 
 # Maximum number of consecutive invalid inputs before the session is terminated.
 MAX_RETRIES: int = 5
-
-# Operations registry: insertion order defines menu display order.
-# Each entry maps a user-facing key to metadata needed to dispatch the call.
-OPERATIONS: dict[str, dict] = {
-    "add": {
-        "method": "add",
-        "arity": 2,
-        "label": "Add two numbers",
-    },
-    "subtract": {
-        "method": "subtract",
-        "arity": 2,
-        "label": "Subtract two numbers",
-    },
-    "multiply": {
-        "method": "multiply",
-        "arity": 2,
-        "label": "Multiply two numbers",
-    },
-    "divide": {
-        "method": "divide",
-        "arity": 2,
-        "label": "Divide two numbers",
-    },
-    "power": {
-        "method": "power",
-        "arity": 2,
-        "label": "Raise a number to a power",
-    },
-    "factorial": {
-        "method": "factorial",
-        "arity": 1,
-        "label": "Factorial of a non-negative integer",
-        "coerce": int,
-    },
-    "square": {
-        "method": "square",
-        "arity": 1,
-        "label": "Square a number (x^2)",
-    },
-    "cube": {
-        "method": "cube",
-        "arity": 1,
-        "label": "Cube a number (x^3)",
-    },
-    "square_root": {
-        "method": "square_root",
-        "arity": 1,
-        "label": "Square root of a number",
-    },
-    "cube_root": {
-        "method": "cube_root",
-        "arity": 1,
-        "label": "Cube root of a number",
-    },
-    "log10": {
-        "method": "log10",
-        "arity": 1,
-        "label": "Base-10 logarithm of a number",
-    },
-    "ln": {
-        "method": "ln",
-        "arity": 1,
-        "label": "Natural logarithm of a number",
-    },
-}
 
 
 class InputHandler:
@@ -108,6 +48,7 @@ class InputHandler:
         self._input_fn: Callable[[str], str] = input_fn if input_fn is not None else input
         self._history = History()
         self._logger: Logger | None = logger
+        self._dispatcher = OperationDispatcher(calculator)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -213,6 +154,9 @@ class InputHandler:
         re-prompted.  After MAX_RETRIES consecutive failures for a single
         operand a ValueError is raised to abort the current operation.
 
+        Delegates the actual type coercion to
+        ``self._dispatcher.coerce_operands()``.
+
         Args:
             arity: Number of operands to collect (1 or 2).
             coerce: Callable used to convert the raw string to a numeric value;
@@ -240,13 +184,12 @@ class InputHandler:
                         raise last_error
                     raise
                 try:
-                    operands.append(coerce(raw))
+                    coerced = self._dispatcher.coerce_operands([raw], coerce)
+                    operands.extend(coerced)
                     last_error = None
                     break
-                except (ValueError, TypeError):
-                    last_error = ValueError(
-                        f"Invalid operand '{raw}': expected a numeric value."
-                    )
+                except ValueError as exc:
+                    last_error = exc
                     if self._logger is not None:
                         self._logger.log_invalid_operand(raw, "<numeric>")
                     print(f"Error: {last_error}")
@@ -257,6 +200,8 @@ class InputHandler:
 
     def _dispatch(self, op_key: str, operands: list) -> float | int:
         """Call the Calculator method corresponding to *op_key* with *operands*.
+
+        Delegates to ``self._dispatcher.dispatch()``.
 
         Args:
             op_key: A key present in the OPERATIONS registry.
@@ -270,9 +215,7 @@ class InputHandler:
             ZeroDivisionError: Propagated from the Calculator method.
             TypeError: Propagated from the Calculator method.
         """
-        method_name: str = OPERATIONS[op_key]["method"]
-        method = getattr(self._calculator, method_name)
-        return method(*operands)
+        return self._dispatcher.dispatch(op_key, operands)
 
 
 def run_session(

@@ -201,3 +201,28 @@ Risks: File I/O in Logger is non-blocking; errors in logging do not propagate. L
 Test results: 559 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 592.5s | Cost: $1.483705 USD | Turns: 13
+
+## Run: Issue #90 — V1 Task 11 - Logic Separation - Expert/team
+
+Branch: task/issue-90-logic-separation
+PR target: exp/expert-team
+
+Files changed:
+- src/operations.py — new module: OPERATIONS registry extracted from input_handler.py, independently importable
+- src/dispatcher.py — new module: OperationDispatcher class with coerce_operands and dispatch methods
+- src/input_handler.py — imports OPERATIONS from operations.py; uses OperationDispatcher internally; re-exports OPERATIONS for backwards compatibility
+- src/cli.py — imports OPERATIONS from operations.py; uses OperationDispatcher internally
+- src/__init__.py — added OperationDispatcher and OPERATIONS to package exports
+- artifacts/class_diagram.puml — added OperationDispatcher class, updated InputHandler/CliDispatcher with _dispatcher attribute, updated OPERATIONS reference
+- artifacts/activity_diagram.puml — added OperationDispatcher partitions for coerce_operands and dispatch delegation
+- artifacts/sequence_diagram.puml — added OperationDispatcher participant; showed delegation calls
+- tests/test_dispatcher.py — new: 76 tests for OperationDispatcher (coerce_operands, dispatch, all 12 operations, exception propagation)
+- tests/test_operations.py — new: 80 tests for OPERATIONS registry (structure, completeness, metadata, backwards compatibility)
+
+Purpose: Separate core calculation dispatch logic and operation registry from interface concerns (guided input, CLI, output formatting, session control). Eliminates duplication between InputHandler and CliDispatcher. Calculator operations are now independently reusable without interface coupling.
+
+Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid circular imports; backwards-compatible re-export from input_handler maintained.
+
+Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: 630.5s | Cost: $1.413323 USD | Turns: 15

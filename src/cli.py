@@ -16,8 +16,9 @@ import sys
 from typing import Callable
 
 from .calculator import Calculator
-from .input_handler import OPERATIONS
+from .dispatcher import OperationDispatcher
 from .logger import Logger
+from .operations import OPERATIONS
 
 
 class CliDispatcher:
@@ -38,6 +39,7 @@ class CliDispatcher:
     ) -> None:
         self._calculator = calculator
         self._logger: Logger | None = logger
+        self._dispatcher = OperationDispatcher(calculator)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -124,6 +126,10 @@ class CliDispatcher:
     def _coerce_operands(self, raw_args: list[str], coerce: Callable) -> list:
         """Convert a list of raw string arguments to numeric operands.
 
+        Iterates over *raw_args* one at a time, delegating each single-element
+        conversion to ``self._dispatcher.coerce_operands()`` so that any
+        invalid operand can be logged before the error is propagated.
+
         Args:
             raw_args: Raw string operands from the command line.
             coerce: Callable used to convert each string (e.g. ``float`` or
@@ -138,8 +144,9 @@ class CliDispatcher:
         operands: list = []
         for raw in raw_args:
             try:
-                operands.append(coerce(raw))
-            except (ValueError, TypeError):
+                coerced = self._dispatcher.coerce_operands([raw], coerce)
+                operands.extend(coerced)
+            except ValueError:
                 if self._logger is not None:
                     self._logger.log_invalid_operand(raw, "<numeric>")
                 raise ValueError(
@@ -149,6 +156,8 @@ class CliDispatcher:
 
     def _dispatch(self, op_key: str, operands: list) -> float | int:
         """Call the Calculator method corresponding to *op_key* with *operands*.
+
+        Delegates to ``self._dispatcher.dispatch()``.
 
         Args:
             op_key: A key present in the OPERATIONS registry.
@@ -162,9 +171,7 @@ class CliDispatcher:
             ZeroDivisionError: Propagated from the Calculator method.
             TypeError: Propagated from the Calculator method.
         """
-        method_name: str = OPERATIONS[op_key]["method"]
-        method = getattr(self._calculator, method_name)
-        return method(*operands)
+        return self._dispatcher.dispatch(op_key, operands)
 
     @staticmethod
     def _print_error(message: str) -> None:

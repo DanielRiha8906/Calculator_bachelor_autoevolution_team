@@ -6,6 +6,11 @@ start
 
 :Create Calculator instance;
 :Create InputHandler with calculator;
+note right
+    InputHandler.__init__ also creates
+    an OperationDispatcher instance
+    (_dispatcher = OperationDispatcher(calc))
+end note
 :Call handler.run();
 :op_attempts = 0;
 
@@ -43,8 +48,18 @@ repeat
             partition "_prompt_operands retry loop" {
                 repeat
                     :Prompt for operand (label: first/second/"");
-                    :Read raw input and call coerce(raw);
-                    if (coerce raises ValueError or TypeError?) then (yes)
+                    :Read raw input;
+
+                    partition "OperationDispatcher.coerce_operands([raw], coerce)" {
+                        :Call coerce(raw);
+                        if (coerce raises ValueError or TypeError?) then (yes)
+                            :Raise ValueError:\n"Invalid operand '<raw>'...";
+                        else (no)
+                            :Return [coerced_value];
+                        endif
+                    }
+
+                    if (ValueError from coerce_operands?) then (yes)
                         :attempt_count += 1;
                         :logger.log_invalid_operand(raw, "<numeric>");
                         :Print "Error: Invalid operand '<raw>': expected a numeric value.";
@@ -62,7 +77,16 @@ repeat
             if (ValueError raised during _prompt_operands?) then (yes)
                 :Print "Error: <exc>";
             else (no)
-                :_dispatch(op_choice, operands)\ngetattr(calculator, method_name)(*operands);
+                :_dispatch(op_choice, operands);
+                note right
+                    Delegates to
+                    OperationDispatcher.dispatch()
+                end note
+
+                partition "OperationDispatcher.dispatch(op_key, operands)" {
+                    :Look up method_name from OPERATIONS[op_key];
+                    :getattr(calculator, method_name)(*operands);
+                }
 
                 if (ZeroDivisionError raised?) then (yes)
                     :logger.log_division_by_zero(operands);
@@ -89,6 +113,11 @@ partition "CLI Mode (main.py)" {
 
     :Create Calculator instance;
     :Create CliDispatcher with calculator;
+    note right
+        CliDispatcher.__init__ also creates
+        an OperationDispatcher instance
+        (_dispatcher = OperationDispatcher(calc))
+    end note
     :Call dispatcher.dispatch_from_args(sys.argv[1:]);
 
     if (args is empty?) then (yes)
@@ -116,14 +145,37 @@ partition "CLI Mode (main.py)" {
                 stop
             else (no)
                 :_coerce_operands(operand_args, coerce);
+                note right
+                    Iterates per element;
+                    delegates to
+                    OperationDispatcher.coerce_operands([raw], coerce)
+                end note
 
-                if (coerce raises ValueError or TypeError?) then (yes)
+                partition "OperationDispatcher.coerce_operands (per element)" {
+                    :Call coerce(raw);
+                    if (coerce raises ValueError or TypeError?) then (yes)
+                        :Raise ValueError:\n"Invalid operand '<raw>'...";
+                    else (no)
+                        :Return [coerced_value];
+                    endif
+                }
+
+                if (ValueError from _coerce_operands?) then (yes)
                     :logger.log_invalid_operand(raw, "<numeric>");
                     :Print "Error: Invalid operand '<raw>'" to stderr;
                     :Return exit code 1;
                     stop
                 else (no)
-                    :_dispatch(op_key, operands)\ngetattr(calculator, method_name)(*operands);
+                    :_dispatch(op_key, operands);
+                    note right
+                        Delegates to
+                        OperationDispatcher.dispatch()
+                    end note
+
+                    partition "OperationDispatcher.dispatch(op_key, operands)" {
+                        :Look up method_name from OPERATIONS[op_key];
+                        :getattr(calculator, method_name)(*operands);
+                    }
 
                     if (ZeroDivisionError raised?) then (yes)
                         :logger.log_division_by_zero(operands);
