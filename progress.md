@@ -136,4 +136,4 @@ Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
 - Tests passed: Yes (1239 passed, 0 failed)
 - Branch: task/issue-97-scientific-mode
 - Intended merge/PR target: exp/naive-team
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 790.1s | Cost: $2.153515 USD | Turns: 16
