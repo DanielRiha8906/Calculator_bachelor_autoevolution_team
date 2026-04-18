@@ -16,7 +16,8 @@ from typing import Callable
 from ..core.calculator import Calculator
 from ..shared.dispatcher import OperationDispatcher
 from ..shared.logger import Logger
-from ..operations import OPERATIONS, NORMAL_OPERATIONS
+from ..operations import OPERATIONS
+from .base_mode import BaseMode
 from .history import History
 from .mode import Mode, parse_mode_command
 
@@ -51,6 +52,7 @@ class InputHandler:
         self._logger: Logger | None = logger
         self._dispatcher = OperationDispatcher(calculator)
         self._mode: Mode = Mode.NORMAL
+        self._mode_handler = BaseMode()
 
     # ------------------------------------------------------------------
     # Public interface
@@ -170,13 +172,13 @@ class InputHandler:
         In SCIENTIFIC mode the full unified OPERATIONS dict is returned,
         exposing both normal and scientific operations.
 
+        Delegates filtering logic to the composed :class:`BaseMode` instance.
+
         Returns:
             A dict mapping operation keys to their registry entries for the
             current mode.
         """
-        if self._mode is Mode.SCIENTIFIC:
-            return OPERATIONS
-        return {key: OPERATIONS[key] for key in NORMAL_OPERATIONS if key in OPERATIONS}
+        return self._mode_handler.get_available_operations(self._mode)
 
     def _show_menu(self) -> None:
         """Print the list of available operations to stdout.

@@ -215,4 +215,63 @@ partition "CLI Mode (main.py)" {
     endif
 }
 
+' -----------------------------------------------------------------------
+' GUI mode flow
+' -----------------------------------------------------------------------
+partition "GUI Mode (GuiCalculator)" {
+    start
+
+    :Create Calculator instance;
+    :Create GuiCalculator(root, calculator);
+    note right
+        __init__ creates OperationDispatcher,
+        BaseMode, History; mode = NORMAL.
+        _setup_layout() builds all widgets.
+    end note
+    :Call gui.run() — enter Tk main loop;
+
+    repeat
+        if (user changes mode radio button?) then (yes)
+            :_on_mode_change(new_mode);
+            :_mode = new_mode;
+            :_setup_operation_grid()\nRebuild buttons via\nBaseMode.get_available_operations();
+        else (operation button clicked)
+            :_on_operation_click(op_key);
+            :Look up op_info from OPERATIONS;
+            :Extract arity and coerce;
+
+            :_prompt_operands_dialog(op_key, arity, coerce);
+            note right
+                One simpledialog.askstring per operand.
+                Returns None if user cancels any dialog
+                or if coercion fails (error dialog shown).
+            end note
+
+            if (operands is None (cancelled or invalid)?) then (yes)
+                :No-op; return to event loop;
+            else (no)
+                :_execute_operation(op_key, operands);
+
+                :OperationDispatcher.dispatch(op_key, operands);
+
+                if (ZeroDivisionError?) then (yes)
+                    :logger.log_division_by_zero(operands);
+                    :_show_error_dialog("Division by Zero", ...);
+                elseif (ValueError?) then (yes)
+                    :logger.log_domain_error(op_key, ...);
+                    :_show_error_dialog("Domain Error", ...);
+                elseif (TypeError?) then (yes)
+                    :logger.log_domain_error(op_key, ...);
+                    :_show_error_dialog("Type Error", ...);
+                else (no)
+                    :_history.add_operation(...);
+                    :_update_result_display(result);
+                    :_update_history_display();
+                endif
+            endif
+        endif
+    repeat while (window open)
+    stop
+}
+
 @enduml

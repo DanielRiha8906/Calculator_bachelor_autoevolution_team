@@ -101,6 +101,19 @@ note top of OperationDispatcher
     No I/O or Logger dependency — callers handle errors.
 end note
 
+class BaseMode {
+    +get_available_operations(mode: Mode): dict[str, dict]
+    -_filter_operations_for_normal_mode(operations: dict): dict
+}
+
+note top of BaseMode
+    Module: src/session/base_mode.py
+    Shared mode-filtering logic composed by
+    InputHandler and GuiCalculator.
+    NORMAL: returns only NORMAL_OPERATIONS keys.
+    SCIENTIFIC: returns full OPERATIONS dict.
+end note
+
 class InputHandler {
     -_calculator: Calculator
     -_input_fn: Callable[[str], str]
@@ -108,6 +121,7 @@ class InputHandler {
     -_logger: Logger | None
     -_dispatcher: OperationDispatcher
     -_mode: Mode
+    -_mode_handler: BaseMode
     +__init__(calculator: Calculator, input_fn: Callable | None, logger: Logger | None)
     +run(): None
     -_show_menu(): None
@@ -121,9 +135,46 @@ note top of InputHandler
     (shim: src/input_handler.py for backwards compat)
     Drives an interactive calculator REPL session.
     Re-exports OPERATIONS for backwards compatibility.
-    _show_menu() filters OPERATIONS based on _mode:
-    NORMAL shows only NORMAL_OPERATIONS keys;
-    SCIENTIFIC shows all OPERATIONS keys.
+    _get_available_operations_for_mode() delegates to
+    _mode_handler (BaseMode) for filtering logic.
+end note
+
+class GuiCalculator {
+    -_root: tk.Tk
+    -_calculator: Calculator
+    -_logger: Logger | None
+    -_dispatcher: OperationDispatcher
+    -_history: History
+    -_mode: Mode
+    -_mode_handler: BaseMode
+    -_mode_var: tk.StringVar
+    -_result_label: tk.Label | None
+    -_history_text: tk.Text | None
+    -_op_frame: tk.Frame | None
+    +__init__(root: tk.Tk, calculator: Calculator, logger: Logger | None)
+    +run(): None
+    -_setup_layout(): None
+    -_setup_mode_selector(parent: tk.Frame): None
+    -_setup_operation_grid(): None
+    -_on_mode_change(new_mode: Mode): None
+    -_on_operation_click(op_key: str): None
+    -_prompt_operands_dialog(op_key: str, arity: int, coerce: Callable): list | None
+    -_execute_operation(op_key: str, operands: list): None
+    -_update_result_display(result: float | int): None
+    -_update_history_display(): None
+    -_get_available_operations_for_mode(): dict
+    -_show_error_dialog(title: str, message: str): None
+}
+
+note top of GuiCalculator
+    Module: src/interface/gui.py
+    Tkinter GUI for the calculator.
+    Mode radio buttons (Normal/Scientific),
+    operation button grid, result label,
+    scrollable history widget.
+    All calculation logic delegated to
+    Calculator via OperationDispatcher.
+    Mode filtering delegated to BaseMode.
 end note
 
 note as RUN_SESSION_NOTE
@@ -166,9 +217,21 @@ InputHandler --> Calculator : holds reference via\n_calculator
 InputHandler --> History : manages session history
 InputHandler --> Logger : logs errors via\n_logger
 InputHandler *-- OperationDispatcher : owns _dispatcher
+InputHandler *-- BaseMode : owns _mode_handler
 InputHandler ..> OPERATIONS_NOTE : reads registry for\nmenu and dispatch
 InputHandler --> Mode : _mode controls which\noperations are shown
 RUN_SESSION_NOTE ..> InputHandler : creates and calls run()
+
+GuiCalculator --> Calculator : holds reference via\n_calculator
+GuiCalculator --> History : manages session history
+GuiCalculator --> Logger : logs errors via\n_logger
+GuiCalculator *-- OperationDispatcher : owns _dispatcher
+GuiCalculator *-- BaseMode : owns _mode_handler
+GuiCalculator ..> OPERATIONS_NOTE : reads registry for\narity and coerce
+GuiCalculator --> Mode : _mode controls which\noperations are shown
+
+BaseMode ..> OPERATIONS_NOTE : reads OPERATIONS and\nNORMAL_OPERATIONS for\nfiltering logic
+BaseMode --> Mode : filters based on Mode value
 
 CliDispatcher --> Calculator : holds reference via\n_calculator
 CliDispatcher --> Logger : logs errors via\n_logger
