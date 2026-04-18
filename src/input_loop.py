@@ -17,6 +17,7 @@ from .error_logger import (
     ErrorLogger,
 )
 from .history import OperationHistory
+from .mode import Mode, get_operations_for_mode
 from .validation import validate_operation, validate_operand
 
 # Maximum number of re-prompt attempts before the loop is terminated.
@@ -42,11 +43,21 @@ OPERATIONS: dict[str, tuple[str, int]] = {
 }
 
 
-def print_menu() -> None:
-    """Print the operation menu to stdout."""
+def print_menu(mode: Mode = Mode.NORMAL) -> None:
+    """Print the operation menu to stdout, restricted to *mode*'s operations.
+
+    Args:
+        mode: The current :class:`~src.mode.Mode`.  Only operations available
+            in this mode are listed.  Defaults to :attr:`~src.mode.Mode.NORMAL`.
+    """
+    allowed = get_operations_for_mode(mode)
     print("\nAvailable operations:")
     for key, (label, _) in OPERATIONS.items():
-        print(f"  {key:12s} - {label}")
+        if key in allowed:
+            print(f"  {key:12s} - {label}")
+    print("  history      - View operation history")
+    print("  mode normal  - Switch to Normal mode")
+    print("  mode scientific - Switch to Scientific mode")
     print("  exit         - Quit the calculator")
 
 
@@ -71,26 +82,41 @@ def print_history(history: OperationHistory) -> None:
 def get_operation(
     input_fn: Callable[[str], str] = input,
     retry_limit: int = MAX_RETRY_ATTEMPTS,
+    mode: Mode = Mode.NORMAL,
 ) -> str | None:
     """Prompt the user to choose an operation, with bounded retry attempts.
+
+    Mode-switch commands (``mode normal`` / ``mode scientific``) are detected
+    before validation and returned as-is so that :func:`run_loop` can handle
+    them.  The ``history`` meta-command is always accepted regardless of mode.
 
     Args:
         input_fn: Callable used to read user input.  Defaults to the
             built-in ``input``.
         retry_limit: Maximum number of attempts before giving up.  Defaults
             to :data:`MAX_RETRY_ATTEMPTS`.
+        mode: The current :class:`~src.mode.Mode`.  Validation is restricted
+            to operations available in this mode.  Defaults to
+            :attr:`~src.mode.Mode.NORMAL`.
 
     Returns:
         The operation key string on success, ``None`` if the user typed
-        "exit", or the sentinel string ``"__max_retries_exceeded__"`` when
-        the user exhausts all allowed attempts without supplying a valid
-        operation.
+        "exit", a mode-switch string (``"mode normal"`` or
+        ``"mode scientific"``) if the user requested a mode change, or the
+        sentinel string ``"__max_retries_exceeded__"`` when the user exhausts
+        all allowed attempts without supplying a valid operation.
     """
     for attempt in range(1, retry_limit + 1):
         choice = input_fn("Enter operation: ").strip().lower()
         if choice == "exit":
             return None
-        valid, error_msg = validate_operation(choice)
+        # Mode-switch commands bypass operation validation.
+        if choice in ("mode normal", "mode scientific"):
+            return choice
+        # "history" is always a valid meta-command.
+        if choice == "history":
+            return choice
+        valid, error_msg = validate_operation(choice, mode)
         if valid:
             return choice
         print(f"{error_msg}")
@@ -135,6 +161,28 @@ def get_operands(
             return None
         operands.append(value)
     return operands
+
+
+def handle_mode_switch(user_input: str, current_mode: Mode) -> Mode | None:
+    """Interpret *user_input* as a mode-switch command.
+
+    Returns the new :class:`~src.mode.Mode` when *user_input* is a recognised
+    mode-switch command, or ``None`` when it is not a mode command.
+
+    Args:
+        user_input: The raw (already stripped and lowercased) string entered
+            by the user.
+        current_mode: The mode that is currently active.
+
+    Returns:
+        A :class:`~src.mode.Mode` value if the input requests a mode change,
+        or ``None`` if the input is not a mode-switch command.
+    """
+    if user_input == "mode normal":
+        return Mode.NORMAL
+    if user_input == "mode scientific":
+        return Mode.SCIENTIFIC
+    return None
 
 
 def dispatch(operation: str, operands: list[float], calc: Calculator) -> float:
@@ -256,9 +304,12 @@ def run_loop(
         history = OperationHistory()
     error_logger = ErrorLogger()
 
+    current_mode: Mode = Mode.NORMAL
+
     while True:
-        print_menu()
-        operation = get_operation(input_fn)
+        print_menu(current_mode)
+        mode_label = "Normal" if current_mode is Mode.NORMAL else "Scientific"
+        operation = get_operation(input_fn, mode=current_mode)
 
         if operation is None:
             print("Goodbye!")
@@ -267,6 +318,14 @@ def run_loop(
         if operation == "__max_retries_exceeded__":
             print("Session terminated due to too many invalid operation entries.")
             break
+
+        # Handle mode-switch commands before any other logic.
+        new_mode = handle_mode_switch(operation, current_mode)
+        if new_mode is not None:
+            current_mode = new_mode
+            mode_label = "Normal" if current_mode is Mode.NORMAL else "Scientific"
+            print(f"Switched to {mode_label} mode.")
+            continue
 
         if operation == "history":
             print_history(history)
@@ -281,7 +340,7 @@ def run_loop(
 
         try:
             result = dispatch(operation, operands, calc)
-            print(f"Result: {result}")
+            print(f"[{mode_label}]> Result: {result}")
             history.record_operation(operation, operands, result)
         except ValueError as exc:
             category, context = _categorize_error(exc, operation, operands)

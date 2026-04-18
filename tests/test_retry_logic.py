@@ -59,7 +59,8 @@ def test_get_operation_retry_limit_one_single_attempt(capsys: pytest.CaptureFixt
 
 def test_get_operation_retry_limit_one_valid_first_attempt() -> None:
     """With retry_limit=1, valid input on first attempt must return immediately."""
-    result = get_operation(input_fn=lambda _prompt: "square", retry_limit=1)
+    from src.mode import Mode
+    result = get_operation(input_fn=lambda _prompt: "square", retry_limit=1, mode=Mode.SCIENTIFIC)
     assert result == "square"
 
 
@@ -305,7 +306,7 @@ def test_run_loop_two_invalid_operations_then_valid(capsys: pytest.CaptureFixtur
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chdir(tmpdir)
         history = OperationHistory()
-        inputs = iter(["bad1", "bad2", "square", "4", "exit"])
+        inputs = iter(["bad1", "bad2", "mode scientific", "square", "4", "exit"])
         run_loop(input_fn=lambda _prompt: next(inputs), history=history)
         captured = capsys.readouterr()
         assert "Result: 16" in captured.out

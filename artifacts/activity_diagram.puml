@@ -45,9 +45,10 @@ partition "Interaction Layer" {
 
   :Create Calculator instance;
   note right: OperationHistory created; history.txt cleared
+  :Initialize current_mode = NORMAL;
 
   repeat
-    :Print operation menu (print_menu);
+    :Print operation menu for current_mode (print_menu);
     :attempt = 1;
     repeat
       :Prompt user for operation (get_operation);
@@ -56,8 +57,20 @@ partition "Interaction Layer" {
         stop
       else (no)
       endif
-      :validate_operation(choice);
-      if (Valid operation?) then (yes)
+      if (Input is "mode normal" or "mode scientific"?) then (yes)
+        :handle_mode_switch(input, current_mode);
+        :Update current_mode;
+        :Print "Switched to <mode> mode.";
+        break
+      else (no)
+      endif
+      if (Input is "history"?) then (yes)
+        :Use operation;
+        break
+      else (no)
+      endif
+      :validate_operation(choice, current_mode);
+      if (Valid operation for mode?) then (yes)
         :Use operation;
         break
       else (no)

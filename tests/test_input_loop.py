@@ -16,9 +16,11 @@ from src.input_loop import (
     dispatch,
     get_operands,
     get_operation,
+    handle_mode_switch,
     print_menu,
     run_loop,
 )
+from src.mode import Mode
 
 
 # ---------------------------------------------------------------------------
@@ -27,8 +29,8 @@ from src.input_loop import (
 
 
 def test_print_menu_outputs_all_operations(capsys: pytest.CaptureFixture[str]) -> None:
-    """print_menu must include every key in OPERATIONS and the 'exit' hint."""
-    print_menu()
+    """print_menu(mode=SCIENTIFIC) must include every key in OPERATIONS and the 'exit' hint."""
+    print_menu(mode=Mode.SCIENTIFIC)
     captured = capsys.readouterr()
     for key in OPERATIONS:
         assert key in captured.out, f"Expected operation key '{key}' in menu output"
@@ -171,8 +173,8 @@ def test_run_loop_calculator_error_shows_error_and_continues(
 def test_print_menu_contains_labels_for_every_operation(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Every OPERATIONS entry must have its display label present in the output."""
-    print_menu()
+    """Every OPERATIONS entry must have its display label present in SCIENTIFIC mode."""
+    print_menu(mode=Mode.SCIENTIFIC)
     captured = capsys.readouterr()
     for key, (label, _) in OPERATIONS.items():
         # The label string (or at least the key) must appear
@@ -205,8 +207,8 @@ def test_print_menu_called_multiple_times_produces_consistent_output(
 
 @pytest.mark.parametrize("key", list(OPERATIONS.keys()))
 def test_get_operation_each_valid_key_returned(key: str) -> None:
-    """Every key in OPERATIONS must be returned as-is by get_operation."""
-    result = get_operation(input_fn=lambda _prompt: key)
+    """Every key in OPERATIONS must be returned as-is by get_operation in SCIENTIFIC mode."""
+    result = get_operation(input_fn=lambda _prompt: key, mode=Mode.SCIENTIFIC)
     assert result == key
 
 
@@ -223,8 +225,8 @@ def test_get_operation_case_insensitive_upper() -> None:
 
 
 def test_get_operation_case_insensitive_mixed() -> None:
-    """Mixed-case input must be matched case-insensitively."""
-    result = get_operation(input_fn=lambda _prompt: "Factorial")
+    """Mixed-case input must be matched case-insensitively in SCIENTIFIC mode."""
+    result = get_operation(input_fn=lambda _prompt: "Factorial", mode=Mode.SCIENTIFIC)
     assert result == "factorial"
 
 
@@ -702,110 +704,155 @@ def test_run_loop_sqrt_of_negative_shows_error_and_continues(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Square root of a negative number must produce an Error message and keep looping."""
-    inputs = iter(["square_root", "-4", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Error" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "square_root", "-4", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Error" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_log_of_zero_shows_error_and_continues(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """log(0) must produce an Error message and keep the loop going."""
-    inputs = iter(["log", "0", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Error" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "log", "0", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Error" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_factorial_then_exit(capsys: pytest.CaptureFixture[str]) -> None:
     """Factorial operation via run_loop must compute and print the result."""
-    inputs = iter(["factorial", "5", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "120" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "factorial", "5", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "120" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_factorial_negative_shows_error(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Factorial of a negative number must show an Error and keep the loop going."""
-    inputs = iter(["factorial", "-3", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Error" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "factorial", "-3", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Error" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_unary_operations_all_produce_results(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Every unary operation must produce a Result line when given a valid operand."""
-    unary_inputs = [
-        ("factorial", "4"),    # 24
-        ("square", "3"),       # 9
-        ("cube", "2"),         # 8
-        ("square_root", "9"),  # 3
-        ("cube_root", "8"),    # 2
-        ("log", "100"),        # 2
-        ("ln", "1"),           # 0
-    ]
-    sequence: list[str] = []
-    for op, operand in unary_inputs:
-        sequence.extend([op, operand])
-    sequence.append("exit")
+    import tempfile
+    import os
 
-    inputs = iter(sequence)
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        unary_inputs = [
+            ("factorial", "4"),    # 24
+            ("square", "3"),       # 9
+            ("cube", "2"),         # 8
+            ("square_root", "9"),  # 3
+            ("cube_root", "8"),    # 2
+            ("log", "100"),        # 2
+            ("ln", "1"),           # 0
+        ]
+        sequence: list[str] = ["mode scientific"]
+        for op, operand in unary_inputs:
+            sequence.extend([op, operand])
+        sequence.append("exit")
 
-    # Each operation must produce exactly one "Result:" line
-    result_count = captured.out.count("Result:")
-    assert result_count == len(unary_inputs)
-    assert "Goodbye" in captured.out
+        inputs = iter(sequence)
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+
+        # Each operation must produce exactly one "Result:" line
+        result_count = captured.out.count("Result:")
+        assert result_count == len(unary_inputs)
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_multiple_invalid_then_valid(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Three invalid operations exhaust retries and terminate session."""
-    inputs = iter(["bad1", "bad2", "bad3"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Invalid operation" in captured.out
-    assert "Session terminated due to too many invalid operation entries" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["bad1", "bad2", "bad3"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Invalid operation" in captured.out
+        assert "Session terminated due to too many invalid operation entries" in captured.out
 
 
 def test_run_loop_result_line_format(capsys: pytest.CaptureFixture[str]) -> None:
     """The result must be printed with the prefix 'Result:'."""
-    inputs = iter(["add", "10", "5", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result:" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["add", "10", "5", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Result:" in captured.out
 
 
 def test_run_loop_power_operation(capsys: pytest.CaptureFixture[str]) -> None:
     """dispatch 'power' via run_loop must print 2^8 = 256."""
-    inputs = iter(["power", "2", "8", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "256" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "power", "2", "8", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "256" in captured.out
 
 
 def test_run_loop_cube_root_negative_operand(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Cube root of -27 is supported and must print a result close to -3."""
-    inputs = iter(["cube_root", "-27", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result:" in captured.out
-    assert "Goodbye" in captured.out
-    # -3.0 or -2.999... must appear in the output
-    assert "-3" in captured.out or "2.999" in captured.out
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "cube_root", "-27", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Result:" in captured.out
+        assert "Goodbye" in captured.out
+        # -3.0 or -2.999... must appear in the output
+        assert "-3" in captured.out or "2.999" in captured.out
 
 
 # ---------------------------------------------------------------------------
@@ -844,12 +891,16 @@ def test_run_loop_history_command_displays_empty_message(
 ) -> None:
     """history command with no operations must display 'No operations' message."""
     from src.history import OperationHistory
+    import tempfile
+    import os
 
-    history = OperationHistory()
-    inputs = iter(["history", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs), history=history)
-    captured = capsys.readouterr()
-    assert "No operations recorded" in captured.out or "No operations" in captured.out
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["history", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "No operations recorded" in captured.out or "No operations" in captured.out
 
 
 def test_run_loop_history_command_displays_operations(
@@ -961,7 +1012,7 @@ def test_run_loop_records_multiple_operations_in_order(
         inputs = iter([
             "add", "1", "2",
             "multiply", "3", "4",
-            "square", "5",
+            "mode scientific", "square", "5",
             "exit"
         ])
         run_loop(input_fn=lambda _prompt: next(inputs), history=history)
@@ -1049,7 +1100,7 @@ def test_run_loop_negative_square_root_is_logged(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chdir(tmpdir)
-        inputs = iter(["square_root", "-4", "exit"])
+        inputs = iter(["mode scientific", "square_root", "-4", "exit"])
         run_loop(input_fn=lambda _prompt: next(inputs))
 
         log_file = Path(tmpdir) / "error.log"
@@ -1074,3 +1125,429 @@ def test_run_loop_creates_error_logger_by_default(
         log_file = Path(tmpdir) / "error.log"
         # When an error occurs, the default logger should create the file
         assert log_file.exists()
+
+
+# ---------------------------------------------------------------------------
+# handle_mode_switch tests
+# ---------------------------------------------------------------------------
+
+
+def test_handle_mode_switch_normal_command_returns_normal_mode() -> None:
+    """handle_mode_switch('mode normal', ...) must return Mode.NORMAL."""
+    result = handle_mode_switch("mode normal", Mode.SCIENTIFIC)
+    assert result is Mode.NORMAL
+
+
+def test_handle_mode_switch_scientific_command_returns_scientific_mode() -> None:
+    """handle_mode_switch('mode scientific', ...) must return Mode.SCIENTIFIC."""
+    result = handle_mode_switch("mode scientific", Mode.NORMAL)
+    assert result is Mode.SCIENTIFIC
+
+
+def test_handle_mode_switch_returns_none_for_empty_string() -> None:
+    """handle_mode_switch('', ...) must return None."""
+    result = handle_mode_switch("", Mode.NORMAL)
+    assert result is None
+
+
+def test_handle_mode_switch_returns_none_for_add() -> None:
+    """handle_mode_switch('add', ...) must return None."""
+    result = handle_mode_switch("add", Mode.NORMAL)
+    assert result is None
+
+
+def test_handle_mode_switch_returns_none_for_history() -> None:
+    """handle_mode_switch('history', ...) must return None."""
+    result = handle_mode_switch("history", Mode.NORMAL)
+    assert result is None
+
+
+def test_handle_mode_switch_returns_none_for_exit() -> None:
+    """handle_mode_switch('exit', ...) must return None."""
+    result = handle_mode_switch("exit", Mode.NORMAL)
+    assert result is None
+
+
+def test_handle_mode_switch_returns_none_for_arbitrary_string() -> None:
+    """handle_mode_switch('arbitrary', ...) must return None."""
+    result = handle_mode_switch("arbitrary", Mode.NORMAL)
+    assert result is None
+
+
+def test_handle_mode_switch_already_in_normal_can_switch_to_normal() -> None:
+    """Switching to Mode.NORMAL when already in NORMAL must return Mode.NORMAL."""
+    result = handle_mode_switch("mode normal", Mode.NORMAL)
+    assert result is Mode.NORMAL
+
+
+def test_handle_mode_switch_already_in_scientific_can_switch_to_scientific() -> None:
+    """Switching to Mode.SCIENTIFIC when already in SCIENTIFIC must return Mode.SCIENTIFIC."""
+    result = handle_mode_switch("mode scientific", Mode.SCIENTIFIC)
+    assert result is Mode.SCIENTIFIC
+
+
+def test_handle_mode_switch_current_mode_parameter_ignored() -> None:
+    """current_mode parameter only serves as context; result is determined by input."""
+    # Regardless of current_mode, "mode normal" returns Mode.NORMAL
+    result1 = handle_mode_switch("mode normal", Mode.NORMAL)
+    result2 = handle_mode_switch("mode normal", Mode.SCIENTIFIC)
+    assert result1 == result2 == Mode.NORMAL
+
+
+# ---------------------------------------------------------------------------
+# print_menu mode-aware tests
+# ---------------------------------------------------------------------------
+
+
+def test_print_menu_normal_mode_shows_basic_four_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu(Mode.NORMAL) must show only 4 basic operations."""
+    print_menu(mode=Mode.NORMAL)
+    captured = capsys.readouterr()
+    # Must include the four basic operations
+    assert "add" in captured.out
+    assert "subtract" in captured.out
+    assert "multiply" in captured.out
+    assert "divide" in captured.out
+
+
+def test_print_menu_normal_mode_hides_scientific_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu(Mode.NORMAL) must not show scientific-only operations."""
+    print_menu(mode=Mode.NORMAL)
+    captured = capsys.readouterr()
+    # power, factorial, log, ln should NOT appear in NORMAL mode
+    assert "power" not in captured.out
+    assert "factorial" not in captured.out
+    assert "log" not in captured.out
+    assert "ln" not in captured.out
+
+
+def test_print_menu_scientific_mode_shows_all_operations(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu(Mode.SCIENTIFIC) must show all 12 operations."""
+    print_menu(mode=Mode.SCIENTIFIC)
+    captured = capsys.readouterr()
+    # All 12 operations should be shown
+    assert "add" in captured.out
+    assert "subtract" in captured.out
+    assert "multiply" in captured.out
+    assert "divide" in captured.out
+    assert "power" in captured.out
+    assert "factorial" in captured.out
+    assert "square" in captured.out
+    assert "cube" in captured.out
+    assert "square_root" in captured.out
+    assert "cube_root" in captured.out
+    assert "log" in captured.out
+    assert "ln" in captured.out
+
+
+def test_print_menu_normal_shows_mode_switch_commands(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu(Mode.NORMAL) must show mode-switch commands."""
+    print_menu(mode=Mode.NORMAL)
+    captured = capsys.readouterr()
+    assert "mode normal" in captured.out
+    assert "mode scientific" in captured.out
+
+
+def test_print_menu_scientific_shows_mode_switch_commands(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu(Mode.SCIENTIFIC) must show mode-switch commands."""
+    print_menu(mode=Mode.SCIENTIFIC)
+    captured = capsys.readouterr()
+    assert "mode normal" in captured.out
+    assert "mode scientific" in captured.out
+
+
+def test_print_menu_shows_exit_in_both_modes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu must always show exit command in both modes."""
+    print_menu(mode=Mode.NORMAL)
+    captured_normal = capsys.readouterr()
+    assert "exit" in captured_normal.out
+
+    print_menu(mode=Mode.SCIENTIFIC)
+    captured_scientific = capsys.readouterr()
+    assert "exit" in captured_scientific.out
+
+
+def test_print_menu_shows_history_in_both_modes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """print_menu must always show history command in both modes."""
+    print_menu(mode=Mode.NORMAL)
+    captured_normal = capsys.readouterr()
+    assert "history" in captured_normal.out
+
+    print_menu(mode=Mode.SCIENTIFIC)
+    captured_scientific = capsys.readouterr()
+    assert "history" in captured_scientific.out
+
+
+# ---------------------------------------------------------------------------
+# get_operation mode-aware tests
+# ---------------------------------------------------------------------------
+
+
+def test_get_operation_normal_mode_accepts_basic_four() -> None:
+    """get_operation(mode=NORMAL) must accept all four basic operations."""
+    for op in ["add", "subtract", "multiply", "divide"]:
+        result = get_operation(input_fn=lambda _prompt: op, mode=Mode.NORMAL)
+        assert result == op
+
+
+def test_get_operation_normal_mode_rejects_power() -> None:
+    """get_operation(mode=NORMAL) must reject 'power'."""
+    inputs = iter(["power", "exit"])
+    result = get_operation(input_fn=lambda _prompt: next(inputs), mode=Mode.NORMAL)
+    assert result is None
+
+
+def test_get_operation_normal_mode_rejects_factorial() -> None:
+    """get_operation(mode=NORMAL) must reject 'factorial'."""
+    inputs = iter(["factorial", "exit"])
+    result = get_operation(input_fn=lambda _prompt: next(inputs), mode=Mode.NORMAL)
+    assert result is None
+
+
+def test_get_operation_normal_mode_rejects_log() -> None:
+    """get_operation(mode=NORMAL) must reject 'log'."""
+    inputs = iter(["log", "exit"])
+    result = get_operation(input_fn=lambda _prompt: next(inputs), mode=Mode.NORMAL)
+    assert result is None
+
+
+def test_get_operation_normal_mode_rejects_ln() -> None:
+    """get_operation(mode=NORMAL) must reject 'ln'."""
+    inputs = iter(["ln", "exit"])
+    result = get_operation(input_fn=lambda _prompt: next(inputs), mode=Mode.NORMAL)
+    assert result is None
+
+
+def test_get_operation_scientific_mode_accepts_power() -> None:
+    """get_operation(mode=SCIENTIFIC) must accept 'power'."""
+    result = get_operation(input_fn=lambda _prompt: "power", mode=Mode.SCIENTIFIC)
+    assert result == "power"
+
+
+def test_get_operation_scientific_mode_accepts_factorial() -> None:
+    """get_operation(mode=SCIENTIFIC) must accept 'factorial'."""
+    result = get_operation(input_fn=lambda _prompt: "factorial", mode=Mode.SCIENTIFIC)
+    assert result == "factorial"
+
+
+def test_get_operation_scientific_mode_accepts_log() -> None:
+    """get_operation(mode=SCIENTIFIC) must accept 'log'."""
+    result = get_operation(input_fn=lambda _prompt: "log", mode=Mode.SCIENTIFIC)
+    assert result == "log"
+
+
+def test_get_operation_scientific_mode_accepts_ln() -> None:
+    """get_operation(mode=SCIENTIFIC) must accept 'ln'."""
+    result = get_operation(input_fn=lambda _prompt: "ln", mode=Mode.SCIENTIFIC)
+    assert result == "ln"
+
+
+def test_get_operation_mode_switch_bypasses_validation() -> None:
+    """get_operation must return mode-switch commands without retries."""
+    result = get_operation(
+        input_fn=lambda _prompt: "mode normal", mode=Mode.SCIENTIFIC
+    )
+    assert result == "mode normal"
+
+
+def test_get_operation_mode_switch_does_not_consume_retry() -> None:
+    """Mode-switch command must not count toward retry limit."""
+    # Request "mode normal" 10 times (more than MAX_RETRY_ATTEMPTS=3)
+    # All should succeed because mode-switch bypasses retry logic
+    inputs = iter(["mode normal"] * 10)
+    results = []
+    for _ in range(10):
+        result = get_operation(
+            input_fn=lambda _prompt: next(inputs), retry_limit=3, mode=Mode.NORMAL
+        )
+        results.append(result)
+    assert all(r == "mode normal" for r in results)
+
+
+def test_get_operation_history_always_accepted_regardless_of_mode() -> None:
+    """get_operation must accept 'history' in both NORMAL and SCIENTIFIC modes."""
+    result_normal = get_operation(
+        input_fn=lambda _prompt: "history", mode=Mode.NORMAL
+    )
+    assert result_normal == "history"
+
+    result_scientific = get_operation(
+        input_fn=lambda _prompt: "history", mode=Mode.SCIENTIFIC
+    )
+    assert result_scientific == "history"
+
+
+def test_get_operation_mode_scientific_accepts_all_arithmetic_operations() -> None:
+    """get_operation(mode=SCIENTIFIC) must accept all 12 arithmetic operations."""
+    ops_to_test = [
+        "add", "subtract", "multiply", "divide",
+        "power", "factorial", "square", "cube",
+        "square_root", "cube_root", "log", "ln"
+    ]
+    for op in ops_to_test:
+        result = get_operation(input_fn=lambda _prompt: op, mode=Mode.SCIENTIFIC)
+        assert result == op, f"Operation '{op}' should be accepted in SCIENTIFIC mode"
+
+
+# ---------------------------------------------------------------------------
+# run_loop mode-aware integration tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_loop_starts_in_normal_mode(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must start in NORMAL mode."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["add", "1", "2", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        # Result should be prefixed with [Normal]>
+        assert "[Normal]>" in captured.out
+
+
+def test_run_loop_scientific_result_prefixed_with_scientific(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop result must show [Scientific]> when in SCIENTIFIC mode."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "power", "2", "3", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "[Scientific]>" in captured.out
+
+
+def test_run_loop_mode_normal_rejects_power_operation(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Starting in NORMAL mode, 'power' should be rejected."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["power", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        # "power" is not a valid operation in NORMAL mode
+        assert "Invalid operation" in captured.out
+
+
+def test_run_loop_switches_to_scientific_mode(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must accept 'mode scientific' command and switch."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Switched to Scientific mode" in captured.out
+
+
+def test_run_loop_switches_to_normal_mode_from_scientific(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop must accept 'mode normal' from SCIENTIFIC mode."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "mode normal", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Switched to Normal mode" in captured.out
+
+
+def test_run_loop_mode_scientific_accepts_power_operation(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """After switching to SCIENTIFIC, 'power' should be accepted."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["mode scientific", "power", "2", "3", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Result:" in captured.out
+        assert "8" in captured.out  # 2^3 = 8
+
+
+def test_run_loop_mode_label_normal_initially(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop result prefix must say [Normal]> initially."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["add", "1", "1", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "[Normal]>" in captured.out
+
+
+def test_run_loop_mode_label_updates_after_switch(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """run_loop result prefix must update after mode switch."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter([
+            "add", "1", "1",           # Normal: [Normal]> Result: 2
+            "mode scientific",         # Switch to SCIENTIFIC
+            "power", "2", "3",         # Scientific: [Scientific]> Result: 8
+            "exit"
+        ])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        # Both prefixes should appear
+        assert "[Normal]>" in captured.out
+        assert "[Scientific]>" in captured.out
+
+
+def test_run_loop_refuses_scientific_operation_in_normal_mode(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """In NORMAL mode, scientific operations like 'ln' should be rejected."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        inputs = iter(["ln", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs))
+        captured = capsys.readouterr()
+        assert "Invalid operation" in captured.out or "Valid operations" in captured.out

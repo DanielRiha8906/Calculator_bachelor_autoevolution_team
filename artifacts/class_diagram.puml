@@ -53,12 +53,21 @@ package "Calculation Layer" {
 }
 
 package "Interaction Layer" {
+  class Mode <<enum>> {
+    NORMAL
+    SCIENTIFIC
+    +get_normal_operations() : frozenset[str]
+    +get_scientific_operations() : frozenset[str]
+    +get_operations_for_mode(mode: Mode) : frozenset[str]
+  }
+
   class InputLoop <<module>> {
     +OPERATIONS : dict
     +MAX_RETRY_ATTEMPTS : int
-    +print_menu() : None
+    +print_menu(mode: Mode) : None
     +print_history(history: OperationHistory) : None
-    +get_operation(input_fn: Callable, retry_limit: int) : str | None
+    +get_operation(input_fn: Callable, retry_limit: int, mode: Mode) : str | None
+    +handle_mode_switch(user_input: str, current_mode: Mode) : Mode | None
     +get_operands(count: int, input_fn: Callable, retry_limit: int) : list[float] | None
     +dispatch(operation: str, operands: list, calc: Calculator) : float
     +run_loop(input_fn: Callable, history: OperationHistory) : None
@@ -66,7 +75,7 @@ package "Interaction Layer" {
 
   class Validation <<module>> {
     +VALID_OPERATIONS : frozenset[str]
-    +validate_operation(op: str) : tuple[bool, str]
+    +validate_operation(op: str, mode: Mode | None) : tuple[bool, str]
     +validate_operand(raw: str) : tuple[bool, float, str]
   }
 
@@ -120,6 +129,8 @@ InputLoop --> Calculator : uses
 InputLoop --> Validation : validate_operation / validate_operand
 InputLoop --> OperationHistory : creates / records / prints history
 InputLoop --> ErrorLogger : creates / logs errors
+InputLoop --> Mode : uses for menu / validation / mode-switch
+Validation --> Mode : uses for mode-scoped validation
 Main --> InputLoop : calls run_loop()
 Main --> CLI : calls run_cli()
 CLI --> OPERATIONS : reads operand count
