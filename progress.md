@@ -15,7 +15,7 @@ Risks: GuiCalculator and tkinter imports are deferred inside the `--gui` branch 
 
 Test results: 1243 passed, 0 failed.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 495.4s | Cost: $1.251031 USD | Turns: 11
 
 ---
 
