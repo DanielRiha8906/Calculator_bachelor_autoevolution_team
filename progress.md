@@ -316,4 +316,4 @@ Risks: tkinter may not be available in all environments; deferred ImportError pa
 
 Test results: 1041 tests passed (98 new + 943 existing), no regressions.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 684.6s | Cost: $1.673488 USD | Turns: 16
