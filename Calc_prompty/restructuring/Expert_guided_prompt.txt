@@ -3,7 +3,7 @@ Task:
 
 Layout (top to bottom):
 1. Result display — full-width Label, right-aligned, black background (#000000), white text (#FFFFFF), font size 32 bold monospaced. Shows current result or "0" on start.
-2. Mode toggle — small row of two flat buttons ("Normal" / "Scientific") above the button grid, dark grey, accent-highlighted for the active mode.
+2. Mode toggle — A button that will change text based on the mode that it's in, if normal - will show scientific, if scientific - normal
 3. Button grid — 4 columns, rows determined by the current mode's operation count. Buttons are square (equal width and height via grid weight), flat relief, no border.
 
 Button color groups (set bg and activebackground on each):
