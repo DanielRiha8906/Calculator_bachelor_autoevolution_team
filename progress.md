@@ -227,3 +227,24 @@ Risks: Low. Public API of Calculator is unchanged. All delegation is straightfor
 Tests passed: 616/616
 
 Duration: 437.8s | Cost: $1.085196 USD | Turns: 12
+
+## Run: Issue #95 — V1 Task 13 - Documentation (task/issue-95-documentation)
+
+Branch: task/issue-95-documentation
+PR target: exp/structured-team
+
+Files changed:
+- README.md (replaced) — comprehensive project README covering features, installation, interactive and CLI usage with examples, project structure and architecture, testing instructions, and reference to artifacts/ diagrams
+- FEATURES.md (created) — detailed per-operation reference covering all 12 operations with mathematical definitions, operand counts, valid input ranges, error conditions, and CLI and interactive examples; includes meta-command and error-handling sections
+- artifacts/class_diagram.puml (verified, no changes needed) — confirmed accurate against current src/ code
+- artifacts/activity_diagram.puml (verified, no changes needed) — confirmed flow matches actual run_loop() and run_cli() behavior
+- artifacts/sequence_diagram.puml (verified, no changes needed) — confirmed participant interactions match actual code
+- progress.md (appended)
+
+Purpose: Comprehensive written documentation for calculator features, usage, project structure, and setup as required by Issue #95.
+
+Risks: None; documentation-only change. No source code, tests, or existing interfaces modified.
+
+Tests: N/A — documentation-only change; no new code introduced.
+
+Duration: 384.9s | Cost: $0.928655 USD | Turns: 11
