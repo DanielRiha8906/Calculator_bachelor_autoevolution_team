@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .history import History
 
 
 # Maximum number of consecutive invalid inputs before the session is terminated.
@@ -99,6 +100,7 @@ class InputHandler:
     ) -> None:
         self._calculator = calculator
         self._input_fn: Callable[[str], str] = input_fn if input_fn is not None else input
+        self._history = History()
 
     # ------------------------------------------------------------------
     # Public interface
@@ -115,54 +117,69 @@ class InputHandler:
         user-friendly message without crashing.
         """
         op_attempts: int = 0
-        while True:
-            self._show_menu()
-            try:
-                op_choice = self._input_fn("Enter operation (or 'exit'/'quit' to stop): ").strip().lower()
-            except StopIteration:
-                print("Goodbye!")
-                break
-
-            if op_choice in ("exit", "quit"):
-                print("Goodbye!")
-                break
-
-            if op_choice not in OPERATIONS:
-                op_attempts += 1
-                print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
-                print("Available operations: " + ", ".join(OPERATIONS.keys()))
-                if op_attempts >= MAX_RETRIES:
-                    print("Too many invalid attempts. Ending session.")
+        try:
+            while True:
+                self._show_menu()
+                try:
+                    op_choice = self._input_fn("Enter operation (or 'exit'/'quit' to stop): ").strip().lower()
+                except StopIteration:
+                    print("Goodbye!")
                     break
-                continue
 
-            op_attempts = 0
-            op_info = OPERATIONS[op_choice]
-            arity: int = op_info["arity"]
-            coerce: Callable = op_info.get("coerce", float)  # type: ignore[assignment]
+                if op_choice in ("exit", "quit"):
+                    print("Goodbye!")
+                    break
 
+                if op_choice == "history":
+                    entries = self._history.get_all()
+                    if entries:
+                        print("\n".join(entries))
+                    else:
+                        print("No history yet.")
+                    continue
+
+                if op_choice not in OPERATIONS:
+                    op_attempts += 1
+                    print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
+                    print("Available operations: " + ", ".join(OPERATIONS.keys()))
+                    if op_attempts >= MAX_RETRIES:
+                        print("Too many invalid attempts. Ending session.")
+                        break
+                    continue
+
+                op_attempts = 0
+                op_info = OPERATIONS[op_choice]
+                arity: int = op_info["arity"]
+                coerce: Callable = op_info.get("coerce", float)  # type: ignore[assignment]
+
+                try:
+                    operands = self._prompt_operands(arity, coerce)
+                except StopIteration:
+                    print("Goodbye!")
+                    break
+                except ValueError as exc:
+                    print(f"Error: {exc}")
+                    continue
+
+                try:
+                    result = self._dispatch(op_choice, operands)
+                except ZeroDivisionError:
+                    print("Error: Division by zero is not allowed.")
+                    continue
+                except ValueError as exc:
+                    print(f"Error: {exc}")
+                    continue
+                except TypeError as exc:
+                    print(f"Error: {exc}")
+                    continue
+
+                print(f"Result: {result}")
+                self._history.add_operation(op_choice, operands, result)
+        finally:
             try:
-                operands = self._prompt_operands(arity, coerce)
-            except StopIteration:
-                print("Goodbye!")
-                break
-            except ValueError as exc:
-                print(f"Error: {exc}")
-                continue
-
-            try:
-                result = self._dispatch(op_choice, operands)
-            except ZeroDivisionError:
-                print("Error: Division by zero is not allowed.")
-                continue
-            except ValueError as exc:
-                print(f"Error: {exc}")
-                continue
-            except TypeError as exc:
-                print(f"Error: {exc}")
-                continue
-
-            print(f"Result: {result}")
+                self._history.save_to_file("history.txt")
+            except OSError as exc:
+                print(f"Warning: Could not save history to file: {exc}")
 
     # ------------------------------------------------------------------
     # Private helpers

@@ -17,9 +17,25 @@ class Calculator {
     +power(x: float, y: float): float
 }
 
+class History {
+    -_operations: list[str]
+    +add_operation(operation_name: str, operands: list, result: float | int): None
+    +get_all(): list[str]
+    +save_to_file(filepath: str): None
+    -_format_entry(operation_name: str, operands: list, result: float | int): str
+}
+
+note top of History
+    Module: src/history.py
+    Session-scoped operation tracker.
+    Formats entries as operation(arg1, arg2, ...) = result.
+    Persists to file on session end.
+end note
+
 class InputHandler {
     -_calculator: Calculator
     -_input_fn: Callable[[str], str]
+    -_history: History
     +__init__(calculator: Calculator, input_fn: Callable | None)
     +run(): None
     -_show_menu(): None
@@ -76,6 +92,7 @@ note as MAIN_NOTE
 end note
 
 InputHandler --> Calculator : dispatches operations to\n_calculator
+InputHandler --> History : manages session history
 InputHandler ..> OPERATIONS_NOTE : reads registry for\nmenu and dispatch
 RUN_SESSION_NOTE ..> InputHandler : creates and calls run()
 
