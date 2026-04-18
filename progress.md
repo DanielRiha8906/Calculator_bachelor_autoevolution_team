@@ -18,7 +18,7 @@ Risks: tkinter is a system-level optional dependency; the module uses try/except
 
 Test results: 1180 passed, 0 failed.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 668.6s | Cost: $2.028790 USD | Turns: 11
 
 ---
 
