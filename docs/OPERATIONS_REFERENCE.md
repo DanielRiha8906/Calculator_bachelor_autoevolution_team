@@ -329,3 +329,202 @@ python main.py factorial 3.5    # Error: Invalid operand '3.5': expected a numer
 
 Note: `3.5` fails at the coercion stage (`int("3.5")` raises `ValueError`) before it
 reaches `Calculator.factorial`.
+
+---
+
+## Scientific Operations
+
+These operations are only available when the interactive session is in **Scientific Mode**.
+Switch modes with `mode scientific` / `mode normal` at the operation prompt.
+
+### sin
+
+| Field | Value |
+|-------|-------|
+| Key | `sin` |
+| Calculator method | `Calculator.sin(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Sine of x (x in radians) |
+
+**Behavior:** Returns `math.sin(x)`. Input is expected in radians.
+
+**Error conditions:** None.
+
+**Examples:**
+
+```bash
+python main.py sin 0          # 0.0
+python main.py sin 1.5708     # approximately 1.0 (pi/2)
+```
+
+---
+
+### cos
+
+| Field | Value |
+|-------|-------|
+| Key | `cos` |
+| Calculator method | `Calculator.cos(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Cosine of x (x in radians) |
+
+**Behavior:** Returns `math.cos(x)`. Input is expected in radians.
+
+**Error conditions:** None.
+
+**Examples:**
+
+```bash
+python main.py cos 0          # 1.0
+python main.py cos 3.14159    # approximately -1.0 (pi)
+```
+
+---
+
+### tan
+
+| Field | Value |
+|-------|-------|
+| Key | `tan` |
+| Calculator method | `Calculator.tan(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Tangent of x (x in radians) |
+
+**Behavior:** Returns `math.tan(x)`. Input is expected in radians.
+
+**Error conditions:** None (but approaches infinity near pi/2).
+
+**Examples:**
+
+```bash
+python main.py tan 0          # 0.0
+python main.py tan 0.7854     # approximately 1.0 (pi/4)
+```
+
+---
+
+### asin
+
+| Field | Value |
+|-------|-------|
+| Key | `asin` |
+| Calculator method | `Calculator.asin(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Arcsine of x (result in radians, domain: [-1, 1]) |
+
+**Behavior:** Returns `math.asin(x)`. Result is in radians in the range [-pi/2, pi/2].
+
+**Error conditions:**
+- `ValueError` when `x < -1` or `x > 1`. Error message: `"asin() domain error: x must be in [-1, 1], got <x>"`.
+
+**Examples:**
+
+```bash
+python main.py asin 0         # 0.0
+python main.py asin 1         # approximately 1.5708 (pi/2)
+python main.py asin 2         # Error: asin() domain error...  [exit 1]
+```
+
+---
+
+### acos
+
+| Field | Value |
+|-------|-------|
+| Key | `acos` |
+| Calculator method | `Calculator.acos(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Arccosine of x (result in radians, domain: [-1, 1]) |
+
+**Behavior:** Returns `math.acos(x)`. Result is in radians in the range [0, pi].
+
+**Error conditions:**
+- `ValueError` when `x < -1` or `x > 1`. Error message: `"acos() domain error: x must be in [-1, 1], got <x>"`.
+
+**Examples:**
+
+```bash
+python main.py acos 1         # 0.0
+python main.py acos 0         # approximately 1.5708 (pi/2)
+python main.py acos 2         # Error: acos() domain error...  [exit 1]
+```
+
+---
+
+### atan
+
+| Field | Value |
+|-------|-------|
+| Key | `atan` |
+| Calculator method | `Calculator.atan(x)` |
+| Arity | 1 |
+| Operand type | float |
+| Return type | float |
+| Label | Arctangent of x (result in radians) |
+
+**Behavior:** Returns `math.atan(x)`. Result is in radians in the range (-pi/2, pi/2).
+
+**Error conditions:** None.
+
+**Examples:**
+
+```bash
+python main.py atan 0         # 0.0
+python main.py atan 1         # approximately 0.7854 (pi/4)
+```
+
+---
+
+### pi
+
+| Field | Value |
+|-------|-------|
+| Key | `pi` |
+| Calculator method | `Calculator.get_pi()` |
+| Arity | 0 |
+| Operand type | N/A (no operands) |
+| Return type | float |
+| Label | Mathematical constant pi (~3.14159) |
+
+**Behavior:** Returns `math.pi` (~3.141592653589793). Takes no operands.
+
+**Error conditions:** None.
+
+**Examples:**
+
+```bash
+python main.py pi             # 3.141592653589793
+```
+
+---
+
+### e
+
+| Field | Value |
+|-------|-------|
+| Key | `e` |
+| Calculator method | `Calculator.get_e()` |
+| Arity | 0 |
+| Operand type | N/A (no operands) |
+| Return type | float |
+| Label | Mathematical constant e (~2.71828) |
+
+**Behavior:** Returns `math.e` (~2.718281828459045). Takes no operands.
+
+**Error conditions:** None.
+
+**Examples:**
+
+```bash
+python main.py e              # 2.718281828459045
+```

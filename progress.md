@@ -1,3 +1,36 @@
+## Run: Scientific Mode for Interactive Calculator
+
+Branch: task/issue-99-scientific-mode
+PR target: exp/expert-team
+
+Files changed:
+- src/session/mode.py — new module; Mode enum (NORMAL, SCIENTIFIC) and parse_mode_command() helper
+- src/core/calculator.py — added 8 new methods: sin, cos, tan, asin, acos, atan (trig) and get_pi, get_e (constants)
+- src/operations/scientific.py — populated SCIENTIFIC_OPERATIONS with 8 entries: sin, cos, tan, asin, acos, atan (arity=1) and pi, e (arity=0)
+- src/session/input_handler.py — added _mode: Mode attribute, mode-switch command handling in run(), _get_available_operations_for_mode() method, mode-filtered _show_menu(), mode-access guard before operation dispatch
+- artifacts/class_diagram.puml — added Mode enum class, updated InputHandler with _mode attribute and new method, updated OPERATIONS_NOTE and Calculator with new methods
+- artifacts/activity_diagram.puml — added mode-switch decision diamond, mode-access validation check, updated _show_menu() note
+- artifacts/sequence_diagram.puml — added alternate flow for mode-switch command, mode-access validation, and error sequence for mode-restricted operations
+- docs/OPERATIONS_REFERENCE.md — added Scientific Operations section documenting all 8 new operations (sin, cos, tan, asin, acos, atan, pi, e)
+- tests/test_mode.py — new; 53 tests for Mode enum and parse_mode_command()
+- tests/test_scientific_operations.py — new; 168 tests for Calculator scientific methods and SCIENTIFIC_OPERATIONS registry
+- tests/test_input_handler_modes.py — new; 73 tests for InputHandler mode switching and filtering
+- tests/test_modular_structure.py — updated stale assertions (OPERATIONS count 12→20, SCIENTIFIC_OPERATIONS empty→8, arity>0→>=0)
+- tests/test_operations.py — updated stale assertions (count 12→20, arity>0→>=0)
+- tests/test_input_handler_edge.py — updated menu test to check Normal mode only shows NORMAL_OPERATIONS keys
+- tests/test_cli.py — updated arity=0 handling and domain validation
+- tests/test_documentation.py — updated hardcoded expected operation key set to include 8 scientific operations
+
+Purpose: Implement a Scientific Mode for the interactive calculator that makes trigonometric functions and mathematical constants available only when the user explicitly switches to scientific mode, keeping normal mode uncluttered.
+
+Risks: The arity=0 approach for pi/e constants is novel in this registry; dispatcher handles zero-argument dispatch. No changes to CLI mode.
+
+Test results: 1180 passed, 0 failed.
+
+Duration: 886.3s | Cost: $2.460566 USD | Turns: 23
+
+---
+
 ## Run: Issue #96 — Documentation for Calculator Application
 
 Branch: exp/expert-team

@@ -18,39 +18,58 @@ main -> handler : handler.run()
 note over handler : Lazy: Logger() created on\nfirst call to run()
 
 loop session active
-    handler -> handler : _show_menu()
-    handler -> ops : iterate OPERATIONS.items()
-    ops --> handler : key, info pairs
-    handler -> User : print available operations menu
+    handler -> handler : _show_menu()\n[filters OPERATIONS by _mode]
+    handler -> ops : iterate _get_available_operations_for_mode().items()
+    ops --> handler : key, info pairs (filtered by Mode)
+    handler -> User : print available operations menu\n(header shows current mode)
 
     handler -> User : prompt "Enter operation (or 'exit'/'quit' to stop):"
-    User --> handler : "add"
 
-    note over handler : op_choice not in ("exit","quit")\nop_choice found in OPERATIONS
+    alt user enters mode-switch command
+        User --> handler : "mode scientific"
+        note over handler : parse_mode_command("mode scientific")\nreturns Mode.SCIENTIFIC
+        handler -> handler : self._mode = Mode.SCIENTIFIC
+        handler -> User : print "Mode switched to: Scientific"
+        note over handler : continue — loop back to _show_menu()
+    else user enters a normal operation
+        User --> handler : "add"
 
-    handler -> ops : OPERATIONS["add"]
-    ops --> handler : { method:"add", arity:2, label:... }
+        note over handler : parse_mode_command("add") returns None\nop_choice not in ("exit","quit")
 
-    handler -> handler : _prompt_operands(arity=2, coerce=float)
-    handler -> User : prompt "Enter first operand:"
-    User --> handler : "10"
-    handler -> op_disp : coerce_operands(["10"], float)
-    op_disp --> handler : [10.0]
-    handler -> User : prompt "Enter second operand:"
-    User --> handler : "5"
-    handler -> op_disp : coerce_operands(["5"], float)
-    op_disp --> handler : [5.0]
-    note over handler : operands = [10.0, 5.0]
+        handler -> handler : _get_available_operations_for_mode()
+        handler -> ops : check if "add" in available ops for current mode
+        ops --> handler : True (add is a NORMAL_OPERATIONS key)
 
-    handler -> handler : _dispatch("add", [10.0, 5.0])
-    handler -> op_disp : dispatch("add", [10.0, 5.0])
-    op_disp -> ops : OPERATIONS["add"]["method"]
-    ops --> op_disp : "add"
-    op_disp -> calc : getattr(calculator, "add")(10.0, 5.0)
-    calc --> op_disp : 15.0
-    op_disp --> handler : 15.0
+        handler -> ops : OPERATIONS["add"]
+        ops --> handler : { method:"add", arity:2, label:... }
 
-    handler -> User : print "Result: 15.0"
+        handler -> handler : _prompt_operands(arity=2, coerce=float)
+        handler -> User : prompt "Enter first operand:"
+        User --> handler : "10"
+        handler -> op_disp : coerce_operands(["10"], float)
+        op_disp --> handler : [10.0]
+        handler -> User : prompt "Enter second operand:"
+        User --> handler : "5"
+        handler -> op_disp : coerce_operands(["5"], float)
+        op_disp --> handler : [5.0]
+        note over handler : operands = [10.0, 5.0]
+
+        handler -> handler : _dispatch("add", [10.0, 5.0])
+        handler -> op_disp : dispatch("add", [10.0, 5.0])
+        op_disp -> ops : OPERATIONS["add"]["method"]
+        ops --> op_disp : "add"
+        op_disp -> calc : getattr(calculator, "add")(10.0, 5.0)
+        calc --> op_disp : 15.0
+        op_disp --> handler : 15.0
+
+        handler -> User : print "Result: 15.0"
+    else user enters a scientific op in Normal mode
+        User --> handler : "sin"
+        note over handler : parse_mode_command("sin") returns None\n"sin" is in OPERATIONS but NOT in available ops\n(current mode is NORMAL)
+        handler -> handler : _get_available_operations_for_mode()
+        handler -> User : print "Error: 'sin' is only available in scientific mode.\nType 'mode scientific' to switch."
+        note over handler : continue — op_attempts not incremented
+    end
 
     handler -> User : prompt "Enter operation (or 'exit'/'quit' to stop):"
     User --> handler : "quit"

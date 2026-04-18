@@ -139,3 +139,107 @@ class Calculator:
             x raised to the power y.
         """
         return x ** y
+
+    # ------------------------------------------------------------------
+    # Trigonometric methods
+    # ------------------------------------------------------------------
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (x in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            Sine of x.
+        """
+        return math.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (x in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            Cosine of x.
+        """
+        return math.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (x in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            Tangent of x.
+        """
+        return math.tan(x)
+
+    def asin(self, x: float) -> float:
+        """Return the arcsine of x in radians.
+
+        Args:
+            x: Value whose arcsine is to be computed. Must be in [-1, 1].
+
+        Returns:
+            Arcsine of x in radians.
+
+        Raises:
+            ValueError: If x is outside the domain [-1, 1].
+        """
+        if x < -1 or x > 1:
+            raise ValueError(
+                f"asin() is not defined for x outside [-1, 1], got {x!r}"
+            )
+        return math.asin(x)
+
+    def acos(self, x: float) -> float:
+        """Return the arccosine of x in radians.
+
+        Args:
+            x: Value whose arccosine is to be computed. Must be in [-1, 1].
+
+        Returns:
+            Arccosine of x in radians.
+
+        Raises:
+            ValueError: If x is outside the domain [-1, 1].
+        """
+        if x < -1 or x > 1:
+            raise ValueError(
+                f"acos() is not defined for x outside [-1, 1], got {x!r}"
+            )
+        return math.acos(x)
+
+    def atan(self, x: float) -> float:
+        """Return the arctangent of x in radians.
+
+        Args:
+            x: Value whose arctangent is to be computed.
+
+        Returns:
+            Arctangent of x in radians.
+        """
+        return math.atan(x)
+
+    # ------------------------------------------------------------------
+    # Mathematical constants
+    # ------------------------------------------------------------------
+
+    def get_pi(self) -> float:
+        """Return the mathematical constant pi.
+
+        Returns:
+            math.pi (~3.141592653589793).
+        """
+        return math.pi
+
+    def get_e(self) -> float:
+        """Return the mathematical constant e (Euler's number).
+
+        Returns:
+            math.e (~2.718281828459045).
+        """
+        return math.e

@@ -15,7 +15,7 @@ end note
 :op_attempts = 0;
 
 repeat
-    :_show_menu()\nPrint available operations from OPERATIONS registry;
+    :_show_menu()\nPrint available operations filtered by _mode\n(Normal Mode: NORMAL_OPERATIONS only;\nScientific Mode: all OPERATIONS);
     :Prompt user: "Enter operation (or 'exit'/'quit' to stop)";
     :Read and strip/lower input;
 
@@ -23,82 +23,94 @@ repeat
         :Print "Goodbye!";
         stop
     else (no)
-        if (op_choice in OPERATIONS?) then (no)
-            :op_attempts += 1;
-            :logger.log_unsupported_operation(op_choice);
-            :Print "Error: Unknown operation '<op_choice>'.\nPlease choose from the menu.";
-            :Print "Available operations: " + list of keys;
-            if (op_attempts >= MAX_RETRIES?) then (yes)
-                :Print "Too many invalid attempts. Ending session.";
-                stop
-            else (no)
-                ' retry < MAX_RETRIES: loop back to operation input
-            endif
-        else (yes)
-            :op_attempts = 0;
-            :Look up op_info from OPERATIONS;
-            :Extract arity and coerce callable;
+        if (parse_mode_command(input) returns a Mode?) then (yes)
+            :Update _mode to returned Mode;
+            :Print "Mode switched to: <mode>";
+            ' loop back to top
+        else (no)
+            if (op_choice in OPERATIONS?) then (no)
+                :op_attempts += 1;
+                :logger.log_unsupported_operation(op_choice);
+                :Print "Error: Unknown operation '<op_choice>'.\nPlease choose from the menu.";
+                :Print "Available operations: " + list of keys in current mode;
+                if (op_attempts >= MAX_RETRIES?) then (yes)
+                    :Print "Too many invalid attempts. Ending session.";
+                    stop
+                else (no)
+                    ' retry < MAX_RETRIES: loop back to operation input
+                endif
+            else (yes)
+                if (op_choice in _get_available_operations_for_mode()?) then (no)
+                    :Print "Error: '<op_choice>' is only available in scientific mode.\nType 'mode scientific' to switch.";
+                    ' loop back without incrementing op_attempts
+                else (yes)
+                    :op_attempts = 0;
+                    :Look up op_info from OPERATIONS;
+                    :Extract arity and coerce callable;
 
-            :_prompt_operands(arity, coerce);
-            note right
-                For each operand position:
-                attempt_count = 0 .. MAX_RETRIES-1
-            end note
+                    :_prompt_operands(arity, coerce);
+                    note right
+                        For each operand position:
+                        attempt_count = 0 .. MAX_RETRIES-1
+                        (arity=0 operations skip this entirely)
+                    end note
 
-            partition "_prompt_operands retry loop" {
-                repeat
-                    :Prompt for operand (label: first/second/"");
-                    :Read raw input;
+                    partition "_prompt_operands retry loop" {
+                        repeat
+                            :Prompt for operand (label: first/second/"");
+                            :Read raw input;
 
-                    partition "OperationDispatcher.coerce_operands([raw], coerce)" {
-                        :Call coerce(raw);
-                        if (coerce raises ValueError or TypeError?) then (yes)
-                            :Raise ValueError:\n"Invalid operand '<raw>'...";
-                        else (no)
-                            :Return [coerced_value];
-                        endif
+                            partition "OperationDispatcher.coerce_operands([raw], coerce)" {
+                                :Call coerce(raw);
+                                if (coerce raises ValueError or TypeError?) then (yes)
+                                    :Raise ValueError:\n"Invalid operand '<raw>'...";
+                                else (no)
+                                    :Return [coerced_value];
+                                endif
+                            }
+
+                            if (ValueError from coerce_operands?) then (yes)
+                                :attempt_count += 1;
+                                :logger.log_invalid_operand(raw, "<numeric>");
+                                :Print "Error: Invalid operand '<raw>': expected a numeric value.";
+                                if (attempt_count >= MAX_RETRIES?) then (yes)
+                                    :Raise ValueError:\n"Too many invalid attempts for operand. Ending session.";
+                                else (no)
+                                    ' retry < MAX_RETRIES: re-prompt same operand
+                                endif
+                            else (no)
+                                :Append coerced value to operands list;
+                            endif
+                        repeat while (more operands to collect)
                     }
 
-                    if (ValueError from coerce_operands?) then (yes)
-                        :attempt_count += 1;
-                        :logger.log_invalid_operand(raw, "<numeric>");
-                        :Print "Error: Invalid operand '<raw>': expected a numeric value.";
-                        if (attempt_count >= MAX_RETRIES?) then (yes)
-                            :Raise ValueError:\n"Too many invalid attempts for operand. Ending session.";
-                        else (no)
-                            ' retry < MAX_RETRIES: re-prompt same operand
-                        endif
+                    if (ValueError raised during _prompt_operands?) then (yes)
+                        :Print "Error: <exc>";
                     else (no)
-                        :Append coerced value to operands list;
+                        :_dispatch(op_choice, operands);
+                        note right
+                            Delegates to
+                            OperationDispatcher.dispatch()
+                        end note
+
+                        partition "OperationDispatcher.dispatch(op_key, operands)" {
+                            :Look up method_name from OPERATIONS[op_key];
+                            :getattr(calculator, method_name)(*operands);
+                        }
+
+                        if (ZeroDivisionError raised?) then (yes)
+                            :logger.log_division_by_zero(operands);
+                            :Print "Error: Division by zero is not allowed.";
+                        elseif (ValueError raised?) then (yes)
+                            :logger.log_domain_error(op_choice, str(exc));
+                            :Print "Error: <exc>";
+                        elseif (TypeError raised?) then (yes)
+                            :logger.log_domain_error(op_choice, str(exc));
+                            :Print "Error: <exc>";
+                        else (no)
+                            :Print "Result: <result>";
+                        endif
                     endif
-                repeat while (more operands to collect)
-            }
-
-            if (ValueError raised during _prompt_operands?) then (yes)
-                :Print "Error: <exc>";
-            else (no)
-                :_dispatch(op_choice, operands);
-                note right
-                    Delegates to
-                    OperationDispatcher.dispatch()
-                end note
-
-                partition "OperationDispatcher.dispatch(op_key, operands)" {
-                    :Look up method_name from OPERATIONS[op_key];
-                    :getattr(calculator, method_name)(*operands);
-                }
-
-                if (ZeroDivisionError raised?) then (yes)
-                    :logger.log_division_by_zero(operands);
-                    :Print "Error: Division by zero is not allowed.";
-                elseif (ValueError raised?) then (yes)
-                    :logger.log_domain_error(op_choice, str(exc));
-                    :Print "Error: <exc>";
-                elseif (TypeError raised?) then (yes)
-                    :logger.log_domain_error(op_choice, str(exc));
-                    :Print "Error: <exc>";
-                else (no)
-                    :Print "Result: <result>";
                 endif
             endif
         endif

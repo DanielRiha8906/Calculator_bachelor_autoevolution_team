@@ -94,13 +94,15 @@ class TestOperationsReferenceAccuracy:
     def test_operation_keys_match_registry(self):
         """Operation keys in documentation should match OPERATIONS registry keys."""
         expected_keys = set(OPERATIONS.keys())
-        # Expected from NORMAL_OPERATIONS: add, subtract, multiply, divide, power,
+        # Normal operations: add, subtract, multiply, divide, power,
         # factorial, square, cube, square_root, cube_root, log10, ln
-        expected_in_normal = {
+        # Scientific operations: sin, cos, tan, asin, acos, atan, pi, e
+        expected_all = {
             "add", "subtract", "multiply", "divide", "power",
-            "factorial", "square", "cube", "square_root", "cube_root", "log10", "ln"
+            "factorial", "square", "cube", "square_root", "cube_root", "log10", "ln",
+            "sin", "cos", "tan", "asin", "acos", "atan", "pi", "e",
         }
-        assert expected_keys == expected_in_normal, (
+        assert expected_keys == expected_all, (
             f"OPERATIONS registry keys do not match expected set. "
             f"Got: {expected_keys}"
         )
