@@ -7,6 +7,7 @@ start
 :Create Calculator instance;
 :Create InputHandler with calculator;
 :Call handler.run();
+:op_attempts = 0;
 
 repeat
     :_show_menu()\nPrint available operations from OPERATIONS registry;
@@ -18,21 +19,43 @@ repeat
         stop
     else (no)
         if (op_choice in OPERATIONS?) then (no)
+            :op_attempts += 1;
             :Print "Error: Unknown operation '<op_choice>'.\nPlease choose from the menu.";
+            :Print "Available operations: " + list of keys;
+            if (op_attempts >= MAX_RETRIES?) then (yes)
+                :Print "Too many invalid attempts. Ending session.";
+                stop
+            else (no)
+                ' retry < MAX_RETRIES: loop back to operation input
+            endif
         else (yes)
+            :op_attempts = 0;
             :Look up op_info from OPERATIONS;
             :Extract arity and coerce callable;
 
             :_prompt_operands(arity, coerce);
-            fork
-                :Prompt for first operand (and second if arity=2);
-                :Read raw input and call coerce(raw);
-                if (coerce raises ValueError or TypeError?) then (yes)
-                    :Raise ValueError:\n"Invalid operand '<raw>': expected a numeric value.";
-                else (no)
-                    :Append coerced value to operands list;
-                endif
-            end fork
+            note right
+                For each operand position:
+                attempt_count = 0 .. MAX_RETRIES-1
+            end note
+
+            partition "_prompt_operands retry loop" {
+                repeat
+                    :Prompt for operand (label: first/second/"");
+                    :Read raw input and call coerce(raw);
+                    if (coerce raises ValueError or TypeError?) then (yes)
+                        :attempt_count += 1;
+                        :Print "Error: Invalid operand '<raw>': expected a numeric value.";
+                        if (attempt_count >= MAX_RETRIES?) then (yes)
+                            :Raise ValueError:\n"Too many invalid attempts for operand. Ending session.";
+                        else (no)
+                            ' retry < MAX_RETRIES: re-prompt same operand
+                        endif
+                    else (no)
+                        :Append coerced value to operands list;
+                    endif
+                repeat while (more operands to collect)
+            }
 
             if (ValueError raised during _prompt_operands?) then (yes)
                 :Print "Error: <exc>";

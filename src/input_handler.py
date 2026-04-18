@@ -12,6 +12,9 @@ from typing import Callable
 from .calculator import Calculator
 
 
+# Maximum number of consecutive invalid inputs before the session is terminated.
+MAX_RETRIES: int = 5
+
 # Operations registry: insertion order defines menu display order.
 # Each entry maps a user-facing key to metadata needed to dispatch the call.
 OPERATIONS: dict[str, dict] = {
@@ -106,28 +109,43 @@ class InputHandler:
 
         Prints the operation menu, reads the user's choice, collects operands,
         dispatches to the Calculator, and prints the result.  The loop exits
-        when the user enters "exit" or "quit" at the operation prompt.
+        when the user enters "exit" or "quit" at the operation prompt, or when
+        the number of consecutive invalid operation inputs reaches MAX_RETRIES.
         Catches ValueError, ZeroDivisionError, and TypeError, printing a
         user-friendly message without crashing.
         """
+        op_attempts: int = 0
         while True:
             self._show_menu()
-            op_choice = self._input_fn("Enter operation (or 'exit'/'quit' to stop): ").strip().lower()
+            try:
+                op_choice = self._input_fn("Enter operation (or 'exit'/'quit' to stop): ").strip().lower()
+            except StopIteration:
+                print("Goodbye!")
+                break
 
             if op_choice in ("exit", "quit"):
                 print("Goodbye!")
                 break
 
             if op_choice not in OPERATIONS:
+                op_attempts += 1
                 print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
+                print("Available operations: " + ", ".join(OPERATIONS.keys()))
+                if op_attempts >= MAX_RETRIES:
+                    print("Too many invalid attempts. Ending session.")
+                    break
                 continue
 
+            op_attempts = 0
             op_info = OPERATIONS[op_choice]
             arity: int = op_info["arity"]
             coerce: Callable = op_info.get("coerce", float)  # type: ignore[assignment]
 
             try:
                 operands = self._prompt_operands(arity, coerce)
+            except StopIteration:
+                print("Goodbye!")
+                break
             except ValueError as exc:
                 print(f"Error: {exc}")
                 continue
@@ -159,6 +177,11 @@ class InputHandler:
     def _prompt_operands(self, arity: int, coerce: Callable = float) -> list:
         """Prompt the user for the required number of operands.
 
+        For each operand position, up to MAX_RETRIES attempts are made.  On
+        each failed coerce attempt the error is printed and the same operand is
+        re-prompted.  After MAX_RETRIES consecutive failures for a single
+        operand a ValueError is raised to abort the current operation.
+
         Args:
             arity: Number of operands to collect (1 or 2).
             coerce: Callable used to convert the raw string to a numeric value;
@@ -168,19 +191,35 @@ class InputHandler:
             A list of converted operand values.
 
         Raises:
-            ValueError: If any operand cannot be converted by ``coerce``.
+            ValueError: After MAX_RETRIES failed attempts for a single operand,
+                or immediately if the input source is exhausted.
         """
         operands: list = []
         labels = ["first", "second"] if arity == 2 else [""]
         for label in labels[:arity]:
             prompt = f"Enter {label + ' ' if label else ''}operand: "
-            raw = self._input_fn(prompt).strip()
-            try:
-                operands.append(coerce(raw))
-            except (ValueError, TypeError):
-                raise ValueError(
-                    f"Invalid operand '{raw}': expected a numeric value."
-                )
+            last_error: ValueError | None = None
+            for attempt in range(MAX_RETRIES):
+                try:
+                    raw = self._input_fn(prompt).strip()
+                except StopIteration:
+                    # Input source exhausted; re-raise the last conversion error
+                    # if we have one, otherwise propagate StopIteration.
+                    if last_error is not None:
+                        raise last_error
+                    raise
+                try:
+                    operands.append(coerce(raw))
+                    last_error = None
+                    break
+                except (ValueError, TypeError):
+                    last_error = ValueError(
+                        f"Invalid operand '{raw}': expected a numeric value."
+                    )
+                    print(f"Error: {last_error}")
+            else:
+                # All MAX_RETRIES attempts exhausted without a valid value.
+                raise ValueError("Too many invalid attempts for operand. Ending session.")
         return operands
 
     def _dispatch(self, op_key: str, operands: list) -> float | int:
