@@ -162,37 +162,39 @@ participant "Calculator" as gui_calc
 gui_user -> gui : GuiCalculator(root, Calculator())
 note over gui : __init__ creates OperationDispatcher,\nBaseMode, History, mode=NORMAL
 gui -> base_mode : BaseMode()
-gui -> gui : _setup_layout() — builds mode selector,\nop buttons, result label, history widget
+gui -> gui : _setup_layout() — builds display label,\nmode toggle button, 4-col op grid
+note over gui : _build_button_grid() called during setup\nButtons coloured via _THEME / _get_button_colors()\nSymbols resolved via _SYMBOL_MAP
 
-gui_user -> gui : click radio button "Scientific"
-gui -> gui : _on_mode_change(Mode.SCIENTIFIC)
-gui -> gui : _setup_operation_grid()
+gui_user -> gui : click mode toggle button ("scientific")
+gui -> gui : _on_mode_toggle()
+note over gui : _mode = Mode.SCIENTIFIC\nmode toggle btn text = "normal"
+gui -> gui : _rebuild_button_grid()
 gui -> base_mode : get_available_operations(Mode.SCIENTIFIC)
 base_mode --> gui : full OPERATIONS dict
-note over gui : Rebuilds buttons for all ops
+note over gui : Rebuilds buttons for all ops\nwith scientific colour theme
 
-gui_user -> gui : click operation button "add"
-gui -> gui : _on_operation_click("add")
-gui -> gui_ops : OPERATIONS["add"]
-gui_ops --> gui : { method:"add", arity:2, coerce:float }
-gui -> gui : _prompt_operands_dialog("add", 2, float)
-gui -> gui_user : simpledialog.askstring("add", "Enter first operand...")
+gui_user -> gui : click operation button "×" (multiply)
+gui -> gui : _on_operation_click("multiply")
+gui -> gui_ops : OPERATIONS["multiply"]
+gui_ops --> gui : { method:"multiply", arity:2, coerce:float }
+gui -> gui : _prompt_operands_dialog("multiply", 2, float)
+gui -> gui_user : simpledialog.askstring("multiply", "Enter first operand...")
 gui_user --> gui : "10"
 gui -> gui_op_disp : coerce_operands(["10"], float)
 gui_op_disp --> gui : [10.0]
-gui -> gui_user : simpledialog.askstring("add", "Enter second operand...")
+gui -> gui_user : simpledialog.askstring("multiply", "Enter second operand...")
 gui_user --> gui : "5"
 gui -> gui_op_disp : coerce_operands(["5"], float)
 gui_op_disp --> gui : [5.0]
-gui -> gui : _execute_operation("add", [10.0, 5.0])
-gui -> gui_op_disp : dispatch("add", [10.0, 5.0])
-gui_op_disp -> gui_ops : OPERATIONS["add"]["method"]
-gui_ops --> gui_op_disp : "add"
-gui_op_disp -> gui_calc : getattr(calculator, "add")(10.0, 5.0)
-gui_calc --> gui_op_disp : 15.0
-gui_op_disp --> gui : 15.0
-gui -> gui : _update_result_display(15.0)
+gui -> gui : _execute_operation("multiply", [10.0, 5.0])
+gui -> gui_op_disp : dispatch("multiply", [10.0, 5.0])
+gui_op_disp -> gui_ops : OPERATIONS["multiply"]["method"]
+gui_ops --> gui_op_disp : "multiply"
+gui_op_disp -> gui_calc : getattr(calculator, "multiply")(10.0, 5.0)
+gui_calc --> gui_op_disp : 50.0
+gui_op_disp --> gui : 50.0
+gui -> gui : _update_result_display(50.0)
 gui -> gui : _update_history_display()
-gui -> gui_user : result label shows "Result: 15.0"\nhistory widget updated
+gui -> gui_user : result label shows "50.0"
 
 @enduml

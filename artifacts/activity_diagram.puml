@@ -255,15 +255,19 @@ partition "GUI Mode (GuiCalculator)" {
     note right
         __init__ creates OperationDispatcher,
         BaseMode, History; mode = NORMAL.
-        _setup_layout() builds all widgets.
+        _setup_layout() builds display label,
+        mode toggle button, and 4-col op grid
+        (_build_button_grid called at startup).
+        Colours from _THEME; labels from _SYMBOL_MAP.
     end note
     :Call gui.run() — enter Tk main loop;
 
     repeat
-        if (user changes mode radio button?) then (yes)
-            :_on_mode_change(new_mode);
-            :_mode = new_mode;
-            :_setup_operation_grid()\nRebuild buttons via\nBaseMode.get_available_operations();
+        if (user clicks mode toggle button?) then (yes)
+            :_on_mode_toggle();
+            :Toggle _mode (NORMAL <-> SCIENTIFIC);
+            :Update toggle button label;
+            :_rebuild_button_grid()\nDestroy old buttons, call\n_build_button_grid() for new mode;
         else (operation button clicked)
             :_on_operation_click(op_key);
             :Look up op_info from OPERATIONS;

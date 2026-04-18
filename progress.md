@@ -369,3 +369,20 @@ Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid c
 Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 630.5s | Cost: $1.413323 USD | Turns: 15
+
+## Run: iOS-style GuiCalculator redesign (Issue #129)
+
+Branch: task/issue-129-ios-calculator-redesign
+PR target: exp/expert-team
+
+Files changed:
+- src/interface/gui.py — complete visual redesign of GuiCalculator: added _THEME and _SYMBOL_MAP module-level dicts; rebuilt layout with black bg, right-aligned result label (32pt bold monospace), mode toggle button, 4-column flat button grid with orange/dark-gray/medium-gray color groups, hover bindings, and _build_button_grid/_rebuild_button_grid/_get_button_colors/_on_mode_toggle helpers
+- tests/test_gui.py — 83 tests covering _THEME keys, _SYMBOL_MAP mappings, mode toggle, button colors, result label styling, hover bindings, 4-column grid, and dynamic row calculation
+- artifacts/class_diagram.puml — updated GuiCalculator entry: new attributes and methods, removed old ones
+- artifacts/sequence_diagram.puml — updated mode-toggle flow
+- artifacts/activity_diagram.puml — updated GUI mode partition
+
+Risks: GUI tests require a display; 76 skipped in headless CI (expected). No logic changes.
+Tests: 1219 passed, 76 skipped, 0 failed.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
