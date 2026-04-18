@@ -1,3 +1,23 @@
+## Run: Issue #64 — V1 Task 9 - Session History
+
+Branch: task/issue-64-history
+PR target: exp/expert-team
+
+Files changed:
+- src/history.py — new module; History class with __init__(), add_operation(), get_all(), save_to_file(), and _format_entry(); formats entries as operation(arg1, arg2, ...) = result; no external dependencies
+- src/input_handler.py — added import of History from .history; added self._history = History() in InputHandler.__init__(); wrapped run() loop in try/finally to guarantee save_to_file("history.txt") on all exit paths; added "history" special command to display entries via get_all(); added add_operation() call after each successful dispatch
+- artifacts/class_diagram.puml — added History class with all attributes and methods; added _history: History field to InputHandler; added InputHandler --> History relationship arrow
+
+Purpose: Add session-local operation history that records each successful operation in function-call notation, displays on "history" command, and persists to history.txt on session end.
+
+Risks: Low. History recording is additive; only the finally-block wrapping run() touches existing control flow. OSError on file write is caught and printed as a warning rather than crashing the session.
+
+Test results: 489 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #61 — V1 Task 8 - Retry Logic
 
 Branch: task/issue-61-retry-logic
