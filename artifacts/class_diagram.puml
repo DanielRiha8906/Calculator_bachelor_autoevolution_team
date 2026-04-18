@@ -132,6 +132,77 @@ note as MAIN_NOTE
     exits with the returned code.
 end note
 
+abstract class CalculatorMode {
+    +available_operations(): dict[str, dict]
+}
+
+note top of CalculatorMode
+    Module: src/interface/mode.py
+    Abstract base for calculator operating modes.
+    Subclasses filter the OPERATIONS registry
+    to the set visible in that mode.
+end note
+
+class SimpleMode {
+    +available_operations(): dict[str, dict]
+}
+
+note top of SimpleMode
+    Returns NORMAL_OPERATIONS only.
+    Standard arithmetic + basic math operations.
+end note
+
+class ScientificMode {
+    +available_operations(): dict[str, dict]
+}
+
+note top of ScientificMode
+    Returns full OPERATIONS dict
+    (NORMAL_OPERATIONS + SCIENTIFIC_OPERATIONS).
+end note
+
+class GuiCalculator {
+    -_calculator: Calculator
+    -_dispatcher: OperationDispatcher
+    -_history: History
+    -_logger: Logger | None
+    -_current_mode: CalculatorMode
+    -_root: tk.Tk
+    -_display_var: tk.StringVar
+    -_operation_buttons: dict[str, tk.Button]
+    -_history_text: tk.Text
+    -_pending_operation: str | None
+    -_first_operand: float | None
+    -_waiting_for_second: bool
+    +__init__(calculator: Calculator, logger: Logger | None)
+    +run(): None
+    +switch_mode(mode: CalculatorMode): None
+    -_build_window(): None
+    -_build_operation_buttons(): None
+    -_on_digit(value: str): None
+    -_on_clear(): None
+    -_on_operation_select(op_key: str): None
+    -_on_equals(): None
+    -_dispatch(op_key: str, operands: list): float | int
+    -_update_history_display(): None
+    -_handle_error(message: str): None
+}
+
+note top of GuiCalculator
+    Module: src/interface/gui.py
+    Tkinter-based graphical calculator.
+    Reuses Calculator, OperationDispatcher, History.
+    Renders operation buttons dynamically per mode.
+    Entry point: run_gui(calculator, logger) free function.
+end note
+
+note as RUN_GUI_NOTE
+    <b>run_gui</b>(calculator: Calculator, logger: Logger | None): None
+    Free function in src/interface/gui.py
+    Convenience entry point: creates a GuiCalculator
+    and calls gui.run()
+end note
+
 OperationDispatcher --> Calculator : delegates calls to\n_calculator
 
 InputHandler --> Calculator : holds reference via\n_calculator
@@ -146,5 +217,16 @@ CliDispatcher --> Logger : logs errors via\n_logger
 CliDispatcher *-- OperationDispatcher : owns _dispatcher
 CliDispatcher ..> OPERATIONS_NOTE : reads registry for\narity and coerce
 MAIN_NOTE ..> CliDispatcher : creates and calls\ndispatch_from_args()
+
+SimpleMode --|> CalculatorMode : extends
+ScientificMode --|> CalculatorMode : extends
+
+GuiCalculator --> Calculator : holds _calculator
+GuiCalculator *-- OperationDispatcher : owns _dispatcher
+GuiCalculator *-- History : owns _history
+GuiCalculator --> Logger : logs errors via\n_logger
+GuiCalculator --> CalculatorMode : holds _current_mode
+GuiCalculator ..> OPERATIONS_NOTE : mode filters\noperations registry
+RUN_GUI_NOTE ..> GuiCalculator : creates and calls run()
 
 @enduml

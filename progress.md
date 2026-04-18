@@ -291,3 +291,29 @@ Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid c
 Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 630.5s | Cost: $1.413323 USD | Turns: 15
+
+---
+
+## Run: Issue #102 — GUI Expert/Team
+
+Branch: task/issue-102-gui-expert-team
+PR target: exp/expert-team
+
+Files changed:
+- src/interface/mode.py — new; CalculatorMode abstract base class, SimpleMode, ScientificMode subclasses for operation filtering
+- src/interface/gui.py — new; GuiCalculator tkinter-based GUI class with binary/unary operation state machine, mode switching, session history display, error handling; run_gui entry point
+- src/__main__.py — modified; added --gui CLI flag and CALCULATOR_GUI=1 env var routing to run_gui
+- src/interface/__init__.py — modified; exported GuiCalculator, run_gui, CalculatorMode, SimpleMode, ScientificMode
+- tests/test_mode.py — new; 28 tests for mode abstraction layer
+- tests/test_gui.py — new; 70 tests for GuiCalculator with tkinter mocking
+- artifacts/class_diagram.puml — updated; added CalculatorMode hierarchy and GuiCalculator class with relationships
+- artifacts/activity_diagram.puml — updated; added GUI Mode partition with interaction flows
+- artifacts/sequence_diagram.puml — updated; added GUI operation sequence (add 5 + 3)
+
+Purpose: Add tkinter-based GUI for the calculator supporting all operations, simple/scientific mode switching via OOP base abstraction, session history display, and terminal-free operation; reuses existing Calculator/OperationDispatcher/History logic without duplication; coexists with existing CLI and interactive modes.
+
+Risks: tkinter may not be available in all environments; deferred ImportError pattern ensures CLI/tests are unaffected.
+
+Test results: 1041 tests passed (98 new + 943 existing), no regressions.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

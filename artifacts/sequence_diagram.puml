@@ -105,4 +105,58 @@ dispatcher -> cli_user : print("12.0")  [stdout]
 dispatcher --> cli_main : return 0
 cli_main -> cli_main : sys.exit(0)
 
+
+' -----------------------------------------------------------------------
+' GUI mode: user adds 5 + 3
+' -----------------------------------------------------------------------
+== GUI Mode: add 5 + 3 ==
+
+actor User as gui_user
+participant "GuiCalculator" as gui
+participant "OperationDispatcher" as gui_op_disp
+boundary "OPERATIONS\n(src/operations/__init__.py)" as gui_ops
+participant "Calculator" as gui_calc
+participant "History" as gui_hist
+participant "CalculatorMode\n(SimpleMode)" as gui_mode
+
+gui_user -> gui : python -m src --gui
+note over gui : GuiCalculator.__init__:\n- OperationDispatcher(calc)\n- History()\n- _current_mode = SimpleMode()
+gui -> gui : _build_window()
+gui -> gui_mode : available_operations()
+gui_mode --> gui : NORMAL_OPERATIONS
+gui -> gui : _build_operation_buttons()\n[creates one Button per op in NORMAL_OPERATIONS]
+gui -> gui_user : show window (event loop starts)
+
+gui_user -> gui : click digit "5"
+gui -> gui : _on_digit("5")
+note over gui : display = "0" -> replace -> "5"
+
+gui_user -> gui : click operation "add"
+gui -> gui : _on_operation_select("add")
+gui -> gui_mode : available_operations()
+gui_mode --> gui : NORMAL_OPERATIONS
+note over gui : arity=2 (binary op)\nfloat("5") = 5.0
+note over gui : _first_operand=5.0\n_pending_operation="add"\n_waiting_for_second=True\ndisplay reset to "0"
+
+gui_user -> gui : click digit "3"
+gui -> gui : _on_digit("3")
+note over gui : display = "0" -> replace -> "3"
+
+gui_user -> gui : click "="
+gui -> gui : _on_equals()
+note over gui : _waiting_for_second=True\nsecond = float("3") = 3.0\noperands = [5.0, 3.0]
+gui -> gui : _dispatch("add", [5.0, 3.0])
+gui -> gui_op_disp : dispatch("add", [5.0, 3.0])
+gui_op_disp -> gui_ops : OPERATIONS["add"]["method"]
+gui_ops --> gui_op_disp : "add"
+gui_op_disp -> gui_calc : getattr(calculator, "add")(5.0, 3.0)
+gui_calc --> gui_op_disp : 8.0
+gui_op_disp --> gui : 8.0
+gui -> gui : _display_var.set("8")
+gui -> gui_hist : add_operation("add", [5.0, 3.0], 8.0)
+gui -> gui : _update_history_display()
+gui_hist --> gui : ["add(5.0, 3.0) = 8.0"]
+gui -> gui_user : history panel shows "add(5.0, 3.0) = 8.0"
+note over gui : _reset_binary_state():\n_pending_operation=None\n_first_operand=None\n_waiting_for_second=False
+
 @enduml

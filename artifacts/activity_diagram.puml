@@ -203,4 +203,142 @@ partition "CLI Mode (main.py)" {
     endif
 }
 
+
+' -----------------------------------------------------------------------
+' GUI mode flow
+' -----------------------------------------------------------------------
+partition "GUI Mode (python -m src --gui)" {
+    start
+
+    :Create Calculator instance;
+    :Create GuiCalculator(calculator);
+    note right
+        GuiCalculator.__init__ creates:
+        - OperationDispatcher(_calculator)
+        - History()
+        - _current_mode = SimpleMode()
+    end note
+    :_build_window(): create tkinter widget tree;
+    note right
+        Creates display label, mode radio buttons,
+        digit buttons (0-9, "."), Clear, Equals,
+        operation buttons frame, history text panel
+    end note
+    :_build_operation_buttons() for SimpleMode;
+    note right
+        Iterates SimpleMode.available_operations()
+        (NORMAL_OPERATIONS) and creates one
+        Button per entry in _op_frame
+    end note
+    :Call gui.run() -> root.mainloop();
+
+    fork
+        ' --- Digit button pressed ---
+        :User clicks digit button (e.g. "5");
+        :_on_digit("5");
+        if (display == "0" or starts with "Error"?) then (yes)
+            :Replace display with "5";
+        else (no)
+            :Append "5" to display;
+        endif
+
+    fork again
+        ' --- Binary operation selected ---
+        :User clicks binary operation (e.g. "add");
+        :_on_operation_select("add");
+        note right
+            arity == 2
+        end note
+        :Parse current display as float -> first_operand;
+        if (parse raises ValueError/TypeError?) then (yes)
+            :_handle_error(message);
+            :Display "Error: <message>";
+        else (no)
+            :_first_operand = parsed_value;
+            :_pending_operation = "add";
+            :_waiting_for_second = True;
+            :Reset display to "0";
+        endif
+
+    fork again
+        ' --- Equals pressed after binary op ---
+        :User clicks "=";
+        :_on_equals();
+        if (_waiting_for_second == False?) then (yes)
+            :No-op, return;
+        else (no)
+            :Parse current display as second operand;
+            if (parse raises error?) then (yes)
+                :_handle_error(message);
+            else (no)
+                :operands = [_first_operand, second];
+                :_dispatch(_pending_operation, operands);
+                note right
+                    Delegates to
+                    OperationDispatcher.dispatch()
+                end note
+                if (ZeroDivisionError?) then (yes)
+                    :_logger.log_division_by_zero(operands);
+                    :_handle_error("Division by zero");
+                elseif (ValueError or TypeError?) then (yes)
+                    :_log_error(op_key, exc);
+                    :_handle_error(str(exc));
+                else (no)
+                    :Display formatted result;
+                    :_history.add_operation(op_key, operands, result);
+                    :_update_history_display();
+                endif
+                :_reset_binary_state();
+            endif
+        endif
+
+    fork again
+        ' --- Unary operation selected ---
+        :User clicks unary operation (e.g. "square");
+        :_on_operation_select("square");
+        note right
+            arity == 1
+        end note
+        :Parse current display as float -> value;
+        if (parse raises error?) then (yes)
+            :_handle_error(message);
+        else (no)
+            :_dispatch("square", [value]);
+            if (ValueError or TypeError?) then (yes)
+                :_log_error(op_key, exc);
+                :_handle_error(str(exc));
+            else (no)
+                :Display formatted result;
+                :_history.add_operation("square", [value], result);
+                :_update_history_display();
+            endif
+        endif
+
+    fork again
+        ' --- Clear pressed ---
+        :User clicks "C";
+        :_on_clear();
+        :Display = "0";
+        :_pending_operation = None;
+        :_first_operand = None;
+        :_waiting_for_second = False;
+
+    fork again
+        ' --- Mode switch ---
+        :User selects "Scientific" radio button;
+        :_on_mode_change();
+        :switch_mode(ScientificMode());
+        :_build_operation_buttons();
+        note right
+            Rebuilds operation buttons using
+            ScientificMode.available_operations()
+            (full OPERATIONS dict)
+        end note
+
+    end fork
+
+    :User closes window;
+    stop
+}
+
 @enduml
