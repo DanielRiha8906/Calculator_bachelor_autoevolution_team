@@ -98,6 +98,16 @@ Duration: 523.4s | Cost: $1.473231 USD | Turns: 12
 - Intended merge/PR target: exp/naive-team
 Duration: 536.2s | Cost: $1.399869 USD | Turns: 15
 
+## Run Summary — Issue #91: Calculator Modularization (Naive/team)
+
+- Files changed: src/operations/__init__.py (created), src/operations/base.py (created), src/operations/arithmetic.py (created), src/operations/advanced.py (created), src/calculator.py (modified), artifacts/class_diagram.puml (modified)
+- Purpose: Refactor Calculator from a monolithic class into a composition-based facade; ArithmeticOperations and AdvancedOperations extracted into src/operations/ subpackage inheriting from OperationModule abstract base; Calculator delegates every call to the appropriate module; all public interfaces, error messages, and error types remain identical
+- Risks: Low — public interface of Calculator is fully preserved; CalculatorWithHistory requires no changes; error message strings and exception types copied verbatim from original; only internal structure changes; logger names differ (now src.operations.arithmetic / src.operations.advanced instead of src.calculator) — no behavioral impact since NullHandler is the default
+- Tests passed: PENDING (pytest not available in this environment; smoke-tested manually via python3.12 -c invocations covering all methods and all error paths)
+- Branch: task/issue-91-modularization
+- Intended merge/PR target: exp/naive-team
+- Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run Summary — Issue #88: Logic Separation (Naive/team)
 
 - Files changed: src/parser.py (created), src/dispatcher.py (created), src/input_handler.py (converted to backwards-compatible re-export shim), src/cli.py (modified), src/retry_handler.py (modified), src/__main__.py (modified), artifacts/class_diagram.puml (modified)

@@ -14,7 +14,62 @@ note right of logger_module
     All modules use this for error logging.
 end note
 
+package "src.operations" {
+
+    abstract class OperationModule {
+    }
+
+    note right of OperationModule
+        Abstract base class.
+        Provides structural contract for
+        all operation modules.
+    end note
+
+    class ArithmeticOperations {
+        +add(a: float, b: float) : float
+        +subtract(a: float, b: float) : float
+        +multiply(a: float, b: float) : float
+        +divide(a: float, b: float) : float
+    }
+
+    note right of ArithmeticOperations::divide
+        Raises ZeroDivisionError when b == 0
+    end note
+
+    class AdvancedOperations {
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +power(base: float, exponent: float) : float
+        +log(x: float) : float
+        +ln(x: float) : float
+    }
+
+    note right of AdvancedOperations::factorial
+        Raises ValueError for non-int or negative n
+    end note
+
+    note right of AdvancedOperations::square_root
+        Raises ValueError for negative x
+    end note
+
+    note right of AdvancedOperations::log
+        Raises ValueError for non-positive x
+    end note
+
+    note right of AdvancedOperations::ln
+        Raises ValueError for non-positive x
+    end note
+
+    ArithmeticOperations --|> OperationModule
+    AdvancedOperations --|> OperationModule
+}
+
 class Calculator {
+    -_arithmetic : ArithmeticOperations
+    -_advanced : AdvancedOperations
     +add(a: float, b: float) : float
     +subtract(a: float, b: float) : float
     +multiply(a: float, b: float) : float
@@ -29,21 +84,14 @@ class Calculator {
     +ln(x: float) : float
 }
 
-note right of Calculator::factorial
-    Raises ValueError for non-int or negative n
+note right of Calculator
+    Facade: delegates all calls to
+    ArithmeticOperations or AdvancedOperations.
+    Each instance owns its own module instances.
 end note
 
-note right of Calculator::square_root
-    Raises ValueError for negative x
-end note
-
-note right of Calculator::log
-    Raises ValueError for non-positive x
-end note
-
-note right of Calculator::ln
-    Raises ValueError for non-positive x
-end note
+Calculator *-- ArithmeticOperations : owns
+Calculator *-- AdvancedOperations : owns
 
 class CalculatorWithHistory {
     -_calculator : Calculator
@@ -105,7 +153,8 @@ main_module ..> dispatcher_module : imports (run_calculation)
 main_module ..> cli_module : delegates CLI mode
 retry_handler ..> parser_module : imports (BINARY_OPERATORS, parse_operand)
 
-Calculator ..> logger_module : get_logger (error logging)
+ArithmeticOperations ..> logger_module : get_logger (error logging)
+AdvancedOperations ..> logger_module : get_logger (error logging)
 CalculatorWithHistory ..> logger_module : get_logger (error logging)
 parser_module ..> logger_module : get_logger (error logging)
 dispatcher_module ..> logger_module : get_logger (error logging)

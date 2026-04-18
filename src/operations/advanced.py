@@ -1,39 +1,23 @@
-"""Calculator facade that composes arithmetic and advanced operation modules.
+"""Advanced mathematical operation module for the calculator application.
 
-All public method signatures, docstrings, return types, and error behaviours
-are identical to the original monolithic implementation.  Each Calculator
-instance owns its own ArithmeticOperations and AdvancedOperations instances
-and delegates every call to the appropriate module.
+Provides higher-order mathematical operations: factorial, powers, roots,
+and logarithms.  Input validation and error handling mirror the original
+Calculator class so that the Calculator facade can delegate transparently.
 """
 
-from src.operations.arithmetic import ArithmeticOperations
-from src.operations.advanced import AdvancedOperations
+import math
+
+from src.logger import get_logger
+from src.operations.base import OperationModule
 
 
-class Calculator:
-    """A facade that delegates mathematical operations to specialised modules.
+class AdvancedOperations(OperationModule):
+    """Implements advanced mathematical operations.
 
-    Attributes:
-        _arithmetic: Handles add, subtract, multiply, divide.
-        _advanced: Handles factorial, square, cube, roots, power, log, ln.
+    All methods mirror the signatures, docstrings, and error behaviour of
+    the original Calculator class so that the Calculator facade can
+    delegate to this module transparently.
     """
-
-    def __init__(self) -> None:
-        """Initialise the Calculator with dedicated operation module instances."""
-        self._arithmetic: ArithmeticOperations = ArithmeticOperations()
-        self._advanced: AdvancedOperations = AdvancedOperations()
-
-    def add(self, a: float, b: float) -> float:
-        return self._arithmetic.add(a, b)
-
-    def subtract(self, a: float, b: float) -> float:
-        return self._arithmetic.subtract(a, b)
-
-    def multiply(self, a: float, b: float) -> float:
-        return self._arithmetic.multiply(a, b)
-
-    def divide(self, a: float, b: float) -> float:
-        return self._arithmetic.divide(a, b)
 
     def factorial(self, n: int) -> int:
         """Return the factorial of n.
@@ -47,7 +31,14 @@ class Calculator:
         Raises:
             ValueError: If n is not an integer or if n is negative.
         """
-        return self._advanced.factorial(n)
+        logger = get_logger(__name__)
+        if not isinstance(n, int):
+            logger.error(f"factorial({n!r}) failed: expected int, got {type(n).__name__!r}")
+            raise ValueError(f"factorial requires a non-negative integer, got {type(n).__name__!r}")
+        if n < 0:
+            logger.error(f"factorial({n}) failed: negative integer")
+            raise ValueError(f"factorial is not defined for negative integers, got {n}")
+        return math.factorial(n)
 
     def square(self, x: float) -> float:
         """Return the square of x.
@@ -58,7 +49,7 @@ class Calculator:
         Returns:
             x multiplied by itself.
         """
-        return self._advanced.square(x)
+        return x * x
 
     def cube(self, x: float) -> float:
         """Return the cube of x.
@@ -69,7 +60,7 @@ class Calculator:
         Returns:
             x multiplied by itself twice.
         """
-        return self._advanced.cube(x)
+        return x * x * x
 
     def square_root(self, x: float) -> float:
         """Return the square root of x.
@@ -83,7 +74,11 @@ class Calculator:
         Raises:
             ValueError: If x is negative.
         """
-        return self._advanced.square_root(x)
+        logger = get_logger(__name__)
+        if x < 0:
+            logger.error(f"square_root({x}) failed: negative number")
+            raise ValueError(f"square_root requires a non-negative number, got {x}")
+        return math.sqrt(x)
 
     def cube_root(self, x: float) -> float:
         """Return the real cube root of x, supporting negative inputs.
@@ -94,7 +89,7 @@ class Calculator:
         Returns:
             The real cube root of x.
         """
-        return self._advanced.cube_root(x)
+        return math.copysign(abs(x) ** (1 / 3), x)
 
     def power(self, base: float, exponent: float) -> float:
         """Return base raised to the given exponent.
@@ -107,7 +102,7 @@ class Calculator:
             base raised to the power of exponent. Returns 1.0 when both
             base and exponent are 0.
         """
-        return self._advanced.power(base, exponent)
+        return math.pow(base, exponent)
 
     def log(self, x: float) -> float:
         """Return the base-10 logarithm of x.
@@ -121,7 +116,11 @@ class Calculator:
         Raises:
             ValueError: If x is zero or negative.
         """
-        return self._advanced.log(x)
+        logger = get_logger(__name__)
+        if x <= 0:
+            logger.error(f"log({x}) failed: non-positive number")
+            raise ValueError(f"log requires a positive number, got {x}")
+        return math.log10(x)
 
     def ln(self, x: float) -> float:
         """Return the natural (base-e) logarithm of x.
@@ -135,4 +134,8 @@ class Calculator:
         Raises:
             ValueError: If x is zero or negative.
         """
-        return self._advanced.ln(x)
+        logger = get_logger(__name__)
+        if x <= 0:
+            logger.error(f"ln({x}) failed: non-positive number")
+            raise ValueError(f"ln requires a positive number, got {x}")
+        return math.log(x)
