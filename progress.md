@@ -86,4 +86,4 @@ Duration: 496.1s | Cost: $1.142796 USD | Turns: 11
 - Tests passed: Partial — 424 passed, 22 failed (all in test_input_handler.py / test_input_handler_edge_cases.py, all due to the intentional run_calculation return-type change)
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 523.4s | Cost: $1.473231 USD | Turns: 12
