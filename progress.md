@@ -106,7 +106,7 @@ Duration: 536.2s | Cost: $1.399869 USD | Turns: 15
 - Tests passed: PENDING (pytest not available in this environment; smoke-tested manually via python3.12 -c invocations covering all methods and all error paths)
 - Branch: task/issue-91-modularization
 - Intended merge/PR target: exp/naive-team
-- Duration: PENDING | Cost: PENDING | Turns: PENDING
+- Duration: 491.1s | Cost: $1.247722 USD | Turns: 13
 
 ## Run Summary — Issue #88: Logic Separation (Naive/team)
 
