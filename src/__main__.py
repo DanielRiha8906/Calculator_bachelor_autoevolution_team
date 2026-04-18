@@ -21,7 +21,7 @@ def main() -> None:
     method_name = BINARY_OPERATORS[operator]
 
     try:
-        result = run_calculation(first_operand, second_operand, method_name)
+        result, _calc = run_calculation(first_operand, second_operand, method_name)
     except (ValueError, ZeroDivisionError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)

@@ -36,11 +36,36 @@ note right of Calculator::ln
     Raises ValueError for non-positive x
 end note
 
+class CalculatorWithHistory {
+    -_calculator : Calculator
+    -_history : list[str]
+    +add(a: float, b: float) : float
+    +subtract(a: float, b: float) : float
+    +multiply(a: float, b: float) : float
+    +divide(a: float, b: float) : float
+    +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+    +power(base: float, exponent: float) : float
+    +log(x: float) : float
+    +ln(x: float) : float
+    +get_history() : list[str]
+}
+
+note right of CalculatorWithHistory
+    Failed operations are NOT recorded.
+    get_history() returns a copy of the list.
+end note
+
+CalculatorWithHistory *-- Calculator : wraps
+
 class "input_handler" as input_handler <<module>> {
     +BINARY_OPERATORS : dict
     +parse_operand(raw: str) : float
     +parse_input(operand_a: str, operand_b: str, operator: str) : tuple
-    +run_calculation(a: float, b: float, method_name: str) : float
+    +run_calculation(a: float, b: float, method_name: str) : tuple[float, CalculatorWithHistory]
 }
 
 class "cli" as cli_module <<module>> {
@@ -59,7 +84,7 @@ class "__main__" as main_module <<module>> {
     +main() : None
 }
 
-input_handler ..> Calculator : imports / instantiates
+input_handler ..> CalculatorWithHistory : imports / instantiates
 cli_module ..> input_handler : imports / calls
 main_module ..> retry_handler : imports / calls
 main_module ..> input_handler : imports (BINARY_OPERATORS, run_calculation)

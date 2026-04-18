@@ -77,3 +77,13 @@ Duration: 299.4s | Cost: $0.865561 USD | Turns: 17
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
 Duration: 496.1s | Cost: $1.142796 USD | Turns: 11
+
+## Run Summary — CalculatorWithHistory + CLI history flag
+
+- Files changed: src/calculator_with_history.py (created), src/input_handler.py (modified), src/cli.py (modified), src/__main__.py (modified), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)
+- Purpose: Add CalculatorWithHistory stateful wrapper; change run_calculation return type to tuple[float, CalculatorWithHistory]; add --history/-H flag to CLI to display formatted operation history after computation
+- Risks: Intentional interface break — run_calculation now returns a tuple instead of a plain float. All existing tests that compare run_calculation(...) directly to a float will fail (22 tests in test_input_handler.py and test_input_handler_edge_cases.py). These tests must be updated by the Tester to unpack the tuple. __main__.py updated in the same commit to unpack the result; all other callers accounted for.
+- Tests passed: Partial — 424 passed, 22 failed (all in test_input_handler.py / test_input_handler_edge_cases.py, all due to the intentional run_calculation return-type change)
+- Branch: exp/naive-team
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING

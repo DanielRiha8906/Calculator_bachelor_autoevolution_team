@@ -125,23 +125,28 @@ def test_parse_input_word_operator_raises_value_error():
 # ---------------------------------------------------------------------------
 
 def test_run_calculation_add():
-    assert run_calculation(3.0, 4.0, "add") == pytest.approx(7.0)
+    result, _ = run_calculation(3.0, 4.0, "add")
+    assert result == pytest.approx(7.0)
 
 
 def test_run_calculation_subtract():
-    assert run_calculation(10.0, 5.0, "subtract") == pytest.approx(5.0)
+    result, _ = run_calculation(10.0, 5.0, "subtract")
+    assert result == pytest.approx(5.0)
 
 
 def test_run_calculation_multiply():
-    assert run_calculation(6.0, 7.0, "multiply") == pytest.approx(42.0)
+    result, _ = run_calculation(6.0, 7.0, "multiply")
+    assert result == pytest.approx(42.0)
 
 
 def test_run_calculation_divide():
-    assert run_calculation(8.0, 2.0, "divide") == pytest.approx(4.0)
+    result, _ = run_calculation(8.0, 2.0, "divide")
+    assert result == pytest.approx(4.0)
 
 
 def test_run_calculation_divide_float_result():
-    assert run_calculation(1.0, 3.0, "divide") == pytest.approx(1 / 3)
+    result, _ = run_calculation(1.0, 3.0, "divide")
+    assert result == pytest.approx(1 / 3)
 
 
 # ---------------------------------------------------------------------------

@@ -9,7 +9,7 @@ participant "__main__" as main
 participant "cli" as cli
 participant retry_handler
 participant input_handler
-participant Calculator
+participant CalculatorWithHistory
 
 alt CLI mode (sys.argv has arguments)
     User -> main : python -m src OPERAND_A OPERATOR OPERAND_B
@@ -94,33 +94,39 @@ end
 input_handler --> cli : return (a, b, method_name)
 cli -> input_handler : run_calculation(a, b, method_name)
 
-create Calculator
-input_handler -> Calculator : new Calculator()
-input_handler -> Calculator : e.g. add(a, b)
+create CalculatorWithHistory
+input_handler -> CalculatorWithHistory : new CalculatorWithHistory()
+input_handler -> CalculatorWithHistory : e.g. add(a, b)
 
 alt ZeroDivisionError or ValueError raised
-    Calculator --> input_handler : raises exception
+    CalculatorWithHistory --> input_handler : raises exception
     input_handler --> cli : propagates
     cli -> cli : print error to stderr\nsys.exit(1)
 end
 
-Calculator --> input_handler : return result
-input_handler --> cli : return result
+CalculatorWithHistory --> input_handler : return result
+input_handler --> cli : return (result, calc)
 cli -> User : print "Result: {result}"
+
+alt --history flag provided
+    cli -> CalculatorWithHistory : get_history()
+    CalculatorWithHistory --> cli : list[str]
+    cli -> User : print "History:" + entries
+end
 
 note over main, input_handler
     Interactive dispatch flow (retry path succeeded)
 end note
 
-input_handler -> Calculator : run_calculation(first_operand, second_operand, method_name)
+input_handler -> CalculatorWithHistory : run_calculation(first_operand, second_operand, method_name)
 
 alt ZeroDivisionError or ValueError raised
-    Calculator --> input_handler : raises exception
+    CalculatorWithHistory --> input_handler : raises exception
     input_handler --> main : propagates
     main -> main : print error to stderr\nsys.exit(1)
 end
 
-input_handler --> main : return result
+input_handler --> main : return (result, _calc)
 main -> User : print "Result: {result}"
 
 @enduml
