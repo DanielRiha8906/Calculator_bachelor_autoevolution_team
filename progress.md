@@ -14,7 +14,7 @@ Risks: Low. History recording is additive; only the finally-block wrapping run()
 
 Test results: 489 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 518.5s | Cost: $1.184480 USD | Turns: 17
 
 ---
 
