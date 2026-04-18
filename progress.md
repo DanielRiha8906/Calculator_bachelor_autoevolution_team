@@ -225,4 +225,4 @@ Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid c
 
 Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 630.5s | Cost: $1.413323 USD | Turns: 15
