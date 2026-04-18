@@ -1,3 +1,24 @@
+## Run: GUI mode launch flag (--gui) in src/__main__.py
+
+Branch: exp/expert-team
+PR target: exp/expert-team
+
+Files changed:
+- src/__main__.py — added module docstring; added `import sys`; updated `main()` to check for `--gui` in sys.argv; if present, conditionally imports tkinter and GuiCalculator, creates tk.Tk root, instantiates GuiCalculator(root, calc), calls gui.run(); default path calls run_session(calc) unchanged
+- artifacts/class_diagram.puml — updated MAIN_NOTE to describe the --gui routing logic
+- artifacts/activity_diagram.puml — added entry-point dispatch partition before the interactive session flow
+- artifacts/sequence_diagram.puml — added entry-point dispatch sequence section before the interactive CLI session section
+
+Purpose: Allow the calculator to be launched in GUI mode via `python -m src --gui` without breaking the existing default CLI mode (`python -m src`).
+
+Risks: GuiCalculator and tkinter imports are deferred inside the `--gui` branch only, so headless/CI environments remain unaffected when running in CLI mode. The tkinter import in the --gui branch will fail naturally in environments without tkinter, which is the expected and documented behaviour.
+
+Test results: 1243 passed, 0 failed.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: BaseMode abstraction and GUI interface
 
 Branch: exp/expert-team

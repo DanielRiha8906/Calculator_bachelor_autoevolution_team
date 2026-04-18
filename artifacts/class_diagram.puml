@@ -205,10 +205,14 @@ end note
 
 note as MAIN_NOTE
     <b>main()</b>
-    Root-level entry point in main.py
-    Creates Calculator + CliDispatcher,
-    calls dispatch_from_args(sys.argv[1:]),
-    exits with the returned code.
+    Entry point in src/__main__.py
+    Creates a Calculator instance.
+    If "--gui" in sys.argv:
+      imports GuiCalculator, creates tk.Tk root,
+      instantiates GuiCalculator(root, calc), calls run().
+    Otherwise (default CLI mode):
+      calls run_session(calc).
+    GuiCalculator import is conditional — only when --gui is used.
 end note
 
 OperationDispatcher --> Calculator : delegates calls to\n_calculator

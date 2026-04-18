@@ -2,6 +2,35 @@
 
 title Calculator User Interaction Flow
 
+' -----------------------------------------------------------------------
+' Entry-point mode dispatch (src/__main__.py)
+' -----------------------------------------------------------------------
+partition "Entry Point (src/__main__.py main())" {
+    start
+    :Create Calculator instance;
+    if ("--gui" in sys.argv?) then (yes)
+        :import tkinter as tk\nimport GuiCalculator (conditional);
+        :root = tk.Tk();
+        :GuiCalculator(root, calc).run();
+        note right
+            Enters Tk main-event loop.
+            See GUI Mode partition below.
+        end note
+        stop
+    else (no)
+        :run_session(calc);
+        note right
+            Default CLI mode — unchanged behaviour.
+            See interactive session flow below.
+        end note
+        stop
+    endif
+}
+
+' -----------------------------------------------------------------------
+' Interactive session flow (InputHandler)
+' -----------------------------------------------------------------------
+
 start
 
 :Create Calculator instance;
