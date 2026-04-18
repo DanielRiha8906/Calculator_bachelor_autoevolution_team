@@ -5,12 +5,15 @@ title Calculator Sequence — Typical Interaction
 actor User
 participant "__main__" as main
 participant "InputHandler" as handler
-boundary "OPERATIONS" as ops
+participant "OperationDispatcher" as op_disp
+boundary "OPERATIONS\n(src/operations.py)" as ops
 participant "Calculator" as calc
 participant "Logger" as log
 
 main -> calc : calc = Calculator()
 main -> handler : handler = InputHandler(calc)\n[via run_session(calc)]
+note over handler : InputHandler.__init__ creates\nself._dispatcher = OperationDispatcher(calc)
+handler -> op_disp : OperationDispatcher(calc)
 main -> handler : handler.run()
 note over handler : Lazy: Logger() created on\nfirst call to run()
 
@@ -31,15 +34,21 @@ loop session active
     handler -> handler : _prompt_operands(arity=2, coerce=float)
     handler -> User : prompt "Enter first operand:"
     User --> handler : "10"
+    handler -> op_disp : coerce_operands(["10"], float)
+    op_disp --> handler : [10.0]
     handler -> User : prompt "Enter second operand:"
     User --> handler : "5"
-    note over handler : float("10") = 10.0, float("5") = 5.0\noperands = [10.0, 5.0]
+    handler -> op_disp : coerce_operands(["5"], float)
+    op_disp --> handler : [5.0]
+    note over handler : operands = [10.0, 5.0]
 
     handler -> handler : _dispatch("add", [10.0, 5.0])
-    handler -> ops : OPERATIONS["add"]["method"]
-    ops --> handler : "add"
-    handler -> calc : getattr(calculator, "add")(10.0, 5.0)
-    calc --> handler : 15.0
+    handler -> op_disp : dispatch("add", [10.0, 5.0])
+    op_disp -> ops : OPERATIONS["add"]["method"]
+    ops --> op_disp : "add"
+    op_disp -> calc : getattr(calculator, "add")(10.0, 5.0)
+    calc --> op_disp : 15.0
+    op_disp --> handler : 15.0
 
     handler -> User : print "Result: 15.0"
 
@@ -60,13 +69,16 @@ handler --> main : return (run() exits)
 actor User as cli_user
 participant "main.py\nmain()" as cli_main
 participant "CliDispatcher" as dispatcher
-boundary "OPERATIONS" as cli_ops
+participant "OperationDispatcher" as cli_op_disp
+boundary "OPERATIONS\n(src/operations.py)" as cli_ops
 participant "Calculator" as cli_calc
 participant "Logger" as cli_log
 
 cli_user -> cli_main : python main.py add 5 7
 cli_main -> cli_calc : calc = Calculator()
 cli_main -> dispatcher : dispatcher = CliDispatcher(calc)
+note over dispatcher : CliDispatcher.__init__ creates\nself._dispatcher = OperationDispatcher(calc)
+dispatcher -> cli_op_disp : OperationDispatcher(calc)
 cli_main -> dispatcher : dispatch_from_args(["add", "5", "7"])
 note over dispatcher : Lazy: Logger() created on\nfirst call to dispatch_from_args()
 
@@ -76,13 +88,19 @@ cli_ops --> dispatcher : True — { method:"add", arity:2, coerce:float }
 note over dispatcher : len(["5","7"]) == arity(2) — OK
 
 dispatcher -> dispatcher : _coerce_operands(["5","7"], float)
-note over dispatcher : float("5") = 5.0, float("7") = 7.0\noperands = [5.0, 7.0]
+dispatcher -> cli_op_disp : coerce_operands(["5"], float)
+cli_op_disp --> dispatcher : [5.0]
+dispatcher -> cli_op_disp : coerce_operands(["7"], float)
+cli_op_disp --> dispatcher : [7.0]
+note over dispatcher : operands = [5.0, 7.0]
 
 dispatcher -> dispatcher : _dispatch("add", [5.0, 7.0])
-dispatcher -> cli_ops : OPERATIONS["add"]["method"]
-cli_ops --> dispatcher : "add"
-dispatcher -> cli_calc : getattr(calculator, "add")(5.0, 7.0)
-cli_calc --> dispatcher : 12.0
+dispatcher -> cli_op_disp : dispatch("add", [5.0, 7.0])
+cli_op_disp -> cli_ops : OPERATIONS["add"]["method"]
+cli_ops --> cli_op_disp : "add"
+cli_op_disp -> cli_calc : getattr(calculator, "add")(5.0, 7.0)
+cli_calc --> cli_op_disp : 12.0
+cli_op_disp --> dispatcher : 12.0
 
 dispatcher -> cli_user : print("12.0")  [stdout]
 dispatcher --> cli_main : return 0
