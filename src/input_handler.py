@@ -2,10 +2,10 @@
 
 This module provides utilities to validate and parse user-supplied strings,
 map operator symbols to Calculator method names, and execute calculations
-through the Calculator class without using eval() or exec().
+through the CalculatorWithHistory class without using eval() or exec().
 """
 
-from src.calculator import Calculator
+from src.calculator_with_history import CalculatorWithHistory
 
 BINARY_OPERATORS: dict[str, str] = {
     "+": "add",
@@ -67,20 +67,29 @@ def parse_input(
     return a, b, method_name
 
 
-def run_calculation(a: float, b: float, method_name: str) -> float:
-    """Instantiate a Calculator and dispatch the named method.
+def run_calculation(
+    a: float, b: float, method_name: str
+) -> tuple[float, CalculatorWithHistory]:
+    """Instantiate a CalculatorWithHistory and dispatch the named method.
 
     Args:
         a: The first operand.
         b: The second operand.
-        method_name: The Calculator method to call (e.g. 'add', 'divide').
+        method_name: The CalculatorWithHistory method to call
+            (e.g. 'add', 'divide').
 
     Returns:
-        The result of the calculation as a float.
+        A tuple of (result, calculator_instance) where result is the
+        calculated float value and calculator_instance is the
+        CalculatorWithHistory object whose ``get_history()`` reflects the
+        completed operation.
 
     Raises:
-        ZeroDivisionError: Propagated from Calculator.divide when b is zero.
-        ValueError: Propagated from Calculator when inputs are invalid.
+        ZeroDivisionError: Propagated from CalculatorWithHistory.divide
+            when b is zero.
+        ValueError: Propagated from CalculatorWithHistory when inputs are
+            invalid.
     """
-    calc = Calculator()
-    return getattr(calc, method_name)(a, b)
+    calc = CalculatorWithHistory()
+    result: float = getattr(calc, method_name)(a, b)
+    return result, calc

@@ -11,7 +11,7 @@ start
 if (sys.argv has arguments?) then (yes)
     :Delegate to cli.main();
     |cli|
-    :argparse parses\n(operand_a, operator, operand_b);
+    :argparse parses\n(operand_a, operator, operand_b, --history?);
 
     if (wrong argument count\nor --help?) then (yes)
         :argparse prints usage / help;
@@ -58,9 +58,10 @@ endif
 :Lookup method_name via BINARY_OPERATORS;
 :Call run_calculation(first_operand, second_operand, method_name);
 
-|input_handler / Calculator|
-:Instantiate Calculator;
-:Dispatch Calculator method via getattr;
+|input_handler / CalculatorWithHistory|
+:Instantiate CalculatorWithHistory;
+:Dispatch method via getattr;
+:Record successful operation in history;
 
 if (arithmetic error?\n(ZeroDivisionError / ValueError)) then (yes)
     :Print error to stderr;
@@ -69,10 +70,18 @@ if (arithmetic error?\n(ZeroDivisionError / ValueError)) then (yes)
 else (no)
 endif
 
-:Return result float;
+:Return (result, calc) tuple;
 
 |__main__|
 :Print "Result: {result}";
+
+|cli|
+if (--history flag set?) then (yes)
+    :Call calc.get_history();
+    :Print "History:" and each entry;
+else (no)
+endif
+
 end
 
 @enduml

@@ -51,6 +51,13 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="OPERAND_B",
         help="The second numeric operand (e.g. 3 or 1.5).",
     )
+    parser.add_argument(
+        "--history",
+        "-H",
+        action="store_true",
+        default=False,
+        help="Display the calculation history after the result.",
+    )
     return parser
 
 
@@ -70,9 +77,14 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         a, b, method_name = parse_input(args.operand_a, args.operand_b, args.operator)
-        result = run_calculation(a, b, method_name)
+        result, calc = run_calculation(a, b, method_name)
     except (ValueError, ZeroDivisionError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
     print(f"Result: {result}")
+
+    if args.history:
+        print("History:")
+        for entry in calc.get_history():
+            print(f"  {entry}")

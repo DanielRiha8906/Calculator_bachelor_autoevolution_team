@@ -507,3 +507,115 @@ def test_main_invalid_inputs(operand_a, operator, operand_b, capsys):
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "Error:" in captured.err
+
+
+# ---------------------------------------------------------------------------
+# --history / -H flag functionality
+# ---------------------------------------------------------------------------
+
+def test_main_history_flag_long_form_displays_history(capsys):
+    """Verify --history flag displays operation history."""
+    main(argv=["2", "+", "3", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: 5.0" in captured.out
+    assert "History:" in captured.out
+    assert "2.0 + 3.0 = 5.0" in captured.out
+
+
+def test_main_history_flag_short_form_displays_history(capsys):
+    """Verify -H flag displays operation history."""
+    main(argv=["2", "+", "3", "-H"])
+    captured = capsys.readouterr()
+    assert "Result: 5.0" in captured.out
+    assert "History:" in captured.out
+    assert "2.0 + 3.0 = 5.0" in captured.out
+
+
+def test_main_no_history_flag_no_history_output(capsys):
+    """Verify without --history flag, no history is displayed."""
+    main(argv=["2", "+", "3"])
+    captured = capsys.readouterr()
+    assert "Result: 5.0" in captured.out
+    assert "History:" not in captured.out
+
+
+def test_main_history_flag_with_subtraction(capsys):
+    """Verify history displays subtraction operation."""
+    main(argv=["10", "-", "3", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: 7.0" in captured.out
+    assert "History:" in captured.out
+    assert "10.0 - 3.0 = 7.0" in captured.out
+
+
+def test_main_history_flag_with_multiplication(capsys):
+    """Verify history displays multiplication operation."""
+    main(argv=["6", "*", "7", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: 42.0" in captured.out
+    assert "History:" in captured.out
+    assert "6.0 * 7.0 = 42.0" in captured.out
+
+
+def test_main_history_flag_with_division(capsys):
+    """Verify history displays division operation."""
+    main(argv=["8", "/", "2", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: 4.0" in captured.out
+    assert "History:" in captured.out
+    assert "8.0 / 2.0 = 4.0" in captured.out
+
+
+def test_main_history_flag_with_float_division_result(capsys):
+    """Verify history displays float division result correctly."""
+    main(argv=["1", "/", "3", "--history"])
+    captured = capsys.readouterr()
+    assert "Result:" in captured.out
+    assert "History:" in captured.out
+    assert "1.0 / 3.0" in captured.out
+
+
+def test_main_history_flag_with_negative_operands(capsys):
+    """Verify history displays operations with negative operands."""
+    main(argv=["-5", "+", "-3", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: -8.0" in captured.out
+    assert "History:" in captured.out
+
+
+def test_main_history_flag_indentation_formatting(capsys):
+    """Verify history entries are indented with two spaces."""
+    main(argv=["2", "+", "3", "--history"])
+    captured = capsys.readouterr()
+    # The history entries should be indented
+    lines = captured.out.split("\n")
+    history_lines = [line for line in lines if "=" in line and line.startswith("  ")]
+    assert len(history_lines) >= 1
+
+
+def test_main_history_flag_division_by_zero_no_history_output(capsys):
+    """Verify history is not shown when division by zero occurs."""
+    with pytest.raises(SystemExit) as exc_info:
+        main(argv=["5", "/", "0", "--history"])
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    # No history should be displayed on error
+    assert "History:" not in captured.out
+
+
+def test_main_history_flag_invalid_input_no_history_output(capsys):
+    """Verify history is not shown when input is invalid."""
+    with pytest.raises(SystemExit) as exc_info:
+        main(argv=["abc", "+", "3", "--history"])
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "History:" not in captured.out
+
+
+def test_main_history_flag_with_scientific_notation(capsys):
+    """Verify history displays scientific notation operands."""
+    main(argv=["1e2", "+", "1e1", "--history"])
+    captured = capsys.readouterr()
+    assert "Result: 110.0" in captured.out
+    assert "History:" in captured.out
+    assert "+" in captured.out

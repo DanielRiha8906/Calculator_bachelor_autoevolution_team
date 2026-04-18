@@ -202,63 +202,78 @@ class TestParseInputBothOperandsInvalid:
 
 class TestRunCalculationAllOperators:
     def test_add_positive_numbers(self):
-        assert run_calculation(3.0, 4.0, "add") == pytest.approx(7.0)
+        result, _ = run_calculation(3.0, 4.0, "add")
+        assert result == pytest.approx(7.0)
 
     def test_add_negative_numbers(self):
-        assert run_calculation(-3.0, -4.0, "add") == pytest.approx(-7.0)
+        result, _ = run_calculation(-3.0, -4.0, "add")
+        assert result == pytest.approx(-7.0)
 
     def test_add_mixed_signs(self):
-        assert run_calculation(-3.0, 4.0, "add") == pytest.approx(1.0)
+        result, _ = run_calculation(-3.0, 4.0, "add")
+        assert result == pytest.approx(1.0)
 
     def test_subtract_produces_negative(self):
-        assert run_calculation(3.0, 10.0, "subtract") == pytest.approx(-7.0)
+        result, _ = run_calculation(3.0, 10.0, "subtract")
+        assert result == pytest.approx(-7.0)
 
     def test_subtract_same_values_gives_zero(self):
-        assert run_calculation(5.0, 5.0, "subtract") == pytest.approx(0.0)
+        result, _ = run_calculation(5.0, 5.0, "subtract")
+        assert result == pytest.approx(0.0)
 
     def test_subtract_negative_operand(self):
-        assert run_calculation(5.0, -3.0, "subtract") == pytest.approx(8.0)
+        result, _ = run_calculation(5.0, -3.0, "subtract")
+        assert result == pytest.approx(8.0)
 
     def test_multiply_by_zero(self):
-        assert run_calculation(99999.0, 0.0, "multiply") == pytest.approx(0.0)
+        result, _ = run_calculation(99999.0, 0.0, "multiply")
+        assert result == pytest.approx(0.0)
 
     def test_multiply_two_negatives_gives_positive(self):
-        assert run_calculation(-4.0, -5.0, "multiply") == pytest.approx(20.0)
+        result, _ = run_calculation(-4.0, -5.0, "multiply")
+        assert result == pytest.approx(20.0)
 
     def test_multiply_negative_and_positive(self):
-        assert run_calculation(-4.0, 5.0, "multiply") == pytest.approx(-20.0)
+        result, _ = run_calculation(-4.0, 5.0, "multiply")
+        assert result == pytest.approx(-20.0)
 
     def test_divide_produces_float_result(self):
-        assert run_calculation(5.0, 2.0, "divide") == pytest.approx(2.5)
+        result, _ = run_calculation(5.0, 2.0, "divide")
+        assert result == pytest.approx(2.5)
 
     def test_divide_one_third(self):
-        assert run_calculation(1.0, 3.0, "divide") == pytest.approx(1 / 3)
+        result, _ = run_calculation(1.0, 3.0, "divide")
+        assert result == pytest.approx(1 / 3)
 
     def test_divide_negative_by_positive(self):
-        assert run_calculation(-6.0, 2.0, "divide") == pytest.approx(-3.0)
+        result, _ = run_calculation(-6.0, 2.0, "divide")
+        assert result == pytest.approx(-3.0)
 
     def test_divide_positive_by_negative(self):
-        assert run_calculation(6.0, -2.0, "divide") == pytest.approx(-3.0)
+        result, _ = run_calculation(6.0, -2.0, "divide")
+        assert result == pytest.approx(-3.0)
 
     def test_divide_by_zero_raises_zero_division_error(self):
         with pytest.raises(ZeroDivisionError):
             run_calculation(5.0, 0.0, "divide")
 
     def test_divide_zero_by_nonzero(self):
-        assert run_calculation(0.0, 5.0, "divide") == pytest.approx(0.0)
+        result, _ = run_calculation(0.0, 5.0, "divide")
+        assert result == pytest.approx(0.0)
 
     def test_large_number_addition(self):
-        assert run_calculation(1e300, 1e300, "add") == pytest.approx(2e300)
+        result, _ = run_calculation(1e300, 1e300, "add")
+        assert result == pytest.approx(2e300)
 
     def test_multiply_large_numbers_overflow_to_inf(self):
         # 1e200 * 1e200 = 1e400, which exceeds float max (~1.8e308) → inf
         import math
-        result = run_calculation(1e200, 1e200, "multiply")
+        result, _ = run_calculation(1e200, 1e200, "multiply")
         assert math.isinf(result)
 
     def test_multiply_large_numbers_within_range(self):
         # 1e154 * 1e154 = 1e308, which is within float range (~1.8e308)
-        result = run_calculation(1e154, 1e154, "multiply")
+        result, _ = run_calculation(1e154, 1e154, "multiply")
         assert result == pytest.approx(1e308, rel=1e-6)
 
 
