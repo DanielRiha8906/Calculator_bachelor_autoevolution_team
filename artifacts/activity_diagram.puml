@@ -37,33 +37,72 @@ else (no)
 endif
 
 :Create Calculator instance;
-:Print operation menu (print_menu);
-:Prompt user for operation (get_operation);
 
-if (Operation == "exit"?) then (yes)
-  :Print "Goodbye!";
-  stop
-else (no)
-  if (Operation == "__invalid__"?) then (yes)
-    :Loop back to menu;
-    :Print operation menu (print_menu);
+repeat
+  :Print operation menu (print_menu);
+  :attempt = 1;
+  repeat
     :Prompt user for operation (get_operation);
+    if (User typed "exit"?) then (yes)
+      :Print "Goodbye!";
+      stop
+    else (no)
+    endif
+    :validate_operation(choice);
+    if (Valid operation?) then (yes)
+      :Use operation;
+      break
+    else (no)
+      :Print error + attempt counter message;
+      :attempt = attempt + 1;
+    endif
+  repeat while (attempt <= MAX_RETRY_ATTEMPTS?) is (yes)
+  if (Retries exceeded?) then (yes)
+    :Print "Session terminated due to too many invalid operation entries.";
+    stop
   else (no)
-    :Look up operand_count from OPERATIONS;
+  endif
+
+  :Look up operand_count from OPERATIONS;
+
+  :operand_index = 1;
+  :all_operands_ok = true;
+  while (operand_index <= operand_count?) is (yes)
+    :attempt = 1;
+    repeat
+      :Prompt user for operand N;
+      :validate_operand(raw);
+      if (Valid numeric value?) then (yes)
+        :Append float to operands list;
+        break
+      else (no)
+        :Print error + attempt counter message;
+        :attempt = attempt + 1;
+      endif
+    repeat while (attempt <= MAX_RETRY_ATTEMPTS?) is (yes)
+    if (Retries exceeded for this operand?) then (yes)
+      :Print "Maximum retry attempts reached. Returning to menu.";
+      :all_operands_ok = false;
+      break
+    else (no)
+      :operand_index = operand_index + 1;
+    endif
+  endwhile
+
+  if (all_operands_ok?) then (no)
+    :Print "Returning to the main menu.";
+  else (yes)
     group try
-      :Prompt user for operand(s) (get_operands);
-      :Dispatch operation to Calculator (dispatch);
+      :dispatch(operation, operands, calc);
       :Print Result;
     end group
     if (ValueError raised?) then (yes)
       :Print "Error: <message>";
     else (no)
     endif
-    :Loop back to menu;
-    :Print operation menu (print_menu);
-    :Prompt user for operation (get_operation);
   endif
-endif
+
+repeat while (loop continues) is (yes)
 
 stop
 @enduml
