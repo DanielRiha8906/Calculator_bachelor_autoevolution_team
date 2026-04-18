@@ -10,13 +10,15 @@ from __future__ import annotations
 from typing import Callable
 
 from .calculator import Calculator
+from .history import OperationHistory
 from .validation import validate_operation, validate_operand
 
 # Maximum number of re-prompt attempts before the loop is terminated.
 MAX_RETRY_ATTEMPTS: int = 3
 
 # Maps string keys to (display_label, operand_count).
-# operand_count == 1 for unary operations, 2 for binary operations.
+# operand_count == 1 for unary operations, 2 for binary operations,
+# 0 for meta-commands such as "history".
 OPERATIONS: dict[str, tuple[str, int]] = {
     "add":         ("Add (a + b)",                    2),
     "subtract":    ("Subtract (a - b)",               2),
@@ -30,6 +32,7 @@ OPERATIONS: dict[str, tuple[str, int]] = {
     "cube_root":   ("Cube root (∛x)",                 1),
     "log":         ("Log base-10 (log₁₀ x)",          1),
     "ln":          ("Natural logarithm (ln x)",       1),
+    "history":     ("View operation history",         0),
 }
 
 
@@ -39,6 +42,24 @@ def print_menu() -> None:
     for key, (label, _) in OPERATIONS.items():
         print(f"  {key:12s} - {label}")
     print("  exit         - Quit the calculator")
+
+
+def print_history(history: OperationHistory) -> None:
+    """Print all recorded history entries to stdout.
+
+    If no operations have been recorded yet, prints an informational message
+    instead.
+
+    Args:
+        history: The :class:`~src.history.OperationHistory` instance to read
+            from.
+    """
+    entries = history.get_history()
+    if not entries:
+        print("No operations recorded in this session.")
+    else:
+        for entry in entries:
+            print(entry)
 
 
 def get_operation(
@@ -154,7 +175,10 @@ def dispatch(operation: str, operands: list[float], calc: Calculator) -> float:
     raise KeyError(f"Unknown operation: '{operation}'")
 
 
-def run_loop(input_fn: Callable[[str], str] = input) -> None:
+def run_loop(
+    input_fn: Callable[[str], str] = input,
+    history: OperationHistory | None = None,
+) -> None:
     """Run the interactive calculator loop.
 
     Creates a single :class:`~src.calculator.Calculator` instance and
@@ -162,8 +186,10 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
 
     1. Prints the operation menu.
     2. Reads and validates the user's operation choice.
-    3. Collects the required operands.
-    4. Dispatches the calculation and prints the result.
+    3. If the user typed "history", prints the session history and continues.
+    4. Collects the required operands.
+    5. Dispatches the calculation and prints the result.
+    6. Records the successful result in *history*.
 
     The loop exits when the user types "exit".  :exc:`ValueError` raised by
     either operand parsing or the Calculator is caught at the loop level so
@@ -173,8 +199,13 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
         input_fn: Callable used to read user input throughout the session.
             Defaults to the built-in ``input``.  Pass a custom callable in
             tests to avoid interactive I/O.
+        history: :class:`~src.history.OperationHistory` instance used to
+            record successful operations.  When ``None`` (the default) a new
+            instance is created at the start of the loop.
     """
     calc = Calculator()
+    if history is None:
+        history = OperationHistory()
 
     while True:
         print_menu()
@@ -188,6 +219,10 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
             print("Session terminated due to too many invalid operation entries.")
             break
 
+        if operation == "history":
+            print_history(history)
+            continue
+
         _, operand_count = OPERATIONS[operation]
 
         operands = get_operands(operand_count, input_fn)
@@ -198,5 +233,6 @@ def run_loop(input_fn: Callable[[str], str] = input) -> None:
         try:
             result = dispatch(operation, operands, calc)
             print(f"Result: {result}")
+            history.record_operation(operation, operands, result)
         except ValueError as exc:
             print(f"Error: {exc}")

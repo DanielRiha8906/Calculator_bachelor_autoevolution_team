@@ -37,6 +37,7 @@ else (no)
 endif
 
 :Create Calculator instance;
+note right: OperationHistory created; history.txt cleared
 
 repeat
   :Print operation menu (print_menu);
@@ -60,6 +61,20 @@ repeat
   if (Retries exceeded?) then (yes)
     :Print "Session terminated due to too many invalid operation entries.";
     stop
+  else (no)
+  endif
+
+  if (Operation is "history"?) then (yes)
+    :print_history(history);
+    if (history entries exist?) then (yes)
+      :Print each entry;
+    else (no)
+      :Print "No operations recorded in this session.";
+    endif
+  else (no)
+  endif
+  if (Operation is "history"?) then (yes)
+    :continue;
   else (no)
   endif
 
@@ -95,6 +110,8 @@ repeat
     group try
       :dispatch(operation, operands, calc);
       :Print Result;
+      :history.record_operation(operation, operands, result);
+      :Append entry to history.txt;
     end group
     if (ValueError raised?) then (yes)
       :Print "Error: <message>";

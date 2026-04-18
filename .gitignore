@@ -210,3 +210,6 @@ secrets/
 .mcp.json
 key.txt
 prompt_additions.txt
+
+# Calculator session history (runtime artifact, not source)
+history.txt

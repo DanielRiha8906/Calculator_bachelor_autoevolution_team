@@ -189,84 +189,140 @@ def test_get_operands_retry_limit_one(capsys: pytest.CaptureFixture[str]) -> Non
 
 def test_run_loop_operation_retry_exhaustion_terminates(capsys: pytest.CaptureFixture[str]) -> None:
     """If operation retries are exhausted, run_loop must terminate gracefully."""
-    inputs = iter(["bad1", "bad2", "bad3"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Session terminated due to too many invalid operation entries" in captured.out
-    assert "Goodbye" not in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["bad1", "bad2", "bad3"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Session terminated due to too many invalid operation entries" in captured.out
+        assert "Goodbye" not in captured.out
 
 
 def test_run_loop_operation_invalid_then_valid_continues(capsys: pytest.CaptureFixture[str]) -> None:
     """Invalid operation followed by valid operation must continue normally."""
-    inputs = iter(["bad", "add", "5", "10", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result: 15" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["bad", "add", "5", "10", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Result: 15" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_operand_retry_exhaustion_continues(capsys: pytest.CaptureFixture[str]) -> None:
     """If operand retries are exhausted, run_loop must return to menu."""
-    inputs = iter(["add", "bad1", "bad2", "bad3", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Returning to the main menu" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["add", "bad1", "bad2", "bad3", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Returning to the main menu" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_operand_invalid_then_valid_continues(capsys: pytest.CaptureFixture[str]) -> None:
     """Invalid operand followed by valid operands must compute result."""
-    inputs = iter(["add", "bad", "5", "10", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result: 15" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["add", "bad", "5", "10", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Result: 15" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_multiple_retry_cycles(capsys: pytest.CaptureFixture[str]) -> None:
     """Multiple retry cycles across different operations must work."""
-    inputs = iter([
-        "bad1",          # invalid operation - retry
-        "add",           # valid operation
-        "bad",           # invalid operand - retry
-        "3",             # valid first operand
-        "4",             # valid second operand
-        "bad2",          # invalid operation - retry
-        "multiply",      # valid operation
-        "2",             # valid operand
-        "3",             # valid operand
-        "exit"
-    ])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result: 7" in captured.out or "7" in captured.out  # 3 + 4
-    assert "Result: 6" in captured.out or "6" in captured.out  # 2 * 3
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter([
+            "bad1",          # invalid operation - retry
+            "add",           # valid operation
+            "bad",           # invalid operand - retry
+            "3",             # valid first operand
+            "4",             # valid second operand
+            "bad2",          # invalid operation - retry
+            "multiply",      # valid operation
+            "2",             # valid operand
+            "3",             # valid operand
+            "exit"
+        ])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Result: 7" in captured.out or "7" in captured.out  # 3 + 4
+        assert "Result: 6" in captured.out or "6" in captured.out  # 2 * 3
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_exit_skips_retries(capsys: pytest.CaptureFixture[str]) -> None:
     """Typing 'exit' must terminate immediately without triggering retries."""
-    inputs = iter(["bad", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Goodbye" in captured.out
-    # The retry should happen first before exit
-    assert "Please try again" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["bad", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Goodbye" in captured.out
+        # The retry should happen first before exit
+        assert "Please try again" in captured.out
 
 
 def test_run_loop_two_invalid_operations_then_valid(capsys: pytest.CaptureFixture[str]) -> None:
     """Two invalid operations followed by valid must work."""
-    inputs = iter(["bad1", "bad2", "square", "4", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result: 16" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["bad1", "bad2", "square", "4", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Result: 16" in captured.out
+        assert "Goodbye" in captured.out
 
 
 def test_run_loop_two_invalid_operands_then_valid(capsys: pytest.CaptureFixture[str]) -> None:
     """Two invalid operands followed by valid for both operands must work."""
-    inputs = iter(["add", "bad1", "bad2", "5", "10", "exit"])
-    run_loop(input_fn=lambda _prompt: next(inputs))
-    captured = capsys.readouterr()
-    assert "Result: 15" in captured.out
-    assert "Goodbye" in captured.out
+    import tempfile
+    import os
+    from src.history import OperationHistory
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        history = OperationHistory()
+        inputs = iter(["add", "bad1", "bad2", "5", "10", "exit"])
+        run_loop(input_fn=lambda _prompt: next(inputs), history=history)
+        captured = capsys.readouterr()
+        assert "Result: 15" in captured.out
+        assert "Goodbye" in captured.out
