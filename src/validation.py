@@ -1,4 +1,7 @@
-"""Centralised input validation for the calculator.
+"""Interaction layer — input validation.
+
+Validates and sanitizes user input before it is dispatched to the Calculator.
+Part of the interaction layer; has no direct role in arithmetic computation.
 
 This module provides pure validation helpers that are free of I/O side-effects
 and carry no dependency on :mod:`src.input_loop`, ensuring there is no circular

@@ -1,14 +1,25 @@
 @startuml
 title Calculator — Sequence Diagram (interactive divide + CLI add scenarios)
 
-participant User
-participant Main
-participant CLI
-participant InputLoop
-participant OperationHistory
-participant Validation
-participant Calculator
-participant ErrorLogger
+box "Interaction Layer" #LightBlue
+  participant User
+  participant Main
+  participant CLI
+  participant InputLoop
+  participant OperationHistory
+  participant Validation
+  participant ErrorLogger
+end box
+
+box "Calculation Layer" #LightYellow
+  participant Calculator
+end box
+
+note over Calculator
+  Calculator has no direct I/O.
+  It is only called from the Interaction Layer
+  (via InputLoop.dispatch()).
+end note
 
 == CLI mode (e.g. python -m src add 3 5) ==
 

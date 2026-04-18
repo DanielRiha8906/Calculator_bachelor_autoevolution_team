@@ -1,76 +1,87 @@
 @startuml
 title Calculator — Class Diagram
 
-class Calculator {
-  +add(a, b) : float
-  +subtract(a, b) : float
-  +multiply(a, b) : float
-  +divide(a, b) : float
-  +power(base: float, exponent: float) : float
-  +factorial(n: int) : int
-  +square(x: float) : float
-  +cube(x: float) : float
-  +square_root(x: float) : float
-  +cube_root(x: float) : float
-  +log(x: float) : float
-  +ln(x: float) : float
+note "Calculator has no I/O dependencies.\nAll user interaction is handled by the Interaction Layer." as N1
+
+package "Calculation Layer" {
+  class Calculator {
+    +add(a, b) : float
+    +subtract(a, b) : float
+    +multiply(a, b) : float
+    +divide(a, b) : float
+    +power(base: float, exponent: float) : float
+    +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+    +log(x: float) : float
+    +ln(x: float) : float
+  }
+
+  note right of Calculator
+    Uses math.factorial, math.sqrt,
+    math.cbrt, math.log10, math.log
+  end note
 }
 
-note right of Calculator
-  Uses math.factorial, math.sqrt,
-  math.cbrt, math.log10, math.log
-end note
+package "Interaction Layer" {
+  class InputLoop <<module>> {
+    +OPERATIONS : dict
+    +MAX_RETRY_ATTEMPTS : int
+    +print_menu() : None
+    +print_history(history: OperationHistory) : None
+    +get_operation(input_fn: Callable, retry_limit: int) : str | None
+    +get_operands(count: int, input_fn: Callable, retry_limit: int) : list[float] | None
+    +dispatch(operation: str, operands: list, calc: Calculator) : float
+    +run_loop(input_fn: Callable, history: OperationHistory) : None
+  }
 
-class InputLoop <<module>> {
-  +OPERATIONS : dict
-  +MAX_RETRY_ATTEMPTS : int
-  +print_menu() : None
-  +print_history(history: OperationHistory) : None
-  +get_operation(input_fn: Callable, retry_limit: int) : str | None
-  +get_operands(count: int, input_fn: Callable, retry_limit: int) : list[float] | None
-  +dispatch(operation: str, operands: list, calc: Calculator) : float
-  +run_loop(input_fn: Callable, history: OperationHistory) : None
-}
+  class Validation <<module>> {
+    +VALID_OPERATIONS : frozenset[str]
+    +validate_operation(op: str) : tuple[bool, str]
+    +validate_operand(raw: str) : tuple[bool, float, str]
+  }
 
-class Validation <<module>> {
-  +VALID_OPERATIONS : frozenset[str]
-  +validate_operation(op: str) : tuple[bool, str]
-  +validate_operand(raw: str) : tuple[bool, float, str]
-}
+  class Main <<module>> {
+    +main() : None
+  }
 
-class Main <<module>> {
-  +main() : None
-}
+  class CLI <<module>> {
+    +run_cli(history: OperationHistory) : None
+    -_build_parser() : ArgumentParser
+  }
 
-class CLI <<module>> {
-  +run_cli(history: OperationHistory) : None
-  -_build_parser() : ArgumentParser
-}
+  class OperationHistory {
+    -_history : list[str]
+    -_file_path : str
+    +__init__() : None
+    +record_operation(op: str, operands: list, result: float) : None
+    +get_history() : list[str]
+    +clear() : None
+    -_format_entry(op: str, operands: list, result: float) : str
+  }
 
-class OperationHistory {
-  -_history : list[str]
-  -_file_path : str
-  +__init__() : None
-  +record_operation(op: str, operands: list, result: float) : None
-  +get_history() : list[str]
-  +clear() : None
-  -_format_entry(op: str, operands: list, result: float) : str
-}
+  class ErrorLogger {
+    -_history : list[str]
+    -_file_path : str
+    +__init__(file_path: str) : None
+    +log_error(category: str, message: str, context: dict) : None
+    +get_errors() : list[str]
+    -_format_entry(timestamp: str, category: str, message: str, context: dict) : str
+  }
 
-class ErrorLogger {
-  -_history : list[str]
-  -_file_path : str
-  +__init__(file_path: str) : None
-  +log_error(category: str, message: str, context: dict) : None
-  +get_errors() : list[str]
-  -_format_entry(timestamp: str, category: str, message: str, context: dict) : str
-}
+  class ErrorCategories <<enum>> {
+    INVALID_INPUT
+    UNSUPPORTED_OPERATION
+    CALCULATION_ERROR
+    UNEXPECTED_ERROR
+  }
 
-class ErrorCategories <<enum>> {
-  INVALID_INPUT
-  UNSUPPORTED_OPERATION
-  CALCULATION_ERROR
-  UNEXPECTED_ERROR
+  note right of CLI
+    Uses argparse + sys from stdlib.
+    No third-party dependencies.
+  end note
 }
 
 InputLoop --> Calculator : uses
@@ -85,10 +96,5 @@ CLI --> InputLoop : calls dispatch()
 CLI --> OperationHistory : creates / records operation
 CLI --> ErrorLogger : creates / logs errors
 ErrorLogger --> ErrorCategories : uses
-
-note right of CLI
-  Uses argparse + sys from stdlib.
-  No third-party dependencies.
-end note
 
 @enduml

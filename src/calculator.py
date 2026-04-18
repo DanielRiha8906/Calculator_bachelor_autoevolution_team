@@ -1,7 +1,18 @@
+"""Calculation engine layer.
+
+Contains the Calculator class which handles all mathematical operations
+with no I/O side effects.
+"""
+
 import math
 
 
 class Calculator:
+    """Pure calculation engine.
+
+    All methods perform arithmetic operations and return results.
+    No input/output or user interaction occurs in this class.
+    """
     def add(self, a, b):
         return a + b
 

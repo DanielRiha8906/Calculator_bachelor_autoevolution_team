@@ -1,8 +1,8 @@
-"""Interactive input loop for the calculator.
+"""Interaction layer — interactive mode.
 
-Provides a menu-driven REPL that reads operations and operands from the user,
-dispatches them to a Calculator instance, and prints the result.  The loop
-runs until the user types "exit".
+Handles user prompts, menu display, input parsing, retry logic, history
+recording, and error logging. Delegates all arithmetic to the Calculator
+class via dispatch().
 """
 
 from __future__ import annotations

@@ -1,4 +1,7 @@
-"""Operation history tracking for the calculator.
+"""Interaction layer service — operation history.
+
+Records and persists calculator operation history for user review. Part of
+the interaction layer; has no direct role in arithmetic computation.
 
 Records each successful operation to an in-memory list and to a persistent
 ``history.txt`` file in the current working directory.  The file is cleared

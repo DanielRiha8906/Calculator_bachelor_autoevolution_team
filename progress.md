@@ -178,3 +178,29 @@ Branch: task/issue-66-error-logging
 Merge target: exp/structured-team
 
 Duration: 509.7s | Cost: $1.258862 USD | Turns: 12
+
+## Run: Issue #89 — V1 Task 11 - Logic separation - Structured/team
+
+Branch: task/issue-89-logic-separation
+PR target: exp/structured-team
+
+Files changed:
+- src/calculator.py: added module-level docstring declaring it the Calculation engine layer; added Calculator class docstring declaring it a pure calculation engine with no I/O side effects
+- src/input_loop.py: replaced module docstring clarifying Interaction layer — interactive mode role
+- src/cli.py: replaced module docstring clarifying Interaction layer — CLI mode role
+- src/history.py: enhanced module docstring clarifying Interaction layer service — operation history role
+- src/error_logger.py: enhanced module docstring clarifying Interaction layer service — error logging role
+- src/validation.py: enhanced module docstring clarifying Interaction layer — input validation role
+- src/__main__.py: added module docstring clarifying Entry point routing role
+- artifacts/class_diagram.puml: reorganised classes into package blocks "Calculation Layer" and "Interaction Layer"
+- artifacts/activity_diagram.puml: added partition annotations for "Interaction Layer" and "Calculation Layer" boundaries
+- artifacts/sequence_diagram.puml: added box frames for "Interaction Layer" and "Calculation Layer" with architectural note
+- tests/test_layer_separation.py: 40 new tests verifying module docstrings, Calculator purity, artifact layer annotations, and layer dependencies
+
+Purpose: Establish explicit two-layer architecture (Calculation Layer vs Interaction Layer) through documentation and diagrams, making the existing separation visible and verifiable without changing any logic.
+
+Risks: Low. All changes are documentation and diagram annotations only. No logic modified, no interfaces changed, no dependencies added.
+
+Tests passed: 616/616
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
