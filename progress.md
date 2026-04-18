@@ -6,7 +6,7 @@
 - Tests passed: Yes (1362 passed, 0 failed)
 - Branch: task/issue-127-modern-gui-design
 - Intended merge/PR target: exp/naive-team
-- Duration: PENDING | Cost: PENDING | Turns: PENDING
+- Duration: 388.8s | Cost: $1.229396 USD | Turns: 17
 
 ## Run: 2026-04-17
 
