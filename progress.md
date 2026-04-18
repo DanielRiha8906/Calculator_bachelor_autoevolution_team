@@ -273,4 +273,4 @@ Risks: Signature changes to print_menu() and get_operation() break callers that 
 
 Tests: 1047 tests pass, 0 failures.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 782.1s | Cost: $1.989335 USD | Turns: 14
