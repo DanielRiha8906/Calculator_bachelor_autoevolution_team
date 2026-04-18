@@ -131,4 +131,4 @@ Tests passed: 448/448
 Branch: task/issue-60-retry-logic
 Merge target: exp/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 457.7s | Cost: $1.235659 USD | Turns: 12
