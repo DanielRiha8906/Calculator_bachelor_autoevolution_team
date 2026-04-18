@@ -17,6 +17,7 @@ from typing import Callable
 
 from .calculator import Calculator
 from .input_handler import OPERATIONS
+from .logger import Logger
 
 
 class CliDispatcher:
@@ -24,10 +25,19 @@ class CliDispatcher:
 
     Args:
         calculator: A Calculator instance to which operations are dispatched.
+        logger: Optional ``Logger`` instance for error logging.  When ``None``
+            (the default), a ``Logger`` is created lazily inside
+            ``dispatch_from_args()`` so that construction-time callers (e.g.
+            tests) are not forced to deal with log file creation.
     """
 
-    def __init__(self, calculator: Calculator) -> None:
+    def __init__(
+        self,
+        calculator: Calculator,
+        logger: Logger | None = None,
+    ) -> None:
         self._calculator = calculator
+        self._logger: Logger | None = logger
 
     # ------------------------------------------------------------------
     # Public interface
@@ -50,6 +60,9 @@ class CliDispatcher:
             count, coercion failure, domain error, division by zero, or
             type error).
         """
+        if self._logger is None:
+            self._logger = Logger()
+
         if not args:
             self._print_error(
                 "Usage: python main.py <operation> <operand1> [<operand2>]\n"
@@ -60,6 +73,7 @@ class CliDispatcher:
         op_key = args[0].lower()
 
         if op_key not in OPERATIONS:
+            self._logger.log_unsupported_operation(op_key)
             self._print_error(
                 f"Unknown operation '{op_key}'. "
                 f"Available operations: {', '.join(OPERATIONS.keys())}"
@@ -72,6 +86,7 @@ class CliDispatcher:
 
         operand_args = args[1:]
         if len(operand_args) != arity:
+            self._logger.log_invalid_argument_count(op_key, arity, len(operand_args))
             self._print_error(
                 f"Operation '{op_key}' requires {arity} operand(s), "
                 f"but {len(operand_args)} were given."
@@ -87,12 +102,15 @@ class CliDispatcher:
         try:
             result = self._dispatch(op_key, operands)
         except ZeroDivisionError:
+            self._logger.log_division_by_zero(operands)
             self._print_error("Division by zero is not allowed.")
             return 1
         except ValueError as exc:
+            self._logger.log_domain_error(op_key, str(exc))
             self._print_error(str(exc))
             return 1
         except TypeError as exc:
+            self._logger.log_domain_error(op_key, str(exc))
             self._print_error(str(exc))
             return 1
 
@@ -122,6 +140,8 @@ class CliDispatcher:
             try:
                 operands.append(coerce(raw))
             except (ValueError, TypeError):
+                if self._logger is not None:
+                    self._logger.log_invalid_operand(raw, "<numeric>")
                 raise ValueError(
                     f"Invalid operand '{raw}': expected a numeric value."
                 )

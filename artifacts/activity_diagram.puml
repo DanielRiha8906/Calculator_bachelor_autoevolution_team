@@ -20,6 +20,7 @@ repeat
     else (no)
         if (op_choice in OPERATIONS?) then (no)
             :op_attempts += 1;
+            :logger.log_unsupported_operation(op_choice);
             :Print "Error: Unknown operation '<op_choice>'.\nPlease choose from the menu.";
             :Print "Available operations: " + list of keys;
             if (op_attempts >= MAX_RETRIES?) then (yes)
@@ -45,6 +46,7 @@ repeat
                     :Read raw input and call coerce(raw);
                     if (coerce raises ValueError or TypeError?) then (yes)
                         :attempt_count += 1;
+                        :logger.log_invalid_operand(raw, "<numeric>");
                         :Print "Error: Invalid operand '<raw>': expected a numeric value.";
                         if (attempt_count >= MAX_RETRIES?) then (yes)
                             :Raise ValueError:\n"Too many invalid attempts for operand. Ending session.";
@@ -63,10 +65,13 @@ repeat
                 :_dispatch(op_choice, operands)\ngetattr(calculator, method_name)(*operands);
 
                 if (ZeroDivisionError raised?) then (yes)
+                    :logger.log_division_by_zero(operands);
                     :Print "Error: Division by zero is not allowed.";
                 elseif (ValueError raised?) then (yes)
+                    :logger.log_domain_error(op_choice, str(exc));
                     :Print "Error: <exc>";
                 elseif (TypeError raised?) then (yes)
+                    :logger.log_domain_error(op_choice, str(exc));
                     :Print "Error: <exc>";
                 else (no)
                     :Print "Result: <result>";
@@ -94,6 +99,7 @@ partition "CLI Mode (main.py)" {
         :Extract op_key = args[0].lower();
 
         if (op_key in OPERATIONS?) then (no)
+            :logger.log_unsupported_operation(op_key);
             :Print "Error: Unknown operation '<op_key>'" to stderr;
             :Return exit code 1;
             stop
@@ -104,6 +110,7 @@ partition "CLI Mode (main.py)" {
             :operand_args = args[1:];
 
             if (len(operand_args) != arity?) then (yes)
+                :logger.log_invalid_argument_count(op_key, arity, len(operand_args));
                 :Print "Error: wrong operand count" to stderr;
                 :Return exit code 1;
                 stop
@@ -111,6 +118,7 @@ partition "CLI Mode (main.py)" {
                 :_coerce_operands(operand_args, coerce);
 
                 if (coerce raises ValueError or TypeError?) then (yes)
+                    :logger.log_invalid_operand(raw, "<numeric>");
                     :Print "Error: Invalid operand '<raw>'" to stderr;
                     :Return exit code 1;
                     stop
@@ -118,14 +126,17 @@ partition "CLI Mode (main.py)" {
                     :_dispatch(op_key, operands)\ngetattr(calculator, method_name)(*operands);
 
                     if (ZeroDivisionError raised?) then (yes)
+                        :logger.log_division_by_zero(operands);
                         :Print "Error: Division by zero" to stderr;
                         :Return exit code 1;
                         stop
                     elseif (ValueError raised?) then (yes)
+                        :logger.log_domain_error(op_key, str(exc));
                         :Print "Error: <exc>" to stderr;
                         :Return exit code 1;
                         stop
                     elseif (TypeError raised?) then (yes)
+                        :logger.log_domain_error(op_key, str(exc));
                         :Print "Error: <exc>" to stderr;
                         :Return exit code 1;
                         stop

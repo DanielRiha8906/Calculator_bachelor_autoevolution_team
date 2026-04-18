@@ -11,6 +11,7 @@ from typing import Callable
 
 from .calculator import Calculator
 from .history import History
+from .logger import Logger
 
 
 # Maximum number of consecutive invalid inputs before the session is terminated.
@@ -91,16 +92,22 @@ class InputHandler:
         input_fn: Callable used to read user input; defaults to the built-in
             ``input``. Inject a custom callable in tests to avoid touching
             ``builtins.input``.
+        logger: Optional ``Logger`` instance for error logging.  When ``None``
+            (the default), a ``Logger`` is created lazily inside ``run()``
+            so that construction-time callers (e.g. tests) are not forced to
+            deal with log file creation.
     """
 
     def __init__(
         self,
         calculator: Calculator,
         input_fn: Callable[[str], str] | None = None,
+        logger: Logger | None = None,
     ) -> None:
         self._calculator = calculator
         self._input_fn: Callable[[str], str] = input_fn if input_fn is not None else input
         self._history = History()
+        self._logger: Logger | None = logger
 
     # ------------------------------------------------------------------
     # Public interface
@@ -116,6 +123,9 @@ class InputHandler:
         Catches ValueError, ZeroDivisionError, and TypeError, printing a
         user-friendly message without crashing.
         """
+        if self._logger is None:
+            self._logger = Logger()
+
         op_attempts: int = 0
         try:
             while True:
@@ -140,6 +150,7 @@ class InputHandler:
 
                 if op_choice not in OPERATIONS:
                     op_attempts += 1
+                    self._logger.log_unsupported_operation(op_choice)
                     print(f"Error: Unknown operation '{op_choice}'. Please choose from the menu.")
                     print("Available operations: " + ", ".join(OPERATIONS.keys()))
                     if op_attempts >= MAX_RETRIES:
@@ -164,12 +175,15 @@ class InputHandler:
                 try:
                     result = self._dispatch(op_choice, operands)
                 except ZeroDivisionError:
+                    self._logger.log_division_by_zero(operands)
                     print("Error: Division by zero is not allowed.")
                     continue
                 except ValueError as exc:
+                    self._logger.log_domain_error(op_choice, str(exc))
                     print(f"Error: {exc}")
                     continue
                 except TypeError as exc:
+                    self._logger.log_domain_error(op_choice, str(exc))
                     print(f"Error: {exc}")
                     continue
 
@@ -233,6 +247,8 @@ class InputHandler:
                     last_error = ValueError(
                         f"Invalid operand '{raw}': expected a numeric value."
                     )
+                    if self._logger is not None:
+                        self._logger.log_invalid_operand(raw, "<numeric>")
                     print(f"Error: {last_error}")
             else:
                 # All MAX_RETRIES attempts exhausted without a valid value.
@@ -262,6 +278,7 @@ class InputHandler:
 def run_session(
     calculator: Calculator,
     input_fn: Callable[[str], str] | None = None,
+    logger: Logger | None = None,
 ) -> None:
     """Convenience function: create an InputHandler and start the session loop.
 
@@ -269,6 +286,9 @@ def run_session(
         calculator: A Calculator instance to use for computation.
         input_fn: Optional injectable input callable; defaults to built-in
             ``input``.
+        logger: Optional ``Logger`` instance for error logging.  When ``None``
+            (the default), the ``InputHandler`` creates one lazily on first
+            call to ``run()``.
     """
-    handler = InputHandler(calculator, input_fn)
+    handler = InputHandler(calculator, input_fn, logger)
     handler.run()

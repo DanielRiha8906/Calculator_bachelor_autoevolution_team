@@ -7,10 +7,12 @@ participant "__main__" as main
 participant "InputHandler" as handler
 boundary "OPERATIONS" as ops
 participant "Calculator" as calc
+participant "Logger" as log
 
 main -> calc : calc = Calculator()
 main -> handler : handler = InputHandler(calc)\n[via run_session(calc)]
 main -> handler : handler.run()
+note over handler : Lazy: Logger() created on\nfirst call to run()
 
 loop session active
     handler -> handler : _show_menu()
@@ -60,11 +62,13 @@ participant "main.py\nmain()" as cli_main
 participant "CliDispatcher" as dispatcher
 boundary "OPERATIONS" as cli_ops
 participant "Calculator" as cli_calc
+participant "Logger" as cli_log
 
 cli_user -> cli_main : python main.py add 5 7
 cli_main -> cli_calc : calc = Calculator()
 cli_main -> dispatcher : dispatcher = CliDispatcher(calc)
 cli_main -> dispatcher : dispatch_from_args(["add", "5", "7"])
+note over dispatcher : Lazy: Logger() created on\nfirst call to dispatch_from_args()
 
 dispatcher -> cli_ops : "add" in OPERATIONS?
 cli_ops --> dispatcher : True — { method:"add", arity:2, coerce:float }

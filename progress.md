@@ -174,3 +174,30 @@ Risks: None. Change is purely additive (test-only). No production code was modif
 Test results: 23 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 293.9s | Cost: $0.799775 USD | Turns: 13
+
+---
+
+## Run: Issue #67 — V1 Task 10 - Error Logging - Expert/team
+
+Branch: task/issue-67-error-logging
+PR target: exp/expert-team
+
+Files changed:
+- src/logger.py — new module: Logger class with log_unsupported_operation, log_invalid_operand, log_invalid_argument_count, log_division_by_zero, log_domain_error
+- src/__init__.py — added Logger to package exports
+- src/input_handler.py — integrated Logger into InputHandler (optional injection, lazy init, 4 error sites logged)
+- src/cli.py — integrated Logger into CliDispatcher (optional injection, lazy init, 5 error sites logged)
+- artifacts/class_diagram.puml — added Logger class and dependency arrows
+- artifacts/activity_diagram.puml — added logger call steps at error sites
+- artifacts/sequence_diagram.puml — added Logger participant
+- tests/test_logger.py — new: 47 unit/integration tests for Logger class
+- tests/test_input_handler.py — added 9 logging integration tests
+- tests/test_cli.py — added 10 logging integration tests
+
+Purpose: Add dedicated error logging to error.log (append mode, plain-text) for all error categories across interactive and CLI modes, isolated from operation history.
+
+Risks: File I/O in Logger is non-blocking; errors in logging do not propagate. Logger uses duplicate-handler guard for test safety.
+
+Test results: 559 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: 592.5s | Cost: $1.483705 USD | Turns: 13
