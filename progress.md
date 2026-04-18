@@ -1,3 +1,27 @@
+## Run: BaseMode abstraction and GUI interface
+
+Branch: exp/expert-team
+PR target: exp/expert-team
+
+Files changed:
+- src/session/base_mode.py — new module; BaseMode class with get_available_operations(mode) and _filter_operations_for_normal_mode(operations); centralises mode-based operation filtering shared by InputHandler and GuiCalculator
+- src/session/input_handler.py — added import of BaseMode; added _mode_handler: BaseMode instance in __init__; replaced body of _get_available_operations_for_mode() to delegate to _mode_handler.get_available_operations(); removed now-unused NORMAL_OPERATIONS import
+- src/interface/gui.py — new module; GuiCalculator class with Tkinter-based GUI: mode radio buttons, operation button grid, result label, scrollable history widget; delegates calculation to Calculator via OperationDispatcher and mode filtering to BaseMode; tkinter import guarded with try/except for headless/CI environments
+- src/interface/__init__.py — added export of GuiCalculator; added "GuiCalculator" to __all__
+- artifacts/class_diagram.puml — added BaseMode class; added GuiCalculator class with all attributes and methods; added relationship arrows for BaseMode→InputHandler, BaseMode→GuiCalculator, GuiCalculator→Calculator/History/Logger/OperationDispatcher/Mode/OPERATIONS
+- artifacts/activity_diagram.puml — added GUI Mode partition showing mode-switch, button-click, operand dialog, execution, and error-dialog flows
+- artifacts/sequence_diagram.puml — added GUI Mode sequence showing GuiCalculator creation, mode change, and a representative add operation with dialog prompts
+
+Purpose: Extract mode-filtering logic into a shared BaseMode class and introduce a Tkinter-based GUI front-end that reuses all existing calculation, dispatch, and history infrastructure without duplicating logic.
+
+Risks: tkinter is a system-level optional dependency; the module uses try/except ImportError at module level so import succeeds in headless environments; GuiCalculator.__init__ raises ImportError explicitly if tkinter is unavailable at construction time. The _mode_handler composition in InputHandler is a non-breaking additive change.
+
+Test results: 1180 passed, 0 failed.
+
+Duration: 668.6s | Cost: $2.028790 USD | Turns: 11
+
+---
+
 ## Run: Scientific Mode for Interactive Calculator
 
 Branch: task/issue-99-scientific-mode
