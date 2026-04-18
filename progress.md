@@ -226,4 +226,4 @@ Risks: Low. Public API of Calculator is unchanged. All delegation is straightfor
 
 Tests passed: 616/616
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 437.8s | Cost: $1.085196 USD | Turns: 12
