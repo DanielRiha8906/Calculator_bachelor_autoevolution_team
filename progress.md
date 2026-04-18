@@ -35,7 +35,7 @@ Risks: Low. All existing behavior preserved; old import paths continue to work v
 
 Test results: 861 passed, 0 failed, 0 skipped (python -m pytest; includes 146 new modular structure tests)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 676.0s | Cost: $1.887215 USD | Turns: 15
 
 ---
 
