@@ -160,18 +160,36 @@ boundary "OPERATIONS\n(src/operations/__init__.py)" as gui_ops
 participant "Calculator" as gui_calc
 
 gui_user -> gui : GuiCalculator(root, Calculator())
-note over gui : __init__ creates OperationDispatcher,\nBaseMode, History, mode=NORMAL
+note over gui : __init__ creates OperationDispatcher,\nBaseMode, History, mode=NORMAL.\n_mode_toggle_btn, _op_frame, _result_label created.
 gui -> base_mode : BaseMode()
-gui -> gui : _setup_layout() — builds mode selector,\nop buttons, result label, history widget
+gui -> gui : _setup_layout()\nRow 0: result label (right-aligned, Courier 32 bold, black bg)\nRow 1: mode toggle button ("scientific")\nRow 2: operation grid (_setup_operation_grid)\nRow 3: number grid 4x3 (_setup_number_grid)\nAll colors read from _THEME["COLORS"]
+gui -> gui : _setup_operation_grid()
+gui -> base_mode : get_available_operations(Mode.NORMAL)
+base_mode --> gui : NORMAL_OPERATIONS dict
+note over gui : Buttons created per op; color via\n_get_operation_color_group();\nlabel via _get_operation_symbol();\n_bind_hover() bound to each button.
 
-gui_user -> gui : click radio button "Scientific"
+== Mode Toggle: NORMAL → SCIENTIFIC ==
+
+gui_user -> gui : click mode toggle button (label: "scientific")
+gui -> gui : _on_mode_toggle()
+note over gui : Flips mode: NORMAL -> SCIENTIFIC
 gui -> gui : _on_mode_change(Mode.SCIENTIFIC)
+gui -> gui : _mode = Mode.SCIENTIFIC\n_mode_var.set("scientific")\n_mode_toggle_btn.configure(text="normal")
 gui -> gui : _setup_operation_grid()
 gui -> base_mode : get_available_operations(Mode.SCIENTIFIC)
 base_mode --> gui : full OPERATIONS dict
-note over gui : Rebuilds buttons for all ops
+note over gui : Clears old buttons; rebuilds with\nceil(len(ops)/4) rows, 4 columns.\nScientific ops colored bg_scientific (#1C1C1E);\noperators colored bg_operator (#FF9500).
 
-gui_user -> gui : click operation button "add"
+== Hover Effect on a Button ==
+
+gui_user -> gui : <Enter> event on operation button
+note over gui : _bind_hover callback fires:\nbtn.configure(bg=hover_bg)
+gui_user -> gui : <Leave> event on operation button
+note over gui : _bind_hover callback fires:\nbtn.configure(bg=default_bg)
+
+== Operation Click → Result ==
+
+gui_user -> gui : click operation button "+" (add)
 gui -> gui : _on_operation_click("add")
 gui -> gui_ops : OPERATIONS["add"]
 gui_ops --> gui : { method:"add", arity:2, coerce:float }
@@ -191,8 +209,10 @@ gui_ops --> gui_op_disp : "add"
 gui_op_disp -> gui_calc : getattr(calculator, "add")(10.0, 5.0)
 gui_calc --> gui_op_disp : 15.0
 gui_op_disp --> gui : 15.0
+gui -> gui : _history.add_operation("add", [10.0, 5.0], 15.0)
 gui -> gui : _update_result_display(15.0)
+note over gui : result label text set to "15.0"\n(right-aligned, Courier 32 bold, white on black)
 gui -> gui : _update_history_display()
-gui -> gui_user : result label shows "Result: 15.0"\nhistory widget updated
+gui -> gui_user : result label shows "15.0"
 
 @enduml

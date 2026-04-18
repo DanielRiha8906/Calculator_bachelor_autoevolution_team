@@ -151,11 +151,17 @@ class GuiCalculator {
     -_result_label: tk.Label | None
     -_history_text: tk.Text | None
     -_op_frame: tk.Frame | None
+    -_mode_toggle_btn: tk.Button | None
     +__init__(root: tk.Tk, calculator: Calculator, logger: Logger | None)
     +run(): None
     -_setup_layout(): None
-    -_setup_mode_selector(parent: tk.Frame): None
     -_setup_operation_grid(): None
+    -_setup_number_grid(parent: tk.Frame): None
+    -_get_operation_symbol(op_key: str): str
+    -_get_operation_color_group(op_key: str): str
+    -_bind_hover(button: tk.Button, default_bg: str, hover_bg: str): None
+    -_mode_toggle_label(): str
+    -_on_mode_toggle(): None
     -_on_mode_change(new_mode: Mode): None
     -_on_operation_click(op_key: str): None
     -_prompt_operands_dialog(op_key: str, arity: int, coerce: Callable): list | None
@@ -168,13 +174,29 @@ class GuiCalculator {
 
 note top of GuiCalculator
     Module: src/interface/gui.py
-    Tkinter GUI for the calculator.
-    Mode radio buttons (Normal/Scientific),
-    operation button grid, result label,
-    scrollable history widget.
-    All calculation logic delegated to
-    Calculator via OperationDispatcher.
+    iOS-style Tkinter GUI for the calculator.
+    Layout (top to bottom):
+      Row 0: Result display (right-aligned, Courier 32 bold, black bg)
+      Row 1: Single mode toggle button (shows target mode name)
+      Row 2: Operation button grid (4-col, rebuilt on mode switch)
+      Row 3: Number button grid (fixed 4x3, digits 0-9)
+    _THEME dict (module-level) centralises all colors, fonts, padding.
+    Color groups: "operator" (orange), "scientific" (dark gray),
+      "standard" (medium gray), "number" (medium gray).
+    New helpers: _get_operation_symbol(), _get_operation_color_group(),
+      _setup_number_grid(), _bind_hover().
+    All calculation logic delegated to Calculator via OperationDispatcher.
     Mode filtering delegated to BaseMode.
+end note
+
+note as THEME_NOTE
+    <b>_THEME</b> : dict (module-level in src/interface/gui.py)
+    Centralises all visual styling for GuiCalculator.
+    COLORS: bg_window, bg_display, fg_display,
+      bg/fg/active for operator, scientific, standard, number groups.
+    FONTS: display (Courier 32 bold), button (Helvetica 16).
+    PADDING: button_padx=2, button_pady=2.
+    Every widget explicitly reads bg/fg from _THEME["COLORS"].
 end note
 
 note as RUN_SESSION_NOTE

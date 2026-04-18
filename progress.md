@@ -369,3 +369,24 @@ Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid c
 Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 630.5s | Cost: $1.413323 USD | Turns: 15
+
+## Run: iOS-style visual redesign of GuiCalculator
+
+Branch: task/issue-129-ios-calculator-redesign
+PR target: exp/expert-team
+
+Files changed:
+- src/interface/gui.py — full visual redesign of GuiCalculator; added module-level _THEME dict with COLORS/FONTS/PADDING; restructured _setup_layout() for 4-row iOS layout (result display, mode toggle, op grid, number grid); replaced radio-button mode selector with single toggle button via _on_mode_toggle() and _mode_toggle_label(); rewrote _setup_operation_grid() with color-group theming and symbolic labels; added _setup_number_grid() (fixed 4x3, digits 0-9); added _get_operation_symbol(), _get_operation_color_group(), _bind_hover() helpers; updated _update_result_display() to show plain numeric string; preserved all existing calculation/dispatch/error-handling methods unchanged
+- artifacts/class_diagram.puml — updated GuiCalculator class with new attributes (_mode_toggle_btn) and new methods; added THEME_NOTE documenting _THEME dict; updated GuiCalculator note to describe iOS layout and color groups
+- artifacts/activity_diagram.puml — updated GUI Mode partition to reflect toggle button (not radio buttons), dynamic grid rebuild on toggle, and hover effect activity steps
+- artifacts/sequence_diagram.puml — replaced radio button sequence with mode toggle sequence; added hover effect sequence; kept operation click → execution → history update unchanged
+
+Purpose: Deliver a complete iOS-style visual redesign of the GUI calculator while preserving all existing calculation logic and public interfaces.
+
+Risks: Layout uses explicit bg from _THEME everywhere to avoid tkinter color inheritance issues. The _setup_number_grid number buttons are wired up visually but not yet connected to calculator dispatch (no operation key for raw digit input exists in OPERATIONS); this is a wiring point for future work and does not affect existing functionality.
+
+Test results: 1326 passed, 0 failed, 0 skipped (python -m pytest)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---

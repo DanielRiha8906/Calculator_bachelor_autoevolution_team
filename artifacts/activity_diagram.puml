@@ -256,14 +256,37 @@ partition "GUI Mode (GuiCalculator)" {
         __init__ creates OperationDispatcher,
         BaseMode, History; mode = NORMAL.
         _setup_layout() builds all widgets.
+        Layout: result display (row 0),
+        mode toggle button (row 1),
+        operation grid (row 2),
+        number grid 4x3 (row 3).
+        All colors/fonts read from _THEME dict.
     end note
     :Call gui.run() — enter Tk main loop;
 
     repeat
-        if (user changes mode radio button?) then (yes)
+        if (user clicks mode toggle button?) then (yes)
+            :_on_mode_toggle();
+            note right
+                Single toggle button shows target mode name.
+                Flips NORMAL <-> SCIENTIFIC.
+            end note
             :_on_mode_change(new_mode);
             :_mode = new_mode;
-            :_setup_operation_grid()\nRebuild buttons via\nBaseMode.get_available_operations();
+            :Update toggle button label\n(shows opposite mode name);
+            :_setup_operation_grid()\nDynamically rebuilds operation buttons\nvia BaseMode.get_available_operations();\nrows = ceil(len(operations) / 4);
+            note right
+                Each button colored by group:
+                operator -> orange (#FF9500),
+                scientific -> dark gray (#1C1C1E),
+                standard -> medium gray (#333333).
+                _bind_hover() sets Enter/Leave
+                color swap on every button.
+            end note
+        elseif (user hovers over a button?) then (yes)
+            :<Enter> event fires;\n_bind_hover sets bg to hover color;
+            :Mouse moves away;
+            :<Leave> event fires;\n_bind_hover restores default bg color;
         else (operation button clicked)
             :_on_operation_click(op_key);
             :Look up op_info from OPERATIONS;
@@ -294,7 +317,7 @@ partition "GUI Mode (GuiCalculator)" {
                     :_show_error_dialog("Type Error", ...);
                 else (no)
                     :_history.add_operation(...);
-                    :_update_result_display(result);
+                    :_update_result_display(result)\nResult label shows numeric value\n(right-aligned, Courier 32 bold);
                     :_update_history_display();
                 endif
             endif
