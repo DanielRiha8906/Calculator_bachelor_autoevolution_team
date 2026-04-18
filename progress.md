@@ -136,7 +136,7 @@ Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
 - Tests passed: Yes (1239 passed, 0 failed)
 - Branch: task/issue-100-gui-tkinter
 - Intended merge/PR target: exp/naive-team
-- Duration: PENDING | Cost: PENDING | Turns: PENDING
+- Duration: 669.3s | Cost: $1.415656 USD | Turns: 12
 
 ## Run Summary — Issue #97: Scientific Mode (Naive/team)
 
