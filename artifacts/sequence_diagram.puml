@@ -7,6 +7,7 @@ skinparam SequenceLifeLineBorderColor #888888
 participant User
 participant "__main__" as main
 participant "cli" as cli
+participant ModeManager
 participant retry_handler
 participant input_handler
 participant CalculatorWithHistory
@@ -23,6 +24,39 @@ alt CLI mode (sys.argv has arguments)
 
     cli -> input_handler : parse_input(operand_a, operand_b, operator)
 else Interactive mode (no sys.argv arguments)
+    create ModeManager
+    main -> ModeManager : new ModeManager()
+    main -> User : print current mode + prompt for mode command
+    User -> main : raw mode command (or empty)
+    alt "mode science" entered
+        main -> ModeManager : set_mode("scientific")
+    else "mode normal" entered
+        main -> ModeManager : set_mode("normal")
+    end
+
+    alt is_scientific() == true
+        main -> retry_handler : get_scientific_unary_input_with_retries()
+
+        loop up to MAX_RETRIES times
+            retry_handler -> User : prompt for scientific expression
+            User -> retry_handler : raw string
+            retry_handler -> input_handler : parse_unary_function(raw)
+            alt valid
+                note right: break loop
+            else invalid
+                retry_handler -> User : print error + remaining retries
+            end
+        end
+
+        alt retries exhausted
+            retry_handler -> User : "Maximum retries reached. Operation cancelled."
+            retry_handler --> main : None
+            main -> main : return (no output)
+        end
+
+        retry_handler --> main : (method_name, operand)
+        main -> input_handler : run_unary_calculation(operand, method_name)
+    else is_scientific() == false
     main -> retry_handler : get_input_with_retries()
 
     loop up to MAX_RETRIES times
@@ -77,6 +111,7 @@ else Interactive mode (no sys.argv arguments)
 
     retry_handler --> main : (first_operand, operator, second_operand)
     main -> input_handler : run_calculation(first_operand, second_operand, method_name)
+    end
 end
 
 note over cli, input_handler

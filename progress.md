@@ -127,3 +127,13 @@ Duration: 625.4s | Cost: $1.603886 USD | Turns: 16
 - Branch: exp/naive-team
 - Intended merge/PR target: exp/naive-team
 - Duration: 313.8s | Cost: $0.828787 USD | Turns: 11
+
+## Run Summary — Issue #97: Scientific Mode (Naive/team)
+
+- Files changed: src/operations/scientific.py (created), src/mode_manager.py (created), src/scientific_parser.py (created), src/calculator.py (modified), src/calculator_with_history.py (modified), src/parser.py (modified), src/retry_handler.py (modified), src/dispatcher.py (modified), src/__main__.py (modified), src/operations/__init__.py (modified), artifacts/class_diagram.puml (modified), artifacts/activity_diagram.puml (modified), artifacts/sequence_diagram.puml (modified)
+- Purpose: Add scientific mode supporting sin, cos, tan, log, ln, exp, sqrt as unary operations; ScientificOperations module, ModeManager, ScientificParser, get_scientific_unary_input_with_retries, and run_unary_calculation all added; __main__.py initialises ModeManager (default "normal") and routes to scientific flow when mode is "scientific"
+- Risks: Low — existing Calculator.log and Calculator.ln already existed via _advanced delegation and are preserved; ScientificOperations.log/ln have identical semantics; ModeManager starts in "normal" mode so all existing interactive tests continue to exercise the unchanged binary path; stdout banner prints were removed from main() to avoid breaking the test asserting captured.out.startswith("Result:")
+- Tests passed: Yes (1239 passed, 0 failed)
+- Branch: task/issue-97-scientific-mode
+- Intended merge/PR target: exp/naive-team
+Duration: PENDING | Cost: PENDING | Turns: PENDING

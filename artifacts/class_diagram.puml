@@ -65,11 +65,35 @@ package "src.operations" {
 
     ArithmeticOperations --|> OperationModule
     AdvancedOperations --|> OperationModule
+    ScientificOperations --|> OperationModule
+
+    class ScientificOperations {
+        +sin(x: float) : float
+        +cos(x: float) : float
+        +tan(x: float) : float
+        +log(x: float) : float
+        +ln(x: float) : float
+        +exp(x: float) : float
+        +sqrt(x: float) : float
+    }
+
+    note right of ScientificOperations::log
+        Raises ValueError for non-positive x
+    end note
+
+    note right of ScientificOperations::ln
+        Raises ValueError for non-positive x
+    end note
+
+    note right of ScientificOperations::sqrt
+        Raises ValueError for negative x
+    end note
 }
 
 class Calculator {
     -_arithmetic : ArithmeticOperations
     -_advanced : AdvancedOperations
+    -_scientific : ScientificOperations
     +add(a: float, b: float) : float
     +subtract(a: float, b: float) : float
     +multiply(a: float, b: float) : float
@@ -82,16 +106,35 @@ class Calculator {
     +power(base: float, exponent: float) : float
     +log(x: float) : float
     +ln(x: float) : float
+    +sin(x: float) : float
+    +cos(x: float) : float
+    +tan(x: float) : float
+    +exp(x: float) : float
+    +sqrt(x: float) : float
 }
 
 note right of Calculator
     Facade: delegates all calls to
-    ArithmeticOperations or AdvancedOperations.
+    ArithmeticOperations, AdvancedOperations,
+    or ScientificOperations.
     Each instance owns its own module instances.
 end note
 
 Calculator *-- ArithmeticOperations : owns
 Calculator *-- AdvancedOperations : owns
+Calculator *-- ScientificOperations : owns
+
+class ModeManager {
+    -_mode : str
+    +get_mode() : str
+    +set_mode(mode_name: str) : None
+    +is_scientific() : bool
+}
+
+note right of ModeManager
+    Valid modes: "normal", "scientific".
+    Raises ValueError for unknown modes.
+end note
 
 class CalculatorWithHistory {
     -_calculator : Calculator
@@ -108,6 +151,11 @@ class CalculatorWithHistory {
     +power(base: float, exponent: float) : float
     +log(x: float) : float
     +ln(x: float) : float
+    +sin(x: float) : float
+    +cos(x: float) : float
+    +tan(x: float) : float
+    +exp(x: float) : float
+    +sqrt(x: float) : float
     +get_history() : list[str]
 }
 
@@ -120,12 +168,19 @@ CalculatorWithHistory *-- Calculator : wraps
 
 class "parser" as parser_module <<module>> {
     +BINARY_OPERATORS : dict
+    +UNARY_FUNCTIONS : dict
     +parse_operand(raw: str) : float
     +parse_input(operand_a: str, operand_b: str, operator: str) : tuple
 }
 
+class "scientific_parser" as scientific_parser_module <<module>> {
+    +UNARY_FUNCTIONS : dict
+    +parse_unary_function(raw: str) : tuple[str, float]
+}
+
 class "dispatcher" as dispatcher_module <<module>> {
     +run_calculation(a: float, b: float, method_name: str) : tuple[float, CalculatorWithHistory]
+    +run_unary_calculation(x: float, method_name: str) : tuple[float, CalculatorWithHistory]
 }
 
 class "cli" as cli_module <<module>> {
@@ -138,6 +193,7 @@ class "retry_handler" as retry_handler <<module>> {
     +get_operand_with_retries(prompt: str, max_retries: int) : float | None
     +get_operator_with_retries(valid_operators: list[str], max_retries: int) : str | None
     +get_input_with_retries(max_retries: int) : tuple[float, str, float] | None
+    +get_scientific_unary_input_with_retries(max_retries: int) : tuple[str, float] | None
 }
 
 class "__main__" as main_module <<module>> {
@@ -149,15 +205,20 @@ cli_module ..> parser_module : imports (parse_input)
 cli_module ..> dispatcher_module : imports (run_calculation)
 main_module ..> retry_handler : imports / calls
 main_module ..> parser_module : imports (BINARY_OPERATORS)
-main_module ..> dispatcher_module : imports (run_calculation)
+main_module ..> dispatcher_module : imports (run_calculation, run_unary_calculation)
 main_module ..> cli_module : delegates CLI mode
+main_module ..> ModeManager : instantiates
 retry_handler ..> parser_module : imports (BINARY_OPERATORS, parse_operand)
+retry_handler ..> scientific_parser_module : imports (parse_unary_function)
 
 ArithmeticOperations ..> logger_module : get_logger (error logging)
 AdvancedOperations ..> logger_module : get_logger (error logging)
+ScientificOperations ..> logger_module : get_logger (error logging)
 CalculatorWithHistory ..> logger_module : get_logger (error logging)
 parser_module ..> logger_module : get_logger (error logging)
 dispatcher_module ..> logger_module : get_logger (error logging)
 cli_module ..> logger_module : get_logger (error logging)
+scientific_parser_module ..> logger_module : get_logger (error logging)
+ModeManager ..> logger_module : get_logger (mode change logging)
 
 @enduml

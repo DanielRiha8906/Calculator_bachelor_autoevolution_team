@@ -1,8 +1,9 @@
 """Pure parsing logic for the calculator interface.
 
 This module provides utilities to validate and parse user-supplied strings,
-and maps operator symbols to Calculator method names. It contains no I/O,
-no class instantiation, and no side effects beyond error logging.
+and maps operator symbols / function names to Calculator method names. It
+contains no I/O, no class instantiation, and no side effects beyond error
+logging.
 """
 
 from src.logger import get_logger
@@ -12,6 +13,16 @@ BINARY_OPERATORS: dict[str, str] = {
     "-": "subtract",
     "*": "multiply",
     "/": "divide",
+}
+
+UNARY_FUNCTIONS: dict[str, str] = {
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "log": "log",
+    "ln": "ln",
+    "exp": "exp",
+    "sqrt": "sqrt",
 }
 
 
