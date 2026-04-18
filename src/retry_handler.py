@@ -5,7 +5,7 @@ a configurable number of retries before aborting. All validation reuses
 logic from input_handler so there is no duplication of parsing rules.
 """
 
-from src.input_handler import BINARY_OPERATORS, parse_operand
+from src.parser import BINARY_OPERATORS, parse_operand
 
 MAX_RETRIES: int = 3
 

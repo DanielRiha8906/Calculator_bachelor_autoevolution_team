@@ -14,7 +14,8 @@ import argparse
 import logging
 import sys
 
-from src.input_handler import parse_input, run_calculation
+from src.dispatcher import run_calculation
+from src.parser import parse_input
 from src.logger import get_logger
 
 

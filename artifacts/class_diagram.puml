@@ -70,10 +70,13 @@ end note
 
 CalculatorWithHistory *-- Calculator : wraps
 
-class "input_handler" as input_handler <<module>> {
+class "parser" as parser_module <<module>> {
     +BINARY_OPERATORS : dict
     +parse_operand(raw: str) : float
     +parse_input(operand_a: str, operand_b: str, operator: str) : tuple
+}
+
+class "dispatcher" as dispatcher_module <<module>> {
     +run_calculation(a: float, b: float, method_name: str) : tuple[float, CalculatorWithHistory]
 }
 
@@ -93,16 +96,19 @@ class "__main__" as main_module <<module>> {
     +main() : None
 }
 
-input_handler ..> CalculatorWithHistory : imports / instantiates
-cli_module ..> input_handler : imports / calls
+dispatcher_module ..> CalculatorWithHistory : imports / instantiates
+cli_module ..> parser_module : imports (parse_input)
+cli_module ..> dispatcher_module : imports (run_calculation)
 main_module ..> retry_handler : imports / calls
-main_module ..> input_handler : imports (BINARY_OPERATORS, run_calculation)
+main_module ..> parser_module : imports (BINARY_OPERATORS)
+main_module ..> dispatcher_module : imports (run_calculation)
 main_module ..> cli_module : delegates CLI mode
-retry_handler ..> input_handler : imports (BINARY_OPERATORS, parse_operand)
+retry_handler ..> parser_module : imports (BINARY_OPERATORS, parse_operand)
 
 Calculator ..> logger_module : get_logger (error logging)
 CalculatorWithHistory ..> logger_module : get_logger (error logging)
-input_handler ..> logger_module : get_logger (error logging)
+parser_module ..> logger_module : get_logger (error logging)
+dispatcher_module ..> logger_module : get_logger (error logging)
 cli_module ..> logger_module : get_logger (error logging)
 
 @enduml
