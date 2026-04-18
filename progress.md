@@ -294,4 +294,4 @@ Risks: tkinter is not available on headless CI; mitigated by mocking tkinter in 
 
 Tests: 1112 total (1047 pre-existing + 65 new), all pass, 0 failures.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 582.4s | Cost: $1.315426 USD | Turns: 14
