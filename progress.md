@@ -156,4 +156,4 @@ Tests passed: 450/450
 Branch: exp/structured-team
 Merge target: exp/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 687.0s | Cost: $1.789463 USD | Turns: 17
