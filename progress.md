@@ -6,7 +6,7 @@
 - risks: __main__.py now starts interactive loop instead of demo output; no Calculator logic changed
 - tests passed: 96/96 new tests, 394/394 total suite
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 231.5s | Cost: $0.619703 USD | Turns: 13
 
 ## Run: issue-146-functions-naive-team
 
