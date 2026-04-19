@@ -3,4 +3,4 @@ Task:
 - Handle invalid operation selections and invalid operand inputs by showing an error, allowing the user to retry, and terminating the session after a fixed maximum number of failed attempts such as 5.
 - If the user enters an unsupported operation, show an error message and list the available operations; in bash-based CLI mode, invalid input should instead fail fast with a clear error message and no retry loop.
 - Example behavior: if the user enters an unknown operation or a non-numeric operand in interactive mode, the calculator should prompt for valid input again instead of ending immediately.
-- Keep the change scoped to input validation behavior, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Keep the change scoped to input validation behavior, and maintain relevant tests so they accurately reflect the current version of the application.
