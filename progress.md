@@ -1,3 +1,13 @@
+## Run: issue-149-user-input
+
+- branch: task/issue-149-user-input
+- files changed: src/user_input.py (new), src/__main__.py (modified), tests/test_user_input.py (new)
+- purpose: Add interactive user input to calculator CLI via new user_input module (Issue #149)
+- risks: __main__.py now starts interactive loop instead of demo output; no Calculator logic changed
+- tests passed: 96/96 new tests, 394/394 total suite
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-146-functions-naive-team
 
 - branch: task/issue-146-functions-naive-team
