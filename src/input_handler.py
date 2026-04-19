@@ -9,10 +9,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .error_logger import ErrorLogger
 from .history import HistoryTracker
 
 if TYPE_CHECKING:
     from .calculator import Calculator
+
+_error_logger = ErrorLogger()
 
 MAX_VALIDATION_ATTEMPTS = 5
 
@@ -115,6 +118,17 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
                 method, arity = registry[name]
                 return (name, method, arity)
             attempt_count += 1
+            _error_logger.log_error(
+                "UNSUPPORTED_OPERATION",
+                {
+                    "operation": raw,
+                    "operands": "N/A",
+                    "message": (
+                        f"numeric selection '{raw}' out of range"
+                        f" (1–{len(names)})"
+                    ),
+                },
+            )
             print(
                 f"  Invalid number. Choose between 1 and {len(names)}."
                 f" Available operations: {available}."
@@ -124,6 +138,14 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
             return (raw, method, arity)
         else:
             attempt_count += 1
+            _error_logger.log_error(
+                "UNSUPPORTED_OPERATION",
+                {
+                    "operation": raw,
+                    "operands": "N/A",
+                    "message": f"unknown operation '{raw}'",
+                },
+            )
             print(
                 f"  Unknown operation '{raw}'."
                 f" Available operations: {available}."
@@ -158,6 +180,14 @@ def get_operands(arity: int) -> list[float] | None:
                 break
             except ValueError:
                 attempt_count += 1
+                _error_logger.log_error(
+                    "INVALID_OPERAND",
+                    {
+                        "operation": "N/A",
+                        "operands": f"slot {i}: '{raw}'",
+                        "message": f"'{raw}' is not a valid number",
+                    },
+                )
                 print(f"  '{raw}' is not a valid number. Please enter a numeric value.")
                 if attempt_count >= MAX_VALIDATION_ATTEMPTS:
                     print("Maximum invalid input attempts reached. Ending session.")
@@ -240,7 +270,35 @@ def run_interactive_session(
             print(f"  Result: {result}")
             history_tracker.record(operation_name, operands, result)
             failed_attempts = 0
-        except (TypeError, ValueError, ZeroDivisionError) as exc:
+        except ZeroDivisionError as exc:
+            _error_logger.log_error(
+                "DIVISION_BY_ZERO",
+                {
+                    "operation": operation_name,
+                    "operands": ", ".join(str(o) for o in operands),
+                    "message": str(exc),
+                },
+            )
+            print(f"  Error: {exc}")
+        except TypeError as exc:
+            _error_logger.log_error(
+                "INVALID_OPERAND",
+                {
+                    "operation": operation_name,
+                    "operands": ", ".join(str(o) for o in operands),
+                    "message": str(exc),
+                },
+            )
+            print(f"  Error: {exc}")
+        except ValueError as exc:
+            _error_logger.log_error(
+                "INVALID_OPERAND",
+                {
+                    "operation": operation_name,
+                    "operands": ", ".join(str(o) for o in operands),
+                    "message": str(exc),
+                },
+            )
             print(f"  Error: {exc}")
 
     history_tracker.save_to_file()

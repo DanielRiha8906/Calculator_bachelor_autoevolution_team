@@ -643,3 +643,167 @@ class TestMainPyIntegration:
         )
         assert result.returncode == 0
         assert "4" in result.stdout
+
+
+# ==================== Error Logging Tests ====================
+
+class TestCliErrorLogging:
+    """Tests for error logging integration in execute_cli()."""
+
+    @pytest.fixture
+    def calc_and_registry(self):
+        """Fixture to create a Calculator instance and registry."""
+        calculator = Calculator()
+        registry = get_operation_registry(calculator)
+        return calculator, registry
+
+    def test_cli_unknown_operation_logged(self, capsys, calc_and_registry):
+        """Test that unknown operation error is logged."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("unknown_op", ["5"], registry, calc)
+            assert result == 1
+            mock_log.assert_called_once()
+            # Verify the error type
+            call_args = mock_log.call_args
+            assert call_args[0][0] == "UNSUPPORTED_OPERATION"
+
+    def test_cli_arity_mismatch_logged(self, capsys, calc_and_registry):
+        """Test that arity mismatch error is logged."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("add", ["5"], registry, calc)
+            assert result == 1
+            mock_log.assert_called_once()
+            call_args = mock_log.call_args
+            assert call_args[0][0] == "ARGUMENT_COUNT_MISMATCH"
+
+    def test_cli_invalid_operand_logged(self, capsys, calc_and_registry):
+        """Test that invalid operand error is logged."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("add", ["5", "abc"], registry, calc)
+            assert result == 1
+            mock_log.assert_called_once()
+            call_args = mock_log.call_args
+            assert call_args[0][0] == "INVALID_OPERAND"
+
+    def test_cli_division_by_zero_logged(self, capsys, calc_and_registry):
+        """Test that division by zero error is logged."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("divide", ["10", "0"], registry, calc)
+            assert result == 1
+            mock_log.assert_called_once()
+            call_args = mock_log.call_args
+            assert call_args[0][0] == "DIVISION_BY_ZERO"
+
+    def test_cli_successful_operation_not_logged(self, capsys, calc_and_registry):
+        """Test that successful operations don't trigger logging."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("add", ["5", "3"], registry, calc)
+            assert result == 0
+            mock_log.assert_not_called()
+
+    def test_cli_error_message_still_printed(self, capsys, calc_and_registry):
+        """Test that error message is still printed to stderr (unchanged behavior)."""
+        calc, registry = calc_and_registry
+
+        result = execute_cli("unknown_op", ["5"], registry, calc)
+        captured = capsys.readouterr()
+        assert result == 1
+        assert "Error:" in captured.err
+        assert "unknown_op" in captured.err
+
+    def test_cli_log_error_context_has_operation(self, capsys, calc_and_registry):
+        """Test that logged context includes operation name."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            execute_cli("unknown_op", ["5"], registry, calc)
+            call_args = mock_log.call_args
+            context = call_args[0][1]
+            assert "operation" in context
+            assert context["operation"] == "unknown_op"
+
+    def test_cli_log_error_context_has_message(self, capsys, calc_and_registry):
+        """Test that logged context includes error message."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            execute_cli("unknown_op", ["5"], registry, calc)
+            call_args = mock_log.call_args
+            context = call_args[0][1]
+            assert "message" in context
+            assert len(context["message"]) > 0
+
+    def test_cli_arity_mismatch_context_includes_operands(self, capsys, calc_and_registry):
+        """Test that arity mismatch log includes operands."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            execute_cli("add", ["5"], registry, calc)
+            call_args = mock_log.call_args
+            context = call_args[0][1]
+            assert "operands" in context
+
+    def test_cli_invalid_operand_context_includes_raw_value(self, capsys, calc_and_registry):
+        """Test that invalid operand log includes the problematic value."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            execute_cli("add", ["5", "abc"], registry, calc)
+            call_args = mock_log.call_args
+            context = call_args[0][1]
+            assert "abc" in str(context)
+
+    def test_cli_division_by_zero_context_has_operands(self, capsys, calc_and_registry):
+        """Test that division by zero log includes the operands."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            execute_cli("divide", ["10", "0"], registry, calc)
+            call_args = mock_log.call_args
+            context = call_args[0][1]
+            assert "operands" in context
+
+    def test_cli_sqrt_negative_logged(self, capsys, calc_and_registry):
+        """Test that sqrt of negative number is logged as INVALID_OPERAND."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("square_root", ["-4"], registry, calc)
+            assert result == 1
+            mock_log.assert_called_once()
+            call_args = mock_log.call_args
+            # Could be INVALID_OPERAND or similar
+            assert call_args[0][0] in ["INVALID_OPERAND"]
+
+    def test_cli_log_called_before_return(self, capsys, calc_and_registry):
+        """Test that log_error is called before returning error code."""
+        from unittest.mock import patch
+        calc, registry = calc_and_registry
+
+        with patch('src.cli._error_logger.log_error') as mock_log:
+            result = execute_cli("unknown_op", ["5"], registry, calc)
+            # Verify log was called
+            assert mock_log.called
+            # And we got an error result
+            assert result == 1

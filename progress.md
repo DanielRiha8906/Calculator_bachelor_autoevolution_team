@@ -190,3 +190,16 @@ Duration: 40.2s | Cost: $0.142323 USD | Turns: 10
 - **Intended PR target:** exp2/expert-team
 
 Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
+
+---
+
+## Run: issue-172-error-logging — Add error logging to calculator
+
+- **Branch:** task/issue-172-error-logging
+- **Files changed:** src/error_logger.py (created), src/cli.py (modified), src/input_handler.py (modified), src/__init__.py (modified), tests/test_error_logger.py (created), tests/test_cli.py (modified), tests/test_input_handler.py (modified)
+- **Purpose:** Add dedicated error logging to error.log for invalid usage and calculation failures across both interactive and CLI modes. Logs UNSUPPORTED_OPERATION, INVALID_OPERAND, ARGUMENT_COUNT_MISMATCH, DIVISION_BY_ZERO, and INVALID_DOMAIN errors with ISO 8601 timestamps. Kept separate from user-facing history tracking.
+- **Risks:** Low — purely additive logging; log failures are silently swallowed so they cannot crash the application. User-facing messages and control flow unchanged.
+- **Tests passed:** Yes — 469 tests passed (83 new: 51 in test_error_logger.py, 13 in test_cli.py, 19 in test_input_handler.py), 0 failures.
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

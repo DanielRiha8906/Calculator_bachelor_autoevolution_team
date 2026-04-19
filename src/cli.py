@@ -8,7 +8,10 @@ from a non-interactive (CLI) context.
 import sys
 
 from src.calculator import Calculator
+from src.error_logger import ErrorLogger
 from src.input_handler import get_operation_registry
+
+_error_logger = ErrorLogger()
 
 
 def parse_arguments(args: list[str]) -> tuple[str, list[str]]:
@@ -99,6 +102,14 @@ def execute_cli(
     # --- operation look-up ---
     if operation_name not in registry:
         available = ", ".join(registry.keys())
+        _error_logger.log_error(
+            "UNSUPPORTED_OPERATION",
+            {
+                "operation": operation_name,
+                "operands": ", ".join(operand_strs),
+                "message": f"unknown operation '{operation_name}'",
+            },
+        )
         print(
             f"Error: unknown operation '{operation_name}'."
             f" Available operations: {available}",
@@ -111,6 +122,17 @@ def execute_cli(
     # --- arity validation ---
     actual = len(operand_strs)
     if actual != arity:
+        _error_logger.log_error(
+            "ARGUMENT_COUNT_MISMATCH",
+            {
+                "operation": operation_name,
+                "operands": ", ".join(operand_strs),
+                "message": (
+                    f"operation '{operation_name}' expects {arity}"
+                    f" operand(s), got {actual}"
+                ),
+            },
+        )
         print(
             f"Error: operation '{operation_name}' expects {arity}"
             f" operand(s), got {actual}.",
@@ -124,13 +146,51 @@ def execute_cli(
         try:
             operands.append(convert_operand(raw))
         except ValueError:
+            _error_logger.log_error(
+                "INVALID_OPERAND",
+                {
+                    "operation": operation_name,
+                    "operands": raw,
+                    "message": f"operand '{raw}' is not a valid number",
+                },
+            )
             print(f"Error: operand '{raw}' is not a valid number.", file=sys.stderr)
             return 1
 
     # --- dispatch ---
     try:
         result = method(*operands)
-    except (TypeError, ValueError, ZeroDivisionError) as exc:
+    except ZeroDivisionError as exc:
+        _error_logger.log_error(
+            "DIVISION_BY_ZERO",
+            {
+                "operation": operation_name,
+                "operands": ", ".join(str(o) for o in operands),
+                "message": str(exc),
+            },
+        )
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except TypeError as exc:
+        _error_logger.log_error(
+            "INVALID_OPERAND",
+            {
+                "operation": operation_name,
+                "operands": ", ".join(str(o) for o in operands),
+                "message": str(exc),
+            },
+        )
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        _error_logger.log_error(
+            "INVALID_OPERAND",
+            {
+                "operation": operation_name,
+                "operands": ", ".join(str(o) for o in operands),
+                "message": str(exc),
+            },
+        )
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
