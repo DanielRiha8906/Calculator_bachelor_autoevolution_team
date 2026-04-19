@@ -313,4 +313,4 @@ Risks: tests/test_gui.py imports OperandInputWidget which no longer exists — T
 
 Tests: 1047 non-GUI tests pass. GUI tests require Tester rewrite (OperandInputWidget removed as intended by architecture).
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 553.0s | Cost: $1.424852 USD | Turns: 14
