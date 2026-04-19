@@ -6,7 +6,7 @@
 - risks: None — diagram-only update, no source changes
 - tests passed: N/A
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 166.6s | Cost: $0.438934 USD | Turns: 17
 
 ## Run: issue-167-history (2026-04-19)
 
