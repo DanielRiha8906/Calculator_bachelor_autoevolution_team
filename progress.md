@@ -1,6 +1,34 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-150-user-input
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `REPLInterface` class with all attributes and methods; added relationship `REPLInterface o-- Calculator`; added notes for `OPERATIONS`, `last_result`, and `_execute`
+  - `artifacts/activity_diagram.puml` — restructured to show full REPL execution flow (instantiation → menu loop → operand prompting → Calculator dispatch → result display); retained all Calculator operation branches with guard conditions
+  - `artifacts/sequence_diagram.puml` — added `REPLInterface` and `User` participants; shows full interactive session: menu display, operand prompting, Calculator dispatch for all 12 operations, error handling, result carry-over
+- **Purpose:** Sync PlantUML diagrams with current source after issue-150 added `REPLInterface`
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 103.7s | Cost: $0.278066 USD | Turns: 16
+
+## Run: issue-150-user-input (2026-04-19)
+
+- **Branch:** task/issue-150-user-input
+- **Files changed:**
+  - `src/repl.py` — new file; `REPLInterface` class with REPL loop, operation menu, operand prompting, result carry-over, error handling
+  - `src/__main__.py` — replaced demo prints with `main()` wiring `Calculator` + `REPLInterface`
+  - `src/__init__.py` — added `REPLInterface` to exports
+  - `tests/test_repl.py` — new file; 105 tests covering all REPL paths
+- **Purpose:** Add interactive CLI input (REPL) to calculator so users can select operations and enter values at runtime; result of each operation carries forward as default for next
+- **Risks:** `Calculator.logarithm` only accepts one argument (base-10); REPL uses `math.log(x, base)` directly for the 2-argument logarithm — a future cycle should add `Calculator.logarithm(x, base)` for uniform dispatch
+- **Tests passed:** 271/271 (166 pre-existing + 105 new)
+- **Intended PR target:** exp2/structured-team
+
+Duration: 394.4s | Cost: $0.924388 USD | Turns: 22
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-147-math-functions
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added 7 new methods: `square`, `cube`, `square_root`, `cube_root`, `power`, `logarithm`, `natural_logarithm`; added notes for `square_root`, `logarithm`, `natural_logarithm` error conditions

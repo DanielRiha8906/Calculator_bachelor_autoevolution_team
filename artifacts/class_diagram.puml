@@ -44,10 +44,43 @@ note right of Calculator::natural_logarithm
   Raises ValueError if x <= 0.
 end note
 
+class REPLInterface {
+    +OPERATIONS : dict
+    -calculator : Calculator
+    -last_result : float | None
+    +__init__(calculator: Calculator)
+    +run() : void
+    +get_operation_selection() : str
+    +get_operand(prompt: str) : float
+    +display_result(operation: str, operands: list, result: float) : void
+    -_first_operand_prompt(label: str) : str
+    -_execute(operation: str, operands: list) : float
+}
+
+note right of REPLInterface::OPERATIONS
+  Class-level dict mapping operation
+  name → {arity, label} metadata
+  for all 12 supported operations.
+end note
+
+note right of REPLInterface::last_result
+  Carries the result of the last
+  operation forward as the default
+  first operand for the next operation.
+end note
+
+note right of REPLInterface::_execute
+  Dispatches to Calculator methods.
+  Uses math.log(x, base) directly
+  for the 2-argument logarithm case.
+end note
+
 class "__main__" as Main {
     +main() : void
 }
 
 Main ..> Calculator : instantiates
+Main ..> REPLInterface : instantiates
+REPLInterface o-- Calculator : uses >
 
 @enduml
