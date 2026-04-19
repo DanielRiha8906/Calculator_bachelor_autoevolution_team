@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-149-user-input
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include user_input module added in issue-149 (InvalidInputError, OPERATIONS, parse_number, get_operands, execute_operation, format_result, run_interactive)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-149-user-input
 
 - branch: task/issue-149-user-input
