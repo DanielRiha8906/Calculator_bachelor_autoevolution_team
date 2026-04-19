@@ -29,3 +29,13 @@ Duration: 124.9s | Cost: $0.353112 USD | Turns: 16
 - **Tests passed:** N/A (no code changes)
 
 Duration: 55.5s | Cost: $0.188179 USD | Turns: 14
+
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-142-test-suite-expert-team
+- **Files changed:** artifacts/class_diagram.puml (verified current), artifacts/activity_diagram.puml (verified current), artifacts/sequence_diagram.puml (verified current)
+- **Purpose:** Verify PlantUML diagrams reflect current state of src/ (Calculator class with add, subtract, multiply, divide methods; main() entry point). No source changes since last diagram run — diagrams remain accurate.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
