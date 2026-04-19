@@ -8,7 +8,7 @@
 - **Risks:** Backward compatibility shims add indirection; error_logger.py retains canonical state to avoid breaking test_error_logger.py patch paths; interactive/input_handler.py re-exports from session.py to preserve inspect.getsource assertion in test_logic_separation.py.
 - **Tests passed:** 622/622 (99 new tests added)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 897.3s | Cost: $2.714352 USD | Turns: 16
 
 ## Run: update-diagrams — PlantUML diagram update
 
