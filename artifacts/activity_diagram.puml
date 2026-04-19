@@ -1,0 +1,27 @@
+@startuml activity_diagram
+
+start
+
+:Instantiate Calculator;
+
+:Call add(10, 5);
+:Print "Addition: 15";
+
+:Call subtract(10, 5);
+:Print "Subtraction: 5";
+
+:Call multiply(10, 5);
+:Print "Multiplication: 50";
+
+:Call divide(10, 5);
+
+if (divisor == 0?) then (yes)
+  :Raise ZeroDivisionError;
+  stop
+else (no)
+  :Print "Division: 2.0";
+endif
+
+stop
+
+@enduml

@@ -1,0 +1,15 @@
+@startuml class_diagram
+
+class Calculator {
+    +add(a, b) : float
+    +subtract(a, b) : float
+    +multiply(a, b) : float
+    +divide(a, b) : float
+}
+
+note right of Calculator::divide
+  Raises ZeroDivisionError
+  when b == 0
+end note
+
+@enduml

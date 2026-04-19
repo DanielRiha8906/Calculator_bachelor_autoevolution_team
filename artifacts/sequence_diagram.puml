@@ -1,0 +1,24 @@
+@startuml sequence_diagram
+
+participant "main()" as Main
+participant "Calculator" as Calc
+
+Main -> Calc : <<create>>
+
+Main -> Calc : add(10, 5)
+Calc --> Main : 15
+
+Main -> Calc : subtract(10, 5)
+Calc --> Main : 5
+
+Main -> Calc : multiply(10, 5)
+Calc --> Main : 50
+
+Main -> Calc : divide(10, 5)
+alt divisor != 0
+    Calc --> Main : 2.0
+else divisor == 0
+    Calc --> Main : ZeroDivisionError
+end
+
+@enduml
