@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-161-cli-mode
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include cli module (run_cli, parse_and_evaluate, _eval_node) and __main__ dispatch logic added in issue-161
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-161-cli-mode (2026-04-19)
 
 - branch: task/issue-161-cli-mode
