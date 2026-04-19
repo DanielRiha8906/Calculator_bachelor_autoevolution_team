@@ -38,4 +38,4 @@ Duration: 55.6s | Cost: $0.154226 USD | Turns: 12
 - **Risks:** None — tests only, no source code modified
 - **Tests passed:** Yes — all 68 tests pass, no regressions
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 175.2s | Cost: $0.390062 USD | Turns: 14
