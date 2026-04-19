@@ -19,7 +19,7 @@ jobs:
         actions: read   
     uses: ./.github/workflows/pr-request-changes-shared.yml
     with:
-      branch: exp/structured-team
+      branch: exp2/structured-team
       experiment_name: structured-team
       pr_number: ${{ github.event.pull_request.number }}
       pr_title: ${{ github.event.pull_request.title }}

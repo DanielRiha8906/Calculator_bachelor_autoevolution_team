@@ -19,7 +19,7 @@ jobs:
         actions: read   
     uses: ./.github/workflows/pr-request-changes-shared.yml
     with:
-      branch: exp/expert-team
+      branch: exp2/expert-team
       experiment_name: expert-team
       pr_number: ${{ github.event.pull_request.number }}
       pr_title: ${{ github.event.pull_request.title }}
