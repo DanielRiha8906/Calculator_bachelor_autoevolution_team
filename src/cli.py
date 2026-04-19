@@ -9,7 +9,7 @@ import sys
 
 from src.calculator import Calculator
 from src.error_logger import ErrorLogger
-from src.input_handler import get_operation_registry
+from src.core.operations import get_operation_registry
 
 _error_logger = ErrorLogger()
 

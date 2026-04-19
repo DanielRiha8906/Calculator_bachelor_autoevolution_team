@@ -16,7 +16,7 @@ import pytest
 
 from src.calculator import Calculator
 from src.cli import convert_operand, execute_cli, parse_arguments
-from src.input_handler import get_operation_registry
+from src.core.operations import get_operation_registry
 
 
 # ==================== convert_operand() Tests ====================

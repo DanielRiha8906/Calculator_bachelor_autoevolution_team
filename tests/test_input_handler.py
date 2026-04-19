@@ -1,12 +1,18 @@
-"""Tests for the interactive input handler module."""
+"""Tests for the interactive input handler module.
+
+Note: These tests import from the new canonical locations:
+- src.core.operations for get_operation_registry
+- src.interactive.session for interactive functions
+This validates backward compatibility of src.input_handler shim.
+"""
 
 import pytest
 import io
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from src.calculator import Calculator
-from src.input_handler import (
-    get_operation_registry,
+from src.core.operations import get_operation_registry
+from src.interactive.session import (
     display_menu,
     get_operation_choice,
     get_operands,

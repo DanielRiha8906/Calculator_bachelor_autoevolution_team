@@ -215,3 +215,20 @@ Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
 - **PR target:** exp2/expert-team
 
 Duration: 426.9s | Cost: $1.200818 USD | Turns: 15
+
+---
+
+## Run: Issue #176 — V2 Task 11: Logic Separation (Expert/Team)
+- **Branch:** task/issue-176-logic-separation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - Created: `src/core/__init__.py`, `src/core/operations.py`
+  - Created: `src/interactive/__init__.py`, `src/interactive/session.py`
+  - Modified: `src/input_handler.py` (backward-compat shim), `src/cli.py` (import update), `src/__init__.py` (new exports)
+  - Modified: `tests/test_cli.py`, `tests/test_input_handler.py` (import updates)
+  - Created: `tests/test_logic_separation.py` (54 new tests)
+- **Purpose:** Separate core calculation logic (`src/core/`) from interactive UI (`src/interactive/`). `input_handler.py` becomes a backward-compat re-export shim. CLI now depends directly on core, not interactive layer.
+- **Risks:** Low — all logic moved verbatim; no behavioral changes; backward-compat shim preserves all existing import paths.
+- **Tests passed:** Yes — 523 tests passed (54 new), 0 failures.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
