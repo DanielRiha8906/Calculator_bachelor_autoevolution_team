@@ -38,6 +38,43 @@ note over Main, Calc
   factorial(5.0) coerces to int and returns 120.
 end note
 
+Main -> Calc : square(4)
+Calc --> Main : 16.0
+
+Main -> Calc : cube(3)
+Calc --> Main : 27.0
+
+Main -> Calc : square_root(9)
+Calc -> Calc : check x >= 0
+Calc --> Main : 3.0
+
+note over Main, Calc
+  square_root(-1) raises ValueError.
+end note
+
+Main -> Calc : cube_root(-8)
+Calc -> Calc : copysign(|-8|^(1/3), -8)
+Calc --> Main : -2.0
+
+Main -> Calc : power(2, 10)
+Calc --> Main : 1024.0
+
+Main -> Calc : logarithm(100)
+Calc -> Calc : check x > 0
+Calc --> Main : 2.0
+
+note over Main, Calc
+  logarithm(0) and logarithm(-1) raise ValueError.
+end note
+
+Main -> Calc : natural_logarithm(2.718...)
+Calc -> Calc : check x > 0
+Calc --> Main : 1.0
+
+note over Main, Calc
+  natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
+end note
+
 deactivate Calc
 
 @enduml

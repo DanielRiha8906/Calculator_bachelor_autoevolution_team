@@ -8,6 +8,13 @@ class Calculator {
     +multiply(a, b) : float
     +divide(a, b) : float
     +factorial(n) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+    +power(base: float, exponent: float) : float
+    +logarithm(x: float) : float
+    +natural_logarithm(x: float) : float
 }
 
 note right of Calculator::divide
@@ -21,6 +28,20 @@ note right of Calculator::factorial
   Raises ValueError if n < 0.
   Accepts whole-number floats
   (e.g. 5.0) by coercing to int.
+end note
+
+note right of Calculator::square_root
+  Raises ValueError if x < 0.
+end note
+
+note right of Calculator::logarithm
+  Base-10 log (math.log10).
+  Raises ValueError if x <= 0.
+end note
+
+note right of Calculator::natural_logarithm
+  Natural log base e (math.log).
+  Raises ValueError if x <= 0.
 end note
 
 class "__main__" as Main {

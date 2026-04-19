@@ -1,4 +1,33 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-147-math-functions
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added 7 new methods: `square`, `cube`, `square_root`, `cube_root`, `power`, `logarithm`, `natural_logarithm`; added notes for `square_root`, `logarithm`, `natural_logarithm` error conditions
+  - `artifacts/activity_diagram.puml` — added activity branches for all 7 new math methods with guard conditions
+  - `artifacts/sequence_diagram.puml` — added example interactions for all 7 new methods
+- **Purpose:** Sync PlantUML diagrams with current `src/calculator.py` state after issue-147 additions
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 59.4s | Cost: $0.211018 USD | Turns: 17
+
+## Run: issue-147-math-functions (2026-04-19)
+
+- **Branch:** task/issue-147-math-functions
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added 7 new methods: `square`, `cube`, `square_root`, `cube_root`, `power`, `logarithm`, `natural_logarithm`; added `import math`
+  - `tests/test_calculator.py` — added 96 new tests covering all 7 operations (normal inputs, edge cases, domain errors, result chaining)
+- **Purpose:** Add square, cube, roots, power, log, and ln as supported calculator operations (issue #147)
+- **Risks:** Low — backward-compatible additions; existing 70 tests unaffected
+- **Tests passed:** Yes — all 166 tests pass (70 existing + 96 new)
+- **Tokens used:** PENDING
+- **Cost (USD):** PENDING
+- **Turns:** PENDING
+
+Duration: 260.1s | Cost: $0.642786 USD | Turns: 14
+
 ## Run: issue-144-factorial (2026-04-19)
 
 - **Branch:** task/issue-144-factorial
