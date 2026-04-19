@@ -6,7 +6,7 @@
 - risks: None — diagram-only update, no source changes
 - tests passed: N/A
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 493.2s | Cost: $1.008632 USD | Turns: 19
 
 ## Run: issue-173-logic-separation (2026-04-19)
 
