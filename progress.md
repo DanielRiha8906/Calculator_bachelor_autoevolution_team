@@ -6,7 +6,7 @@
 - **Risks:** None — diagram-only artifacts, no source code modified.
 - **Tests passed:** N/A (no code changes)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 72.2s | Cost: $0.213811 USD | Turns: 17
 
 ---
 
