@@ -6,6 +6,7 @@ participant "cli" as CLI
 participant "user_input" as UI
 participant "input_retry" as IR
 participant "Calculator" as Calc
+participant "OperationHistory" as Hist
 participant "math" as Math
 
 User -> Main : python -m src [args...]
@@ -16,6 +17,9 @@ alt sys.argv has arguments (CLI mode)
     Main -> CLI : run_cli(sys.argv[1:])
     CLI -> CLI : expression = " ".join(args)
     CLI -> Calc : <<create>>
+    activate Calc
+    Calc -> Hist : <<create>>
+    activate Hist
     CLI -> CLI : parse_and_evaluate(expression, calc)
     CLI -> CLI : ast.parse(expression, mode="eval")
 
@@ -24,27 +28,34 @@ alt sys.argv has arguments (CLI mode)
             CLI -> CLI : return constant value
         else ast.UnaryOp (USub)
             CLI -> Calc : multiply(operand, -1)
+            Calc -> Hist : add_record("multiply", [operand, -1], result, now())
             Calc --> CLI : negated value
         else ast.BinOp Add
             CLI -> Calc : add(left, right)
+            Calc -> Hist : add_record("add", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Sub
             CLI -> Calc : subtract(left, right)
+            Calc -> Hist : add_record("subtract", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Mult
             CLI -> Calc : multiply(left, right)
+            Calc -> Hist : add_record("multiply", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Div
             CLI -> Calc : divide(left, right)
             alt b == 0
                 Calc --> CLI : ZeroDivisionError
+                note right of Hist : history NOT recorded on error
                 CLI --> User : "Error: Division by zero is not allowed." (stderr)
                 CLI --> Main : exit code 1
             else b != 0
+                Calc -> Hist : add_record("divide", [left, right], result, now())
                 Calc --> CLI : a / b
             end
         else ast.BinOp Pow
             CLI -> Calc : power(left, right)
+            Calc -> Hist : add_record("power", [left, right], result, now())
             Calc --> CLI : float result
         else unsupported node / syntax error / empty expression
             CLI --> User : error message (stderr)
@@ -54,11 +65,16 @@ alt sys.argv has arguments (CLI mode)
 
     CLI --> User : result (stdout)
     CLI --> Main : exit code 0
+    deactivate Hist
+    deactivate Calc
 
 else no arguments (interactive mode)
 
     Main -> UI : run_interactive()
     UI -> Calc : <<create>>
+    activate Calc
+    Calc -> Hist : <<create>>
+    activate Hist
     note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
     UI -> User : display numbered operation list
 
@@ -98,40 +114,54 @@ else no arguments (interactive mode)
                 UI -> Calc : resolved_method(*operands)
 
                 alt add / subtract / multiply
+                    Calc -> Hist : add_record(op, operands, result, now())
                     Calc --> UI : numeric result
                 else divide — b == 0
                     Calc --> UI : ZeroDivisionError → error string
+                    note right of Hist : history NOT recorded on error
                 else divide — b != 0
+                    Calc -> Hist : add_record("divide", operands, result, now())
                     Calc --> UI : a / b
                 else factorial — invalid input (bool / non-integer float / negative)
                     Calc --> UI : TypeError or ValueError → error string
+                    note right of Hist : history NOT recorded on error
                 else factorial — valid n
+                    Calc -> Hist : add_record("factorial", [n], n!, now())
                     Calc --> UI : n!
                 else square / cube
+                    Calc -> Hist : add_record(op, [x], result, now())
                     Calc --> UI : x*x or x*x*x
                 else square_root — x < 0
                     Calc --> UI : ValueError → error string
+                    note right of Hist : history NOT recorded on error
                 else square_root — x >= 0
                     Calc -> Math : sqrt(x)
                     Math --> Calc : float
+                    Calc -> Hist : add_record("square_root", [x], result, now())
                     Calc --> UI : float result
                 else cube_root
                     Calc -> Math : copysign(abs(x)^(1/3), x)
                     Math --> Calc : float
+                    Calc -> Hist : add_record("cube_root", [x], result, now())
                     Calc --> UI : float result
                 else power — invalid types
                     Calc --> UI : TypeError → error string
+                    note right of Hist : history NOT recorded on error
                 else power — valid
+                    Calc -> Hist : add_record("power", [base, exp], result, now())
                     Calc --> UI : float(base ** exponent)
                 else log10 / natural_log — x <= 0
                     Calc --> UI : ValueError → error string
+                    note right of Hist : history NOT recorded on error
                 else log10 — x > 0
                     Calc -> Math : log10(x)
                     Math --> Calc : float
+                    Calc -> Hist : add_record("log10", [x], result, now())
                     Calc --> UI : float result
                 else natural_log — x > 0
                     Calc -> Math : log(x)
                     Math --> Calc : float
+                    Calc -> Hist : add_record("natural_log", [x], result, now())
                     Calc --> UI : float result
                 end
 
@@ -143,6 +173,9 @@ else no arguments (interactive mode)
         end
     end
 
+    deactivate Hist
+    deactivate Calc
+
 end
 
 note over IR
@@ -153,6 +186,15 @@ note over IR
   - validate_with_retry() generic helper
   user_input imports DEFAULT_MAX_RETRIES
   and enforces limits directly in its loops.
+end note
+
+note over Hist
+  OperationHistory stores OperationRecord
+  entries (operation_name, operands, result,
+  timestamp). Records are only appended on
+  successful operations — errors are not
+  logged. get_history() returns a copy;
+  clear_history() wipes the log.
 end note
 
 @enduml

@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-167-history
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include OperationRecord and OperationHistory classes added in issue-167, Calculator._history field, get_history()/clear_history() methods, and history recording (add_record calls) after each successful Calculator operation
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-167-history (2026-04-19)
 
 - branch: task/issue-167-history

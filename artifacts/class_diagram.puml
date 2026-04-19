@@ -1,6 +1,9 @@
 @startuml class_diagram
 
 class Calculator {
+    -_history: OperationHistory
+    +get_history() : list
+    +clear_history() : None
     +add(a, b) : float
     +subtract(a, b) : float
     +multiply(a, b) : float
@@ -13,6 +16,21 @@ class Calculator {
     +power(base: int|float, exponent: int|float) : float
     +log10(x: int|float) : float
     +natural_log(x: int|float) : float
+}
+
+class OperationHistory {
+    -_records: list[OperationRecord]
+    +add_record(operation_name: str, operands: list, result: object, timestamp: datetime) : None
+    +get_history() : list[OperationRecord]
+    +clear_history() : None
+    +__len__() : int
+}
+
+class OperationRecord <<dataclass>> {
+    +operation_name: str
+    +operands: list
+    +result: object
+    +timestamp: datetime
 }
 
 class InvalidInputError {
@@ -53,6 +71,9 @@ class "cli" <<module>> {
     +run_cli(args: list[str]) : int
 }
 
+Calculator "1" *-- "1" OperationHistory : contains
+OperationHistory "1" *-- "*" OperationRecord : stores
+
 Exception <|-- InvalidInputError
 Exception <|-- OperandRetryExceeded
 Exception <|-- RetryLimitExceeded
@@ -66,8 +87,19 @@ Exception <|-- RetryLimitExceeded
 "input_retry" ..> InputRetryConfig : uses
 "cli" ..> Calculator : uses
 
+note right of Calculator::_history
+  Created in __init__; shared across
+  all operation calls on this instance.
+end note
+
+note right of Calculator::get_history
+  Delegates to OperationHistory.get_history().
+  Returns a shallow copy (list) of records.
+end note
+
 note right of Calculator::divide
-  Raises ZeroDivisionError when b == 0
+  Raises ZeroDivisionError when b == 0.
+  History is NOT recorded on error.
 end note
 
 note right of Calculator::factorial
@@ -75,6 +107,7 @@ note right of Calculator::factorial
   non-integer float. Raises ValueError
   if n < 0. Accepts float only when it
   represents an exact integer.
+  History recorded only on success.
 end note
 
 note right of Calculator::square
@@ -117,6 +150,24 @@ note right of Calculator::natural_log
   Always returns float. Raises TypeError
   for bool or non-numeric. Raises
   ValueError if x <= 0.
+end note
+
+note right of OperationRecord
+  Immutable dataclass. Each successful
+  Calculator operation appends one record
+  with its name, operand list, result,
+  and a datetime.now() timestamp.
+end note
+
+note right of OperationHistory::add_record
+  Wraps args into an OperationRecord
+  and appends it to _records.
+end note
+
+note right of OperationHistory::get_history
+  Returns list(self._records) — a
+  defensive shallow copy so callers
+  cannot mutate the internal log.
 end note
 
 note right of "user_input"::MAX_RETRIES

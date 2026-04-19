@@ -13,7 +13,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
             stop
         else (no)
             :Join args with spaces → expression string;
-            :Instantiate Calculator;
+            :Instantiate Calculator (with empty OperationHistory);
 
             partition "parse_and_evaluate(expression, calc)" {
                 :Strip expression;
@@ -31,6 +31,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
                                 :Recurse on operand;
                                 if (USub?) then (yes)
                                     :calc.multiply(operand, -1);
+                                    :calc._history.add_record("multiply", ...);
                                 else (UAdd)
                                     :Return operand as-is;
                                 endif
@@ -38,14 +39,23 @@ if (sys.argv has arguments?) then (yes — CLI mode)
                                 :Recurse on left and right nodes;
                                 if (Add?) then (yes)
                                     :calc.add(left, right);
+                                    :calc._history.add_record("add", ...);
                                 elseif (Sub?) then (yes)
                                     :calc.subtract(left, right);
+                                    :calc._history.add_record("subtract", ...);
                                 elseif (Mult?) then (yes)
                                     :calc.multiply(left, right);
+                                    :calc._history.add_record("multiply", ...);
                                 elseif (Div?) then (yes)
                                     :calc.divide(left, right);
+                                    if (b == 0?) then (yes)
+                                        :Raise ZeroDivisionError;
+                                    else (no)
+                                        :calc._history.add_record("divide", ...);
+                                    endif
                                 else (Pow)
                                     :calc.power(left, right);
+                                    :calc._history.add_record("power", ...);
                                 endif
                             else (unsupported node)
                                 :Raise ValueError "Unsupported expression node";
@@ -78,7 +88,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
 else (no — interactive mode)
 
     partition "run_interactive()" {
-        :Instantiate Calculator;
+        :Instantiate Calculator (with empty OperationHistory);
         :Build operation list from OPERATIONS keys;
         :Display numbered list of available operations;
         :op_attempts = 0;
@@ -135,6 +145,7 @@ else (no — interactive mode)
                         elseif (TypeError)
                             :Return "Error: <exception message>";
                         else (success)
+                            :calc._history.add_record(op, operands, result, now());
                             :Return numeric result;
                         endif
                     }
