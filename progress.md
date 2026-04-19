@@ -8,7 +8,7 @@
 - worktree/branch: task/issue-170-error-logging
 - PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 446.8s | Cost: $1.352453 USD | Turns: 17
 
 ## Run: update-diagrams (2026-04-19)
 
