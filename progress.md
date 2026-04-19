@@ -1,5 +1,27 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-182-documentation
+- files changed: artifacts/class_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect that Calculator.__init__ calls both register_basic_operations() and register_scientific_operations() (stub); diagrams were otherwise accurate for the current src/ state
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 84.1s | Cost: $0.389732 USD | Turns: 19
+
+## Run: issue-182-documentation (2026-04-19)
+
+- branch: task/issue-182-documentation
+- files changed: README.md, docs/README.md, docs/ARCHITECTURE.md, docs/API_REFERENCE.md, docs/USER_GUIDE.md, docs/EXTENDING.md, tests/test_documentation.py
+- purpose: Add comprehensive documentation for the calculator application (issue #182) — user guide, architecture reference, API reference, extension guide, and updated root README
+- risks: None — purely additive changes; no existing source or test files modified
+- tests passed: Yes — 44 new tests pass; full suite (1,068 tests) passes
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/214
+- target: exp2/naive-team
+
+Duration: 531.4s | Cost: $1.370808 USD | Turns: 17
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-179-modularization-naive-team
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to reflect modularization from issue-179 — new operations/ package (Operation ABC, OperationRegistry, 12 concrete operation classes, register_basic_operations, register_scientific_operations stub), new presentation/ package (presentation.cli, presentation.interactive), Calculator._registry field, and backward-compat re-export shims for src/cli.py and src/user_input.py
