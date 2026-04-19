@@ -388,4 +388,4 @@ Risks: Number pad digits are visual-only (no digit accumulation logic); result d
 
 All tests passed: yes (1326/1326)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 695.3s | Cost: $1.685668 USD | Turns: 14
