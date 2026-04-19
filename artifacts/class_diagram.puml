@@ -34,6 +34,10 @@ package "src" {
         +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
     }
 
+    class ErrorLogger {
+        +log_error(error_type: str, context: dict) : None
+    }
+
     class CLI <<module>> {
         +parse_arguments(args: list[str]) : tuple[str, list[str]]
         +convert_operand(value: str) : int | float
@@ -54,6 +58,7 @@ InputHandler ..> Calculator : invokes methods via registry
 InputHandler ..> HistoryTracker : records results / displays / saves
 CLI ..> Calculator : invokes methods via registry
 CLI ..> InputHandler : calls get_operation_registry()
+CLI ..> ErrorLogger : logs errors
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -124,6 +129,14 @@ end note
 note right of CLI::convert_operand
   Parses string to int or float.
   Returns int if value is whole (3.0 -> 3).
+end note
+
+note right of ErrorLogger::log_error
+  Writes to error.log in ISO 8601 format.
+  Format: TIMESTAMP | ERROR_TYPE | OPERATION | OPERANDS | MESSAGE
+  Error types: UNSUPPORTED_OPERATION, INVALID_OPERAND,
+  ARGUMENT_COUNT_MISMATCH, DIVISION_BY_ZERO, INVALID_DOMAIN.
+  Module-level singleton logger; silently swallows I/O errors.
 end note
 
 @enduml

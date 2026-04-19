@@ -1,5 +1,17 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-172-error-logging
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect ErrorLogger class added in issue-172: new ErrorLogger class node in class diagram with log_error method and note on error types/format; CLI→ErrorLogger dependency added; activity diagram updated with log_error steps before each stderr error print in CLI branch; sequence diagram updated with ErrorLogger participant and all log_error calls from CLI (UNSUPPORTED_OPERATION, ARGUMENT_COUNT_MISMATCH, INVALID_OPERAND, DIVISION_BY_ZERO).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-169-history-tracking
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect HistoryTracker class added in issue-169: new class diagram node with record/get_history/display/save_to_file/clear methods; activity diagram updated with history recording, display, and save-to-file steps; sequence diagram updated with HistoryTracker participant and all interactions.

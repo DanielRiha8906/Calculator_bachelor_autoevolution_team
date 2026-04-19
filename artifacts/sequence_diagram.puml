@@ -5,6 +5,7 @@ participant "CLI" as cli
 participant "InputHandler" as ih
 participant "Calculator" as calc
 participant "HistoryTracker" as ht
+participant "ErrorLogger" as el
 
 alt Interactive Mode (python -m src)
 
@@ -65,21 +66,39 @@ else CLI Mode (execute_cli)
 
     cli -> cli : lookup operation in registry
 
-    alt invalid operation or arity mismatch
+    alt invalid operation
+        cli -> el : log_error("UNSUPPORTED_OPERATION", context)
+        cli -> cli : print error to stderr
+        cli --> main : return 1
+    else arity mismatch
+        cli -> el : log_error("ARGUMENT_COUNT_MISMATCH", context)
         cli -> cli : print error to stderr
         cli --> main : return 1
     else valid
         cli -> cli : convert_operand(value) for each operand
-        cli -> calc : method(*operands)
 
-        alt success
-            calc --> cli : result
-            cli -> cli : print result to stdout
-            cli --> main : return 0
-        else TypeError / ValueError / ZeroDivisionError
-            calc --> cli : raises exception
+        alt operand conversion failed
+            cli -> el : log_error("INVALID_OPERAND", context)
             cli -> cli : print error to stderr
             cli --> main : return 1
+        else operands converted
+            cli -> calc : method(*operands)
+
+            alt success
+                calc --> cli : result
+                cli -> cli : print result to stdout
+                cli --> main : return 0
+            else ZeroDivisionError
+                calc --> cli : raises ZeroDivisionError
+                cli -> el : log_error("DIVISION_BY_ZERO", context)
+                cli -> cli : print error to stderr
+                cli --> main : return 1
+            else TypeError / ValueError
+                calc --> cli : raises TypeError / ValueError
+                cli -> el : log_error("INVALID_OPERAND", context)
+                cli -> cli : print error to stderr
+                cli --> main : return 1
+            end
         end
     end
 
