@@ -11,7 +11,7 @@
 - **Risks:** None — documentation only, no source code changes
 - **Tests passed:** Yes — 716/716 tests pass, all documentation verified accurate against implementation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 435.0s | Cost: $1.318197 USD | Turns: 16
 
 ## Run: update-diagrams (2026-04-19)
 
