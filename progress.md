@@ -127,4 +127,4 @@ Duration: 40.2s | Cost: $0.142323 USD | Turns: 10
 - **Current branch/worktree:** task/issue-163-cli-mode
 - **Intended PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
