@@ -16,9 +16,9 @@ from src.logger import get_logger
 from src.mode_manager import ModeManager
 from src.parser import BINARY_OPERATORS, UNARY_FUNCTIONS
 
-_DISPLAY_BG = "#1e1e1e"
+_DISPLAY_BG = "#000000"
 _DISPLAY_FG = "#ffffff"
-_BTN_BG = "#3c3c3c"
+_BTN_BG = "#333333"
 _BTN_FG = "#ffffff"
 _BTN_OP_BG = "#ff9500"
 _BTN_OP_FG = "#ffffff"
@@ -27,11 +27,11 @@ _BTN_SCI_FG = "#ffffff"
 _BTN_MODE_BG = "#555555"
 _BTN_MODE_FG = "#ffffff"
 _BTN_CLEAR_BG = "#a5a5a5"
-_BTN_CLEAR_FG = "#1e1e1e"
+_BTN_CLEAR_FG = "#ffffff"
 _BTN_EQUAL_BG = "#ff9500"
 _BTN_EQUAL_FG = "#ffffff"
-_WINDOW_BG = "#2b2b2b"
-_HISTORY_BG = "#1e1e1e"
+_WINDOW_BG = "#000000"
+_HISTORY_BG = "#000000"
 _HISTORY_FG = "#aaaaaa"
 _ERROR_FG = "#ff4444"
 
@@ -86,8 +86,8 @@ class CalculatorGUI:
 
     def _build_display(self) -> None:
         """Create the main expression display at the top of the window."""
-        display_frame = tk.Frame(self._root, bg=_DISPLAY_BG, pady=4)
-        display_frame.pack(fill=tk.X, padx=8, pady=(8, 0))
+        display_frame = tk.Frame(self._root, bg=_DISPLAY_BG, pady=8)
+        display_frame.pack(fill=tk.X, padx=0, pady=(0, 0))
 
         display_font = tkfont.Font(family="Helvetica", size=32, weight="bold")
         self._display_var = tk.StringVar(value="0")
@@ -98,8 +98,8 @@ class CalculatorGUI:
             bg=_DISPLAY_BG,
             fg=_DISPLAY_FG,
             anchor="e",
-            padx=12,
-            pady=8,
+            padx=16,
+            pady=16,
             width=14,
         )
         self._display_label.pack(fill=tk.X)
@@ -117,7 +117,7 @@ class CalculatorGUI:
             anchor="e",
             padx=12,
         )
-        self._history_label.pack(fill=tk.X, padx=8)
+        self._history_label.pack(fill=tk.X, padx=16)
 
     def _build_mode_bar(self) -> None:
         """Create the mode-toggle bar (Normal / Scientific)."""
@@ -192,8 +192,10 @@ class CalculatorGUI:
             relief=tk.FLAT,
             activebackground=bg,
             activeforeground=fg,
-            padx=8,
-            pady=14,
+            borderwidth=0,
+            highlightthickness=0,
+            padx=10,
+            pady=18,
             width=4,
             command=command,
         )
@@ -201,7 +203,7 @@ class CalculatorGUI:
 
     def _build_normal_buttons(self) -> None:
         """Build the normal-mode button grid (digits, operators, clear, equals)."""
-        self._normal_frame = tk.Frame(self._root, bg=_WINDOW_BG, pady=4)
+        self._normal_frame = tk.Frame(self._root, bg=_WINDOW_BG, pady=6)
 
         # Row layout: each inner list is one row of (label, bg, fg, action)
         rows: list[list[tuple[str, str, str, str]]] = [
@@ -253,8 +255,8 @@ class CalculatorGUI:
                     row=r_idx,
                     column=c_idx,
                     columnspan=col_span,
-                    padx=3,
-                    pady=3,
+                    padx=4,
+                    pady=4,
                     sticky=tk.NSEW,
                 )
                 c_idx += col_span
@@ -265,7 +267,7 @@ class CalculatorGUI:
 
     def _build_scientific_buttons(self) -> None:
         """Build the scientific-mode button grid (unary functions + digits + equals)."""
-        self._sci_frame = tk.Frame(self._root, bg=_WINDOW_BG, pady=4)
+        self._sci_frame = tk.Frame(self._root, bg=_WINDOW_BG, pady=6)
 
         sci_labels = list(UNARY_FUNCTIONS.keys())  # sin cos tan log ln exp sqrt
 
@@ -281,7 +283,7 @@ class CalculatorGUI:
                 bg=_BTN_SCI_BG,
                 fg=_BTN_SCI_FG,
             )
-            btn.grid(row=0, column=c_idx, padx=3, pady=3, sticky=tk.NSEW)
+            btn.grid(row=0, column=c_idx, padx=4, pady=4, sticky=tk.NSEW)
 
         for c_idx, func in enumerate(sci_row1):
             btn = self._make_button(
@@ -291,7 +293,7 @@ class CalculatorGUI:
                 bg=_BTN_SCI_BG,
                 fg=_BTN_SCI_FG,
             )
-            btn.grid(row=1, column=c_idx, padx=3, pady=3, sticky=tk.NSEW)
+            btn.grid(row=1, column=c_idx, padx=4, pady=4, sticky=tk.NSEW)
 
         # Rows 2-5: digit + clear + equals
         digit_rows: list[list[tuple[str, str, str, str]]] = [
@@ -336,8 +338,8 @@ class CalculatorGUI:
                     row=r_offset + 2,
                     column=c_idx,
                     columnspan=col_span,
-                    padx=3,
-                    pady=3,
+                    padx=4,
+                    pady=4,
                     sticky=tk.NSEW,
                 )
                 c_idx += col_span
@@ -359,12 +361,12 @@ class CalculatorGUI:
             self._mode_scientific_btn.config(relief=tk.SUNKEN)
             self._mode_normal_btn.config(relief=tk.FLAT)
             self._normal_frame.pack_forget()
-            self._sci_frame.pack(padx=8, pady=(0, 8))
+            self._sci_frame.pack(padx=4, pady=(0, 8))
         else:
             self._mode_normal_btn.config(relief=tk.SUNKEN)
             self._mode_scientific_btn.config(relief=tk.FLAT)
             self._sci_frame.pack_forget()
-            self._normal_frame.pack(padx=8, pady=(0, 8))
+            self._normal_frame.pack(padx=4, pady=(0, 8))
 
     def _on_mode_switch(self, mode_name: str) -> None:
         """Handle a mode toggle button press.
