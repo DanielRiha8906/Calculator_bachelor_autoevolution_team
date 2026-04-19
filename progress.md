@@ -7,7 +7,7 @@
 - **Risks:** Low — calculator core unchanged; __main__.py demo replaced by interactive session; new module is isolated.
 - **Tests passed:** 194/194 (117 existing + 77 new)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 347.6s | Cost: $0.833391 USD | Turns: 22
 
 ---
 
