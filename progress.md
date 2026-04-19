@@ -6,7 +6,7 @@
 - **Risks:** None — diagram-only artifacts, no source code modified.
 - **Tests passed:** N/A (no code changes)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 180.4s | Cost: $0.567824 USD | Turns: 24
 
 ## Run: issue-181 — V2 Modularization (Expert/Team)
 
