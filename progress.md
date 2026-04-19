@@ -8,7 +8,7 @@
 - **Risks:** None — purely additive changes; no existing logic modified.
 - **Tests passed:** 47/47 (35 existing + 12 new)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 171.4s | Cost: $0.429407 USD | Turns: 15
 
 ---
 
