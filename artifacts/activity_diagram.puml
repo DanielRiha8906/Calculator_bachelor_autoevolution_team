@@ -3,6 +3,7 @@
 start
 
 :__main__.main() is invoked;
+:setup_logging() → configures "calculator" logger\n(FileHandler, ERROR level, calculator.log);
 
 if (sys.argv has arguments?) then (yes — CLI mode)
 
@@ -22,6 +23,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
                 else (no)
                     :ast.parse(expression, mode="eval");
                     if (SyntaxError?) then (yes)
+                        :logger.error("parse_and_evaluate: invalid syntax …");
                         :Raise ValueError "Invalid expression syntax";
                     else (no)
                         partition "_eval_node(tree.body, calc)" {
@@ -49,6 +51,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
                                 elseif (Div?) then (yes)
                                     :calc.divide(left, right);
                                     if (b == 0?) then (yes)
+                                        :logger.error("divide: division by zero …");
                                         :Raise ZeroDivisionError;
                                     else (no)
                                         :calc._history.add_record("divide", ...);
@@ -66,14 +69,17 @@ if (sys.argv has arguments?) then (yes — CLI mode)
             }
 
             if (ZeroDivisionError?) then (yes)
+                :logger.error("cli: division by zero in expression …");
                 :Print "Error: Division by zero is not allowed." to stderr;
                 :Return exit code 1;
                 stop
             elseif (ValueError?) then (yes)
+                :logger.error("cli: ValueError in expression …");
                 :Print error message to stderr;
                 :Return exit code 1;
                 stop
             elseif (TypeError?) then (yes)
+                :logger.error("cli: TypeError in expression …");
                 :Print error message to stderr;
                 :Return exit code 1;
                 stop
@@ -121,6 +127,7 @@ else (no — interactive mode)
                             :Append parsed number to operands list;
                             :operand_attempts = 0;
                         else (InvalidInputError)
+                            :logger.error("parse_number: could not parse … InvalidInputError");
                             if (operand_attempts >= MAX_RETRIES?) then (yes)
                                 :Raise OperandRetryExceeded;
                             else (no)
@@ -139,10 +146,13 @@ else (no — interactive mode)
                         :Resolve Calculator method name via OPERATIONS;
                         :Call method(*operands) on Calculator instance;
                         if (exception raised?) then (ZeroDivisionError)
+                            :logger.error("execute_operation: … ZeroDivisionError");
                             :Return "Error: Division by zero is not allowed.";
                         elseif (ValueError)
+                            :logger.error("execute_operation: … ValueError");
                             :Return "Error: <exception message>";
                         elseif (TypeError)
+                            :logger.error("execute_operation: … TypeError");
                             :Return "Error: <exception message>";
                         else (success)
                             :calc._history.add_record(op, operands, result, now());

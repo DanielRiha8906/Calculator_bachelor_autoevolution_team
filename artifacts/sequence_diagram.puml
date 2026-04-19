@@ -2,6 +2,7 @@
 
 actor User
 participant "__main__" as Main
+participant "logging_config" as LogConf
 participant "cli" as CLI
 participant "user_input" as UI
 participant "input_retry" as IR
@@ -11,6 +12,13 @@ participant "math" as Math
 
 User -> Main : python -m src [args...]
 Main -> Main : main()
+Main -> LogConf : setup_logging()
+note right of LogConf
+  Configures "calculator" logger with
+  a FileHandler at ERROR level writing
+  to calculator.log. Idempotent.
+end note
+LogConf --> Main : logger (configured)
 
 alt sys.argv has arguments (CLI mode)
 
@@ -21,7 +29,14 @@ alt sys.argv has arguments (CLI mode)
     Calc -> Hist : <<create>>
     activate Hist
     CLI -> CLI : parse_and_evaluate(expression, calc)
-    CLI -> CLI : ast.parse(expression, mode="eval")
+
+    alt SyntaxError during ast.parse
+        CLI -> LogConf : logger.error("parse_and_evaluate: invalid syntax …")
+        CLI --> User : error message (stderr)
+        CLI --> Main : exit code 1
+    else valid parse
+        CLI -> CLI : ast.parse(expression, mode="eval")
+    end
 
     loop recursive _eval_node traversal
         alt ast.Constant
@@ -45,8 +60,10 @@ alt sys.argv has arguments (CLI mode)
         else ast.BinOp Div
             CLI -> Calc : divide(left, right)
             alt b == 0
+                Calc -> LogConf : logger.error("divide: division by zero …")
                 Calc --> CLI : ZeroDivisionError
                 note right of Hist : history NOT recorded on error
+                CLI -> LogConf : logger.error("cli: division by zero in expression …")
                 CLI --> User : "Error: Division by zero is not allowed." (stderr)
                 CLI --> Main : exit code 1
             else b != 0
@@ -57,7 +74,8 @@ alt sys.argv has arguments (CLI mode)
             CLI -> Calc : power(left, right)
             Calc -> Hist : add_record("power", [left, right], result, now())
             Calc --> CLI : float result
-        else unsupported node / syntax error / empty expression
+        else unsupported node / empty expression
+            CLI -> LogConf : logger.error("cli: ValueError …") [if applicable]
             CLI --> User : error message (stderr)
             CLI --> Main : exit code 1
         end
@@ -97,8 +115,10 @@ else no arguments (interactive mode)
                 User -> UI : raw string
                 UI -> UI : parse_number(raw)
                 alt parse fails and attempts < MAX_RETRIES
+                    UI -> LogConf : logger.error("parse_number: could not parse … InvalidInputError")
                     UI -> User : InvalidInputError message (retry)
                 else parse fails and attempts >= MAX_RETRIES
+                    UI -> LogConf : logger.error("parse_number: could not parse … InvalidInputError")
                     UI -> UI : raise OperandRetryExceeded
                     UI -> User : retry-exceeded error message
                 else parse succeeds
@@ -117,23 +137,38 @@ else no arguments (interactive mode)
                     Calc -> Hist : add_record(op, operands, result, now())
                     Calc --> UI : numeric result
                 else divide — b == 0
-                    Calc --> UI : ZeroDivisionError → error string
+                    Calc -> LogConf : logger.error("divide: division by zero …")
+                    Calc --> UI : ZeroDivisionError
+                    UI -> LogConf : logger.error("execute_operation: … ZeroDivisionError")
                     note right of Hist : history NOT recorded on error
+                    UI --> UI : "Error: Division by zero is not allowed."
                 else divide — b != 0
                     Calc -> Hist : add_record("divide", operands, result, now())
                     Calc --> UI : a / b
                 else factorial — invalid input (bool / non-integer float / negative)
-                    Calc --> UI : TypeError or ValueError → error string
+                    Calc -> LogConf : logger.error("factorial: … TypeError/ValueError")
+                    Calc --> UI : TypeError or ValueError
+                    UI -> LogConf : logger.error("execute_operation: … TypeError/ValueError")
                     note right of Hist : history NOT recorded on error
+                    UI --> UI : error string
                 else factorial — valid n
                     Calc -> Hist : add_record("factorial", [n], n!, now())
                     Calc --> UI : n!
-                else square / cube
+                else square / cube — invalid type
+                    Calc -> LogConf : logger.error("square/cube: invalid type … TypeError")
+                    Calc --> UI : TypeError
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
+                    note right of Hist : history NOT recorded on error
+                    UI --> UI : error string
+                else square / cube — valid
                     Calc -> Hist : add_record(op, [x], result, now())
                     Calc --> UI : x*x or x*x*x
-                else square_root — x < 0
-                    Calc --> UI : ValueError → error string
+                else square_root — x < 0 or invalid type
+                    Calc -> LogConf : logger.error("square_root: … ValueError/TypeError")
+                    Calc --> UI : ValueError or TypeError
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
                     note right of Hist : history NOT recorded on error
+                    UI --> UI : error string
                 else square_root — x >= 0
                     Calc -> Math : sqrt(x)
                     Math --> Calc : float
@@ -145,14 +180,20 @@ else no arguments (interactive mode)
                     Calc -> Hist : add_record("cube_root", [x], result, now())
                     Calc --> UI : float result
                 else power — invalid types
-                    Calc --> UI : TypeError → error string
+                    Calc -> LogConf : logger.error("power: invalid type … TypeError")
+                    Calc --> UI : TypeError
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
                     note right of Hist : history NOT recorded on error
+                    UI --> UI : error string
                 else power — valid
                     Calc -> Hist : add_record("power", [base, exp], result, now())
                     Calc --> UI : float(base ** exponent)
-                else log10 / natural_log — x <= 0
-                    Calc --> UI : ValueError → error string
+                else log10 / natural_log — x <= 0 or invalid type
+                    Calc -> LogConf : logger.error("log10/natural_log: … ValueError/TypeError")
+                    Calc --> UI : ValueError or TypeError
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
                     note right of Hist : history NOT recorded on error
+                    UI --> UI : error string
                 else log10 — x > 0
                     Calc -> Math : log10(x)
                     Math --> Calc : float
@@ -195,6 +236,15 @@ note over Hist
   successful operations — errors are not
   logged. get_history() returns a copy;
   clear_history() wipes the log.
+end note
+
+note over LogConf
+  All modules (Calculator, cli, user_input)
+  obtain the same "calculator" named logger
+  via logging.getLogger("calculator").
+  All error paths emit logger.error() before
+  raising or returning an error string.
+  Log destination: calculator.log (ERROR+).
 end note
 
 @enduml

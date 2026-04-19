@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-170-error-logging
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect error logging added in issue-170 — new logging_config module (setup_logging, logger), __main__ calling setup_logging(), and logger.error() calls at all error paths in Calculator, cli, and user_input
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-170-error-logging (2026-04-19)
 
 - branch: task/issue-170-error-logging
