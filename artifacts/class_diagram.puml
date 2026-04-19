@@ -15,6 +15,22 @@ class Calculator {
     +natural_log(x: int|float) : float
 }
 
+class InvalidInputError {
+}
+
+class "user_input" <<module>> {
+    +OPERATIONS : dict[str, tuple[str, int]]
+    +parse_number(input_str: str) : int|float
+    +get_operands(operation: str) : list[int|float]
+    +execute_operation(calc: Calculator, operation: str, operands: list) : object
+    +format_result(result: object) : str
+    +run_interactive() : None
+}
+
+Exception <|-- InvalidInputError
+"user_input" ..> Calculator : uses
+"user_input" ..> InvalidInputError : raises
+
 note right of Calculator::divide
   Raises ZeroDivisionError when b == 0
 end note
@@ -66,6 +82,23 @@ note right of Calculator::natural_log
   Always returns float. Raises TypeError
   for bool or non-numeric. Raises
   ValueError if x <= 0.
+end note
+
+note right of "user_input"::OPERATIONS
+  Maps each operation name to
+  (Calculator method name, operand count).
+  12 operations supported.
+end note
+
+note right of "user_input"::parse_number
+  Tries int first, then float.
+  Raises InvalidInputError on failure.
+end note
+
+note right of "user_input"::execute_operation
+  Catches ZeroDivisionError, ValueError,
+  and TypeError; returns error string
+  instead of propagating exception.
 end note
 
 @enduml

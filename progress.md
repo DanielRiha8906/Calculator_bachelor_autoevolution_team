@@ -1,3 +1,23 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-149-user-input
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include user_input module added in issue-149 (InvalidInputError, OPERATIONS, parse_number, get_operands, execute_operation, format_result, run_interactive)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 120.0s | Cost: $0.348000 USD | Turns: 17
+
+## Run: issue-149-user-input
+
+- branch: task/issue-149-user-input
+- files changed: src/user_input.py (new), src/__main__.py (modified), tests/test_user_input.py (new)
+- purpose: Add interactive user input to calculator CLI via new user_input module (Issue #149)
+- risks: __main__.py now starts interactive loop instead of demo output; no Calculator logic changed
+- tests passed: 96/96 new tests, 394/394 total suite
+
+Duration: 231.5s | Cost: $0.619703 USD | Turns: 13
+
 ## Run: issue-146-functions-naive-team
 
 - branch: task/issue-146-functions-naive-team
