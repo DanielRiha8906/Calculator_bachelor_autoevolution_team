@@ -202,4 +202,4 @@ Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
 - **Tests passed:** Yes — 469 tests passed (83 new: 51 in test_error_logger.py, 13 in test_cli.py, 19 in test_input_handler.py), 0 failures.
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 426.9s | Cost: $1.200818 USD | Turns: 15
