@@ -1,5 +1,17 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-172-error-logging
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect ErrorLogger class added in issue-172: new ErrorLogger class node in class diagram with log_error method and note on error types/format; CLI→ErrorLogger dependency added; activity diagram updated with log_error steps before each stderr error print in CLI branch; sequence diagram updated with ErrorLogger participant and all log_error calls from CLI (UNSUPPORTED_OPERATION, ARGUMENT_COUNT_MISMATCH, INVALID_OPERAND, DIVISION_BY_ZERO).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 142.7s | Cost: $0.456281 USD | Turns: 20
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-169-history-tracking
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect HistoryTracker class added in issue-169: new class diagram node with record/get_history/display/save_to_file/clear methods; activity diagram updated with history recording, display, and save-to-file steps; sequence diagram updated with HistoryTracker participant and all interactions.
@@ -190,3 +202,16 @@ Duration: 40.2s | Cost: $0.142323 USD | Turns: 10
 - **Intended PR target:** exp2/expert-team
 
 Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
+
+---
+
+## Run: issue-172-error-logging — Add error logging to calculator
+
+- **Branch:** task/issue-172-error-logging
+- **Files changed:** src/error_logger.py (created), src/cli.py (modified), src/input_handler.py (modified), src/__init__.py (modified), tests/test_error_logger.py (created), tests/test_cli.py (modified), tests/test_input_handler.py (modified)
+- **Purpose:** Add dedicated error logging to error.log for invalid usage and calculation failures across both interactive and CLI modes. Logs UNSUPPORTED_OPERATION, INVALID_OPERAND, ARGUMENT_COUNT_MISMATCH, DIVISION_BY_ZERO, and INVALID_DOMAIN errors with ISO 8601 timestamps. Kept separate from user-facing history tracking.
+- **Risks:** Low — purely additive logging; log failures are silently swallowed so they cannot crash the application. User-facing messages and control flow unchanged.
+- **Tests passed:** Yes — 469 tests passed (83 new: 51 in test_error_logger.py, 13 in test_cli.py, 19 in test_input_handler.py), 0 failures.
+- **PR target:** exp2/expert-team
+
+Duration: 426.9s | Cost: $1.200818 USD | Turns: 15

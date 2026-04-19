@@ -1220,3 +1220,268 @@ def test_display_menu_shows_history_option():
         output = "\n".join(str(p) for p in printed)
         assert "history" in output.lower()
         assert "h." in output or "h " in output
+
+
+# ==================== Error Logging Tests ====================
+
+class TestInputHandlerErrorLogging:
+    """Tests for error logging in input handler module."""
+
+    def test_get_operation_choice_invalid_name_logged(self):
+        """Test that invalid operation name is logged in get_operation_choice."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", side_effect=["invalid", "add"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    name, method, arity = get_operation_choice(registry)
+                    # Should have logged the invalid operation
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "UNSUPPORTED_OPERATION"
+
+    def test_get_operation_choice_out_of_range_number_logged(self):
+        """Test that out-of-range numeric selection is logged."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", side_effect=["99", "add"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    name, method, arity = get_operation_choice(registry)
+                    # Should have logged the invalid number
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "UNSUPPORTED_OPERATION"
+
+    def test_get_operation_choice_valid_input_not_logged(self):
+        """Test that valid operation selection doesn't log error."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", return_value="add"):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                name, method, arity = get_operation_choice(registry)
+                # Valid input should not log
+                mock_log.assert_not_called()
+
+    def test_get_operation_choice_invalid_number_zero_logged(self):
+        """Test that 0 (out of range) is logged."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", side_effect=["0", "add"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    name, method, arity = get_operation_choice(registry)
+                    # 0 is out of range (1-based indexing)
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "UNSUPPORTED_OPERATION"
+
+    def test_get_operands_invalid_input_logged(self):
+        """Test that invalid operand input is logged in get_operands."""
+        with patch("builtins.input", side_effect=["abc", "5"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    operands = get_operands(1)
+                    # Should have logged the invalid operand
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "INVALID_OPERAND"
+
+    def test_get_operands_valid_input_not_logged(self):
+        """Test that valid operand input doesn't log error."""
+        with patch("builtins.input", return_value="5.0"):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                operands = get_operands(1)
+                # Valid input should not log
+                mock_log.assert_not_called()
+
+    def test_get_operands_invalid_context_includes_slot_number(self):
+        """Test that invalid operand log includes the slot number for traceability."""
+        with patch("builtins.input", side_effect=["abc", "5", "3"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    operands = get_operands(2)
+                    # First invalid operand should be slot 1
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    context = call_args[0][1]
+                    assert "slot" in str(context.get("operands", "")).lower() or "1" in str(context)
+
+    def test_run_interactive_session_division_by_zero_logged(self):
+        """Test that division by zero is logged in interactive session."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["divide", "5", "0", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the division by zero
+                    assert mock_log.called
+                    # Find the division by zero call
+                    found = False
+                    for call_args in mock_log.call_args_list:
+                        if call_args[0][0] == "DIVISION_BY_ZERO":
+                            found = True
+                            break
+                    assert found
+
+    def test_run_interactive_session_invalid_operand_logged(self):
+        """Test that invalid operand in interactive session is logged."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["add", "abc", "5", "3", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the invalid operand
+                    assert mock_log.called
+                    # Find the invalid operand call
+                    found = False
+                    for call_args in mock_log.call_args_list:
+                        if call_args[0][0] == "INVALID_OPERAND":
+                            found = True
+                            break
+                    assert found
+
+    def test_run_interactive_session_successful_operation_not_logged(self):
+        """Test that successful operations in interactive session don't log errors."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should not have logged any errors
+                    mock_log.assert_not_called()
+
+    def test_run_interactive_session_multiple_errors_logged(self):
+        """Test that multiple errors in a session are all logged."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=[
+            "divide", "5", "0",  # Error 1: division by zero
+            "add", "abc", "5", "3",   # Error 2: invalid operand, then valid ones
+            "q"
+        ]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged both errors
+                    assert mock_log.call_count >= 2
+
+    def test_run_interactive_session_error_then_success_both_handled(self):
+        """Test that error followed by success are both handled correctly."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=[
+            "divide", "5", "0",  # Error: division by zero
+            "add", "2", "3",     # Success
+            "q"
+        ]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print") as mock_print:
+                    run_interactive_session(calc)
+                    # Should have logged the error
+                    assert mock_log.called
+                    # But should also execute the next operation
+                    printed = [call.args[0] for call in mock_print.call_args_list]
+                    output = "\n".join(str(p) for p in printed)
+                    assert "5" in output  # 2 + 3 = 5
+
+    def test_get_operation_choice_invalid_operation_context(self):
+        """Test that invalid operation log has correct context."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", side_effect=["xyz", "add"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    name, method, arity = get_operation_choice(registry)
+                    # Verify context
+                    call_args = mock_log.call_args_list[0]
+                    context = call_args[0][1]
+                    assert context["operation"] == "xyz"
+                    assert "message" in context
+
+    def test_get_operands_error_message_content(self):
+        """Test that invalid operand error includes the invalid value in message."""
+        with patch("builtins.input", side_effect=["badvalue", "5"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    operands = get_operands(1)
+                    # Check the logged message
+                    call_args = mock_log.call_args_list[0]
+                    context = call_args[0][1]
+                    # Message should indicate invalid number
+                    assert "badvalue" in str(context) or "not a valid" in str(context.get("message", ""))
+
+    def test_run_interactive_session_factorial_non_integer_logged(self):
+        """Test that non-integer factorial is logged as INVALID_OPERAND."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["factorial", "5.5", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the error
+                    assert mock_log.called
+                    # Should be INVALID_OPERAND
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "INVALID_OPERAND"
+
+    def test_run_interactive_session_sqrt_negative_logged(self):
+        """Test that sqrt of negative number is logged as INVALID_OPERAND."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["square_root", "-4", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the error
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    assert call_args[0][0] == "INVALID_OPERAND"
+
+    def test_run_interactive_session_log_error_operation_name(self):
+        """Test that logged errors include the operation name."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["divide", "5", "0", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the division by zero
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    context = call_args[0][1]
+                    assert context["operation"] == "divide"
+
+    def test_run_interactive_session_log_error_operands(self):
+        """Test that logged errors include the operands."""
+        calc = Calculator()
+
+        with patch("builtins.input", side_effect=["divide", "10", "0", "q"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    run_interactive_session(calc)
+                    # Should have logged the division by zero
+                    assert mock_log.called
+                    call_args = mock_log.call_args_list[0]
+                    context = call_args[0][1]
+                    assert "operands" in context
+
+    def test_get_operation_choice_multiple_invalid_attempts_all_logged(self):
+        """Test that each invalid operation attempt is logged."""
+        calc = Calculator()
+        registry = get_operation_registry(calc)
+
+        with patch("builtins.input", side_effect=["bad1", "bad2", "add"]):
+            with patch("src.input_handler._error_logger.log_error") as mock_log:
+                with patch("builtins.print"):
+                    name, method, arity = get_operation_choice(registry)
+                    # Both invalid attempts should be logged
+                    assert mock_log.call_count == 2
