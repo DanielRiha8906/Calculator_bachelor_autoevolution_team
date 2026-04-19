@@ -116,3 +116,15 @@ Duration: 55.5s | Cost: $0.188179 USD | Turns: 14
 - **Tests passed:** N/A (no code changes)
 
 Duration: 40.2s | Cost: $0.142323 USD | Turns: 10
+
+## Run: issue-163 — CLI mode
+
+- **Branch:** task/issue-163-cli-mode
+- **Files changed:** src/cli.py (created), main.py (created), src/__init__.py (modified), tests/test_cli.py (created)
+- **Purpose:** Add command-line interface allowing calculator operations to be invoked via `python main.py <operation> <operands>`. Supports all existing operations (one-operand and two-operand), outputs results to stdout, errors to stderr, exit codes 0/1.
+- **Risks:** Low — no changes to existing calculator logic or input handler; new module only, additive __init__.py change.
+- **Tests passed:** Yes — 268 tests total (74 new CLI tests + 194 existing), all passing.
+- **Current branch/worktree:** task/issue-163-cli-mode
+- **Intended PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
