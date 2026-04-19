@@ -6,19 +6,66 @@ class Calculator {
     +multiply(a, b) : float
     +divide(a, b) : float
     +factorial(n: int) : int
+    +square(x: int|float) : int|float
+    +cube(x: int|float) : int|float
+    +square_root(x: int|float) : float
+    +cube_root(x: int|float) : float
+    +power(base: int|float, exponent: int|float) : float
+    +log10(x: int|float) : float
+    +natural_log(x: int|float) : float
 }
 
 note right of Calculator::divide
-  Raises ZeroDivisionError
-  when b == 0
+  Raises ZeroDivisionError when b == 0
 end note
 
 note right of Calculator::factorial
-  Raises TypeError if n is bool
-  or non-integer float.
-  Raises ValueError if n < 0.
-  Accepts float only when it
+  Raises TypeError if n is bool or
+  non-integer float. Raises ValueError
+  if n < 0. Accepts float only when it
   represents an exact integer.
+end note
+
+note right of Calculator::square
+  Returns int for int input, float for
+  float input. Raises TypeError for bool
+  or non-numeric input.
+end note
+
+note right of Calculator::cube
+  Returns int for int input, float for
+  float input. Raises TypeError for bool
+  or non-numeric input.
+end note
+
+note right of Calculator::square_root
+  Always returns float. Raises TypeError
+  for bool or non-numeric. Raises
+  ValueError if x < 0.
+end note
+
+note right of Calculator::cube_root
+  Always returns float. Supports negative
+  values (sign-preserving via copysign).
+  Raises TypeError for bool or non-numeric.
+end note
+
+note right of Calculator::power
+  Always returns float. Raises TypeError
+  if base or exponent is bool or
+  non-numeric.
+end note
+
+note right of Calculator::log10
+  Always returns float. Raises TypeError
+  for bool or non-numeric. Raises
+  ValueError if x <= 0.
+end note
+
+note right of Calculator::natural_log
+  Always returns float. Raises TypeError
+  for bool or non-numeric. Raises
+  ValueError if x <= 0.
 end note
 
 @enduml

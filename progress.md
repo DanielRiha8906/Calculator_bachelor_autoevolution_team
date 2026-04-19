@@ -1,3 +1,13 @@
+## Run: issue-146-functions-naive-team
+
+- branch: task/issue-146-functions-naive-team
+- files changed: src/calculator.py, tests/test_calculator.py
+- purpose: Add square, cube, square root, cube root, power, log10, and natural log to Calculator class (Issue #146)
+- risks: None — additive change only, no existing methods modified
+- tests passed: 164/164 new tests, 298/298 total suite
+
+Duration: 269.9s | Cost: $0.718418 USD | Turns: 12
+
 ## Run: issue-143-factorial-naive-team
 
 - branch: task/issue-143-factorial
@@ -62,3 +72,13 @@ Duration: 31.8s | Cost: $0.146748 USD | Turns: 16
 - tests passed: N/A
 
 Duration: 56.9s | Cost: $0.205081 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-146-functions-naive-team
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include the 7 new Calculator methods added in issue-146 (square, cube, square_root, cube_root, power, log10, natural_log)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
