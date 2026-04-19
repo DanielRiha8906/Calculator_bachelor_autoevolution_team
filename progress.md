@@ -10,7 +10,7 @@
 - **Risks:** None — diagram-only update, no source changes
 - **Tests passed:** N/A — no code changes
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 59.4s | Cost: $0.211018 USD | Turns: 17
 
 ## Run: issue-147-math-functions (2026-04-19)
 
