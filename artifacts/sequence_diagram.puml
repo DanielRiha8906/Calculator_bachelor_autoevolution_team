@@ -2,7 +2,8 @@
 
 participant "__main__" as main
 participant "CLI" as cli
-participant "InputHandler" as ih
+participant "core.Operations" as ops
+participant "interactive.Session" as session
 participant "Calculator" as calc
 participant "HistoryTracker" as ht
 participant "ErrorLogger" as el
@@ -11,43 +12,45 @@ alt Interactive Mode (python -m src)
 
     main -> calc : <<create>>
     main -> ht : <<create>>
-    main -> ih : run_interactive_session(calculator, history_tracker)
+    main -> session : run_interactive_session(calculator, history_tracker)
 
-    ih -> ih : get_operation_registry(calculator)
-    ih -> ih : print welcome message
+    session -> ops : get_operation_registry(calculator)
+    ops --> session : registry
+    session -> session : print welcome message
 
     loop interactive session
-        ih -> ih : display_menu(registry)
-        ih -> ih : get_operation_choice(registry)
+        session -> session : display_menu(registry)
+        session -> session : get_operation_choice(registry)
 
         alt user quit (q / quit / exit)
-            ih -> ht : save_to_file("history.txt")
-            ih -> main : return\n(prints "Goodbye.")
+            session -> ht : save_to_file("history.txt")
+            session -> main : return\n(prints "Goodbye.")
         else history request ("h")
-            ih -> ht : display()
+            session -> ht : display()
         else max validation attempts exceeded → (None, None, None)
-            ih -> ht : save_to_file("history.txt")
-            ih -> main : return
+            session -> ht : save_to_file("history.txt")
+            session -> main : return
         else operation selected
-            ih -> ih : get_operands(arity)
+            session -> session : get_operands(arity)
 
             alt max validation attempts exceeded → None
-                ih -> ht : save_to_file("history.txt")
-                ih -> main : return
+                session -> ht : save_to_file("history.txt")
+                session -> main : return
             else operands collected
                 opt method is factorial
-                    ih -> ih : convert whole-valued floats to int
+                    session -> session : convert whole-valued floats to int
                 end
 
-                ih -> calc : method(*operands)
+                session -> calc : method(*operands)
 
                 alt success
-                    calc --> ih : result
-                    ih -> ih : print "Result: {result}"
-                    ih -> ht : record(operation_name, operands, result)
+                    calc --> session : result
+                    session -> session : print "Result: {result}"
+                    session -> ht : record(operation_name, operands, result)
                 else TypeError / ValueError / ZeroDivisionError
-                    calc --> ih : raises exception
-                    ih -> ih : print error message
+                    calc --> session : raises exception
+                    session -> el : log_error(error_type, context)
+                    session -> session : print error message
                 end
             end
         end
@@ -59,8 +62,8 @@ else CLI Mode (execute_cli)
     main -> cli : parse_arguments(sys.argv)
     cli --> main : (operation_name, operand_strs)
 
-    main -> ih : get_operation_registry(calculator)
-    ih --> main : registry
+    main -> ops : get_operation_registry(calculator)
+    ops --> main : registry
 
     main -> cli : execute_cli(operation_name, operand_strs, registry, calculator)
 
