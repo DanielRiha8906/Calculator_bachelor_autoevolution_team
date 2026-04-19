@@ -245,3 +245,14 @@ Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
 - **PR target:** exp2/structured-team
 
 Duration: 402.4s | Cost: $1.051931 USD | Turns: 14
+
+## Run: issue-174-logic-separation (2026-04-19)
+
+- **Branch:** task/issue-174-logic-separation
+- **Files changed:** src/operations.py (created), src/cli.py (modified), src/repl.py (modified), tests/test_operations.py (created)
+- **Purpose:** Refactor calculator to separate calculation dispatch logic from user interaction layers by introducing a centralized OperationRegistry; CLI and REPL now delegate operation metadata and dispatch to the registry
+- **Risks:** Backwards-compatible shim kept for `OPERATIONS` dict in repl.py and `get_operation_mapping()` in cli.py so existing tests pass without modification
+- **Tests passed:** 716/716 (131 new operations tests, 585 existing tests all still pass)
+- **PR target:** exp2/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
