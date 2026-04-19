@@ -33,7 +33,7 @@ def calculator():
 @pytest.fixture
 def handler(calculator):
     """Provide a CLIHandler instance with a real Calculator."""
-    return CLIHandler(calculator)
+    return CLIHandler(calculator, error_logger=None)
 
 
 @pytest.fixture
@@ -1115,3 +1115,183 @@ class TestMainWithNoneArgv:
                 with patch("src.__main__.Calculator"):
                     main(argv=None)
             mock_run.assert_called_once()
+
+
+# ==============================================================================
+# TESTS: CLIHandler Error Logging Integration
+# ==============================================================================
+
+class TestCLIHandlerErrorLogging:
+    """Test suite for error logging integration in CLIHandler."""
+
+    def test_cli_logs_unsupported_operation_error(self):
+        """Test that CLI logs UNSUPPORTED_OPERATION for unknown operation."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            with pytest.raises(ValueError):
+                handler.execute(["unknown_op", "1", "2"])
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "UNSUPPORTED_OPERATION" in errors[0]
+            assert "unknown_op" in errors[0]
+
+    def test_cli_logs_invalid_input_wrong_operand_count(self):
+        """Test that CLI logs INVALID_INPUT for wrong operand count."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            with pytest.raises(ValueError):
+                handler.execute(["add", "5"])  # Missing second operand
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "INVALID_INPUT" in errors[0]
+
+    def test_cli_logs_invalid_input_non_numeric_operand(self):
+        """Test that CLI logs INVALID_INPUT for non-numeric operand."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            with pytest.raises(ValueError):
+                handler.execute(["add", "abc", "2"])
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "INVALID_INPUT" in errors[0]
+
+    def test_cli_logs_calculation_error_division_by_zero(self):
+        """Test that CLI logs CALCULATION_ERROR on division by zero."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            with pytest.raises(ZeroDivisionError):
+                handler.execute(["divide", "10", "0"])
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "CALCULATION_ERROR" in errors[0]
+            assert "divide" in errors[0]
+
+    def test_cli_logs_calculation_error_math_domain_error(self):
+        """Test that CLI logs CALCULATION_ERROR on math domain error."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            with pytest.raises(ValueError):
+                handler.execute(["logarithm", "-5", "10"])
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "CALCULATION_ERROR" in errors[0]
+
+    def test_cli_successful_operation_not_logged_as_error(self):
+        """Test that successful operations are not logged to error log."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            result = handler.execute(["add", "2", "3"])
+            assert result == 5.0
+
+            errors = error_logger.get_errors()
+            assert errors == []
+
+    def test_cli_error_logger_none_does_not_crash(self):
+        """Test that execution with error_logger=None doesn't crash."""
+        calc = Calculator()
+        handler = CLIHandler(calc, error_logger=None)
+
+        result = handler.execute(["add", "2", "3"])
+        assert result == 5.0
+
+    def test_cli_error_logger_none_with_error_still_raises(self):
+        """Test that execution with error_logger=None still raises exception."""
+        calc = Calculator()
+        handler = CLIHandler(calc, error_logger=None)
+
+        with pytest.raises(ZeroDivisionError):
+            handler.execute(["divide", "10", "0"])
+
+    def test_cli_multiple_error_types_logged_separately(self):
+        """Test that different error types are logged correctly."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            handler = CLIHandler(calc, error_logger=error_logger)
+
+            # Try different types of errors
+            try:
+                handler.execute(["unknown"])
+            except ValueError:
+                pass
+
+            try:
+                handler.execute(["add", "x"])
+            except ValueError:
+                pass
+
+            try:
+                handler.execute(["divide", "10", "0"])
+            except ZeroDivisionError:
+                pass
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 3
+            assert "UNSUPPORTED_OPERATION" in errors[0]
+            assert "INVALID_INPUT" in errors[1]
+            assert "CALCULATION_ERROR" in errors[2]
