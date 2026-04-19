@@ -7,12 +7,12 @@ start
 if (Mode?) then (interactive — via __main__)
 
     :Instantiate HistoryTracker;
-    :core.Operations: get_operation_registry(calculator);
+    :core.Operations: get_operation_registry(calculator)\n→ OperationRegistry loads normal operations;
     :Print welcome message;
 
     while (session active?) is (yes)
 
-        :display_menu(registry);
+        :interface.MenuRenderer: display_menu(registry);
         :get_operation_choice(registry);
 
         if (choice is None?) then (yes — user quit)
@@ -52,8 +52,8 @@ if (Mode?) then (interactive — via __main__)
 
 else (CLI — via execute_cli)
 
-    :parse_arguments(sys.argv);
-    :core.Operations: get_operation_registry(calculator);
+    :interface.InputParser: parse_cli_args(sys.argv);
+    :core.Operations: get_operation_registry(calculator)\n→ OperationRegistry loads normal operations;
 
     :Look up operation_name in registry;
     if (operation found?) then (no)
@@ -71,7 +71,7 @@ else (CLI — via execute_cli)
         stop
     endif
 
-    :convert_operand(value) for each operand;
+    :interface.InputParser: convert_operand(value) for each operand;
     if (conversion failed?) then (yes)
         :error_logger.log_error("INVALID_OPERAND", context);
         :Print error to stderr;

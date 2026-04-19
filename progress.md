@@ -1,3 +1,13 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-181-modularization-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-181 modularization: new OperationRegistry class in src/core/operations_manager.py (with _normal_operations, _scientific_operations, get_all_operations, get_normal_operations); new src/interface/ package with InputParser (parse_cli_args, convert_operand), OutputFormatter (format_result), and MenuRenderer (display_menu) modules; HistoryTracker and ErrorLogger canonical homes moved to src/support/. Class diagram restructured with new src.interface and src.support packages, OperationRegistry node added, and dependency edges updated. Sequence diagram updated with interface.InputParser, interface.MenuRenderer, and core.OperationRegistry participants showing full delegation chain. Activity diagram updated to reference interface.InputParser and interface.MenuRenderer at call sites.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-181 — V2 Modularization (Expert/Team)
 
 - **Branch:** task/issue-181-modularization-expert-team

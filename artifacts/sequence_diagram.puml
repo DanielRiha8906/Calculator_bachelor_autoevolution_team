@@ -2,7 +2,10 @@
 
 participant "__main__" as main
 participant "CLI" as cli
+participant "interface.InputParser" as inputparser
+participant "interface.MenuRenderer" as menurenderer
 participant "core.Operations" as ops
+participant "core.OperationRegistry" as oreg
 participant "interactive.Session" as session
 participant "Calculator" as calc
 participant "HistoryTracker" as ht
@@ -15,11 +18,15 @@ alt Interactive Mode (python -m src)
     main -> session : run_interactive_session(calculator, history_tracker)
 
     session -> ops : get_operation_registry(calculator)
+    ops -> oreg : <<create>>(calculator)
+    oreg -> oreg : _load_normal_operations()
+    ops -> oreg : get_all_operations()
+    oreg --> ops : registry dict
     ops --> session : registry
     session -> session : print welcome message
 
     loop interactive session
-        session -> session : display_menu(registry)
+        session -> menurenderer : display_menu(registry)
         session -> session : get_operation_choice(registry)
 
         alt user quit (q / quit / exit)
@@ -60,9 +67,15 @@ else CLI Mode (execute_cli)
 
     main -> calc : <<create>>
     main -> cli : parse_arguments(sys.argv)
+    cli -> inputparser : parse_cli_args(args)
+    inputparser --> cli : (operation_name, operand_strs)
     cli --> main : (operation_name, operand_strs)
 
     main -> ops : get_operation_registry(calculator)
+    ops -> oreg : <<create>>(calculator)
+    oreg -> oreg : _load_normal_operations()
+    ops -> oreg : get_all_operations()
+    oreg --> ops : registry dict
     ops --> main : registry
 
     main -> cli : execute_cli(operation_name, operand_strs, registry, calculator)
@@ -78,7 +91,7 @@ else CLI Mode (execute_cli)
         cli -> cli : print error to stderr
         cli --> main : return 1
     else valid
-        cli -> cli : convert_operand(value) for each operand
+        cli -> inputparser : convert_operand(value) for each operand
 
         alt operand conversion failed
             cli -> el : log_error("INVALID_OPERAND", context)

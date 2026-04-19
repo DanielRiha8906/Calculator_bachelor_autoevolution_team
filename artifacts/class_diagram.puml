@@ -1,6 +1,17 @@
 @startuml class_diagram
 
 package "src" {
+    class ErrorLogger {
+        +log_error(error_type: str, context: dict) : None
+    }
+
+    class CLI <<module>> {
+        +parse_arguments(args: list[str]) : tuple[str, list[str]]
+        +execute_cli(operation_name: str, operand_strs: list[str], registry: dict, calculator: Calculator) : int
+    }
+}
+
+package "src.core" {
     class Calculator {
         +add(a, b) : float
         +subtract(a, b) : float
@@ -16,6 +27,47 @@ package "src" {
         +ln(x: int|float) : float
     }
 
+    class OperationRegistry {
+        -_calculator : Calculator
+        -_normal_operations : dict[str, tuple]
+        -_scientific_operations : dict[str, tuple]
+        +__init__(calculator: Calculator)
+        -_load_normal_operations() : None
+        -_register_op(name: str, method: object, arity: int) : None
+        +get_all_operations() : dict[str, tuple]
+        +get_normal_operations() : dict[str, tuple]
+    }
+
+    class Operations <<module>> {
+        +get_operation_registry(calculator: Calculator) : dict[str, tuple]
+    }
+}
+
+package "src.interface" {
+    class InputParser <<module>> {
+        +parse_cli_args(args: list[str]) : tuple[str, list[str]]
+        +convert_operand(value: str) : int | float
+    }
+
+    class OutputFormatter <<module>> {
+        +format_result(result: int|float) : str
+    }
+
+    class MenuRenderer <<module>> {
+        +display_menu(registry: dict) : None
+    }
+}
+
+package "src.interactive" {
+    class Session <<module>> {
+        MAX_VALIDATION_ATTEMPTS : int = 5
+        +get_operation_choice(registry: dict) : tuple | None
+        +get_operands(arity: int) : list[float] | None
+        +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
+    }
+}
+
+package "src.support" {
     class HistoryTracker {
         -_history : list[str]
         +record(operation_name: str, operands: list, result: object) : None
@@ -24,55 +76,30 @@ package "src" {
         +save_to_file(filepath: str) : None
         +clear() : None
     }
-
-    class InputHandler <<module>> {
-    }
-
-    class ErrorLogger {
-        +log_error(error_type: str, context: dict) : None
-    }
-
-    class CLI <<module>> {
-        +parse_arguments(args: list[str]) : tuple[str, list[str]]
-        +convert_operand(value: str) : int | float
-        +execute_cli(operation_name: str, operand_strs: list[str], registry: dict, calculator: Calculator) : int
-    }
-}
-
-package "src.core" {
-    class Operations <<module>> {
-        +get_operation_registry(calculator: Calculator) : dict[str, tuple]
-    }
-}
-
-package "src.interactive" {
-    class Session <<module>> {
-        MAX_VALIDATION_ATTEMPTS : int = 5
-        +display_menu(registry: dict) : None
-        +get_operation_choice(registry: dict) : tuple | None
-        +get_operands(arity: int) : list[float] | None
-        +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
-    }
 }
 
 package "__main__" {
     class EntryPoint <<module>> {
-        +main() : None
     }
 }
 
+Operations ..> OperationRegistry : instantiates
+OperationRegistry o-- Calculator : delegates to
+
 EntryPoint ..> Calculator : instantiates
 EntryPoint ..> HistoryTracker : instantiates
-EntryPoint ..> InputHandler : calls run_interactive_session()
-InputHandler ..> Session : re-exports
-InputHandler ..> Operations : re-exports
+EntryPoint ..> Session : calls run_interactive_session()
+
 Session ..> Calculator : invokes methods via registry
 Session ..> HistoryTracker : records results / displays / saves
 Session ..> Operations : calls get_operation_registry()
 Session ..> ErrorLogger : logs errors
+Session ..> MenuRenderer : calls display_menu()
+
 CLI ..> Calculator : invokes methods via registry
 CLI ..> Operations : calls get_operation_registry()
 CLI ..> ErrorLogger : logs errors
+CLI ..> InputParser : calls parse_cli_args() / convert_operand()
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -104,6 +131,18 @@ note right of Calculator::ln
   Raises ValueError if x <= 0.
 end note
 
+note right of OperationRegistry
+  Registers binary ops (add, subtract, multiply, divide, power)
+  and unary ops (factorial, square, cube, square_root,
+  cube_root, log, ln) in _normal_operations.
+  _scientific_operations reserved for future extension.
+end note
+
+note right of Operations
+  Delegates to OperationRegistry.get_all_operations().
+  Return format: dict[name -> (method, arity)].
+end note
+
 note right of HistoryTracker::record
   Stores entry as "operation(args) = result".
 end note
@@ -111,13 +150,6 @@ end note
 note right of HistoryTracker::save_to_file
   Defaults to "history.txt".
   OSError is caught and printed to stderr.
-end note
-
-note right of InputHandler
-  Backward-compatibility shim.
-  Re-exports from src.core.operations and
-  src.interactive.session. Preserves existing
-  call sites without requiring import updates.
 end note
 
 note right of Session::get_operation_choice
@@ -147,7 +179,7 @@ note right of CLI::execute_cli
   ZeroDivisionError.
 end note
 
-note right of CLI::convert_operand
+note right of InputParser::convert_operand
   Parses string to int or float.
   Returns int if value is whole (3.0 -> 3).
 end note
