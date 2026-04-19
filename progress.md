@@ -231,4 +231,4 @@ Duration: 426.9s | Cost: $1.200818 USD | Turns: 15
 - **Risks:** Low — all logic moved verbatim; no behavioral changes; backward-compat shim preserves all existing import paths.
 - **Tests passed:** Yes — 523 tests passed (54 new), 0 failures.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 364.0s | Cost: $0.993583 USD | Turns: 13
