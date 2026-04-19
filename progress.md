@@ -1,3 +1,13 @@
+## Run: issue-143-factorial-naive-team
+
+- branch: task/issue-143-factorial
+- files changed: src/calculator.py, src/__main__.py, tests/test_calculator.py
+- purpose: Add factorial unary operation to Calculator class (Issue #143)
+- risks: None — additive change only, no existing methods modified
+- tests passed: 45/45 new tests, 134/134 total suite
+
+Duration: 177.5s | Cost: $0.464955 USD | Turns: 12
+
 ## Run: issue-137-zerodivisionerror-naive-team
 
 - branch: task/issue-137-zerodivisionerror-naive-team
@@ -42,3 +52,13 @@ Duration: 45.7s | Cost: $0.159431 USD | Turns: 12
 - tests passed: N/A
 
 Duration: 31.8s | Cost: $0.146748 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-143-factorial
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include the factorial method added in issue-143
+- risks: None — diagram-only additions, no source changes
+- tests passed: N/A
+
+Duration: 56.9s | Cost: $0.205081 USD | Turns: 15

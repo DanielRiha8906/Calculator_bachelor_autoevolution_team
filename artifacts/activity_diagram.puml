@@ -22,6 +22,43 @@ else (no)
   :Print "Division: 2.0";
 endif
 
+:Call factorial(5);
+
+if (n is bool?) then (yes)
+  :Raise TypeError;
+  stop
+else (no)
+endif
+
+if (n is float?) then (yes)
+  if (n.is_integer()?) then (no)
+    :Raise TypeError;
+    stop
+  else (yes)
+    :Convert n to int;
+  endif
+else (no)
+endif
+
+if (n is not int?) then (yes)
+  :Raise TypeError;
+  stop
+else (no)
+endif
+
+if (n < 0?) then (yes)
+  :Raise ValueError;
+  stop
+else (no)
+endif
+
+:Compute result = 1;
+:Iterate i from 2 to n, result *= i;
+:Print "Factorial of 5: 120";
+
+:Call factorial(0);
+:Print "Factorial of 0: 1";
+
 stop
 
 @enduml
