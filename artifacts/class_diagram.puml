@@ -18,17 +18,33 @@ class Calculator {
 class InvalidInputError {
 }
 
+class OperandRetryExceeded {
+}
+
+class RetryLimitExceeded {
+}
+
+class InputRetryConfig <<dataclass>> {
+    +max_attempts: int
+}
+
 class "__main__" <<module>> {
     +main() : None
 }
 
 class "user_input" <<module>> {
+    +MAX_RETRIES : int
     +OPERATIONS : dict[str, tuple[str, int]]
     +parse_number(input_str: str) : int|float
     +get_operands(operation: str) : list[int|float]
     +execute_operation(calc: Calculator, operation: str, operands: list) : object
     +format_result(result: object) : str
     +run_interactive() : None
+}
+
+class "input_retry" <<module>> {
+    +DEFAULT_MAX_RETRIES : int
+    +validate_with_retry(input_fn: Callable, validator: Callable, error_formatter: Callable, config: InputRetryConfig|None) : T
 }
 
 class "cli" <<module>> {
@@ -38,10 +54,16 @@ class "cli" <<module>> {
 }
 
 Exception <|-- InvalidInputError
+Exception <|-- OperandRetryExceeded
+Exception <|-- RetryLimitExceeded
 "__main__" ..> "cli" : dispatches to (argv present)
 "__main__" ..> "user_input" : dispatches to (no argv)
 "user_input" ..> Calculator : uses
 "user_input" ..> InvalidInputError : raises
+"user_input" ..> OperandRetryExceeded : raises
+"user_input" ..> "input_retry" : imports DEFAULT_MAX_RETRIES
+"input_retry" ..> RetryLimitExceeded : raises
+"input_retry" ..> InputRetryConfig : uses
 "cli" ..> Calculator : uses
 
 note right of Calculator::divide
@@ -97,6 +119,12 @@ note right of Calculator::natural_log
   ValueError if x <= 0.
 end note
 
+note right of "user_input"::MAX_RETRIES
+  Initialized from input_retry.DEFAULT_MAX_RETRIES
+  (currently 3). Controls retry limits for
+  both operation selection and operand input.
+end note
+
 note right of "user_input"::OPERATIONS
   Maps each operation name to
   (Calculator method name, operand count).
@@ -108,10 +136,29 @@ note right of "user_input"::parse_number
   Raises InvalidInputError on failure.
 end note
 
+note right of "user_input"::get_operands
+  Retries each operand up to MAX_RETRIES
+  times. Raises OperandRetryExceeded when
+  all attempts for an operand are exhausted.
+end note
+
 note right of "user_input"::execute_operation
   Catches ZeroDivisionError, ValueError,
   and TypeError; returns error string
   instead of propagating exception.
+end note
+
+note right of "input_retry"::validate_with_retry
+  Generic retry loop (type T). Calls input_fn
+  repeatedly until validator returns True or
+  max_attempts reached. error_formatter receives
+  (value, attempt, max). Raises RetryLimitExceeded
+  when exhausted.
+end note
+
+note right of InputRetryConfig
+  max_attempts defaults to
+  DEFAULT_MAX_RETRIES (3).
 end note
 
 note right of "cli"::_eval_node
