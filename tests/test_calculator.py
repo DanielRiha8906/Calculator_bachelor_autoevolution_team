@@ -1,5 +1,6 @@
 import pytest
 import math
+import logging
 from datetime import datetime
 from src.calculator import Calculator
 from src.history import OperationRecord, OperationHistory
@@ -1864,3 +1865,191 @@ class TestCalculatorHistory:
         # Timestamps should be in chronological order
         # Note: very fast execution might result in same microsecond
         assert ts1 <= ts2 <= ts3
+
+
+# ============================================================================
+# ERROR LOGGING TESTS
+# ============================================================================
+
+class TestCalculatorErrorLogging:
+    """Test suite for error logging in Calculator methods."""
+
+    def test_divide_by_zero_error_is_logged(self, calculator, caplog):
+        """Verify that ZeroDivisionError in divide() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ZeroDivisionError):
+                calculator.divide(10, 0)
+
+        assert any("divide" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.factorial(-5)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial(True)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_non_integer_float_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for non-integer float in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial(5.5)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_string_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for string in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial("5")
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in square() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square(True)
+
+        assert any("square" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_string_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for string in square() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square("5")
+
+        assert any("square" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in cube() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube(False)
+
+        assert any("cube" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_none_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for None in cube() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube(None)
+
+        assert any("cube" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_root_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError in square_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.square_root(-1)
+
+        assert any("square_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_root_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in square_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square_root(True)
+
+        assert any("square_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_root_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in cube_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube_root(False)
+
+        assert any("cube_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_power_bool_base_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool base in power() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.power(True, 2)
+
+        assert any("power" in record.message.lower() for record in caplog.records)
+        assert any("base" in record.message.lower() for record in caplog.records)
+
+    def test_power_bool_exponent_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool exponent in power() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.power(2, False)
+
+        assert any("power" in record.message.lower() for record in caplog.records)
+        assert any("exponent" in record.message.lower() for record in caplog.records)
+
+    def test_log10_zero_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for log10(0) is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.log10(0)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_log10_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for negative in log10() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.log10(-5)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_log10_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in log10() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.log10(True)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_zero_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for natural_log(0) is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.natural_log(0)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for negative in natural_log() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.natural_log(-5)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in natural_log() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.natural_log(True)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)

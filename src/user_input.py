@@ -4,8 +4,12 @@ Provides prompt-based input parsing, operation dispatch, and a top-level
 interactive loop that drives the Calculator through user-supplied commands.
 """
 
+import logging
+
 from src.calculator import Calculator
 from src.input_retry import DEFAULT_MAX_RETRIES
+
+logger = logging.getLogger("calculator")
 
 MAX_RETRIES: int = DEFAULT_MAX_RETRIES
 
@@ -58,6 +62,9 @@ def parse_number(input_str: str) -> int | float:
     try:
         return float(stripped)
     except ValueError:
+        logger.error(
+            f"parse_number: could not parse '{input_str}' as a number; InvalidInputError"
+        )
         raise InvalidInputError(
             f"Invalid number: '{input_str}'. Please enter an integer or decimal value."
         )
@@ -127,10 +134,19 @@ def execute_operation(calc: Calculator, operation: str, operands: list) -> objec
     try:
         return method(*operands)
     except ZeroDivisionError:
+        logger.error(
+            f"execute_operation: {operation} with operands {operands} failed; ZeroDivisionError"
+        )
         return "Error: Division by zero is not allowed."
     except ValueError as exc:
+        logger.error(
+            f"execute_operation: {operation} with operands {operands} failed; {exc}"
+        )
         return f"Error: {exc}"
     except TypeError as exc:
+        logger.error(
+            f"execute_operation: {operation} with operands {operands} failed; {exc}"
+        )
         return f"Error: {exc}"
 
 

@@ -9,6 +9,7 @@ Tests cover:
 """
 
 import pytest
+import logging
 from unittest.mock import patch, MagicMock, call
 import sys
 from io import StringIO
@@ -969,3 +970,121 @@ class TestRunInteractiveRetryLogic:
         result_count = sum(1 for call in print_calls if "Result" in str(call))
         # Should have 2 results: one for add (5+3=8), one for square (9*9=81)
         assert result_count >= 2
+
+
+# ============================================================================
+# USER INPUT ERROR LOGGING TESTS
+# ============================================================================
+
+class TestUserInputErrorLogging:
+    """Test suite for error logging in user_input module."""
+
+    def test_parse_number_invalid_string_logs_error(self, caplog):
+        """Verify that invalid number input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("abc")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_parse_number_empty_string_logs_error(self, caplog):
+        """Verify that empty string input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_parse_number_whitespace_only_logs_error(self, caplog):
+        """Verify that whitespace-only input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("   ")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_parse_number_special_characters_logs_error(self, caplog):
+        """Verify that special characters in input are logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("@#$%")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_division_by_zero_logs_error(self, caplog):
+        """Verify that division by zero in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "divide", [10, 0])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_square_root_negative_logs_error(self, caplog):
+        """Verify that square_root of negative in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "square_root", [-1])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_factorial_negative_logs_error(self, caplog):
+        """Verify that negative factorial in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [-5])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_factorial_bool_logs_error(self, caplog):
+        """Verify that bool in factorial within execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [True])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_log10_zero_logs_error(self, caplog):
+        """Verify that zero value in log10 is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "log10", [0])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_natural_log_negative_logs_error(self, caplog):
+        """Verify that negative value in natural_log is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "natural_log", [-5])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_type_error_logs_error(self, caplog):
+        """Verify that TypeError in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [True])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
