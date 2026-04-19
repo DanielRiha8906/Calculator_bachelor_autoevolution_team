@@ -1,4 +1,20 @@
 
+## Run: issue-147-math-functions (2026-04-19)
+
+- **Branch:** task/issue-147-math-functions
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added 7 new methods: `square`, `cube`, `square_root`, `cube_root`, `power`, `logarithm`, `natural_logarithm`; added `import math`
+  - `tests/test_calculator.py` — added 96 new tests covering all 7 operations (normal inputs, edge cases, domain errors, result chaining)
+- **Purpose:** Add square, cube, roots, power, log, and ln as supported calculator operations (issue #147)
+- **Risks:** Low — backward-compatible additions; existing 70 tests unaffected
+- **Tests passed:** Yes — all 166 tests pass (70 existing + 96 new)
+- **Tokens used:** PENDING
+- **Cost (USD):** PENDING
+- **Turns:** PENDING
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-144-factorial (2026-04-19)
 
 - **Branch:** task/issue-144-factorial

@@ -601,3 +601,539 @@ def test_factorial_result_chains_to_subtract(calc):
     assert isinstance(result_factorial, int)
     result_subtract = calc.subtract(result_factorial, 20)
     assert result_subtract == 100
+
+
+# ============================================================================
+# SQUARE TESTS
+# ============================================================================
+
+def test_square_positive_integer(calc):
+    """Verify square of positive integer."""
+    result = calc.square(5)
+    assert result == 25
+
+
+def test_square_zero(calc):
+    """Verify square of zero."""
+    result = calc.square(0)
+    assert result == 0
+
+
+def test_square_negative_integer(calc):
+    """Verify square of negative integer."""
+    result = calc.square(-5)
+    assert result == 25
+
+
+def test_square_positive_float(calc):
+    """Verify square of positive float."""
+    result = calc.square(2.5)
+    assert abs(result - 6.25) < 1e-10
+
+
+def test_square_negative_float(calc):
+    """Verify square of negative float."""
+    result = calc.square(-2.5)
+    assert abs(result - 6.25) < 1e-10
+
+
+def test_square_one(calc):
+    """Verify square of one."""
+    result = calc.square(1)
+    assert result == 1
+
+
+def test_square_large_value(calc):
+    """Verify square of large value."""
+    result = calc.square(1000)
+    assert result == 1000000
+
+
+def test_square_small_float(calc):
+    """Verify square of small float."""
+    result = calc.square(0.5)
+    assert abs(result - 0.25) < 1e-10
+
+
+def test_square_result_chains_to_add(calc):
+    """Verify output of square can be input to add."""
+    result_square = calc.square(5)
+    assert result_square == 25
+    result_add = calc.add(result_square, 5)
+    assert result_add == 30
+
+
+def test_square_result_chains_to_multiply(calc):
+    """Verify output of square can be input to multiply."""
+    result_square = calc.square(4)
+    assert result_square == 16
+    result_multiply = calc.multiply(result_square, 2)
+    assert result_multiply == 32
+
+
+# ============================================================================
+# CUBE TESTS
+# ============================================================================
+
+def test_cube_positive_integer(calc):
+    """Verify cube of positive integer."""
+    result = calc.cube(3)
+    assert result == 27
+
+
+def test_cube_zero(calc):
+    """Verify cube of zero."""
+    result = calc.cube(0)
+    assert result == 0
+
+
+def test_cube_negative_integer(calc):
+    """Verify cube of negative integer."""
+    result = calc.cube(-3)
+    assert result == -27
+
+
+def test_cube_positive_float(calc):
+    """Verify cube of positive float."""
+    result = calc.cube(2.0)
+    assert abs(result - 8.0) < 1e-10
+
+
+def test_cube_negative_float(calc):
+    """Verify cube of negative float."""
+    result = calc.cube(-2.0)
+    assert abs(result - (-8.0)) < 1e-10
+
+
+def test_cube_one(calc):
+    """Verify cube of one."""
+    result = calc.cube(1)
+    assert result == 1
+
+
+def test_cube_large_value(calc):
+    """Verify cube of large value."""
+    result = calc.cube(10)
+    assert result == 1000
+
+
+def test_cube_small_float(calc):
+    """Verify cube of small float."""
+    result = calc.cube(0.5)
+    assert abs(result - 0.125) < 1e-10
+
+
+def test_cube_result_chains_to_add(calc):
+    """Verify output of cube can be input to add."""
+    result_cube = calc.cube(3)
+    assert result_cube == 27
+    result_add = calc.add(result_cube, 3)
+    assert result_add == 30
+
+
+def test_cube_result_chains_to_multiply(calc):
+    """Verify output of cube can be input to multiply."""
+    result_cube = calc.cube(2)
+    assert result_cube == 8
+    result_multiply = calc.multiply(result_cube, 2)
+    assert result_multiply == 16
+
+
+# ============================================================================
+# SQUARE ROOT TESTS
+# ============================================================================
+
+def test_square_root_perfect_square(calc):
+    """Verify square root of perfect square."""
+    result = calc.square_root(4)
+    assert result == 2
+
+
+def test_square_root_zero(calc):
+    """Verify square root of zero."""
+    result = calc.square_root(0)
+    assert result == 0
+
+
+def test_square_root_one(calc):
+    """Verify square root of one."""
+    result = calc.square_root(1)
+    assert result == 1
+
+
+def test_square_root_float(calc):
+    """Verify square root of float."""
+    result = calc.square_root(2.25)
+    assert abs(result - 1.5) < 1e-10
+
+
+def test_square_root_large_value(calc):
+    """Verify square root of large value."""
+    result = calc.square_root(10000)
+    assert result == 100
+
+
+def test_square_root_small_float(calc):
+    """Verify square root of small float."""
+    result = calc.square_root(0.25)
+    assert abs(result - 0.5) < 1e-10
+
+
+def test_square_root_non_perfect_square(calc):
+    """Verify square root of non-perfect square with tolerance."""
+    result = calc.square_root(2)
+    assert abs(result - 1.41421356237) < 1e-10
+
+
+def test_square_root_negative_integer(calc):
+    """Verify square root of negative integer raises ValueError."""
+    with pytest.raises(ValueError, match="square_root\\(\\) not defined for negative values"):
+        calc.square_root(-1)
+
+
+def test_square_root_negative_float(calc):
+    """Verify square root of negative float raises ValueError."""
+    with pytest.raises(ValueError, match="square_root\\(\\) not defined for negative values"):
+        calc.square_root(-2.5)
+
+
+def test_square_root_result_chains_to_add(calc):
+    """Verify output of square_root can be input to add."""
+    result_sqrt = calc.square_root(4)
+    assert result_sqrt == 2
+    result_add = calc.add(result_sqrt, 3)
+    assert result_add == 5
+
+
+def test_square_root_result_chains_to_multiply(calc):
+    """Verify output of square_root can be input to multiply."""
+    result_sqrt = calc.square_root(9)
+    assert result_sqrt == 3
+    result_multiply = calc.multiply(result_sqrt, 2)
+    assert result_multiply == 6
+
+
+def test_square_root_result_chains_to_divide(calc):
+    """Verify output of square_root can be input to divide."""
+    result_sqrt = calc.square_root(16)
+    assert result_sqrt == 4
+    result_divide = calc.divide(result_sqrt, 2)
+    assert abs(result_divide - 2.0) < 1e-10
+
+
+# ============================================================================
+# CUBE ROOT TESTS
+# ============================================================================
+
+def test_cube_root_perfect_cube(calc):
+    """Verify cube root of perfect cube."""
+    result = calc.cube_root(8)
+    assert abs(result - 2) < 1e-10
+
+
+def test_cube_root_zero(calc):
+    """Verify cube root of zero."""
+    result = calc.cube_root(0)
+    assert result == 0.0
+
+
+def test_cube_root_one(calc):
+    """Verify cube root of one."""
+    result = calc.cube_root(1)
+    assert abs(result - 1) < 1e-10
+
+
+def test_cube_root_negative_integer(calc):
+    """Verify cube root of negative integer."""
+    result = calc.cube_root(-8)
+    assert abs(result - (-2)) < 1e-10
+
+
+def test_cube_root_negative_float(calc):
+    """Verify cube root of negative float."""
+    result = calc.cube_root(-27.0)
+    assert abs(result - (-3.0)) < 1e-10
+
+
+def test_cube_root_float(calc):
+    """Verify cube root of float."""
+    result = calc.cube_root(8.0)
+    assert abs(result - 2.0) < 1e-10
+
+
+def test_cube_root_large_value(calc):
+    """Verify cube root of large value."""
+    result = calc.cube_root(1000)
+    assert abs(result - 10) < 1e-10
+
+
+def test_cube_root_small_float(calc):
+    """Verify cube root of small float."""
+    result = calc.cube_root(0.125)
+    assert abs(result - 0.5) < 1e-10
+
+
+def test_cube_root_non_perfect_cube(calc):
+    """Verify cube root of non-perfect cube."""
+    result = calc.cube_root(2)
+    assert abs(result - 1.2599210498948732) < 1e-9
+
+
+def test_cube_root_negative_non_perfect(calc):
+    """Verify cube root of negative non-perfect cube."""
+    result = calc.cube_root(-2)
+    assert abs(result - (-1.2599210498948732)) < 1e-9
+
+
+def test_cube_root_result_chains_to_add(calc):
+    """Verify output of cube_root can be input to add."""
+    result_cbrt = calc.cube_root(8)
+    assert abs(result_cbrt - 2) < 1e-10
+    result_add = calc.add(result_cbrt, 3)
+    assert abs(result_add - 5) < 1e-10
+
+
+def test_cube_root_result_chains_to_multiply(calc):
+    """Verify output of cube_root can be input to multiply."""
+    result_cbrt = calc.cube_root(27)
+    assert abs(result_cbrt - 3) < 1e-10
+    result_multiply = calc.multiply(result_cbrt, 2)
+    assert abs(result_multiply - 6) < 1e-10
+
+
+# ============================================================================
+# POWER TESTS
+# ============================================================================
+
+def test_power_positive_integer_exponent(calc):
+    """Verify power with positive integer exponent."""
+    result = calc.power(2, 5)
+    assert result == 32
+
+
+def test_power_zero_base(calc):
+    """Verify power with zero base."""
+    result = calc.power(0, 3)
+    assert result == 0
+
+
+def test_power_one_base(calc):
+    """Verify power with one base."""
+    result = calc.power(1, 5)
+    assert result == 1
+
+
+def test_power_zero_exponent(calc):
+    """Verify power with zero exponent."""
+    result = calc.power(5, 0)
+    assert result == 1
+
+
+def test_power_one_exponent(calc):
+    """Verify power with one exponent."""
+    result = calc.power(5, 1)
+    assert result == 5
+
+
+def test_power_negative_integer_base(calc):
+    """Verify power with negative integer base and even exponent."""
+    result = calc.power(-2, 4)
+    assert result == 16
+
+
+def test_power_negative_integer_base_odd_exponent(calc):
+    """Verify power with negative integer base and odd exponent."""
+    result = calc.power(-2, 3)
+    assert result == -8
+
+
+def test_power_float_base(calc):
+    """Verify power with float base."""
+    result = calc.power(2.5, 2)
+    assert abs(result - 6.25) < 1e-10
+
+
+def test_power_float_exponent(calc):
+    """Verify power with float exponent (square root case)."""
+    result = calc.power(4, 0.5)
+    assert abs(result - 2.0) < 1e-10
+
+
+def test_power_negative_float_base(calc):
+    """Verify power with negative float base and even exponent."""
+    result = calc.power(-2.0, 2)
+    assert abs(result - 4.0) < 1e-10
+
+
+def test_power_both_floats(calc):
+    """Verify power with both base and exponent as floats."""
+    result = calc.power(2.0, 3.0)
+    assert abs(result - 8.0) < 1e-10
+
+
+def test_power_fractional_exponent(calc):
+    """Verify power with fractional exponent."""
+    result = calc.power(8, 1/3)
+    assert abs(result - 2.0) < 1e-10
+
+
+def test_power_result_chains_to_add(calc):
+    """Verify output of power can be input to add."""
+    result_power = calc.power(2, 3)
+    assert result_power == 8
+    result_add = calc.add(result_power, 2)
+    assert result_add == 10
+
+
+def test_power_result_chains_to_multiply(calc):
+    """Verify output of power can be input to multiply."""
+    result_power = calc.power(3, 2)
+    assert result_power == 9
+    result_multiply = calc.multiply(result_power, 2)
+    assert result_multiply == 18
+
+
+# ============================================================================
+# LOGARITHM (BASE 10) TESTS
+# ============================================================================
+
+def test_logarithm_one(calc):
+    """Verify logarithm of one equals zero."""
+    result = calc.logarithm(1)
+    assert result == 0
+
+
+def test_logarithm_ten(calc):
+    """Verify logarithm of ten equals one."""
+    result = calc.logarithm(10)
+    assert abs(result - 1) < 1e-10
+
+
+def test_logarithm_hundred(calc):
+    """Verify logarithm of hundred equals two."""
+    result = calc.logarithm(100)
+    assert abs(result - 2) < 1e-10
+
+
+def test_logarithm_decimal_less_than_one(calc):
+    """Verify logarithm of 0.1 equals -1."""
+    result = calc.logarithm(0.1)
+    assert abs(result - (-1)) < 1e-10
+
+
+def test_logarithm_decimal_value(calc):
+    """Verify logarithm of 2 approximately."""
+    result = calc.logarithm(2)
+    assert abs(result - 0.30103) < 1e-8
+
+
+def test_logarithm_zero(calc):
+    """Verify logarithm of zero raises ValueError."""
+    with pytest.raises(ValueError, match="logarithm\\(\\) not defined for non-positive values"):
+        calc.logarithm(0)
+
+
+def test_logarithm_negative_integer(calc):
+    """Verify logarithm of negative integer raises ValueError."""
+    with pytest.raises(ValueError, match="logarithm\\(\\) not defined for non-positive values"):
+        calc.logarithm(-5)
+
+
+def test_logarithm_negative_float(calc):
+    """Verify logarithm of negative float raises ValueError."""
+    with pytest.raises(ValueError, match="logarithm\\(\\) not defined for non-positive values"):
+        calc.logarithm(-1.5)
+
+
+def test_logarithm_large_value(calc):
+    """Verify logarithm of large value."""
+    result = calc.logarithm(1000000)
+    assert abs(result - 6) < 1e-10
+
+
+def test_logarithm_small_positive_value(calc):
+    """Verify logarithm of small positive value."""
+    result = calc.logarithm(0.001)
+    assert abs(result - (-3)) < 1e-10
+
+
+def test_logarithm_result_chains_to_add(calc):
+    """Verify output of logarithm can be input to add."""
+    result_log = calc.logarithm(100)
+    assert abs(result_log - 2) < 1e-10
+    result_add = calc.add(result_log, 3)
+    assert abs(result_add - 5) < 1e-10
+
+
+# ============================================================================
+# NATURAL LOGARITHM (BASE E) TESTS
+# ============================================================================
+
+def test_natural_logarithm_one(calc):
+    """Verify natural logarithm of one equals zero."""
+    result = calc.natural_logarithm(1)
+    assert result == 0
+
+
+def test_natural_logarithm_e(calc):
+    """Verify natural logarithm of e equals one."""
+    result = calc.natural_logarithm(math.e)
+    assert abs(result - 1.0) < 1e-10
+
+
+def test_natural_logarithm_decimal_less_than_one(calc):
+    """Verify natural logarithm of 0.5."""
+    result = calc.natural_logarithm(0.5)
+    assert abs(result - (-0.6931471805599453)) < 1e-9
+
+
+def test_natural_logarithm_value(calc):
+    """Verify natural logarithm of 2."""
+    result = calc.natural_logarithm(2)
+    assert abs(result - 0.6931471805599453) < 1e-9
+
+
+def test_natural_logarithm_large_value(calc):
+    """Verify natural logarithm of large value."""
+    result = calc.natural_logarithm(1000)
+    assert abs(result - 6.907755278982137) < 1e-8
+
+
+def test_natural_logarithm_zero(calc):
+    """Verify natural logarithm of zero raises ValueError."""
+    with pytest.raises(ValueError, match="natural_logarithm\\(\\) not defined for non-positive values"):
+        calc.natural_logarithm(0)
+
+
+def test_natural_logarithm_negative_integer(calc):
+    """Verify natural logarithm of negative integer raises ValueError."""
+    with pytest.raises(ValueError, match="natural_logarithm\\(\\) not defined for non-positive values"):
+        calc.natural_logarithm(-5)
+
+
+def test_natural_logarithm_negative_float(calc):
+    """Verify natural logarithm of negative float raises ValueError."""
+    with pytest.raises(ValueError, match="natural_logarithm\\(\\) not defined for non-positive values"):
+        calc.natural_logarithm(-1.5)
+
+
+def test_natural_logarithm_small_positive_value(calc):
+    """Verify natural logarithm of small positive value."""
+    result = calc.natural_logarithm(0.001)
+    assert abs(result - (-6.907755278982137)) < 1e-8
+
+
+def test_natural_logarithm_result_chains_to_add(calc):
+    """Verify output of natural_logarithm can be input to add."""
+    result_ln = calc.natural_logarithm(math.e)
+    assert abs(result_ln - 1.0) < 1e-10
+    result_add = calc.add(result_ln, 2)
+    assert abs(result_add - 3.0) < 1e-10
+
+
+def test_natural_logarithm_result_chains_to_multiply(calc):
+    """Verify output of natural_logarithm can be input to multiply."""
+    result_ln = calc.natural_logarithm(math.e)
+    assert abs(result_ln - 1.0) < 1e-10
+    result_multiply = calc.multiply(result_ln, 5)
+    assert abs(result_multiply - 5.0) < 1e-10
