@@ -30,4 +30,63 @@ else n < 0
     calc --> main : raises ValueError
 end
 
+main -> calc : square(4)
+alt x is numeric
+    calc --> main : 16
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : cube(3)
+alt x is numeric
+    calc --> main : 27
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : square_root(9)
+alt x is numeric and x >= 0
+    calc --> main : 3.0
+else x < 0
+    calc --> main : raises ValueError
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : cube_root(27)
+alt x is numeric
+    calc --> main : 3.0
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : power(2, 10)
+alt base and exponent are numeric
+    alt base >= 0 or exponent is int
+        calc --> main : 1024
+    else base < 0 and exponent is non-integer
+        calc --> main : raises ValueError
+    end
+else base or exponent not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : log(100)
+alt x is numeric and x > 0
+    calc --> main : 2.0
+else x <= 0
+    calc --> main : raises ValueError
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
+main -> calc : ln(1)
+alt x is numeric and x > 0
+    calc --> main : 0.0
+else x <= 0
+    calc --> main : raises ValueError
+else x is not numeric
+    calc --> main : raises TypeError
+end
+
 @enduml

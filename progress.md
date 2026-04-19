@@ -1,5 +1,31 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-148-functions-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect 7 new methods added to Calculator in this branch (square, cube, square_root, cube_root, power, log, ln) with their type and domain validation.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 72.2s | Cost: $0.213811 USD | Turns: 17
+
+---
+
+## Run: issue-148 — Mathematical functions for Calculator
+
+- **Branch:** task/issue-148-functions-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:** src/calculator.py (added 7 methods: square, cube, square_root, cube_root, power, log, ln), tests/test_calculator.py (added 70 new tests)
+- **Purpose:** Add square, cube, square root, cube root, power, log₁₀, and natural log as Calculator operations with type and domain validation.
+- **Risks:** None — purely additive changes; no existing logic modified.
+- **Tests passed:** 117/117 (47 existing + 70 new)
+- **Worktree/branch:** task/issue-148-functions-expert-team
+
+Duration: 231.1s | Cost: $0.584082 USD | Turns: 18
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-145-factorial
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect factorial method added to Calculator in this branch (factorial with TypeError/ValueError validation).
