@@ -6,7 +6,7 @@
 - risks: None — additive change only, no existing methods modified
 - tests passed: 45/45 new tests, 134/134 total suite
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 177.5s | Cost: $0.464955 USD | Turns: 12
 
 ## Run: issue-137-zerodivisionerror-naive-team
 
