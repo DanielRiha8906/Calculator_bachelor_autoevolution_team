@@ -1,3 +1,16 @@
+## Run: issue-173-logic-separation (2026-04-19)
+
+- branch: task/issue-173-logic-separation
+- files changed: src/logic/__init__.py (created), src/logic/core.py (created), src/logic/state.py (created), src/calculator.py (re-export), src/__init__.py (import update), src/cli.py (import update), src/user_input.py (import update), tests/test_logic_separation.py (created), tests/test_calculator.py (import update), tests/test_cli.py (import update), tests/test_logging.py (import update), tests/test_user_input.py (import update)
+- purpose: Separate calculator logic from interface — extract arithmetic operations into src/logic/core.py (ArithmeticEngine) and state management into src/logic/state.py (Calculator); presentation layers now import from src.logic with unidirectional dependency
+- risks: src/calculator.py is now a thin re-export; if removed, callers must update imports. No behavioral changes.
+- tests passed: yes — 895 tests (172 new logic separation tests + 723 existing)
+- worktree/branch: task/issue-173-logic-separation
+- PR target: exp2/naive-team
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/208
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-170-error-logging
