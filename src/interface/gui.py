@@ -1,9 +1,10 @@
 """Tkinter-based GUI for the Calculator application.
 
-This module provides GuiCalculator, a graphical user interface that exposes
-the same operation set as the interactive CLI session, with mode switching
-(Normal / Scientific) via radio buttons, an operation button grid, a result
-display label, and a scrollable history widget.
+This module provides GuiCalculator, a graphical user interface styled after
+a modern iOS calculator layout.  The interface exposes the same operation set
+as the interactive CLI session, with mode switching (Normal / Scientific) via
+a single toggle button, an iOS-style operation button grid, a numeric keypad,
+a result display label, and a scrollable history widget.
 
 Typical usage::
 
@@ -31,6 +32,7 @@ except ImportError as _tk_err:  # noqa: F841
     messagebox = None  # type: ignore[assignment]
     simpledialog = None  # type: ignore[assignment]
 
+import math
 from typing import Callable
 
 from ..core.calculator import Calculator
@@ -42,12 +44,58 @@ from ..session.mode import Mode
 from ..session.base_mode import BaseMode
 
 
-class GuiCalculator:
-    """Tkinter-based graphical calculator interface.
+# ---------------------------------------------------------------------------
+# iOS-style theme constants
+# ---------------------------------------------------------------------------
 
-    Displays mode radio buttons (Normal / Scientific), an operation button
-    grid filtered by the current mode, a result label, and a scrollable
-    history widget.  All calculation logic is delegated to the injected
+_THEME: dict[str, object] = {
+    "bg": "#000000",                        # window / frame background
+    "fg": "#FFFFFF",                        # default text colour
+    "display_font": ("Courier", 32, "bold"),  # result display font
+    "button_font": ("Helvetica", 18, "bold"),  # button label font
+    "op_bg": "#FF9500",                     # arithmetic operator background
+    "op_active": "#FFB143",                 # arithmetic operator hover
+    "sci_bg": "#1C1C1E",                    # scientific button background
+    "sci_active": "#2C2C2E",                # scientific button hover
+    "std_bg": "#333333",                    # standard (non-op) background
+    "std_active": "#4D4D4D",                # standard button hover
+    "num_bg": "#505050",                    # digit button background
+    "num_active": "#707070",                # digit button hover
+    "toggle_bg": "#1C1C1E",                 # mode-toggle button background
+    "toggle_active": "#2C2C2E",             # mode-toggle button hover
+}
+
+# Mapping of operation registry keys to their display symbols / labels.
+_OP_SYMBOLS: dict[str, str] = {
+    "add": "+",
+    "subtract": "\u2212",   # −
+    "multiply": "\u00d7",   # ×
+    "divide": "\u00f7",     # ÷
+    "sqrt": "\u221a",       # √
+    "square": "x\u00b2",   # x²
+    "cube": "x\u00b3",     # x³
+    "power": "x\u02b8",    # xʸ
+    "factorial": "n!",
+    "log": "log",
+    "ln": "ln",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "pi": "\u03c0",         # π
+    "e": "e",
+}
+
+# Arithmetic-operator keys that receive the orange iOS highlight.
+_ARITHMETIC_OPS: frozenset[str] = frozenset({"add", "subtract", "multiply", "divide"})
+
+
+class GuiCalculator:
+    """Tkinter-based graphical calculator interface styled after iOS.
+
+    Displays a result label (right-anchored), a mode toggle button
+    (Normal / Scientific), an operation button grid (4 columns), and a
+    3x4 numeric keypad.  A scrollable history widget below shows past
+    calculations.  All calculation logic is delegated to the injected
     Calculator instance via OperationDispatcher; no operation logic is
     duplicated here.
 
@@ -71,6 +119,7 @@ class GuiCalculator:
             )
         self._root = root
         self._root.title("Calculator")  # type: ignore[attr-defined]
+        self._root.configure(bg=_THEME["bg"])  # type: ignore[attr-defined]
         self._calculator = calculator
         self._logger: Logger | None = logger
         self._dispatcher = OperationDispatcher(calculator)
@@ -78,13 +127,12 @@ class GuiCalculator:
         self._mode: Mode = Mode.NORMAL
         self._mode_handler = BaseMode()
 
-        # StringVar used by the mode radio buttons.
-        self._mode_var = tk.StringVar(value=Mode.NORMAL.value)
-
         # Widget references populated by _setup_layout.
         self._result_label: tk.Label | None = None
         self._history_text: tk.Text | None = None
         self._op_frame: tk.Frame | None = None
+        self._toggle_btn: tk.Button | None = None
+        self._num_frame: tk.Frame | None = None
 
         self._setup_layout()
 
@@ -97,7 +145,7 @@ class GuiCalculator:
 
         Blocks until the user closes the window.
         """
-        self._root.mainloop()
+        self._root.mainloop()  # type: ignore[attr-defined]
 
     # ------------------------------------------------------------------
     # Layout setup
@@ -107,47 +155,87 @@ class GuiCalculator:
         """Build and grid all top-level frames and widgets.
 
         Layout (top to bottom):
-        1. Mode selector row (Normal / Scientific radio buttons).
-        2. Operation button grid (rebuilt on mode change).
-        3. Result display label.
-        4. History text widget with vertical scrollbar.
+        1. Result display label (right-anchored, black background).
+        2. Mode toggle button (Single button: "Scientific" / "Normal").
+        3. Operation button grid (4-column, rebuilt on mode change).
+        4. Number grid (3 wide x 4 rows with digits 0-9).
+        5. History text widget with vertical scrollbar.
         """
-        self._root.columnconfigure(0, weight=1)
+        self._root.columnconfigure(0, weight=1)  # type: ignore[attr-defined]
 
-        # --- Mode selector ---
-        mode_frame = tk.Frame(self._root, padx=8, pady=4)
-        mode_frame.grid(row=0, column=0, sticky="ew")
-        self._setup_mode_selector(mode_frame)
+        # --- Result display ---
+        display_frame = tk.Frame(self._root, bg=_THEME["bg"], padx=8, pady=8)
+        display_frame.grid(row=0, column=0, sticky="ew")
+        display_frame.columnconfigure(0, weight=1)
 
-        # --- Operation button grid ---
-        self._op_frame = tk.Frame(self._root, padx=8, pady=4)
-        self._op_frame.grid(row=1, column=0, sticky="nsew")
-        self._root.rowconfigure(1, weight=0)
-        self._setup_operation_grid()
-
-        # --- Result label ---
         self._result_label = tk.Label(
-            self._root,
-            text="Result: —",
-            anchor="w",
-            font=("TkDefaultFont", 12, "bold"),
+            display_frame,
+            text="0",
+            anchor="e",
+            font=_THEME["display_font"],
+            bg=_THEME["bg"],
+            fg=_THEME["fg"],
             padx=8,
             pady=4,
         )
-        self._result_label.grid(row=2, column=0, sticky="ew")
+        self._result_label.grid(row=0, column=0, sticky="ew")
+
+        # --- Mode toggle button ---
+        toggle_frame = tk.Frame(self._root, bg=_THEME["bg"], padx=8, pady=4)
+        toggle_frame.grid(row=1, column=0, sticky="ew")
+        toggle_frame.columnconfigure(0, weight=1)
+
+        self._toggle_btn = tk.Button(
+            toggle_frame,
+            text="Scientific",
+            font=_THEME["button_font"],
+            bg=_THEME["toggle_bg"],
+            fg=_THEME["fg"],
+            activebackground=_THEME["toggle_active"],
+            activeforeground=_THEME["fg"],
+            relief=tk.FLAT,
+            bd=0,
+            command=self._on_toggle_mode,
+        )
+        self._toggle_btn.grid(row=0, column=0, sticky="ew", padx=2, pady=2)
+        self._toggle_btn.bind(
+            "<Enter>",
+            lambda e, b=self._toggle_btn: b.config(bg=_THEME["toggle_active"]),
+        )
+        self._toggle_btn.bind(
+            "<Leave>",
+            lambda e, b=self._toggle_btn: b.config(bg=_THEME["toggle_bg"]),
+        )
+
+        # --- Operation button grid ---
+        self._op_frame = tk.Frame(self._root, bg=_THEME["bg"], padx=8, pady=4)
+        self._op_frame.grid(row=2, column=0, sticky="nsew")
+        self._root.rowconfigure(2, weight=0)  # type: ignore[attr-defined]
+        self._setup_operation_grid()
+
+        # --- Number grid ---
+        self._num_frame = tk.Frame(self._root, bg=_THEME["bg"], padx=8, pady=4)
+        self._num_frame.grid(row=3, column=0, sticky="nsew")
+        self._root.rowconfigure(3, weight=0)  # type: ignore[attr-defined]
+        self._setup_number_grid()
 
         # --- History text + scrollbar ---
-        history_frame = tk.Frame(self._root, padx=8, pady=4)
-        history_frame.grid(row=3, column=0, sticky="nsew")
-        self._root.rowconfigure(3, weight=1)
+        history_frame = tk.Frame(self._root, bg=_THEME["bg"], padx=8, pady=4)
+        history_frame.grid(row=4, column=0, sticky="nsew")
+        self._root.rowconfigure(4, weight=1)  # type: ignore[attr-defined]
         history_frame.columnconfigure(0, weight=1)
         history_frame.rowconfigure(0, weight=1)
 
         self._history_text = tk.Text(
             history_frame,
             state="disabled",
-            height=8,
+            height=6,
             wrap="word",
+            bg=_THEME["bg"],
+            fg=_THEME["fg"],
+            font=("Helvetica", 12),
+            relief=tk.FLAT,
+            bd=0,
         )
         self._history_text.grid(row=0, column=0, sticky="nsew")
 
@@ -159,27 +247,18 @@ class GuiCalculator:
         scrollbar.grid(row=0, column=1, sticky="ns")
         self._history_text.configure(yscrollcommand=scrollbar.set)
 
-    def _setup_mode_selector(self, parent: tk.Frame) -> None:
-        """Add Normal/Scientific radio buttons to *parent*.
-
-        Args:
-            parent: The frame that will contain the radio buttons.
-        """
-        tk.Label(parent, text="Mode:").pack(side="left")
-        for mode in Mode:
-            tk.Radiobutton(
-                parent,
-                text=mode.value.capitalize(),
-                variable=self._mode_var,
-                value=mode.value,
-                command=lambda m=mode: self._on_mode_change(m),
-            ).pack(side="left", padx=4)
-
     def _setup_operation_grid(self) -> None:
         """Populate the operation button grid for the current mode.
 
         Clears any previously rendered buttons before rebuilding.  Buttons
-        are arranged in rows of four.
+        are arranged in rows of four with equal weighting so they fill the
+        available width.  Symbol overrides from ``_OP_SYMBOLS`` are applied
+        where available; otherwise the registry label is used verbatim.
+
+        Color rules:
+        - Arithmetic ops (add/subtract/multiply/divide): orange theme.
+        - All other scientific-mode ops: dark (#1C1C1E) theme.
+        - All other normal-mode ops: medium-dark (#333333) theme.
         """
         if self._op_frame is None:
             return
@@ -190,33 +269,145 @@ class GuiCalculator:
 
         available = self._get_available_operations_for_mode()
         columns = 4
+        num_ops = len(available)
+        num_rows = math.ceil(num_ops / columns) if num_ops else 0
+
         for index, (op_key, op_info) in enumerate(available.items()):
             row, col = divmod(index, columns)
+
+            label_text = _OP_SYMBOLS.get(op_key, op_info.get("label", op_key))
+
+            if op_key in _ARITHMETIC_OPS:
+                default_bg = _THEME["op_bg"]
+                hover_bg = _THEME["op_active"]
+            elif self._mode is Mode.SCIENTIFIC:
+                default_bg = _THEME["sci_bg"]
+                hover_bg = _THEME["sci_active"]
+            else:
+                default_bg = _THEME["std_bg"]
+                hover_bg = _THEME["std_active"]
+
             btn = tk.Button(
                 self._op_frame,
-                text=op_info["label"],
-                width=24,
+                text=label_text,
+                font=_THEME["button_font"],
+                bg=default_bg,
+                fg=_THEME["fg"],
+                activebackground=hover_bg,
+                activeforeground=_THEME["fg"],
+                relief=tk.FLAT,
+                bd=0,
                 command=lambda k=op_key: self._on_operation_click(k),
             )
-            btn.grid(row=row, column=col, padx=2, pady=2, sticky="ew")
+            btn.grid(row=row, column=col, padx=2, pady=2, sticky="nsew")
+            btn.bind(
+                "<Enter>",
+                lambda e, b=btn, c=hover_bg: b.config(bg=c),
+            )
+            btn.bind(
+                "<Leave>",
+                lambda e, b=btn, c=default_bg: b.config(bg=c),
+            )
 
         for col in range(columns):
             self._op_frame.columnconfigure(col, weight=1)
+        for row in range(num_rows):
+            self._op_frame.rowconfigure(row, weight=1)
+
+    def _setup_number_grid(self) -> None:
+        """Build the fixed 3x4 digit button grid.
+
+        Grid layout::
+
+            Row 0 | 7 | 8 | 9 |
+            Row 1 | 4 | 5 | 6 |
+            Row 2 | 1 | 2 | 3 |
+            Row 3 |   | 0 |   |
+
+        All three columns and all four rows have weight=1.  Each button uses
+        sticky="nsew" to fill its cell.  Column 0 and column 2 of row 3 are
+        intentionally empty (no widget placed).  Digit buttons do not
+        currently dispatch any calculation — they are visual placeholders for
+        the iOS-style layout.  Hover effects are applied.
+        """
+        if self._num_frame is None:
+            return
+
+        digit_layout: list[tuple[int, int, str]] = [
+            (0, 0, "7"), (0, 1, "8"), (0, 2, "9"),
+            (1, 0, "4"), (1, 1, "5"), (1, 2, "6"),
+            (2, 0, "1"), (2, 1, "2"), (2, 2, "3"),
+            (3, 1, "0"),
+        ]
+
+        for grid_row, grid_col, digit in digit_layout:
+            btn = tk.Button(
+                self._num_frame,
+                text=digit,
+                font=_THEME["button_font"],
+                bg=_THEME["num_bg"],
+                fg=_THEME["fg"],
+                activebackground=_THEME["num_active"],
+                activeforeground=_THEME["fg"],
+                relief=tk.FLAT,
+                bd=0,
+            )
+            btn.grid(
+                row=grid_row,
+                column=grid_col,
+                padx=2,
+                pady=2,
+                sticky="nsew",
+            )
+            btn.bind(
+                "<Enter>",
+                lambda e, b=btn: b.config(bg=_THEME["num_active"]),
+            )
+            btn.bind(
+                "<Leave>",
+                lambda e, b=btn: b.config(bg=_THEME["num_bg"]),
+            )
+
+        for col in range(3):
+            self._num_frame.columnconfigure(col, weight=1)
+        for row in range(4):
+            self._num_frame.rowconfigure(row, weight=1)
 
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
 
-    def _on_mode_change(self, new_mode: Mode) -> None:
-        """Handle a mode radio-button selection change.
+    def _on_toggle_mode(self) -> None:
+        """Handle the mode toggle button click.
 
-        Updates the internal mode state and rebuilds the operation grid to
-        reflect the newly available operations.
+        Switches between NORMAL and SCIENTIFIC mode.  Updates the toggle
+        button label first, then rebuilds the operation grid.  Calculation
+        state (history, result) is not affected.
+        """
+        if self._mode is Mode.NORMAL:
+            new_mode = Mode.SCIENTIFIC
+        else:
+            new_mode = Mode.NORMAL
+        self._on_mode_change(new_mode)
+
+    def _on_mode_change(self, new_mode: Mode) -> None:
+        """Handle a mode change request.
+
+        Updates the internal mode state, refreshes the toggle button text to
+        reflect the *next* toggle target, and rebuilds the operation grid.
 
         Args:
-            new_mode: The Mode value that was selected.
+            new_mode: The Mode value to activate.
         """
         self._mode = new_mode
+
+        # Update toggle button label: show the mode we would switch *to*.
+        if self._toggle_btn is not None:
+            if self._mode is Mode.NORMAL:
+                self._toggle_btn.configure(text="Scientific")
+            else:
+                self._toggle_btn.configure(text="Normal")
+
         self._setup_operation_grid()
 
     def _on_operation_click(self, op_key: str) -> None:
@@ -332,7 +523,7 @@ class GuiCalculator:
             result: The numeric result to display.
         """
         if self._result_label is not None:
-            self._result_label.configure(text=f"Result: {result}")
+            self._result_label.configure(text=str(result))
 
     def _update_history_display(self) -> None:
         """Refresh the history text widget from the current History entries."""

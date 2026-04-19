@@ -162,14 +162,16 @@ participant "Calculator" as gui_calc
 gui_user -> gui : GuiCalculator(root, Calculator())
 note over gui : __init__ creates OperationDispatcher,\nBaseMode, History, mode=NORMAL
 gui -> base_mode : BaseMode()
-gui -> gui : _setup_layout() — builds mode selector,\nop buttons, result label, history widget
+gui -> gui : _setup_layout() — builds result label,\ntoggle button, op grid, num grid, history widget
 
-gui_user -> gui : click radio button "Scientific"
+gui_user -> gui : click toggle button (shows "Scientific")
+gui -> gui : _on_toggle_mode()
 gui -> gui : _on_mode_change(Mode.SCIENTIFIC)
+note over gui : toggle_btn text set to "Normal"\n(shows the mode we would switch to next)
 gui -> gui : _setup_operation_grid()
 gui -> base_mode : get_available_operations(Mode.SCIENTIFIC)
 base_mode --> gui : full OPERATIONS dict
-note over gui : Rebuilds buttons for all ops
+note over gui : Rebuilds buttons for all ops with\niOS colour scheme (_THEME)
 
 gui_user -> gui : click operation button "add"
 gui -> gui : _on_operation_click("add")

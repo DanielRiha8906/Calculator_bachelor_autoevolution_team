@@ -369,3 +369,23 @@ Risks: Local import of OPERATIONS inside OperationDispatcher.dispatch to avoid c
 Test results: 715 passed, 0 failed, 0 skipped (python -m pytest)
 
 Duration: 630.5s | Cost: $1.413323 USD | Turns: 15
+
+## Run: iOS-style GuiCalculator redesign (Issue #129)
+
+Branch: task/issue-129-ios-calculator-redesign
+PR target: exp/expert-team
+
+Files changed:
+- src/interface/gui.py — complete iOS-style visual redesign: added _THEME dict (all color/font constants), _OP_SYMBOLS dict (operation key → symbol mapping), _ARITHMETIC_OPS frozenset; replaced radio-button mode selector with single toggle button; added _setup_number_grid() for fixed 3x4 digit pad; rewrote _setup_operation_grid() with color rules (orange for operators, dark for sci, gray for standard), symbol labels, hover effects, flat relief; updated _setup_layout() top-to-bottom order; updated _on_mode_change() to refresh toggle button label; _update_result_display() now shows plain number starting at "0"
+- artifacts/class_diagram.puml — updated GuiCalculator class to reflect new attributes (_toggle_btn, _num_frame) and methods (_setup_number_grid, _on_toggle_mode); removed _mode_var and _setup_mode_selector
+- artifacts/sequence_diagram.puml — updated mode-change sequence to show toggle-button flow
+- artifacts/activity_diagram.puml — updated mode partition to reflect toggle button interaction
+- tests/test_gui.py — added 51 new tests covering _THEME constants, _OP_SYMBOLS, _ARITHMETIC_OPS, mode toggle button, number grid layout, result display, and operation button styling; all 1326 tests pass
+
+Purpose: Rebuild GuiCalculator UI to match iOS calculator aesthetics with centralized theming, square buttons, symbol labels, hover effects, and fixed number pad layout.
+
+Risks: Number pad digits are visual-only (no digit accumulation logic); result display format changed (no "Result:" prefix).
+
+All tests passed: yes (1326/1326)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

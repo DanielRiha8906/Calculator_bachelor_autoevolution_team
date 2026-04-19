@@ -255,14 +255,21 @@ partition "GUI Mode (GuiCalculator)" {
     note right
         __init__ creates OperationDispatcher,
         BaseMode, History; mode = NORMAL.
-        _setup_layout() builds all widgets.
+        _setup_layout() builds: result label,
+        toggle button, op grid (4-col, iOS colors),
+        numeric keypad (3x4), history widget.
+        _THEME controls all colors and fonts.
+        _OP_SYMBOLS maps keys to display symbols.
     end note
     :Call gui.run() — enter Tk main loop;
 
     repeat
-        if (user changes mode radio button?) then (yes)
+        if (user clicks mode toggle button?) then (yes)
+            :_on_toggle_mode();
+            :Determine new_mode (opposite of current);
             :_on_mode_change(new_mode);
             :_mode = new_mode;
+            :Update toggle_btn text to opposite mode name;
             :_setup_operation_grid()\nRebuild buttons via\nBaseMode.get_available_operations();
         else (operation button clicked)
             :_on_operation_click(op_key);

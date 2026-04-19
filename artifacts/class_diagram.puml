@@ -147,15 +147,17 @@ class GuiCalculator {
     -_history: History
     -_mode: Mode
     -_mode_handler: BaseMode
-    -_mode_var: tk.StringVar
     -_result_label: tk.Label | None
     -_history_text: tk.Text | None
     -_op_frame: tk.Frame | None
+    -_toggle_btn: tk.Button | None
+    -_num_frame: tk.Frame | None
     +__init__(root: tk.Tk, calculator: Calculator, logger: Logger | None)
     +run(): None
     -_setup_layout(): None
-    -_setup_mode_selector(parent: tk.Frame): None
     -_setup_operation_grid(): None
+    -_setup_number_grid(): None
+    -_on_toggle_mode(): None
     -_on_mode_change(new_mode: Mode): None
     -_on_operation_click(op_key: str): None
     -_prompt_operands_dialog(op_key: str, arity: int, coerce: Callable): list | None
@@ -168,10 +170,13 @@ class GuiCalculator {
 
 note top of GuiCalculator
     Module: src/interface/gui.py
-    Tkinter GUI for the calculator.
-    Mode radio buttons (Normal/Scientific),
-    operation button grid, result label,
+    iOS-style Tkinter GUI for the calculator.
+    Single mode toggle button (Normal/Scientific),
+    4-column op grid with symbol labels,
+    3x4 numeric keypad, right-anchored result label,
     scrollable history widget.
+    _THEME dict controls all colours/fonts.
+    _OP_SYMBOLS maps op keys to display symbols.
     All calculation logic delegated to
     Calculator via OperationDispatcher.
     Mode filtering delegated to BaseMode.
