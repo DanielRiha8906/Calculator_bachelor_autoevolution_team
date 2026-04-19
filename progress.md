@@ -1,3 +1,12 @@
+## Run: issue-161-cli-mode (2026-04-19)
+
+- branch: task/issue-161-cli-mode
+- pr target: exp2/naive-team
+- files changed: src/cli.py (new), src/__main__.py (modified), tests/test_cli.py (new)
+- purpose: Add CLI mode — parse infix arithmetic expressions from argv and evaluate via Calculator; dispatch to interactive mode when no args are given
+- risks: __main__.py now exits with a non-zero code on CLI errors; existing interactive mode is unchanged
+- tests passed: 88 new CLI tests passed; 482 total tests passed, 0 regressions
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-149-user-input
