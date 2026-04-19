@@ -1,3 +1,15 @@
+## Run: issue-167-history (2026-04-19)
+
+- branch: task/issue-167-history
+- files changed: src/history.py (created), src/calculator.py (modified), src/__init__.py (modified), tests/test_history.py (created), tests/test_calculator.py (modified)
+- purpose: Add session-based operation history to calculator — records operation name, operands, result, and timestamp for each successful arithmetic call; exposes get_history() and clear_history()
+- risks: Unbounded memory growth for long-running sessions; thread safety not guaranteed (single-threaded CLI usage assumed)
+- tests passed: 76 new tests (34 unit + 42 integration); all 374 pre-existing tests pass
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/200
+- merge target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-164-retry-logic
