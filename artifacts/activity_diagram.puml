@@ -6,43 +6,47 @@ start
 
 if (Mode?) then (interactive — via __main__)
 
+    :Instantiate HistoryTracker;
     :get_operation_registry(calculator);
     :Print welcome message;
-    :display_menu(registry);
-    :get_operation_choice(registry);
 
-    while (choice is not None?) is (yes)
-
-        if (choice is (None, None)?) then (yes — max attempts exhausted)
-            :Print "Too many invalid attempts. Exiting.";
-            stop
-        endif
-
-        :Unpack (method, arity) from choice;
-        :get_operands(arity);
-
-        if (operands is None?) then (yes — max attempts exhausted)
-            :Print "Too many invalid attempts. Exiting.";
-            stop
-        endif
-
-        if (method is factorial?) then (yes)
-            :Convert whole-valued float operands to int;
-        endif
-
-        :method(*operands);
-
-        if (Exception raised?) then (yes)
-            :Print error message\n(TypeError / ValueError / ZeroDivisionError);
-        else (no)
-            :Print "Result: {result}";
-        endif
+    while (session active?) is (yes)
 
         :display_menu(registry);
         :get_operation_choice(registry);
 
-    endwhile (no — user quit)
+        if (choice is None?) then (yes — user quit)
+            :Print "Goodbye.";
+            stop
+        elseif (choice is (_HISTORY_TOKEN, None, None)?) then (yes — history request)
+            :history_tracker.display();
+        elseif (choice is (None, None, None)?) then (yes — max attempts exhausted)
+            stop
+        else (operation selected)
+            :Unpack (operation_name, method, arity) from choice;
+            :get_operands(arity);
 
+            if (operands is None?) then (yes — max attempts exhausted)
+                stop
+            endif
+
+            if (method is factorial?) then (yes)
+                :Convert whole-valued float operands to int;
+            endif
+
+            :method(*operands);
+
+            if (Exception raised?) then (yes)
+                :Print error message\n(TypeError / ValueError / ZeroDivisionError);
+            else (no)
+                :Print "Result: {result}";
+                :history_tracker.record(operation_name, operands, result);
+            endif
+        endif
+
+    endwhile (no)
+
+    :history_tracker.save_to_file("history.txt");
     :Print "Goodbye.";
 
 else (CLI — via execute_cli)

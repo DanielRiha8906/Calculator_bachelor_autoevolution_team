@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-169-history-tracking
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect HistoryTracker class added in issue-169: new class diagram node with record/get_history/display/save_to_file/clear methods; activity diagram updated with history recording, display, and save-to-file steps; sequence diagram updated with HistoryTracker participant and all interactions.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-169-history-tracking — Add session history tracking to calculator
 
 - **Branch:** task/issue-169-history-tracking

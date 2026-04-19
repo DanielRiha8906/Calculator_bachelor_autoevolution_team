@@ -16,13 +16,22 @@ package "src" {
         +ln(x: int|float) : float
     }
 
+    class HistoryTracker {
+        -_history : list[str]
+        +record(operation_name: str, operands: list, result: object) : None
+        +get_history() : list[str]
+        +display() : None
+        +save_to_file(filepath: str) : None
+        +clear() : None
+    }
+
     class InputHandler <<module>> {
         MAX_VALIDATION_ATTEMPTS : int = 5
         +get_operation_registry(calculator: Calculator) : dict
         +display_menu(registry: dict) : None
         +get_operation_choice(registry: dict) : tuple | None
         +get_operands(arity: int) : list[float] | None
-        +run_interactive_session(calculator: Calculator) : None
+        +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
     }
 
     class CLI <<module>> {
@@ -39,8 +48,10 @@ package "__main__" {
 }
 
 EntryPoint ..> Calculator : instantiates
+EntryPoint ..> HistoryTracker : instantiates
 EntryPoint ..> InputHandler : calls run_interactive_session()
 InputHandler ..> Calculator : invokes methods via registry
+InputHandler ..> HistoryTracker : records results / displays / saves
 CLI ..> Calculator : invokes methods via registry
 CLI ..> InputHandler : calls get_operation_registry()
 
@@ -74,10 +85,20 @@ note right of Calculator::ln
   Raises ValueError if x <= 0.
 end note
 
+note right of HistoryTracker::record
+  Stores entry as "operation(args) = result".
+end note
+
+note right of HistoryTracker::save_to_file
+  Defaults to "history.txt".
+  OSError is caught and printed to stderr.
+end note
+
 note right of InputHandler::get_operation_choice
   Returns None on quit (q/quit/exit).
-  Returns (None, None) when MAX_VALIDATION_ATTEMPTS exceeded.
-  Accepts operation name or 1-based index.
+  Returns (_HISTORY_TOKEN, None, None) on "h".
+  Returns (None, None, None) when MAX_VALIDATION_ATTEMPTS exceeded.
+  Otherwise returns (name, method, arity) 3-tuple.
 end note
 
 note right of InputHandler::get_operands
@@ -85,10 +106,13 @@ note right of InputHandler::get_operands
 end note
 
 note right of InputHandler::run_interactive_session
-  Breaks session if get_operation_choice returns (None, None)
+  history_tracker defaults to a new HistoryTracker() if None.
+  Calls history_tracker.display() on "h" input.
+  Records each successful operation via history_tracker.record().
+  Saves history to file on session exit.
+  Breaks session if get_operation_choice returns (None, None, None)
   or get_operands returns None (max attempts exhausted).
-  Catches TypeError, ValueError,
-  ZeroDivisionError per iteration.
+  Catches TypeError, ValueError, ZeroDivisionError per iteration.
 end note
 
 note right of CLI::execute_cli
