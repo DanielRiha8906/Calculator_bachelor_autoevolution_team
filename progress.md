@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-171-error-logging
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `ErrorLogger` class with `error_file`, `INVALID_INPUT`, `UNSUPPORTED_OPERATION`, `CALCULATION_ERROR` constants, and `clear_errors`, `log_error`, `get_errors` methods; updated `REPLInterface` and `CLIHandler` to include `error_logger: ErrorLogger | None` attribute and constructor param; added `Main ..> ErrorLogger`, `REPLInterface o-- ErrorLogger`, and `CLIHandler o-- ErrorLogger` relationships; updated `Main` note to describe ErrorLogger instantiation
+  - `artifacts/activity_diagram.puml` — added `ErrorLogger` instantiation and `clear_errors()` at session start; added `error_logger.log_error(CALCULATION_ERROR, ...)` in REPL exception handling path; added `error_logger.log_error(UNSUPPORTED_OPERATION, ...)` and `error_logger.log_error(INVALID_INPUT, ...)` in CLI parse error paths; added `error_logger.log_error(CALCULATION_ERROR, ...)` in CLI calculation error path; updated all constructor calls to include `error_logger`
+  - `artifacts/sequence_diagram.puml` — added `ErrorLogger` participant; added `ErrorLogger()` and `clear_errors()` calls from Main; added `log_error(CALCULATION_ERROR, ...)` call from REPL on exception; added `log_error(UNSUPPORTED_OPERATION, ...)` and `log_error(INVALID_INPUT, ...)` calls from CLI on parse errors; added `log_error(CALCULATION_ERROR, ...)` from CLI on calculation errors; updated `CLIHandler` and `REPLInterface` constructor signatures to include `error_logger`
+- **Purpose:** Sync PlantUML diagrams with current source after issue-171 added `ErrorLogger` and wired error logging into REPL and CLI interfaces
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-171-error-logging (2026-04-19)
 
 - **Branch:** task/issue-171-error-logging

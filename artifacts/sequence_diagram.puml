@@ -2,6 +2,7 @@
 
 participant "__main__" as Main
 participant "OperationHistory" as History
+participant "ErrorLogger" as ErrLog
 participant "REPLInterface" as REPL
 participant "CLIHandler" as CLI
 participant "Calculator" as Calc
@@ -18,9 +19,17 @@ note over History
   at session start for isolation.
 end note
 
+Main -> ErrLog : ErrorLogger()
+activate ErrLog
+Main -> ErrLog : clear_errors()
+note over ErrLog
+  Truncates or creates error.log
+  at session start for isolation.
+end note
+
 alt REPL mode (argv empty or ["--repl"])
 
-  Main -> REPL : REPLInterface(calculator, history)
+  Main -> REPL : REPLInterface(calculator, history, error_logger)
   activate REPL
 
   Main -> REPL : run()
@@ -162,6 +171,7 @@ alt REPL mode (argv empty or ["--repl"])
         REPL -> History : record_operation("op(args) = result")
       else exception raised
         REPL -> User : print error message
+        REPL -> ErrLog : log_error(CALCULATION_ERROR, user_input, exception)
       end
 
     end
@@ -178,7 +188,7 @@ alt REPL mode (argv empty or ["--repl"])
 
 else CLI mode (argv has operation + operands)
 
-  Main -> CLI : CLIHandler(calculator, history)
+  Main -> CLI : CLIHandler(calculator, history, error_logger)
   activate CLI
 
   Main -> CLI : execute(argv)
@@ -186,9 +196,11 @@ else CLI mode (argv has operation + operands)
   CLI -> CLI : parse_args(argv)
 
   alt unknown operation
+    CLI -> ErrLog : log_error(UNSUPPORTED_OPERATION, argv[0], exception)
     CLI --> Main : raises ValueError("Unknown operation: ...")
     Main -> User : print error to stderr; exit(2)
   else wrong operand count or non-numeric
+    CLI -> ErrLog : log_error(INVALID_INPUT, str(argv), exception)
     CLI --> Main : raises ValueError(...)
     Main -> User : print error to stderr; exit(3)
   end
@@ -210,6 +222,7 @@ else CLI mode (argv has operation + operands)
     CLI --> Main : result
     Main -> User : print result to stdout; exit(0)
   else ZeroDivisionError / domain error
+    CLI -> ErrLog : log_error(CALCULATION_ERROR, str(argv), exception)
     CLI --> Main : raises exception
     Main -> User : print error to stderr; exit(4)
   end
@@ -218,6 +231,7 @@ else CLI mode (argv has operation + operands)
 
 end
 
+deactivate ErrLog
 deactivate History
 deactivate Calc
 

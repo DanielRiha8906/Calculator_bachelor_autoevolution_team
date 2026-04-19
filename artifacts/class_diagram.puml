@@ -56,6 +56,36 @@ end note
 
 MaxRetriesExceeded --|> Exception
 
+class ErrorLogger {
+    +INVALID_INPUT : str
+    +UNSUPPORTED_OPERATION : str
+    +CALCULATION_ERROR : str
+    +error_file : str
+    +__init__(error_file: str = "error.log")
+    +clear_errors() : None
+    +log_error(error_type: str, user_input: str, exception: Exception) : None
+    +get_errors() : list[str]
+}
+
+note right of ErrorLogger::clear_errors
+  Truncates or creates the error log file.
+  Called once at session start for
+  session isolation.
+end note
+
+note right of ErrorLogger::log_error
+  Appends an ISO8601-timestamped entry
+  to the error file. Entry includes
+  error_type, user_input, and exception message.
+  File I/O errors are logged to stderr.
+end note
+
+note right of ErrorLogger::get_errors
+  Returns list of recorded error entries,
+  trailing newlines stripped.
+  Returns [] on FileNotFoundError or OSError.
+end note
+
 class OperationHistory {
     +history_file : str
     +__init__(history_file: str = "history.txt")
@@ -86,8 +116,9 @@ class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
     -history : OperationHistory | None
+    -error_logger : ErrorLogger | None
     -last_result : float | None
-    +__init__(calculator: Calculator, history: OperationHistory | None)
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +run() : void
     +get_operation_selection() : str
     +get_operand(prompt: str) : float
@@ -144,7 +175,8 @@ end note
 class CLIHandler {
     -calculator : Calculator
     -history : OperationHistory | None
-    +__init__(calculator: Calculator, history: OperationHistory | None)
+    -error_logger : ErrorLogger | None
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +get_operation_mapping() : dict
     +parse_args(args: list[str]) : tuple[str, list[float]]
     +execute(args: list[str]) : float
@@ -169,6 +201,8 @@ note right of CLIHandler::execute
   Dispatches to Calculator methods.
   "logarithm" uses math.log(x, base)
   directly to support arbitrary bases.
+  Logs UNSUPPORTED_OPERATION, INVALID_INPUT,
+  or CALCULATION_ERROR via error_logger if set.
   Records result to history if set.
   Raises ValueError, ZeroDivisionError,
   or TypeError on error.
@@ -179,7 +213,8 @@ class "__main__" as Main {
 }
 
 note right of Main::main
-  Instantiates OperationHistory and clears it.
+  Instantiates OperationHistory, ErrorLogger,
+  and Calculator, then clears their state.
   REPL mode: argv is empty or ["--repl"].
   CLI mode: argv has operation + operands.
   Exit codes: 0=ok, 1=usage, 2=unknown op,
@@ -188,12 +223,15 @@ end note
 
 Main ..> Calculator : instantiates
 Main ..> OperationHistory : instantiates
+Main ..> ErrorLogger : instantiates
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
 REPLInterface o-- Calculator : uses >
 REPLInterface o-- OperationHistory : uses (optional) >
+REPLInterface o-- ErrorLogger : uses (optional) >
 CLIHandler o-- Calculator : uses >
 CLIHandler o-- OperationHistory : uses (optional) >
+CLIHandler o-- ErrorLogger : uses (optional) >
 REPLInterface ..> MaxRetriesExceeded : raises
 
 @enduml
