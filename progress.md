@@ -8,7 +8,7 @@
 - **Tests passed:** 117/117 (47 existing + 70 new)
 - **Worktree/branch:** task/issue-148-functions-expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 231.1s | Cost: $0.584082 USD | Turns: 18
 
 ---
 
