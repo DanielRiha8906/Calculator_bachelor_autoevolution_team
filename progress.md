@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-179-modularization-naive-team
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect modularization from issue-179 — new operations/ package (Operation ABC, OperationRegistry, 12 concrete operation classes, register_basic_operations, register_scientific_operations stub), new presentation/ package (presentation.cli, presentation.interactive), Calculator._registry field, and backward-compat re-export shims for src/cli.py and src/user_input.py
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-179-modularization-naive-team (2026-04-19)
 
 - branch: task/issue-179-modularization-naive-team
