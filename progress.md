@@ -7,7 +7,7 @@
 - **Risks:** None — purely additive test changes; no source code modified.
 - **Tests passed:** 35/35
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 153.6s | Cost: $0.333659 USD | Turns: 13
 
 ## Run: issue-139 — ZeroDivisionError test coverage
 
