@@ -1,5 +1,26 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-161-cli-mode
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include cli module (run_cli, parse_and_evaluate, _eval_node) and __main__ dispatch logic added in issue-161
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 90.9s | Cost: $0.320149 USD | Turns: 18
+
+## Run: issue-161-cli-mode (2026-04-19)
+
+- branch: task/issue-161-cli-mode
+- pr target: exp2/naive-team
+- files changed: src/cli.py (new), src/__main__.py (modified), tests/test_cli.py (new)
+- purpose: Add CLI mode — parse infix arithmetic expressions from argv and evaluate via Calculator; dispatch to interactive mode when no args are given
+- risks: __main__.py now exits with a non-zero code on CLI errors; existing interactive mode is unchanged
+- tests passed: 88 new CLI tests passed; 482 total tests passed, 0 regressions
+
+Duration: 275.9s | Cost: $0.750325 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-149-user-input
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to include user_input module added in issue-149 (InvalidInputError, OPERATIONS, parse_number, get_operands, execute_operation, format_result, run_interactive)

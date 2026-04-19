@@ -18,6 +18,10 @@ class Calculator {
 class InvalidInputError {
 }
 
+class "__main__" <<module>> {
+    +main() : None
+}
+
 class "user_input" <<module>> {
     +OPERATIONS : dict[str, tuple[str, int]]
     +parse_number(input_str: str) : int|float
@@ -27,9 +31,18 @@ class "user_input" <<module>> {
     +run_interactive() : None
 }
 
+class "cli" <<module>> {
+    +_eval_node(node: ast.expr, calc: Calculator) : int|float
+    +parse_and_evaluate(expression: str, calc: Calculator) : int|float
+    +run_cli(args: list[str]) : int
+}
+
 Exception <|-- InvalidInputError
+"__main__" ..> "cli" : dispatches to (argv present)
+"__main__" ..> "user_input" : dispatches to (no argv)
 "user_input" ..> Calculator : uses
 "user_input" ..> InvalidInputError : raises
+"cli" ..> Calculator : uses
 
 note right of Calculator::divide
   Raises ZeroDivisionError when b == 0
@@ -99,6 +112,29 @@ note right of "user_input"::execute_operation
   Catches ZeroDivisionError, ValueError,
   and TypeError; returns error string
   instead of propagating exception.
+end note
+
+note right of "cli"::_eval_node
+  Recursively walks ast.expr nodes.
+  Supports Constant, UnaryOp (USub/UAdd),
+  and BinOp (+, -, *, /, **).
+end note
+
+note right of "cli"::parse_and_evaluate
+  Parses expression with ast.parse
+  (eval mode). Never calls eval().
+  Joins argv tokens with spaces first.
+end note
+
+note right of "cli"::run_cli
+  Returns exit code 0 on success, 1
+  on any error. Errors printed to stderr.
+end note
+
+note right of "__main__"::main
+  Dispatches: len(sys.argv) > 1 →
+  run_cli(sys.argv[1:]); else →
+  run_interactive().
 end note
 
 @enduml
