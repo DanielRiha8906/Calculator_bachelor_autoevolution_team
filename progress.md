@@ -14,7 +14,7 @@
 - **Risks:** None — documentation only, no source code modified
 - **Tests passed:** Yes — 1105/1105 existing tests pass; all CLI examples verified against running application
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 469.7s | Cost: $1.177377 USD | Turns: 19
 
 ## Run: update-diagrams (2026-04-19)
 
