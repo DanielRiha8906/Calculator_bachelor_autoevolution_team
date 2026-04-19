@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-151-user-input
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect new InputHandler module added in issue-151 (get_operation_registry, display_menu, get_operation_choice, get_operands, run_interactive_session) and updated __main__.py entry point that delegates to run_interactive_session.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 95.0s | Cost: $0.305541 USD | Turns: 17
+
+---
+
+## Run: issue-151 — Interactive user input session
+
+- **Branch:** task/issue-151-user-input
+- **PR target:** exp2/expert-team
+- **Files changed:** src/input_handler.py (created), src/__main__.py (modified), tests/test_input_handler.py (created)
+- **Purpose:** Add runtime interactive REPL so users can select operations and enter operands without code changes between calculations. Handles unary/binary arity, factorial int-conversion, and calculator exceptions gracefully.
+- **Risks:** Low — calculator core unchanged; __main__.py demo replaced by interactive session; new module is isolated.
+- **Tests passed:** 194/194 (117 existing + 77 new)
+
+Duration: 347.6s | Cost: $0.833391 USD | Turns: 22
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-148-functions-expert-team
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect 7 new methods added to Calculator in this branch (square, cube, square_root, cube_root, power, log, ln) with their type and domain validation.

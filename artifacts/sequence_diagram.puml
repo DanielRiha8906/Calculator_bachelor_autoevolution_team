@@ -1,92 +1,44 @@
 @startuml sequence_diagram
 
 participant "__main__" as main
+participant "InputHandler" as ih
 participant "Calculator" as calc
 
 main -> calc : <<create>>
+main -> ih : run_interactive_session(calculator)
 
-main -> calc : add(10, 5)
-calc --> main : 15
+ih -> ih : get_operation_registry(calculator)
+ih -> ih : print welcome message
 
-main -> calc : subtract(10, 5)
-calc --> main : 5
+loop interactive session
+    ih -> ih : display_menu(registry)
+    ih -> ih : get_operation_choice(registry)
 
-main -> calc : multiply(10, 5)
-calc --> main : 50
+    alt user quit (q / quit / exit)
+        ih -> main : return\n(prints "Goodbye.")
+    else operation selected
+        ih -> ih : get_operands(arity)
 
-main -> calc : divide(10, 5)
-alt b != 0
-    calc --> main : 2.0
-else b == 0
-    calc --> main : raises ZeroDivisionError
-end
+        opt method is factorial
+            ih -> ih : convert whole-valued floats to int
+        end
 
-main -> calc : factorial(5)
-alt n is int and n >= 0
-    calc --> main : 120
-else n is not int
-    calc --> main : raises TypeError
-else n < 0
-    calc --> main : raises ValueError
-end
+        ih -> calc : method(*operands)
 
-main -> calc : square(4)
-alt x is numeric
-    calc --> main : 16
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : cube(3)
-alt x is numeric
-    calc --> main : 27
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : square_root(9)
-alt x is numeric and x >= 0
-    calc --> main : 3.0
-else x < 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : cube_root(27)
-alt x is numeric
-    calc --> main : 3.0
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : power(2, 10)
-alt base and exponent are numeric
-    alt base >= 0 or exponent is int
-        calc --> main : 1024
-    else base < 0 and exponent is non-integer
-        calc --> main : raises ValueError
+        alt success
+            calc --> ih : result
+            ih -> ih : print "Result: {result}"
+        else TypeError
+            calc --> ih : raises TypeError
+            ih -> ih : print error message
+        else ValueError
+            calc --> ih : raises ValueError
+            ih -> ih : print error message
+        else ZeroDivisionError
+            calc --> ih : raises ZeroDivisionError
+            ih -> ih : print error message
+        end
     end
-else base or exponent not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : log(100)
-alt x is numeric and x > 0
-    calc --> main : 2.0
-else x <= 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : ln(1)
-alt x is numeric and x > 0
-    calc --> main : 0.0
-else x <= 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
 end
 
 @enduml
