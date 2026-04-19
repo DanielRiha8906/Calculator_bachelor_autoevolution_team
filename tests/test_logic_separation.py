@@ -10,7 +10,7 @@ This module validates that:
 
 import pytest
 from unittest.mock import patch
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 
 
 # ==================== Import Path Verification Tests ====================
@@ -618,3 +618,211 @@ def test_operations_work_through_core_registry(op_name, operands, expected):
     method, _arity = registry[op_name]
     result = method(*operands)
     assert result == expected
+
+
+# ==================== Core Layer Module Structure ====================
+
+
+class TestCoreLayerModuleStructure:
+    """Verify core layer module structure and isolation."""
+
+    def test_core_calculator_exists(self):
+        """Test that src.core.calculator exists and contains Calculator."""
+        import src.core.calculator
+        assert hasattr(src.core.calculator, "Calculator")
+
+    def test_core_operations_manager_exists(self):
+        """Test that src.core.operations_manager exists and contains OperationRegistry."""
+        import src.core.operations_manager
+        assert hasattr(src.core.operations_manager, "OperationRegistry")
+
+    def test_operation_registry_instantiable(self):
+        """Test that OperationRegistry can be instantiated."""
+        from src.core.operations_manager import OperationRegistry
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        assert isinstance(registry, OperationRegistry)
+
+    def test_calculator_in_core_has_no_io_dependencies(self):
+        """Test that Calculator module has no I/O dependencies."""
+        import src.core.calculator
+        import inspect
+        source = inspect.getsource(src.core.calculator)
+        # Should not import from UI or interactive modules
+        assert "from src.interface" not in source
+        assert "from src.interactive" not in source
+        assert "input(" not in source
+        assert "print(" not in source
+
+    def test_operations_manager_has_no_io_dependencies(self):
+        """Test that OperationRegistry module has no I/O dependencies."""
+        import src.core.operations_manager
+        import inspect
+        source = inspect.getsource(src.core.operations_manager)
+        # Should not import from UI or interactive modules
+        assert "from src.interface" not in source
+        assert "from src.interactive" not in source
+
+
+# ==================== Interface Layer Module Structure ====================
+
+
+class TestInterfaceLayerStructure:
+    """Verify interface layer module structure."""
+
+    def test_input_parser_module_exists(self):
+        """Test that src.interface.input_parser exists with required functions."""
+        import src.interface.input_parser
+        assert hasattr(src.interface.input_parser, "parse_cli_args")
+        assert hasattr(src.interface.input_parser, "convert_operand")
+
+    def test_menu_renderer_module_exists(self):
+        """Test that src.interface.menu_renderer exists with display_menu."""
+        import src.interface.menu_renderer
+        assert hasattr(src.interface.menu_renderer, "display_menu")
+
+    def test_output_formatter_module_exists(self):
+        """Test that src.interface.output_formatter exists with format_result."""
+        import src.interface.output_formatter
+        assert hasattr(src.interface.output_formatter, "format_result")
+
+    def test_interface_functions_are_callable(self):
+        """Test that interface functions are callable."""
+        from src.interface.input_parser import parse_cli_args, convert_operand
+        from src.interface.output_formatter import format_result
+        from src.interface.menu_renderer import display_menu
+        assert callable(parse_cli_args)
+        assert callable(convert_operand)
+        assert callable(format_result)
+        assert callable(display_menu)
+
+
+# ==================== Session Layer Module Structure ====================
+
+
+class TestSessionLayerStructure:
+    """Verify interactive session layer structure."""
+
+    def test_interactive_input_handler_exists(self):
+        """Test that src.interactive.input_handler exists with required functions."""
+        import src.interactive.input_handler
+        assert hasattr(src.interactive.input_handler, "get_operation_choice")
+        assert hasattr(src.interactive.input_handler, "get_operands")
+
+    def test_interactive_session_exists(self):
+        """Test that src.interactive.session exists with required functions."""
+        import src.interactive.session
+        assert hasattr(src.interactive.session, "run_interactive_session")
+        assert hasattr(src.interactive.session, "display_menu")
+
+    def test_session_functions_are_callable(self):
+        """Test that session functions are callable."""
+        from src.interactive.input_handler import get_operation_choice, get_operands
+        from src.interactive.session import run_interactive_session
+        assert callable(get_operation_choice)
+        assert callable(get_operands)
+        assert callable(run_interactive_session)
+
+
+# ==================== Operations Framework Extensibility ====================
+
+
+class TestOperationsFrameworkExtensibility:
+    """Verify OperationRegistry framework for extensibility."""
+
+    def test_operation_registry_class_exists(self):
+        """Test that OperationRegistry class exists in operations_manager."""
+        from src.core.operations_manager import OperationRegistry
+        assert OperationRegistry is not None
+
+    def test_registry_has_normal_and_scientific_dicts(self):
+        """Test that OperationRegistry has _normal_operations and _scientific_operations."""
+        from src.core.operations_manager import OperationRegistry
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        assert hasattr(registry, "_normal_operations")
+        assert hasattr(registry, "_scientific_operations")
+        assert isinstance(registry._normal_operations, dict)
+        assert isinstance(registry._scientific_operations, dict)
+
+    def test_registry_get_all_operations(self):
+        """Test that get_all_operations returns all operations."""
+        from src.core.operations_manager import OperationRegistry
+        from src.core.operations import get_operation_registry
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        all_ops = registry.get_all_operations()
+        legacy_ops = get_operation_registry(calc)
+        # Should have same operations
+        assert set(all_ops.keys()) == set(legacy_ops.keys())
+
+    def test_registry_get_normal_operations(self):
+        """Test that get_normal_operations returns normal mode operations."""
+        from src.core.operations_manager import OperationRegistry
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        normal_ops = registry.get_normal_operations()
+        assert isinstance(normal_ops, dict)
+        assert "add" in normal_ops
+        assert len(normal_ops) == 12  # All 12 are in normal mode currently
+
+    def test_normal_operations_are_subset_of_all(self):
+        """Test that normal operations are a subset of all operations."""
+        from src.core.operations_manager import OperationRegistry
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        all_ops = registry.get_all_operations()
+        normal_ops = registry.get_normal_operations()
+        assert set(normal_ops.keys()).issubset(set(all_ops.keys()))
+
+
+# ==================== Backward Compatibility Shims ====================
+
+
+class TestBackwardCompatibilityShims:
+    """Verify all backward compatibility shims work."""
+
+    def test_calculator_shim_works(self):
+        """Test that src.calculator shim imports Calculator."""
+        from src.calculator import Calculator as ShimCalc
+        calc = ShimCalc()
+        assert calc.add(2, 3) == 5
+
+    def test_input_handler_shim_exports_all_functions(self):
+        """Test that input_handler shim re-exports all functions."""
+        from src.input_handler import (
+            display_menu,
+            get_operation_choice,
+            get_operands,
+            run_interactive_session,
+            get_operation_registry,
+        )
+        assert callable(display_menu)
+        assert callable(get_operation_choice)
+        assert callable(get_operands)
+        assert callable(run_interactive_session)
+        assert callable(get_operation_registry)
+
+    def test_error_logger_shim_works(self):
+        """Test that src.error_logger still provides ErrorLogger."""
+        from src.error_logger import ErrorLogger
+        logger = ErrorLogger()
+        assert logger is not None
+
+    def test_history_shim_works(self):
+        """Test that src.history shim imports HistoryTracker."""
+        from src.history import HistoryTracker
+        tracker = HistoryTracker()
+        assert tracker is not None
+
+    def test_support_error_logging_re_exports_error_logger(self):
+        """Test that src.support.error_logging re-exports ErrorLogger."""
+        from src.support.error_logging import ErrorLogger as SupportErrorLogger
+        from src.error_logger import ErrorLogger as CanonicalErrorLogger
+        assert SupportErrorLogger is CanonicalErrorLogger
+
+    def test_support_history_exports_history_tracker(self):
+        """Test that src.support.history exports HistoryTracker."""
+        from src.support.history import HistoryTracker
+        tracker = HistoryTracker()
+        assert tracker is not None

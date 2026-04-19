@@ -1,5 +1,27 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-181-modularization-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-181 modularization: new OperationRegistry class in src/core/operations_manager.py (with _normal_operations, _scientific_operations, get_all_operations, get_normal_operations); new src/interface/ package with InputParser (parse_cli_args, convert_operand), OutputFormatter (format_result), and MenuRenderer (display_menu) modules; HistoryTracker and ErrorLogger canonical homes moved to src/support/. Class diagram restructured with new src.interface and src.support packages, OperationRegistry node added, and dependency edges updated. Sequence diagram updated with interface.InputParser, interface.MenuRenderer, and core.OperationRegistry participants showing full delegation chain. Activity diagram updated to reference interface.InputParser and interface.MenuRenderer at call sites.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 180.4s | Cost: $0.567824 USD | Turns: 24
+
+## Run: issue-181 — V2 Modularization (Expert/Team)
+
+- **Branch:** task/issue-181-modularization-expert-team
+- **Target PR:** exp2/expert-team
+- **Files changed (source):** src/core/calculator.py (new), src/core/operations_manager.py (new), src/interface/__init__.py (new), src/interface/input_parser.py (new), src/interface/output_formatter.py (new), src/interface/menu_renderer.py (new), src/interactive/input_handler.py (new), src/support/__init__.py (new), src/support/history.py (new), src/support/error_logging.py (new); modified: src/__init__.py, src/calculator.py, src/cli.py, src/core/__init__.py, src/core/operations.py, src/error_logger.py, src/history.py, src/input_handler.py, src/interactive/session.py
+- **Files changed (tests):** tests/test_modular_structure.py (new); modified: tests/test_calculator.py, tests/test_error_logger.py, tests/test_history.py, tests/test_input_handler.py, tests/test_logic_separation.py
+- **Purpose:** Modularize calculator into core logic (src/core/), interface layer (src/interface/), interactive session layer (src/interactive/), and support utilities (src/support/). Introduced OperationRegistry abstraction with clear placeholder for future scientific mode. All existing import paths preserved via backward-compat shims.
+- **Risks:** Backward compatibility shims add indirection; error_logger.py retains canonical state to avoid breaking test_error_logger.py patch paths; interactive/input_handler.py re-exports from session.py to preserve inspect.getsource assertion in test_logic_separation.py.
+- **Tests passed:** 622/622 (99 new tests added)
+
+Duration: 897.3s | Cost: $2.714352 USD | Turns: 16
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-176-logic-separation
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect issue-176 logic separation: InputHandler reduced to backward-compat shim; new src.core package with Operations module (get_operation_registry); new src.interactive package with Session module (display_menu, get_operation_choice, get_operands, run_interactive_session, MAX_VALIDATION_ATTEMPTS). Class diagram restructured with new packages and updated dependency edges. Sequence diagram updated to use core.Operations and interactive.Session participants, replacing InputHandler. Activity diagram updated to attribute get_operation_registry calls to core.Operations and to include error logging in interactive exception handler.

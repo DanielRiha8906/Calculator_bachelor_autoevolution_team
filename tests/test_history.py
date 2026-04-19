@@ -8,7 +8,7 @@ from io import StringIO
 import sys
 from unittest.mock import patch
 
-from src.history import HistoryTracker
+from src.support.history import HistoryTracker
 
 
 # ==================== HistoryTracker Initialization ====================
