@@ -24,7 +24,7 @@ Duration: 136.1s | Cost: $0.358693 USD | Turns: 16
 - **Tests passed:** 169/169 (all pass)
 - **PR target:** exp2/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 380.1s | Cost: $1.046995 USD | Turns: 14
 
 ## Run: update-diagrams (2026-04-19)
 
