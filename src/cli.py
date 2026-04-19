@@ -1,36 +1,25 @@
 """CLI mode handler for non-interactive command-line operation.
 
 Parses operation names/symbols and operands from sys.argv-style argument lists,
-dispatches to the Calculator, and returns the raw numeric result.
+dispatches to the Calculator via :class:`~src.operations.OperationRegistry`,
+and returns the raw numeric result.
 """
 
-import math
 from typing import TYPE_CHECKING, Any
 
 from src.error_logger import ErrorLogger
+from src.operations import OperationRegistry
 
 if TYPE_CHECKING:
     from src.history import OperationHistory
-
-# Operations that take exactly one operand.
-_UNARY_OPS: frozenset[str] = frozenset(
-    ["factorial", "square", "cube", "square_root", "sqrt", "cube_root", "cbrt",
-     "natural_logarithm", "ln"]
-)
-
-# Operations that take exactly two operands.
-_BINARY_OPS: frozenset[str] = frozenset(
-    ["add", "+", "subtract", "-", "multiply", "*", "divide", "/",
-     "power", "^", "logarithm", "log"]
-)
 
 
 class CLIHandler:
     """Handle non-interactive CLI operation for the calculator.
 
     Parses a list of string arguments representing an operation and its
-    operands, dispatches to the underlying Calculator instance, and returns
-    the numeric result.
+    operands, dispatches to the underlying Calculator instance via the
+    :class:`~src.operations.OperationRegistry`, and returns the numeric result.
 
     Args:
         calculator: A Calculator instance whose methods will be called.
@@ -50,37 +39,19 @@ class CLIHandler:
         self.calculator = calculator
         self.history = history
         self.error_logger = error_logger
+        self._registry = OperationRegistry(calculator)
 
     def get_operation_mapping(self) -> dict[str, str]:
         """Return a mapping from operation names and symbols to Calculator method names.
 
+        Delegates to :class:`~src.operations.OperationRegistry` so that the
+        operation catalog is defined in a single place.
+
         Returns:
             A dict where keys are accepted operation strings (names or symbols)
-            and values are the corresponding Calculator method names.
+            and values are the corresponding canonical Calculator method names.
         """
-        return {
-            "add": "add",
-            "+": "add",
-            "subtract": "subtract",
-            "-": "subtract",
-            "multiply": "multiply",
-            "*": "multiply",
-            "divide": "divide",
-            "/": "divide",
-            "power": "power",
-            "^": "power",
-            "logarithm": "logarithm",
-            "log": "logarithm",
-            "factorial": "factorial",
-            "square": "square",
-            "cube": "cube",
-            "square_root": "square_root",
-            "sqrt": "square_root",
-            "cube_root": "cube_root",
-            "cbrt": "cube_root",
-            "natural_logarithm": "natural_logarithm",
-            "ln": "natural_logarithm",
-        }
+        return self._registry.get_operation_mapping()
 
     def parse_args(self, args: list[str]) -> tuple[str, list[float]]:
         """Parse a list of argument strings into an operation name and operands.
@@ -102,20 +73,14 @@ class CLIHandler:
             raise ValueError("Missing operand(s) for operation: no arguments provided")
 
         raw_op = args[0]
-        mapping = self.get_operation_mapping()
 
-        if raw_op not in mapping:
+        try:
+            method_name = self._registry.resolve(raw_op)
+        except ValueError:
             raise ValueError(f"Unknown operation: {raw_op!r}")
 
-        method_name = mapping[raw_op]
+        expected = self._registry.arity(raw_op)
         operand_strings = args[1:]
-
-        if raw_op in _UNARY_OPS or method_name in {
-            "factorial", "square", "cube", "square_root", "cube_root", "natural_logarithm"
-        }:
-            expected = 1
-        else:
-            expected = 2
 
         if len(operand_strings) != expected:
             raise ValueError(
@@ -136,8 +101,9 @@ class CLIHandler:
         """Execute the operation described by args and return the numeric result.
 
         Parses the operation and operands from args, then dispatches to the
-        Calculator.  The "logarithm" operation is treated as a two-argument
-        logarithm: log(x, base), matching the REPL behaviour.
+        Calculator via the :class:`~src.operations.OperationRegistry`.  The
+        ``logarithm`` operation is treated as a two-argument logarithm:
+        ``log(x, base)``, matching the REPL behaviour.
 
         Errors are logged via ``self.error_logger`` (if set) before being
         re-raised:
@@ -177,16 +143,7 @@ class CLIHandler:
             raise
 
         try:
-            if method_name == "logarithm":
-                x, base = operands
-                if base <= 0 or base == 1:
-                    raise ValueError("logarithm base must be positive and not equal to 1")
-                if x <= 0:
-                    raise ValueError("logarithm() not defined for non-positive values")
-                result = math.log(x, base)
-            else:
-                method = getattr(self.calculator, method_name)
-                result = method(*operands)
+            result = self._registry.dispatch(method_name, operands)
         except (ValueError, ZeroDivisionError, TypeError) as exc:
             if self.error_logger is not None:
                 self.error_logger.log_error(

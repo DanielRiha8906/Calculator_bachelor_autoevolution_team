@@ -4,40 +4,32 @@ Provides a Read-Eval-Print Loop allowing interactive use of all calculator
 operations via a numbered menu driven command-line interface.
 """
 
-import math
 from typing import TYPE_CHECKING, Optional
 
 from src.exceptions import MaxRetriesExceeded
 from src.error_logger import ErrorLogger
+from src.operations import Operation, OperationRegistry, _CATALOG
 
 if TYPE_CHECKING:
     from src.history import OperationHistory
 
 MAX_RETRIES = 3
 
+# Backwards-compatible module-level dict so that existing imports of the form
+# ``from src.repl import OPERATIONS`` continue to work.  The dict is built
+# from the canonical _CATALOG in src.operations so it stays in sync.
 OPERATIONS: dict[str, dict] = {
-    "add": {"arity": 2, "name": "Addition"},
-    "subtract": {"arity": 2, "name": "Subtraction"},
-    "multiply": {"arity": 2, "name": "Multiplication"},
-    "divide": {"arity": 2, "name": "Division"},
-    "power": {"arity": 2, "name": "Power"},
-    "logarithm": {"arity": 2, "name": "Logarithm (base)"},
-    "factorial": {"arity": 1, "name": "Factorial"},
-    "square": {"arity": 1, "name": "Square"},
-    "cube": {"arity": 1, "name": "Cube"},
-    "square_root": {"arity": 1, "name": "Square Root"},
-    "cube_root": {"arity": 1, "name": "Cube Root"},
-    "natural_logarithm": {"arity": 1, "name": "Natural Logarithm"},
+    op.name: {"arity": op.arity, "name": op.display_name}
+    for op in _CATALOG
 }
-
-_OPERATION_KEYS: list[str] = list(OPERATIONS.keys())
 
 
 class REPLInterface:
     """Interactive REPL for the Calculator.
 
     Presents a numbered menu of operations, collects operands from the user,
-    invokes the corresponding Calculator method, displays the result, and
+    invokes the corresponding Calculator method via
+    :class:`~src.operations.OperationRegistry`, displays the result, and
     carries the result forward as a default for the next operation.
 
     Args:
@@ -60,6 +52,11 @@ class REPLInterface:
         self.history = history
         self.error_logger = error_logger
         self.last_result: Optional[float] = None
+        self._registry = OperationRegistry(calculator)
+        # Ordered list of Operation objects — drives menu numbering.
+        self._operations: list[Operation] = self._registry.get_operations()
+        # Ordered list of canonical names — used for index-based selection.
+        self._operation_keys: list[str] = [op.name for op in self._operations]
 
     def run(self) -> None:
         """Start the REPL loop.
@@ -96,8 +93,8 @@ class REPLInterface:
                     print("History is not available in this session.")
                 continue
 
-            meta = OPERATIONS[operation]
-            arity: int = meta["arity"]
+            op_meta = self._registry.get_operation(operation)
+            arity: int = op_meta.arity  # type: ignore[union-attr]
             operands: list[float] = []
 
             try:
@@ -155,14 +152,14 @@ class REPLInterface:
         return f"Enter {label}: "
 
     def _execute(self, operation: str, operands: list[float]):
-        """Dispatch an operation to the Calculator or built-in math.
+        """Dispatch an operation to the Calculator via the registry.
 
-        The "logarithm" operation is treated as a two-argument logarithm
-        (log(x, base)) because Calculator.logarithm only accepts one argument
-        (base-10).  All other operations are dispatched via getattr.
+        Delegates to :meth:`~src.operations.OperationRegistry.dispatch`, which
+        handles the special-case two-argument ``logarithm`` as well as all
+        standard Calculator method calls.
 
         Args:
-            operation: Key from OPERATIONS.
+            operation: Canonical operation name (a key in the registry).
             operands: Collected operand values.
 
         Returns:
@@ -174,20 +171,7 @@ class REPLInterface:
             TypeError: Propagated from calculator (e.g. factorial of float).
             OverflowError: Propagated from math operations.
         """
-        if operation == "logarithm":
-            x, base = operands
-            if base <= 0 or base == 1:
-                raise ValueError(
-                    "logarithm base must be positive and not equal to 1"
-                )
-            if x <= 0:
-                raise ValueError(
-                    "logarithm() not defined for non-positive values"
-                )
-            return math.log(x, base)
-
-        method = getattr(self.calculator, operation)
-        return method(*operands)
+        return self._registry.dispatch(operation, operands)
 
     def _is_valid_operand(self, raw_input: str) -> bool:
         """Return True if raw_input can be parsed as a float.
@@ -208,7 +192,7 @@ class REPLInterface:
         """Return True if raw_input is a valid operation selection or "quit".
 
         A valid selection is either the string "quit" (case-insensitive) or an
-        integer in the range [1, len(_OPERATION_KEYS)].
+        integer in the range [1, len(_operation_keys)].
 
         Args:
             raw_input: The raw string supplied by the user.
@@ -220,7 +204,7 @@ class REPLInterface:
             return True
         try:
             choice = int(raw_input.strip())
-            return 1 <= choice <= len(_OPERATION_KEYS)
+            return 1 <= choice <= len(self._operation_keys)
         except ValueError:
             return False
 
@@ -231,7 +215,7 @@ class REPLInterface:
         MaxRetriesExceeded after MAX_RETRIES consecutive invalid inputs.
 
         Returns:
-            A key from OPERATIONS, or the string "quit".
+            A canonical operation name from the registry, or the string "quit".
 
         Raises:
             EOFError: If stdin is exhausted (propagated to caller).
@@ -239,8 +223,8 @@ class REPLInterface:
                 times in a row.
         """
         print("\nAvailable operations:")
-        for idx, key in enumerate(_OPERATION_KEYS, start=1):
-            print(f"  {idx}. {OPERATIONS[key]['name']}")
+        for idx, op in enumerate(self._operations, start=1):
+            print(f"  {idx}. {op.display_name}")
         print("  history. Show operation history")
         print("  quit. Exit")
 
@@ -261,8 +245,8 @@ class REPLInterface:
                     )
                 print("Invalid selection. Enter a number from the list, 'history', or 'quit'.")
                 continue
-            if 1 <= choice <= len(_OPERATION_KEYS):
-                return _OPERATION_KEYS[choice - 1]
+            if 1 <= choice <= len(self._operation_keys):
+                return self._operation_keys[choice - 1]
             attempts += 1
             if attempts >= MAX_RETRIES:
                 raise MaxRetriesExceeded(
@@ -270,7 +254,7 @@ class REPLInterface:
                 )
             print(
                 f"Invalid selection. Enter a number between 1 and "
-                f"{len(_OPERATION_KEYS)}, 'history', or 'quit'."
+                f"{len(self._operation_keys)}, 'history', or 'quit'."
             )
 
     def get_operand(self, prompt: str) -> float:
@@ -310,10 +294,11 @@ class REPLInterface:
         """Print the result of an operation.
 
         Args:
-            operation: Key from OPERATIONS (e.g. "add").
+            operation: Canonical operation name from the registry (e.g. "add").
             operands: The operand values used.
             result: The computed result.
         """
-        op_name = OPERATIONS[operation]["name"]
+        op_meta = self._registry.get_operation(operation)
+        op_name = op_meta.display_name  # type: ignore[union-attr]
         operand_str = ", ".join(str(o) for o in operands)
         print(f"{op_name}({operand_str}) = {result}")
