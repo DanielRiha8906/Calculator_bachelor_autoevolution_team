@@ -1,4 +1,23 @@
 
+## Run: issue-171-error-logging (2026-04-19)
+
+- **Branch:** task/issue-171-error-logging
+- **PR:** https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/206 (targets exp2/structured-team)
+- **Files changed:**
+  - `src/error_logger.py` — new module, `ErrorLogger` class with `clear_errors`, `log_error`, `get_errors`; three error type constants
+  - `src/__init__.py` — exported `ErrorLogger`
+  - `src/__main__.py` — initialize `ErrorLogger`, pass to REPL and CLI
+  - `src/repl.py` — accept optional `error_logger` param; log `CALCULATION_ERROR` at exception points
+  - `src/cli.py` — accept optional `error_logger` param; log `UNSUPPORTED_OPERATION`, `INVALID_INPUT`, `CALCULATION_ERROR` at exception points
+  - `tests/test_error_logger.py` — 57 new tests for ErrorLogger unit and integration
+  - `tests/test_repl.py` — 6 new integration tests; fixtures updated
+  - `tests/test_cli.py` — 9 new integration tests; fixtures updated
+- **Purpose:** Add dedicated error logging separate from operation history (issue #171)
+- **Risks:** `error.log` written to cwd; no rotation (out of scope). Backward compatible via optional params.
+- **Tests:** 585 passed, 0 failed, 0 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-168-history
