@@ -14,7 +14,7 @@ Risks: Existing test_gui.py tests that rely on the old dialog-based interface (s
 
 Test results: 1317 passed (105 new GUI tests + full suite), 0 failed.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 714.7s | Cost: $1.755819 USD | Turns: 16
 
 ---
 
