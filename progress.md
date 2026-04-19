@@ -1,3 +1,14 @@
+## Run: issue-142 — Comprehensive unit test suite for calculator operations
+
+- **Branch:** task/issue-142-test-suite-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:** tests/test_calculator.py (modified — expanded from 4 to 35 tests)
+- **Purpose:** Add comprehensive unit test coverage for all 4 calculator operations (add, subtract, multiply, divide) including normal inputs, edge cases (negative numbers, zero, floats), division by zero, and invalid input (type errors).
+- **Risks:** None — purely additive test changes; no source code modified.
+- **Tests passed:** 35/35
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-139 — ZeroDivisionError test coverage
 
 - **Branch:** task/issue-139-zero-division-error
