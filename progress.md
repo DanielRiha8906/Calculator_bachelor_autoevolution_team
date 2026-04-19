@@ -13,7 +13,7 @@
 - **Cost (USD):** PENDING
 - **Turns:** PENDING
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 260.1s | Cost: $0.642786 USD | Turns: 14
 
 ## Run: issue-144-factorial (2026-04-19)
 
