@@ -7,11 +7,20 @@ class Calculator {
     +subtract(a, b) : float
     +multiply(a, b) : float
     +divide(a, b) : float
+    +factorial(n) : int
 }
 
 note right of Calculator::divide
   Raises ZeroDivisionError
   when b == 0
+end note
+
+note right of Calculator::factorial
+  Raises TypeError if n is a
+  non-integer float (e.g. 5.5).
+  Raises ValueError if n < 0.
+  Accepts whole-number floats
+  (e.g. 5.0) by coercing to int.
 end note
 
 class "__main__" as Main {

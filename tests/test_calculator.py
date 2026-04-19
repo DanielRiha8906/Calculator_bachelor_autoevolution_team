@@ -467,3 +467,137 @@ def test_complex_chaining_multiply_divide_add(calc):
     assert isinstance(result2, (int, float))
     result3 = calc.add(result2, 1)
     assert abs(result3 - 9.0) < 1e-10
+
+
+# ============================================================================
+# FACTORIAL TESTS
+# ============================================================================
+
+def test_factorial_zero(calc):
+    """Verify factorial of zero returns 1."""
+    result = calc.factorial(0)
+    assert result == 1
+    assert isinstance(result, int)
+
+
+def test_factorial_one(calc):
+    """Verify factorial of one returns 1."""
+    result = calc.factorial(1)
+    assert result == 1
+    assert isinstance(result, int)
+
+
+def test_factorial_two(calc):
+    """Verify factorial of two returns 2."""
+    result = calc.factorial(2)
+    assert result == 2
+    assert isinstance(result, int)
+
+
+def test_factorial_three(calc):
+    """Verify factorial of three returns 6."""
+    result = calc.factorial(3)
+    assert result == 6
+    assert isinstance(result, int)
+
+
+def test_factorial_five(calc):
+    """Verify factorial of five returns 120."""
+    result = calc.factorial(5)
+    assert result == 120
+    assert isinstance(result, int)
+
+
+def test_factorial_ten(calc):
+    """Verify factorial of ten returns 3628800."""
+    result = calc.factorial(10)
+    assert result == 3628800
+    assert isinstance(result, int)
+
+
+def test_factorial_large_value(calc):
+    """Verify factorial of 20 returns 2432902008176640000."""
+    result = calc.factorial(20)
+    assert result == 2432902008176640000
+    assert isinstance(result, int)
+
+
+def test_factorial_result_type(calc):
+    """Verify factorial result is always an integer."""
+    result = calc.factorial(7)
+    assert isinstance(result, int)
+    assert result == 5040
+
+
+def test_factorial_float_integer_value(calc):
+    """Verify factorial with float representing integer (5.0) returns 120."""
+    result = calc.factorial(5.0)
+    assert result == 120
+    assert isinstance(result, int)
+
+
+def test_factorial_float_zero(calc):
+    """Verify factorial with 0.0 returns 1."""
+    result = calc.factorial(0.0)
+    assert result == 1
+    assert isinstance(result, int)
+
+
+def test_factorial_negative_integer(calc):
+    """Verify factorial of negative integer raises ValueError."""
+    with pytest.raises(ValueError, match="factorial\\(\\) not defined for negative values"):
+        calc.factorial(-5)
+
+
+def test_factorial_negative_one(calc):
+    """Verify factorial of -1 raises ValueError."""
+    with pytest.raises(ValueError, match="factorial\\(\\) not defined for negative values"):
+        calc.factorial(-1)
+
+
+def test_factorial_float_non_integer(calc):
+    """Verify factorial with non-integer float (5.5) raises TypeError."""
+    with pytest.raises(TypeError, match="factorial\\(\\) only accepts integer values, not non-integer floats"):
+        calc.factorial(5.5)
+
+
+def test_factorial_negative_float(calc):
+    """Verify factorial with negative float (-0.5) raises TypeError (type check first)."""
+    with pytest.raises(TypeError, match="factorial\\(\\) only accepts integer values, not non-integer floats"):
+        calc.factorial(-0.5)
+
+
+def test_factorial_result_chains_to_add(calc):
+    """Verify factorial result can be used as input to add."""
+    result_factorial = calc.factorial(5)
+    assert result_factorial == 120
+    assert isinstance(result_factorial, int)
+    result_add = calc.add(result_factorial, 30)
+    assert result_add == 150
+
+
+def test_factorial_result_chains_to_multiply(calc):
+    """Verify factorial result can be used as input to multiply."""
+    result_factorial = calc.factorial(5)
+    assert result_factorial == 120
+    assert isinstance(result_factorial, int)
+    result_multiply = calc.multiply(result_factorial, 2)
+    assert result_multiply == 240
+
+
+def test_factorial_result_chains_to_divide(calc):
+    """Verify factorial result can be used as input to divide."""
+    result_factorial = calc.factorial(4)
+    assert result_factorial == 24
+    assert isinstance(result_factorial, int)
+    result_divide = calc.divide(result_factorial, 2)
+    assert result_divide == 12.0
+
+
+def test_factorial_result_chains_to_subtract(calc):
+    """Verify factorial result can be used as input to subtract."""
+    result_factorial = calc.factorial(5)
+    assert result_factorial == 120
+    assert isinstance(result_factorial, int)
+    result_subtract = calc.subtract(result_factorial, 20)
+    assert result_subtract == 100
