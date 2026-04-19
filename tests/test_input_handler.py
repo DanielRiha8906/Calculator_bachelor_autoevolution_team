@@ -2,6 +2,7 @@
 
 import pytest
 import io
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from src.calculator import Calculator
 from src.input_handler import (
@@ -144,7 +145,8 @@ def test_get_operation_choice_by_name():
     calc = Calculator()
     registry = get_operation_registry(calc)
     with patch("builtins.input", return_value="add"):
-        method, arity = get_operation_choice(registry)
+        name, method, arity = get_operation_choice(registry)
+        assert name == "add"
         assert arity == 2
         assert method(2, 3) == 5
 
@@ -154,7 +156,8 @@ def test_get_operation_choice_by_name_case_insensitive():
     calc = Calculator()
     registry = get_operation_registry(calc)
     with patch("builtins.input", return_value="ADD"):
-        method, arity = get_operation_choice(registry)
+        name, method, arity = get_operation_choice(registry)
+        assert name == "add"
         assert arity == 2
         assert method(2, 3) == 5
 
@@ -164,7 +167,8 @@ def test_get_operation_choice_by_number():
     calc = Calculator()
     registry = get_operation_registry(calc)
     with patch("builtins.input", return_value="1"):
-        method, arity = get_operation_choice(registry)
+        name, method, arity = get_operation_choice(registry)
+        assert name == "add"
         assert method(2, 3) == 5  # "1" should be "add"
 
 
@@ -175,7 +179,8 @@ def test_get_operation_choice_by_number_various():
     # Get the 6th operation (should be factorial)
     ops_list = list(registry.keys())
     with patch("builtins.input", return_value="6"):
-        method, arity = get_operation_choice(registry)
+        name, method, arity = get_operation_choice(registry)
+        assert name == "factorial"
         assert arity == 1
         assert method(5) == 120  # factorial(5)
 
@@ -222,7 +227,8 @@ def test_get_operation_choice_invalid_then_valid():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["invalid", "add"]):
         with patch("builtins.print") as mock_print:
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
             # Verify that an error message was printed
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -236,7 +242,8 @@ def test_get_operation_choice_invalid_number_then_valid():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["99", "add"]):
         with patch("builtins.print") as mock_print:
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
             # Verify that an error message was printed
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -251,7 +258,8 @@ def test_get_operation_choice_multiple_invalid_then_valid():
     # 3 invalid inputs + 1 valid = 4 total, within the 5 limit
     with patch("builtins.input", side_effect=["xyz", "", "123abc", "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
 
 
@@ -261,7 +269,8 @@ def test_get_operation_choice_empty_string_then_valid():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["   ", "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
 
 
@@ -271,7 +280,8 @@ def test_get_operation_choice_whitespace_input():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["\t\n", "square"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "square"
             assert arity == 1
 
 
@@ -281,7 +291,8 @@ def test_get_operation_choice_zero_number():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["0", "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
 
 
@@ -291,19 +302,20 @@ def test_get_operation_choice_negative_number():
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=["-1", "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
 
 
 def test_get_operation_choice_max_attempts_reached():
-    """Test that 5 consecutive invalid inputs return (None, None) sentinel."""
+    """Test that 5 consecutive invalid inputs return (None, None, None) sentinel."""
     calc = Calculator()
     registry = get_operation_registry(calc)
     # 5 invalid invalid inputs should trigger max attempts
     with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
         with patch("builtins.print") as mock_print:
             result = get_operation_choice(registry)
-            assert result == (None, None)
+            assert result == (None, None, None)
             # Verify termination message was printed
             printed = [call.args[0] for call in mock_print.call_args_list]
             output = "\n".join(str(p) for p in printed)
@@ -317,7 +329,8 @@ def test_get_operation_choice_recovers_before_max():
     # 4 invalid + 1 valid = success before the 5th attempt
     with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
             assert method(2, 3) == 5
 
@@ -343,7 +356,7 @@ def test_get_operation_choice_mixed_invalid_types():
     with patch("builtins.input", side_effect=["badname", "999", "xyz", "888", "badname"]):
         with patch("builtins.print") as mock_print:
             result = get_operation_choice(registry)
-            assert result == (None, None)
+            assert result == (None, None, None)
             printed = [call.args[0] for call in mock_print.call_args_list]
             output = "\n".join(str(p) for p in printed)
             assert "Maximum invalid input attempts reached" in output
@@ -356,7 +369,8 @@ def test_get_operation_choice_attempt_counting():
     # Should print error message 3 times before valid input
     with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "add"]):
         with patch("builtins.print") as mock_print:
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
             # Count error messages (should be 3 for the 3 invalid attempts)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -918,7 +932,8 @@ def test_get_operation_choice_invalid_inputs(invalid_input):
     registry = get_operation_registry(calc)
     with patch("builtins.input", side_effect=[invalid_input, "add"]):
         with patch("builtins.print"):
-            method, arity = get_operation_choice(registry)
+            name, method, arity = get_operation_choice(registry)
+            assert name == "add"
             assert arity == 2
 
 
@@ -934,3 +949,274 @@ def test_get_operands_numeric_inputs(numeric_input):
         operands = get_operands(1)
         assert len(operands) == 1
         assert isinstance(operands[0], float)
+
+
+# ==================== run_interactive_session with HistoryTracker ====================
+
+
+def test_run_interactive_session_default_tracker_no_error():
+    """Test calling run_interactive_session without history_tracker argument."""
+    calc = Calculator()
+    with patch("builtins.input", return_value="q"):
+        with patch("builtins.print"):
+            # Should not raise TypeError
+            run_interactive_session(calc)
+
+
+def test_run_interactive_session_records_history():
+    """Test that operations are recorded in history."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    assert len(history) == 1
+    # Operands are converted to floats by get_operands
+    assert "add(2.0, 3.0) = 5.0" in history[0]
+
+
+def test_run_interactive_session_records_multiple_operations():
+    """Test recording multiple operations in a session."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "add", "2", "3",
+        "multiply", "4", "5",
+        "q"
+    ]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    assert len(history) == 2
+    # Operands are converted to floats by get_operands
+    assert history[0] == "add(2.0, 3.0) = 5.0"
+    assert history[1] == "multiply(4.0, 5.0) = 20.0"
+
+
+def test_run_interactive_session_history_display():
+    """Test that 'h' command displays history."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "add", "2", "3",
+        "h",
+        "q"
+    ]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc, tracker)
+    # Check that history was displayed
+    printed = [call.args[0] for call in mock_print.call_args_list]
+    output = "\n".join(str(p) for p in printed)
+    assert "Session history:" in output
+    # Operands are converted to floats by get_operands
+    assert "add(2.0, 3.0) = 5.0" in output
+
+
+def test_run_interactive_session_history_empty_display():
+    """Test displaying history when it's empty."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=["h", "q"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc, tracker)
+    printed = [call.args[0] for call in mock_print.call_args_list]
+    output = "\n".join(str(p) for p in printed)
+    assert "No history for this session." in output
+
+
+def test_run_interactive_session_history_display_multiple_times():
+    """Test displaying history multiple times in a session."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "add", "2", "3",
+        "h",
+        "multiply", "4", "5",
+        "h",
+        "q"
+    ]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc, tracker)
+    printed = [call.args[0] for call in mock_print.call_args_list]
+    output = "\n".join(str(p) for p in printed)
+    # First history display should have only add
+    assert "add(2.0, 3.0) = 5.0" in output
+    # Second history display should have both
+    assert "multiply(4.0, 5.0) = 20.0" in output
+
+
+def test_run_interactive_session_saves_on_quit(tmp_path):
+    """Test that history is saved to file on quit."""
+    from src.history import HistoryTracker
+    import os
+    calc = Calculator()
+    tracker = HistoryTracker()
+    filepath = tmp_path / "test_history.txt"
+    # Change to temp directory
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(str(tmp_path))
+        with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+            with patch("builtins.print"):
+                run_interactive_session(calc, tracker)
+        # Default filename is "history.txt"
+        assert Path(tmp_path / "history.txt").exists()
+    finally:
+        os.chdir(original_cwd)
+
+
+def test_run_interactive_session_does_not_record_error_operations():
+    """Test that failed operations (errors) are not recorded in history."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "divide", "5", "0",  # Will error
+        "add", "2", "3",  # Will succeed
+        "q"
+    ]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    # Only the successful add should be recorded
+    assert len(history) == 1
+    # Operands are converted to floats by get_operands
+    assert "add(2.0, 3.0) = 5.0" in history[0]
+
+
+def test_run_interactive_session_error_continues_session():
+    """Test that errors don't prevent recording subsequent operations."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "factorial", "5.5",  # Error: float not int
+        "add", "2", "3",
+        "q"
+    ]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    # Only the successful add should be recorded
+    assert len(history) == 1
+    # Operands are converted to floats by get_operands
+    assert "add(2.0, 3.0) = 5.0" in history[0]
+
+
+def test_run_interactive_session_h_command_in_menu():
+    """Test that 'h' command is recognized in the menu."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=["add", "1", "2", "h", "q"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc, tracker)
+    # Verify the menu was displayed and history option shown
+    printed = [call.args[0] for call in mock_print.call_args_list]
+    output = "\n".join(str(p) for p in printed)
+    assert "View history" in output or "history" in output.lower()
+
+
+def test_run_interactive_session_history_preserves_order():
+    """Test that history maintains insertion order of operations."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=[
+        "add", "1", "2",
+        "multiply", "3", "4",
+        "subtract", "10", "5",
+        "q"
+    ]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    assert len(history) == 3
+    assert "add" in history[0]
+    assert "multiply" in history[1]
+    assert "subtract" in history[2]
+
+
+def test_run_interactive_session_factorial_float_conversion_recorded():
+    """Test that factorial with float input is recorded with converted int."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    with patch("builtins.input", side_effect=["factorial", "5.0", "q"]):
+        with patch("builtins.print"):
+            run_interactive_session(calc, tracker)
+    history = tracker.get_history()
+    assert len(history) == 1
+    # The operand is converted from float 5.0 to int 5 for factorial
+    assert "factorial(5)" in history[0]
+    assert "= 120" in history[0]
+
+
+def test_run_interactive_session_with_none_tracker_creates_default():
+    """Test that passing None for history_tracker creates a default."""
+    calc = Calculator()
+    with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+        with patch("builtins.print"):
+            # Should not raise
+            run_interactive_session(calc, None)
+
+
+def test_run_interactive_session_history_saved_with_custom_path(tmp_path):
+    """Test saving history with a custom tracker path."""
+    from src.history import HistoryTracker
+    calc = Calculator()
+    tracker = HistoryTracker()
+    # We can't easily test custom save path without modifying run_interactive_session
+    # so we test that default behavior works
+    import os
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(str(tmp_path))
+        with patch("builtins.input", side_effect=["add", "5", "3", "q"]):
+            with patch("builtins.print"):
+                run_interactive_session(calc, tracker)
+        # Check that history.txt was created with expected content
+        history_file = tmp_path / "history.txt"
+        assert history_file.exists()
+        content = history_file.read_text()
+        # Operands are converted to floats by get_operands
+        assert "add(5.0, 3.0) = 8.0" in content
+    finally:
+        os.chdir(original_cwd)
+
+
+def test_get_operation_choice_returns_history_token():
+    """Test that get_operation_choice returns history token on 'h'."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    with patch("builtins.input", return_value="h"):
+        result = get_operation_choice(registry)
+        assert result == ("h", None, None)
+
+
+def test_get_operation_choice_history_token_case_insensitive():
+    """Test that 'h' command is case-insensitive."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    with patch("builtins.input", return_value="H"):
+        result = get_operation_choice(registry)
+        # The function converts to lowercase, so "H" becomes "h"
+        assert result == ("h", None, None)
+
+
+def test_display_menu_shows_history_option():
+    """Test that display_menu shows the history option."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    with patch("builtins.print") as mock_print:
+        display_menu(registry)
+        printed = [call.args[0] for call in mock_print.call_args_list]
+        output = "\n".join(str(p) for p in printed)
+        assert "history" in output.lower()
+        assert "h." in output or "h " in output
