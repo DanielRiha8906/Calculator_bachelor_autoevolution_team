@@ -23,6 +23,12 @@ package "src" {
         +get_operands(arity: int) : list[float]
         +run_interactive_session(calculator: Calculator) : None
     }
+
+    class CLI <<module>> {
+        +parse_arguments(args: list[str]) : tuple[str, list[str]]
+        +convert_operand(value: str) : int | float
+        +execute_cli(operation_name: str, operand_strs: list[str], registry: dict, calculator: Calculator) : int
+    }
 }
 
 package "__main__" {
@@ -34,6 +40,8 @@ package "__main__" {
 EntryPoint ..> Calculator : instantiates
 EntryPoint ..> InputHandler : calls run_interactive_session()
 InputHandler ..> Calculator : invokes methods via registry
+CLI ..> Calculator : invokes methods via registry
+CLI ..> InputHandler : calls get_operation_registry()
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -56,7 +64,7 @@ note right of Calculator::power
 end note
 
 note right of Calculator::log
-  Base-10 logarithm (log₁₀).
+  Base-10 logarithm (log10).
   Raises ValueError if x <= 0.
 end note
 
@@ -73,6 +81,17 @@ end note
 note right of InputHandler::run_interactive_session
   Catches TypeError, ValueError,
   ZeroDivisionError per iteration.
+end note
+
+note right of CLI::execute_cli
+  Returns 0 on success, 1 on error.
+  Catches TypeError, ValueError,
+  ZeroDivisionError.
+end note
+
+note right of CLI::convert_operand
+  Parses string to int or float.
+  Returns int if value is whole (3.0 -> 3).
 end note
 
 @enduml
