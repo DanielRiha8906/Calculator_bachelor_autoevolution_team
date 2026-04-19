@@ -1,9 +1,10 @@
 """Tkinter-based GUI for the Calculator application.
 
-This module provides GuiCalculator, a graphical user interface that exposes
-the same operation set as the interactive CLI session, with mode switching
-(Normal / Scientific) via radio buttons, an operation button grid, a result
-display label, and a scrollable history widget.
+This module provides GuiCalculator, a graphical iOS-style user interface that
+exposes the same operation set as the interactive CLI session, with mode
+toggling (Normal / Scientific) via a single toggle button, a display label
+that shows the current operand or result, and a button-driven digit and
+operation input flow.
 
 Typical usage::
 
@@ -18,10 +19,27 @@ Typical usage::
 
 from __future__ import annotations
 
+_THEME = {
+    "bg": "#000000",
+    "display_bg": "#000000",
+    "display_fg": "#FFFFFF",
+    "display_font": ("Courier", 32, "bold"),
+    "btn_digit_bg": "#333333",
+    "btn_digit_fg": "#FFFFFF",
+    "btn_op_bg": "#333333",
+    "btn_op_fg": "#FFFFFF",
+    "btn_binary_bg": "#FF9500",
+    "btn_binary_fg": "#FFFFFF",
+    "btn_utility_bg": "#A5A5A5",
+    "btn_utility_fg": "#FFFFFF",
+    "btn_font": ("Helvetica", 18),
+    "btn_relief": "flat",
+    "btn_borderwidth": 0,
+}
+
 try:
     import tkinter as tk
     import tkinter.messagebox as messagebox
-    import tkinter.simpledialog as simpledialog
 except ImportError as _tk_err:  # noqa: F841
     # tkinter is a system-level optional dependency (not available in all
     # environments, e.g. headless CI).  The module can still be imported
@@ -29,9 +47,6 @@ except ImportError as _tk_err:  # noqa: F841
     # if the runtime truly lacks a display.
     tk = None  # type: ignore[assignment]
     messagebox = None  # type: ignore[assignment]
-    simpledialog = None  # type: ignore[assignment]
-
-from typing import Callable
 
 from ..core.calculator import Calculator
 from ..shared.dispatcher import OperationDispatcher
@@ -41,15 +56,26 @@ from ..session.history import History
 from ..session.mode import Mode
 from ..session.base_mode import BaseMode
 
+# Keys that are binary operations (store first operand, wait for second).
+_BINARY_OP_KEYS: frozenset[str] = frozenset(
+    {"add", "subtract", "multiply", "divide", "power"}
+)
+
+# Keys that are utility/modifier buttons.
+_UTILITY_OP_KEYS: frozenset[str] = frozenset({"clear", "negate", "percent"})
+
 
 class GuiCalculator:
-    """Tkinter-based graphical calculator interface.
+    """Tkinter-based iOS-style graphical calculator interface.
 
-    Displays mode radio buttons (Normal / Scientific), an operation button
-    grid filtered by the current mode, a result label, and a scrollable
-    history widget.  All calculation logic is delegated to the injected
-    Calculator instance via OperationDispatcher; no operation logic is
-    duplicated here.
+    Displays a numeric digit pad and an operation column.  A single toggle
+    button switches between Normal and Scientific mode.  Binary operations
+    (add, subtract, multiply, divide, power) store the first operand and
+    wait for the equals button; unary operations execute immediately on the
+    current display value.
+
+    All calculation logic is delegated to the injected Calculator instance
+    via OperationDispatcher; no operation logic is duplicated here.
 
     Args:
         root: The root Tk window to build the UI inside.
@@ -71,6 +97,7 @@ class GuiCalculator:
             )
         self._root = root
         self._root.title("Calculator")  # type: ignore[attr-defined]
+        self._root.configure(bg=_THEME["bg"])  # type: ignore[attr-defined]
         self._calculator = calculator
         self._logger: Logger | None = logger
         self._dispatcher = OperationDispatcher(calculator)
@@ -78,12 +105,15 @@ class GuiCalculator:
         self._mode: Mode = Mode.NORMAL
         self._mode_handler = BaseMode()
 
-        # StringVar used by the mode radio buttons.
-        self._mode_var = tk.StringVar(value=Mode.NORMAL.value)
+        # Display state
+        self._display_value: str = "0"
+        self._first_operand: float | None = None
+        self._pending_op_key: str | None = None
+        self._last_was_operator: bool = False
 
         # Widget references populated by _setup_layout.
-        self._result_label: tk.Label | None = None
-        self._history_text: tk.Text | None = None
+        self._display_label: tk.Label | None = None
+        self._mode_toggle_btn: tk.Button | None = None
         self._op_frame: tk.Frame | None = None
 
         self._setup_layout()
@@ -107,243 +137,415 @@ class GuiCalculator:
         """Build and grid all top-level frames and widgets.
 
         Layout (top to bottom):
-        1. Mode selector row (Normal / Scientific radio buttons).
-        2. Operation button grid (rebuilt on mode change).
-        3. Result display label.
-        4. History text widget with vertical scrollbar.
+        1. Display label — full-width, right-anchored, large monospaced font.
+        2. Mode toggle button — switches between Normal and Scientific.
+        3. Button grid — digit pad (left) and operation buttons (right).
         """
-        self._root.columnconfigure(0, weight=1)
+        self._root.columnconfigure(0, weight=1)  # type: ignore[attr-defined]
 
-        # --- Mode selector ---
-        mode_frame = tk.Frame(self._root, padx=8, pady=4)
-        mode_frame.grid(row=0, column=0, sticky="ew")
-        self._setup_mode_selector(mode_frame)
-
-        # --- Operation button grid ---
-        self._op_frame = tk.Frame(self._root, padx=8, pady=4)
-        self._op_frame.grid(row=1, column=0, sticky="nsew")
-        self._root.rowconfigure(1, weight=0)
-        self._setup_operation_grid()
-
-        # --- Result label ---
-        self._result_label = tk.Label(
+        # --- Display label ---
+        self._display_label = tk.Label(
             self._root,
-            text="Result: —",
-            anchor="w",
-            font=("TkDefaultFont", 12, "bold"),
-            padx=8,
-            pady=4,
+            text=self._display_value,
+            anchor="e",
+            font=_THEME["display_font"],
+            bg=_THEME["display_bg"],
+            fg=_THEME["display_fg"],
+            padx=12,
+            pady=8,
         )
-        self._result_label.grid(row=2, column=0, sticky="ew")
+        self._display_label.grid(row=0, column=0, sticky="ew")
 
-        # --- History text + scrollbar ---
-        history_frame = tk.Frame(self._root, padx=8, pady=4)
-        history_frame.grid(row=3, column=0, sticky="nsew")
-        self._root.rowconfigure(3, weight=1)
-        history_frame.columnconfigure(0, weight=1)
-        history_frame.rowconfigure(0, weight=1)
-
-        self._history_text = tk.Text(
-            history_frame,
-            state="disabled",
-            height=8,
-            wrap="word",
+        # --- Mode toggle button ---
+        toggle_text = "Scientific" if self._mode == Mode.NORMAL else "Normal"
+        self._mode_toggle_btn = tk.Button(
+            self._root,
+            text=toggle_text,
+            bg=_THEME["btn_utility_bg"],
+            fg=_THEME["btn_utility_fg"],
+            font=_THEME["btn_font"],
+            relief=_THEME["btn_relief"],
+            borderwidth=_THEME["btn_borderwidth"],
+            command=self._on_mode_toggle_click,
         )
-        self._history_text.grid(row=0, column=0, sticky="nsew")
+        self._mode_toggle_btn.grid(row=1, column=0, sticky="ew", padx=4, pady=2)
 
-        scrollbar = tk.Scrollbar(
-            history_frame,
-            orient="vertical",
-            command=self._history_text.yview,
-        )
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        self._history_text.configure(yscrollcommand=scrollbar.set)
+        # --- Combined button grid frame ---
+        grid_frame = tk.Frame(self._root, bg=_THEME["bg"])
+        grid_frame.grid(row=2, column=0, sticky="nsew")
+        grid_frame.columnconfigure(0, weight=3)
+        grid_frame.columnconfigure(1, weight=2)
 
-    def _setup_mode_selector(self, parent: tk.Frame) -> None:
-        """Add Normal/Scientific radio buttons to *parent*.
+        # --- Digit pad (left) ---
+        digit_frame = tk.Frame(grid_frame, bg=_THEME["bg"])
+        digit_frame.grid(row=0, column=0, sticky="nsew", padx=(4, 2), pady=4)
+        self._build_digit_pad(digit_frame)
+
+        # --- Operation buttons (right) ---
+        self._op_frame = tk.Frame(grid_frame, bg=_THEME["bg"])
+        self._op_frame.grid(row=0, column=1, sticky="nsew", padx=(2, 4), pady=4)
+        self._build_operation_buttons()
+
+    def _build_digit_pad(self, parent: tk.Frame) -> None:
+        """Build the 3-column x 4-row digit button grid in *parent*.
+
+        Digit layout::
+
+            row 0 : 7  8  9
+            row 1 : 4  5  6
+            row 2 : 1  2  3
+            row 3 : 0  (spans all 3 columns)
 
         Args:
-            parent: The frame that will contain the radio buttons.
+            parent: Frame that will contain the digit buttons.
         """
-        tk.Label(parent, text="Mode:").pack(side="left")
-        for mode in Mode:
-            tk.Radiobutton(
-                parent,
-                text=mode.value.capitalize(),
-                variable=self._mode_var,
-                value=mode.value,
-                command=lambda m=mode: self._on_mode_change(m),
-            ).pack(side="left", padx=4)
+        rows = [
+            ["7", "8", "9"],
+            ["4", "5", "6"],
+            ["1", "2", "3"],
+        ]
+        for r, row_digits in enumerate(rows):
+            for c, digit in enumerate(row_digits):
+                btn = tk.Button(
+                    parent,
+                    text=digit,
+                    bg=_THEME["btn_digit_bg"],
+                    fg=_THEME["btn_digit_fg"],
+                    font=_THEME["btn_font"],
+                    relief=_THEME["btn_relief"],
+                    borderwidth=_THEME["btn_borderwidth"],
+                    command=lambda d=digit: self._on_digit_click(d),
+                )
+                btn.grid(row=r, column=c, padx=2, pady=2, sticky="nsew")
 
-    def _setup_operation_grid(self) -> None:
-        """Populate the operation button grid for the current mode.
+        # Row 3: "0" spanning all three columns
+        btn_zero = tk.Button(
+            parent,
+            text="0",
+            bg=_THEME["btn_digit_bg"],
+            fg=_THEME["btn_digit_fg"],
+            font=_THEME["btn_font"],
+            relief=_THEME["btn_relief"],
+            borderwidth=_THEME["btn_borderwidth"],
+            command=lambda: self._on_digit_click("0"),
+        )
+        btn_zero.grid(row=3, column=0, columnspan=3, padx=2, pady=2, sticky="nsew")
 
-        Clears any previously rendered buttons before rebuilding.  Buttons
-        are arranged in rows of four.
+        for c in range(3):
+            parent.columnconfigure(c, weight=1)
+        for r in range(4):
+            parent.rowconfigure(r, weight=1)
+
+    def _build_operation_buttons(self) -> None:
+        """Populate the operation button column for the current mode.
+
+        Clears any previously rendered buttons before rebuilding.  Includes
+        the equals (=) and clear buttons in addition to the mode operations.
         """
         if self._op_frame is None:
             return
 
-        # Clear existing buttons.
         for widget in self._op_frame.winfo_children():
             widget.destroy()
 
         available = self._get_available_operations_for_mode()
-        columns = 4
-        for index, (op_key, op_info) in enumerate(available.items()):
-            row, col = divmod(index, columns)
+
+        row = 0
+
+        # Clear button (utility)
+        btn_clear = tk.Button(
+            self._op_frame,
+            text="C",
+            bg=_THEME["btn_utility_bg"],
+            fg=_THEME["btn_utility_fg"],
+            font=_THEME["btn_font"],
+            relief=_THEME["btn_relief"],
+            borderwidth=_THEME["btn_borderwidth"],
+            command=self._on_clear_click,
+        )
+        btn_clear.grid(row=row, column=0, padx=2, pady=2, sticky="nsew")
+        row += 1
+
+        # Operation buttons from the current mode
+        for op_key, op_info in available.items():
+            label: str = op_info["label"]
+            # Use a short display label for the button
+            btn_text = self._short_label(op_key, label)
+            bg, fg = self._op_button_colors(op_key)
+            if op_key in _BINARY_OP_KEYS:
+                cmd = lambda k=op_key: self._on_binary_op_click(k)
+            else:
+                cmd = lambda k=op_key: self._on_unary_op_click(k)
+
             btn = tk.Button(
                 self._op_frame,
-                text=op_info["label"],
-                width=24,
-                command=lambda k=op_key: self._on_operation_click(k),
+                text=btn_text,
+                bg=bg,
+                fg=fg,
+                font=_THEME["btn_font"],
+                relief=_THEME["btn_relief"],
+                borderwidth=_THEME["btn_borderwidth"],
+                command=cmd,
             )
-            btn.grid(row=row, column=col, padx=2, pady=2, sticky="ew")
+            btn.grid(row=row, column=0, padx=2, pady=2, sticky="nsew")
+            row += 1
 
-        for col in range(columns):
-            self._op_frame.columnconfigure(col, weight=1)
+        # Equals button (binary)
+        btn_eq = tk.Button(
+            self._op_frame,
+            text="=",
+            bg=_THEME["btn_binary_bg"],
+            fg=_THEME["btn_binary_fg"],
+            font=_THEME["btn_font"],
+            relief=_THEME["btn_relief"],
+            borderwidth=_THEME["btn_borderwidth"],
+            command=self._on_equals_click,
+        )
+        btn_eq.grid(row=row, column=0, padx=2, pady=2, sticky="nsew")
+        row += 1
+
+        self._op_frame.columnconfigure(0, weight=1)
+        for r in range(row):
+            self._op_frame.rowconfigure(r, weight=1)
+
+    # ------------------------------------------------------------------
+    # Button label helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _short_label(op_key: str, label: str) -> str:  # noqa: ARG004
+        """Return a concise button label for *op_key*.
+
+        Args:
+            op_key: The operation registry key.
+            label: The full human-readable label from the registry.
+
+        Returns:
+            A short string suitable for display on a small button.
+        """
+        _SHORT: dict[str, str] = {
+            "add": "+",
+            "subtract": "−",
+            "multiply": "×",
+            "divide": "÷",
+            "power": "xʸ",
+            "factorial": "n!",
+            "square": "x²",
+            "cube": "x³",
+            "square_root": "√",
+            "cube_root": "∛",
+            "log10": "log",
+            "ln": "ln",
+            "sin": "sin",
+            "cos": "cos",
+            "tan": "tan",
+            "asin": "asin",
+            "acos": "acos",
+            "atan": "atan",
+            "pi": "π",
+            "e": "e",
+            "negate": "+/−",
+            "percent": "%",
+        }
+        return _SHORT.get(op_key, op_key)
+
+    @staticmethod
+    def _op_button_colors(op_key: str) -> tuple[str, str]:
+        """Return (bg, fg) color pair for *op_key* based on its category.
+
+        Args:
+            op_key: The operation registry key.
+
+        Returns:
+            A (background_color, foreground_color) tuple from ``_THEME``.
+        """
+        if op_key in _BINARY_OP_KEYS:
+            return _THEME["btn_binary_bg"], _THEME["btn_binary_fg"]
+        if op_key in _UTILITY_OP_KEYS:
+            return _THEME["btn_utility_bg"], _THEME["btn_utility_fg"]
+        return _THEME["btn_op_bg"], _THEME["btn_op_fg"]
 
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
 
-    def _on_mode_change(self, new_mode: Mode) -> None:
-        """Handle a mode radio-button selection change.
+    def _on_digit_click(self, digit: str) -> None:
+        """Handle a digit button press.
 
-        Updates the internal mode state and rebuilds the operation grid to
-        reflect the newly available operations.
-
-        Args:
-            new_mode: The Mode value that was selected.
-        """
-        self._mode = new_mode
-        self._setup_operation_grid()
-
-    def _on_operation_click(self, op_key: str) -> None:
-        """Handle an operation button click.
-
-        Looks up the operation in the registry, prompts for operands via
-        simple dialog boxes, executes the operation, and updates both the
-        result label and the history widget.
+        Resets the display when the previous action was an operator or when the
+        display currently shows the initial zero.  Otherwise appends *digit* to
+        the current display string.
 
         Args:
-            op_key: The operation key identifying the button that was clicked.
+            digit: A single character string "0"–"9".
         """
-        op_info = OPERATIONS[op_key]
-        arity: int = op_info["arity"]
-        coerce: Callable = op_info.get("coerce", float)  # type: ignore[assignment]
+        if self._last_was_operator or self._display_value == "0":
+            self._display_value = digit
+        else:
+            self._display_value += digit
+        self._last_was_operator = False
+        self._update_display()
 
-        operands = self._prompt_operands_dialog(op_key, arity, coerce)
-        if operands is None:
-            # User cancelled one of the dialogs.
+    def _on_binary_op_click(self, op_key: str) -> None:
+        """Handle a binary operator button press.
+
+        Stores the current display value as the first operand and records
+        which operator is pending.  The operation is not executed until the
+        equals button is pressed.
+
+        Args:
+            op_key: The binary operation key (e.g. "add", "multiply").
+        """
+        try:
+            self._first_operand = float(self._display_value)
+        except ValueError:
+            self._display_value = "Error"
+            self._update_display()
             return
+        self._pending_op_key = op_key
+        self._last_was_operator = True
 
-        self._execute_operation(op_key, operands)
+    def _on_unary_op_click(self, op_key: str) -> None:
+        """Handle a unary operator button press.
 
-    def _prompt_operands_dialog(
-        self,
-        op_key: str,
-        arity: int,
-        coerce: Callable,
-    ) -> list | None:
-        """Show dialog boxes to collect operands for the operation.
-
-        One dialog is shown per required operand.  If the user cancels any
-        dialog, or if the value cannot be coerced to the required type, the
-        method returns None (no silent failure — an error dialog is shown
-        for invalid input, but cancel is treated as an abort).
+        Executes the operation immediately against the current display value
+        and updates the display with the result.
 
         Args:
-            op_key: The operation key, used in the dialog title.
-            arity: Number of operands to collect (0, 1, or 2).
-            coerce: Callable used to convert the raw string (e.g. float or int).
-
-        Returns:
-            A list of coerced operand values, or None if collection was
-            cancelled or a coercion error occurred.
+            op_key: The unary operation key (e.g. "square", "ln").
         """
-        operands: list = []
-        labels = ["first", "second"] if arity == 2 else [""]
-        for label in labels[:arity]:
-            prompt_text = f"Enter {label + ' ' if label else ''}operand for '{op_key}':"
-            raw = simpledialog.askstring(
-                title=op_key,
-                prompt=prompt_text,
-                parent=self._root,
-            )
-            if raw is None:
-                # User pressed Cancel.
-                return None
-            raw = raw.strip()
+        op_info = OPERATIONS.get(op_key, {})
+        arity: int = op_info.get("arity", 1)
+
+        if arity == 0:
+            operands: list = []
+        else:
             try:
-                coerced = self._dispatcher.coerce_operands([raw], coerce)
-                operands.extend(coerced)
-            except ValueError as exc:
-                if self._logger is not None:
-                    self._logger.log_invalid_operand(raw, "<numeric>")
-                self._show_error_dialog("Invalid Operand", str(exc))
-                return None
-        return operands
+                operands = [float(self._display_value)]
+            except ValueError:
+                self._display_value = "Error"
+                self._update_display()
+                return
 
-    def _execute_operation(self, op_key: str, operands: list) -> None:
-        """Execute *op_key* with *operands* and update the display.
-
-        Delegates the actual calculation to OperationDispatcher.dispatch().
-        Catches domain errors and zero-division and shows them in an error
-        dialog rather than crashing.
-
-        Args:
-            op_key: A key present in the OPERATIONS registry.
-            operands: A list of already-coerced operand values.
-        """
         if self._logger is None:
             self._logger = Logger()
 
         try:
             result = self._dispatcher.dispatch(op_key, operands)
-        except ZeroDivisionError:
-            self._logger.log_division_by_zero(operands)
-            self._show_error_dialog(
-                "Division by Zero",
-                "Division by zero is not allowed.",
-            )
-            return
-        except ValueError as exc:
-            self._logger.log_domain_error(op_key, str(exc))
-            self._show_error_dialog("Domain Error", str(exc))
-            return
-        except TypeError as exc:
-            self._logger.log_domain_error(op_key, str(exc))
-            self._show_error_dialog("Type Error", str(exc))
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError) as exc:
+            if self._logger is not None:
+                self._logger.log_domain_error(op_key, str(exc))
+            self._display_value = "Error"
+            self._first_operand = None
+            self._pending_op_key = None
+            self._last_was_operator = False
+            self._update_display()
             return
 
-        self._history.add_operation(op_key, operands, result)
-        self._update_result_display(result)
-        self._update_history_display()
+        self._display_value = self._format_result(result)
+        self._last_was_operator = True
+        self._update_display()
+
+    def _on_equals_click(self) -> None:
+        """Handle the equals button press.
+
+        Executes the pending binary operation using the stored first operand
+        and the current display value as the second operand.  Resets the
+        pending operation state after execution.
+        """
+        if self._pending_op_key is None or self._first_operand is None:
+            return
+
+        try:
+            second_operand = float(self._display_value)
+        except ValueError:
+            self._display_value = "Error"
+            self._update_display()
+            return
+
+        if self._logger is None:
+            self._logger = Logger()
+
+        try:
+            result = self._dispatcher.dispatch(
+                self._pending_op_key,
+                [self._first_operand, second_operand],
+            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError) as exc:
+            if self._logger is not None:
+                self._logger.log_domain_error(self._pending_op_key, str(exc))
+            self._display_value = "Error"
+            self._first_operand = None
+            self._pending_op_key = None
+            self._last_was_operator = False
+            self._update_display()
+            return
+
+        self._display_value = self._format_result(result)
+        self._pending_op_key = None
+        self._first_operand = None
+        self._last_was_operator = True
+        self._update_display()
+
+    def _on_clear_click(self) -> None:
+        """Handle the clear (C) button press.
+
+        Resets all display and operation state to initial values.
+        """
+        self._display_value = "0"
+        self._first_operand = None
+        self._pending_op_key = None
+        self._last_was_operator = False
+        self._update_display()
+
+    def _on_mode_toggle_click(self) -> None:
+        """Handle the mode toggle button press.
+
+        Switches between Normal and Scientific mode, resets all calculator
+        state, rebuilds the operation button panel, and updates the toggle
+        button label.
+        """
+        if self._mode == Mode.NORMAL:
+            self._mode = Mode.SCIENTIFIC
+            toggle_text = "Normal"
+        else:
+            self._mode = Mode.NORMAL
+            toggle_text = "Scientific"
+
+        self._on_clear_click()
+        self._build_operation_buttons()
+
+        if self._mode_toggle_btn is not None:
+            self._mode_toggle_btn.configure(text=toggle_text)
 
     # ------------------------------------------------------------------
     # Display helpers
     # ------------------------------------------------------------------
 
-    def _update_result_display(self, result: float | int) -> None:
-        """Update the result label with the latest computation result.
+    def _update_display(self) -> None:
+        """Sync the display label widget to the current ``_display_value``."""
+        if self._display_label is not None:
+            self._display_label.config(text=self._display_value)
+
+    @staticmethod
+    def _format_result(result: float | int) -> str:
+        """Format a numeric result for display.
+
+        Integers (e.g. 39.0) are shown without a decimal point ("39").
+        Non-integer floats are shown as their default string representation.
 
         Args:
-            result: The numeric result to display.
-        """
-        if self._result_label is not None:
-            self._result_label.configure(text=f"Result: {result}")
+            result: The numeric value to format.
 
-    def _update_history_display(self) -> None:
-        """Refresh the history text widget from the current History entries."""
-        if self._history_text is None:
-            return
-        entries = self._history.get_all()
-        self._history_text.configure(state="normal")
-        self._history_text.delete("1.0", "end")
-        self._history_text.insert("end", "\n".join(entries))
-        self._history_text.configure(state="disabled")
-        self._history_text.see("end")
+        Returns:
+            A human-readable string representation.
+        """
+        try:
+            if result == int(result):
+                return str(int(result))
+        except (ValueError, OverflowError):
+            pass
+        return str(result)
 
     def _get_available_operations_for_mode(self) -> dict:
         """Return the operation dict filtered for the current mode.
@@ -355,12 +557,3 @@ class GuiCalculator:
             the current mode.
         """
         return self._mode_handler.get_available_operations(self._mode)
-
-    def _show_error_dialog(self, title: str, message: str) -> None:
-        """Display a modal error dialog.
-
-        Args:
-            title: The dialog window title.
-            message: The error message body.
-        """
-        messagebox.showerror(title=title, message=message, parent=self._root)

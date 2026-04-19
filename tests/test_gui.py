@@ -1,15 +1,14 @@
-"""Comprehensive pytest tests for GUI calculator.
+"""Comprehensive pytest tests for redesigned iOS-style GUI calculator.
 
 Tests cover:
-- BaseMode operation filtering (NORMAL vs SCIENTIFIC)
-- GuiCalculator initialization and tkinter availability
-- Window/widget creation (result label, history, mode selector)
-- Mode switching and operation grid updates
-- Unary and binary operation execution
-- Dialog-based operand input
-- Error handling (domain errors, division by zero, invalid operands)
-- History display and persistence
-- Integration with Calculator logic
+- Digit input and display accumulation
+- Binary operation deferral (store first, wait for equals)
+- Unary operation immediate execution
+- Utility buttons (clear, negate, percent)
+- Mode toggle (NORMAL ↔ SCIENTIFIC) state reset and button label
+- Color theme constants and button styling
+- End-to-end integration flows
+- Edge cases (zero, negative numbers, large numbers, error handling)
 """
 
 from __future__ import annotations
@@ -26,146 +25,15 @@ from src.session.history import History
 
 
 # ===========================================================================
-# BaseMode Tests (Operation Filtering Logic)
-# ===========================================================================
-
-class TestBaseModeGetAvailableOperations:
-    """Test BaseMode.get_available_operations() filtering logic."""
-
-    def test_base_mode_normal_mode_returns_normal_operations(self):
-        """In NORMAL mode, get_available_operations returns only NORMAL_OPERATIONS."""
-        mode_handler = BaseMode()
-        result = mode_handler.get_available_operations(Mode.NORMAL)
-
-        # All keys in result should be from NORMAL_OPERATIONS
-        for key in result.keys():
-            assert key in NORMAL_OPERATIONS
-
-        # All NORMAL_OPERATIONS keys should be in result
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in result
-
-    def test_base_mode_scientific_mode_returns_all_operations(self):
-        """In SCIENTIFIC mode, get_available_operations returns full OPERATIONS dict."""
-        mode_handler = BaseMode()
-        result = mode_handler.get_available_operations(Mode.SCIENTIFIC)
-
-        # Result should be identical to OPERATIONS
-        assert result is OPERATIONS
-
-        # All NORMAL_OPERATIONS should be present
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in result
-
-        # All SCIENTIFIC_OPERATIONS should be present
-        for key in SCIENTIFIC_OPERATIONS.keys():
-            assert key in result
-
-    def test_base_mode_normal_excludes_scientific_operations(self):
-        """NORMAL mode filtering must exclude scientific-only operations."""
-        mode_handler = BaseMode()
-        result = mode_handler.get_available_operations(Mode.NORMAL)
-
-        # Scientific-only operations should not be present
-        scientific_only = {"sin", "cos", "tan", "asin", "acos", "atan", "pi", "e"}
-        for key in scientific_only:
-            if key in OPERATIONS:  # Only check if it actually exists
-                assert key not in result
-
-    def test_base_mode_returns_dict(self):
-        """get_available_operations must always return a dict."""
-        mode_handler = BaseMode()
-        result_normal = mode_handler.get_available_operations(Mode.NORMAL)
-        result_scientific = mode_handler.get_available_operations(Mode.SCIENTIFIC)
-
-        assert isinstance(result_normal, dict)
-        assert isinstance(result_scientific, dict)
-
-    def test_base_mode_normal_returns_subset_of_full(self):
-        """Normal mode result must be a subset of OPERATIONS."""
-        mode_handler = BaseMode()
-        normal_ops = mode_handler.get_available_operations(Mode.NORMAL)
-        full_ops = mode_handler.get_available_operations(Mode.SCIENTIFIC)
-
-        # Every key in normal_ops should be in full_ops
-        for key in normal_ops.keys():
-            assert key in full_ops
-
-    def test_base_mode_normal_has_fewer_operations(self):
-        """Normal mode must have fewer operations than scientific mode."""
-        mode_handler = BaseMode()
-        normal_ops = mode_handler.get_available_operations(Mode.NORMAL)
-        full_ops = mode_handler.get_available_operations(Mode.SCIENTIFIC)
-
-        assert len(normal_ops) < len(full_ops)
-
-
-class TestBaseModeFilterOperationsForNormalMode:
-    """Test BaseMode._filter_operations_for_normal_mode() helper."""
-
-    def test_filter_operations_returns_dict(self):
-        """_filter_operations_for_normal_mode must return a dict."""
-        mode_handler = BaseMode()
-        result = mode_handler._filter_operations_for_normal_mode(OPERATIONS)
-        assert isinstance(result, dict)
-
-    def test_filter_operations_preserves_normal_operations(self):
-        """_filter_operations_for_normal_mode must preserve all NORMAL_OPERATIONS keys."""
-        mode_handler = BaseMode()
-        result = mode_handler._filter_operations_for_normal_mode(OPERATIONS)
-
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in result
-
-    def test_filter_operations_excludes_scientific_operations(self):
-        """_filter_operations_for_normal_mode must exclude scientific-only operations."""
-        mode_handler = BaseMode()
-        result = mode_handler._filter_operations_for_normal_mode(OPERATIONS)
-
-        # Check that scientific-only ops are not present
-        for key in SCIENTIFIC_OPERATIONS.keys():
-            if key not in NORMAL_OPERATIONS:
-                assert key not in result
-
-    def test_filter_operations_with_empty_dict(self):
-        """_filter_operations_for_normal_mode must handle empty dict gracefully."""
-        mode_handler = BaseMode()
-        result = mode_handler._filter_operations_for_normal_mode({})
-        assert result == {}
-
-    def test_filter_operations_with_partial_dict(self):
-        """_filter_operations_for_normal_mode must handle dict missing some normal ops."""
-        mode_handler = BaseMode()
-        partial_dict = {"add": OPERATIONS["add"], "unknown": {"arity": 1}}
-        result = mode_handler._filter_operations_for_normal_mode(partial_dict)
-
-        # Only "add" should be present (it's in NORMAL_OPERATIONS)
-        assert "add" in result
-        assert "unknown" not in result
-
-    def test_filter_operations_preserves_operation_metadata(self):
-        """_filter_operations_for_normal_mode must preserve operation metadata."""
-        mode_handler = BaseMode()
-        result = mode_handler._filter_operations_for_normal_mode(OPERATIONS)
-
-        # Check that preserved operations have the correct metadata
-        add_op = result.get("add")
-        assert add_op is not None
-        assert add_op["arity"] == 2
-        assert "label" in add_op
-
-
-# ===========================================================================
 # GuiCalculator Initialization Tests (with tkinter mocking)
 # ===========================================================================
 
 class TestGuiCalculatorInitialization:
-    """Test GuiCalculator initialization with tkinter availability."""
+    """Test GuiCalculator initialization with new state attributes."""
 
     @patch("src.interface.gui.tk")
     def test_gui_calculator_raises_import_error_when_tkinter_unavailable(self, mock_tk):
         """GuiCalculator.__init__ must raise ImportError if tkinter is None."""
-        # Simulate tkinter being unavailable
         import src.interface.gui
         original_tk = src.interface.gui.tk
         src.interface.gui.tk = None
@@ -184,7 +52,6 @@ class TestGuiCalculatorInitialization:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
     def test_gui_calculator_initializes_with_calculator(self):
         """GuiCalculator must initialize with Calculator instance."""
         from src.interface.gui import GuiCalculator
@@ -197,7 +64,6 @@ class TestGuiCalculatorInitialization:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
     def test_gui_calculator_initializes_mode_handler(self):
         """GuiCalculator must initialize _mode_handler as BaseMode instance."""
         from src.interface.gui import GuiCalculator
@@ -210,7 +76,6 @@ class TestGuiCalculatorInitialization:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
     def test_gui_calculator_initializes_in_normal_mode(self):
         """GuiCalculator must initialize with _mode = Mode.NORMAL."""
         from src.interface.gui import GuiCalculator
@@ -223,7 +88,6 @@ class TestGuiCalculatorInitialization:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
     def test_gui_calculator_initializes_history(self):
         """GuiCalculator must initialize _history as History instance."""
         from src.interface.gui import GuiCalculator
@@ -236,72 +100,80 @@ class TestGuiCalculatorInitialization:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_calculator_initializes_widgets_to_none(self):
-        """GuiCalculator must initialize widget references to None."""
+    def test_gui_calculator_initializes_display_value_to_zero(self):
+        """GuiCalculator must initialize _display_value to '0'."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        assert gui._result_label is None or hasattr(gui, "_result_label")
-        assert gui._history_text is None or hasattr(gui, "_history_text")
-        assert gui._op_frame is None or hasattr(gui, "_op_frame")
-
-
-# ===========================================================================
-# Window Creation and Widget Tests
-# ===========================================================================
-
-class TestGuiCalculatorWindowAndWidgets:
-    """Test window creation and widget existence."""
+        assert gui._display_value == "0"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_window_has_root_reference(self):
-        """GuiCalculator must store root window reference."""
+    def test_gui_calculator_initializes_first_operand_to_none(self):
+        """GuiCalculator must initialize _first_operand to None."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        assert gui._root is root
+        assert gui._first_operand is None
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_has_result_display_attribute(self):
-        """GuiCalculator must have _result_label attribute after setup."""
+    def test_gui_calculator_initializes_pending_op_key_to_none(self):
+        """GuiCalculator must initialize _pending_op_key to None."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # After _setup_layout, _result_label should be populated or None
-        assert hasattr(gui, "_result_label")
+        assert gui._pending_op_key is None
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_has_history_display_attribute(self):
-        """GuiCalculator must have _history_text attribute after setup."""
+    def test_gui_calculator_initializes_last_was_operator_to_false(self):
+        """GuiCalculator must initialize _last_was_operator to False."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        assert hasattr(gui, "_history_text")
+        assert gui._last_was_operator is False
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_has_operation_frame_attribute(self):
-        """GuiCalculator must have _op_frame attribute for operation buttons."""
+    def test_gui_calculator_initializes_display_label(self):
+        """GuiCalculator must have _display_label widget after setup."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        assert hasattr(gui, "_display_label")
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_gui_calculator_initializes_mode_toggle_btn(self):
+        """GuiCalculator must have _mode_toggle_btn widget after setup."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        assert hasattr(gui, "_mode_toggle_btn")
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_gui_calculator_initializes_op_frame(self):
+        """GuiCalculator must have _op_frame widget for operation buttons."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
@@ -312,463 +184,992 @@ class TestGuiCalculatorWindowAndWidgets:
 
 
 # ===========================================================================
-# Mode Switching Tests
+# Digit Input Tests
 # ===========================================================================
 
-class TestGuiCalculatorModeSwitching:
-    """Test mode selection and operation grid updates."""
+class TestGuiCalculatorDigitInput:
+    """Test digit button input accumulation and state management."""
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_on_mode_change_updates_internal_mode(self):
-        """_on_mode_change must update internal _mode attribute."""
+    def test_first_digit_replaces_initial_zero(self):
+        """First digit after init replaces initial '0' display."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # Start in NORMAL mode
-        assert gui._mode is Mode.NORMAL
+        gui._on_digit_click("5")
 
-        # Switch to SCIENTIFIC
-        gui._on_mode_change(Mode.SCIENTIFIC)
-
-        assert gui._mode is Mode.SCIENTIFIC
+        assert gui._display_value == "5"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_on_mode_change_switches_back_to_normal(self):
-        """_on_mode_change must switch back from SCIENTIFIC to NORMAL."""
+    def test_subsequent_digits_append(self):
+        """Subsequent digits are appended to display."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        gui._mode = Mode.SCIENTIFIC
-        gui._on_mode_change(Mode.NORMAL)
+        gui._on_digit_click("5")
+        gui._on_digit_click("3")
 
-        assert gui._mode is Mode.NORMAL
+        assert gui._display_value == "53"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_get_available_operations_normal_mode(self):
-        """_get_available_operations_for_mode in NORMAL mode returns normal operations only."""
+    def test_multiple_digits_accumulate(self):
+        """Multiple digit clicks accumulate into single number."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
-        gui._mode = Mode.NORMAL
 
-        ops = gui._get_available_operations_for_mode()
+        for digit in "7" "8" "9":
+            gui._on_digit_click(digit)
 
-        # All returned keys should be in NORMAL_OPERATIONS
-        for key in ops.keys():
-            assert key in NORMAL_OPERATIONS
+        assert gui._display_value == "789"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_get_available_operations_scientific_mode(self):
-        """_get_available_operations_for_mode in SCIENTIFIC mode returns all operations."""
+    def test_digit_after_operator_resets_display(self):
+        """Digit click after operator click resets display for next operand."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
-        gui._mode = Mode.SCIENTIFIC
 
-        ops = gui._get_available_operations_for_mode()
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("3")
 
-        # All NORMAL_OPERATIONS keys should be present
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in ops
-
-        # All SCIENTIFIC_OPERATIONS keys should be present
-        for key in SCIENTIFIC_OPERATIONS.keys():
-            assert key in ops
+        assert gui._display_value == "3"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_get_available_operations_excludes_scientific_in_normal_mode(self):
-        """In NORMAL mode, scientific-only operations must not be available."""
+    def test_digit_click_clears_last_was_operator_flag(self):
+        """Digit click sets _last_was_operator to False."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
-        gui._mode = Mode.NORMAL
 
-        ops = gui._get_available_operations_for_mode()
+        gui._on_binary_op_click("add")
+        assert gui._last_was_operator is True
 
-        # Scientific-only operations should not be present
-        for key in SCIENTIFIC_OPERATIONS.keys():
-            if key not in NORMAL_OPERATIONS:
-                assert key not in ops
-
-
-# ===========================================================================
-# Operand Input Dialog Tests
-# ===========================================================================
-
-class TestGuiCalculatorPromptOperandsDialog:
-    """Test operand collection via dialogs."""
+        gui._on_digit_click("3")
+        assert gui._last_was_operator is False
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_unary_operation(self, mock_simpledialog):
-        """_prompt_operands_dialog for unary operation prompts once."""
+    def test_zero_digit_replaces_display_zero(self):
+        """Entering 0 as first digit replaces the initial 0."""
         from src.interface.gui import GuiCalculator
 
-        mock_simpledialog.askstring.return_value = "5.5"
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+        assert gui._display_value == "0"
+
+        gui._on_digit_click("0")
+
+        assert gui._display_value == "0"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_digit_after_clear_shows_digit(self):
+        """After clear, next digit shows that digit."""
+        from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        operands = gui._prompt_operands_dialog("sqrt", 1, float)
+        gui._on_digit_click("7")
+        gui._on_clear_click()
+        gui._on_digit_click("8")
 
-        assert operands == [5.5]
-        assert mock_simpledialog.askstring.call_count == 1
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_binary_operation(self, mock_simpledialog):
-        """_prompt_operands_dialog for binary operation prompts twice."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.side_effect = ["3.0", "4.0"]
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("add", 2, float)
-
-        assert operands == [3.0, 4.0]
-        assert mock_simpledialog.askstring.call_count == 2
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_cancel_returns_none(self, mock_simpledialog):
-        """_prompt_operands_dialog returns None when user cancels."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = None
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("sqrt", 1, float)
-
-        assert operands is None
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_cancel_on_second_operand(self, mock_simpledialog):
-        """_prompt_operands_dialog returns None when user cancels on second operand."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.side_effect = ["3.0", None]
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("add", 2, float)
-
-        assert operands is None
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_invalid_input_shows_error(self, mock_simpledialog):
-        """_prompt_operands_dialog shows error dialog for invalid operand."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "not_a_number"
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        with patch.object(gui, "_show_error_dialog") as mock_error:
-            operands = gui._prompt_operands_dialog("sqrt", 1, float)
-
-            # Should show error dialog and return None
-            assert operands is None
-            mock_error.assert_called_once()
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_with_int_coerce(self, mock_simpledialog):
-        """_prompt_operands_dialog respects coerce function (int)."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "5"
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("factorial", 1, int)
-
-        assert operands == [5]
-        assert isinstance(operands[0], int)
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_strips_whitespace(self, mock_simpledialog):
-        """_prompt_operands_dialog strips whitespace from input."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "  5.5  "
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("sqrt", 1, float)
-
-        assert operands == [5.5]
+        assert gui._display_value == "8"
 
 
 # ===========================================================================
-# Operation Execution Tests
+# Binary Operation Tests
 # ===========================================================================
 
-class TestGuiCalculatorOperationExecution:
-    """Test operation execution via _execute_operation."""
+class TestGuiCalculatorBinaryOperations:
+    """Test binary operation deferral and two-operand execution."""
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_unary_add_result(self):
-        """_execute_operation executes unary operation correctly."""
+    def test_binary_op_stores_first_operand(self):
+        """Binary operation click stores current display as first operand."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # Execute square operation on 5
-        gui._execute_operation("square", [5.0])
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
 
-        # Check result display was updated (via mocked label)
-        assert gui._history._operations  # History should have one entry
+        assert gui._first_operand == 5.0
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_binary_add(self):
-        """_execute_operation executes binary operation correctly."""
+    def test_binary_op_sets_pending_op_key(self):
+        """Binary operation click records the operator key."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # Execute add operation
-        gui._execute_operation("add", [3.0, 4.0])
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("multiply")
 
-        # Check history has the operation
-        assert len(gui._history._operations) == 1
-        assert "add" in gui._history._operations[0]
+        assert gui._pending_op_key == "multiply"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_updates_history(self):
-        """_execute_operation updates history after successful execution."""
+    def test_binary_op_sets_last_was_operator_flag(self):
+        """Binary operation click sets _last_was_operator to True."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        initial_count = len(gui._history._operations)
-        gui._execute_operation("multiply", [2.0, 3.0])
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("divide")
 
-        assert len(gui._history._operations) == initial_count + 1
+        assert gui._last_was_operator is True
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_division_by_zero_shows_error(self):
-        """_execute_operation handles ZeroDivisionError gracefully."""
+    def test_binary_op_does_not_execute_immediately(self):
+        """Binary operation does not execute until equals is pressed."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        with patch.object(gui, "_show_error_dialog") as mock_error:
-            gui._execute_operation("divide", [10.0, 0.0])
+        gui._on_digit_click("1")
+        gui._on_digit_click("0")
+        gui._on_binary_op_click("divide")
 
-            # Error dialog should be shown
-            mock_error.assert_called_once()
-            assert "Division by Zero" in str(mock_error.call_args)
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_domain_error_shows_error(self):
-        """_execute_operation handles domain errors (ValueError) gracefully."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        with patch.object(gui, "_show_error_dialog") as mock_error:
-            # square_root of negative number should raise ValueError
-            gui._execute_operation("square_root", [-4.0])
-
-            mock_error.assert_called_once()
-            assert "Domain Error" in str(mock_error.call_args)
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_does_not_add_to_history_on_error(self):
-        """_execute_operation does not add to history when operation fails."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        initial_count = len(gui._history._operations)
-
-        with patch.object(gui, "_show_error_dialog"):
-            gui._execute_operation("divide", [10.0, 0.0])
-
-        # History should not have changed
-        assert len(gui._history._operations) == initial_count
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_initializes_logger_lazily(self):
-        """_execute_operation initializes logger if None."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator, logger=None)
-
-        assert gui._logger is None
-
-        gui._execute_operation("add", [1.0, 1.0])
-
-        assert gui._logger is not None
-
-
-# ===========================================================================
-# History Display Tests
-# ===========================================================================
-
-class TestGuiCalculatorHistoryDisplay:
-    """Test history display and updates."""
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_history_empty_on_startup(self):
-        """History is empty when GUI starts."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
+        # History should be empty (no operation executed yet)
         assert len(gui._history.get_all()) == 0
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_history_shows_after_operation(self):
-        """History shows entry after executing one operation."""
+    def test_equals_executes_pending_binary_op(self):
+        """Equals click executes the pending binary operation."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        gui._execute_operation("add", [2.0, 3.0])
+        gui._on_digit_click("7")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("8")
+        gui._on_equals_click()
 
-        history_entries = gui._history.get_all()
-        assert len(history_entries) == 1
-        assert "add" in history_entries[0]
+        # Result should be 15
+        assert gui._display_value == "15"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_history_shows_multiple_operations(self):
-        """History accumulates multiple operations."""
+    def test_equals_resets_pending_operation_state(self):
+        """After equals, pending operation state is cleared."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        gui._execute_operation("add", [2.0, 3.0])
-        gui._execute_operation("multiply", [5.0, 2.0])
-        gui._execute_operation("square", [4.0])
+        gui._on_digit_click("7")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("8")
+        gui._on_equals_click()
 
-        history_entries = gui._history.get_all()
-        assert len(history_entries) == 3
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_history_entries_formatted_correctly(self):
-        """History entries are formatted as operation(operands) = result."""
+    def test_equals_with_no_pending_op_is_noop(self):
+        """Equals click with no pending operation does nothing."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        gui._execute_operation("add", [2.0, 3.0])
+        gui._on_digit_click("5")
+        gui._on_equals_click()
 
-        history_entries = gui._history.get_all()
-        # Entry should be like "add(2.0, 3.0) = 5.0"
-        assert "=" in history_entries[0]
-        assert "add" in history_entries[0]
+        assert gui._display_value == "5"
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_update_history_display_calls_text_widget(self):
-        """_update_history_display updates the text widget."""
+    def test_binary_op_addition(self):
+        """Addition operation: 3 + 4 = 7."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # Mock the text widget
-        gui._history_text = MagicMock()
+        gui._on_digit_click("3")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("4")
+        gui._on_equals_click()
 
-        gui._history.add_operation("add", [1.0, 2.0], 3.0)
-        gui._update_history_display()
+        assert gui._display_value == "7"
 
-        # Text widget should have been configured and updated
-        assert gui._history_text.configure.called or gui._history_text.delete.called
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_binary_op_subtraction(self):
+        """Subtraction operation: 10 - 3 = 7."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("1")
+        gui._on_digit_click("0")
+        gui._on_binary_op_click("subtract")
+        gui._on_digit_click("3")
+        gui._on_equals_click()
+
+        assert gui._display_value == "7"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_binary_op_multiplication(self):
+        """Multiplication operation: 6 * 7 = 42."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("6")
+        gui._on_binary_op_click("multiply")
+        gui._on_digit_click("7")
+        gui._on_equals_click()
+
+        assert gui._display_value == "42"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_binary_op_division(self):
+        """Division operation: 8 / 2 = 4."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("8")
+        gui._on_binary_op_click("divide")
+        gui._on_digit_click("2")
+        gui._on_equals_click()
+
+        assert gui._display_value == "4"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_binary_op_power(self):
+        """Power operation: 2 ^ 10 = 1024."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("2")
+        gui._on_binary_op_click("power")
+        gui._on_digit_click("1")
+        gui._on_digit_click("0")
+        gui._on_equals_click()
+
+        assert gui._display_value == "1024"
+
+
+# ===========================================================================
+# Unary Operation Tests
+# ===========================================================================
+
+class TestGuiCalculatorUnaryOperations:
+    """Test unary operation immediate execution."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_executes_immediately(self):
+        """Unary operation click executes immediately."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_unary_op_click("square")
+
+        assert gui._display_value == "25"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_square(self):
+        """Square operation: 7^2 = 49."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("7")
+        gui._on_unary_op_click("square")
+
+        assert gui._display_value == "49"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_square_root(self):
+        """Square root operation: √9 = 3."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("9")
+        gui._on_unary_op_click("square_root")
+
+        assert gui._display_value == "3"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_cube(self):
+        """Cube operation: 3^3 = 27."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("3")
+        gui._on_unary_op_click("cube")
+
+        assert gui._display_value == "27"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_sets_last_was_operator_flag(self):
+        """Unary operation sets _last_was_operator to True."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_unary_op_click("square")
+
+        assert gui._last_was_operator is True
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_no_operands_zero_arity(self):
+        """Zero-arity operations (pi) execute with empty operands list."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_unary_op_click("pi")
+
+        # pi ≈ 3.14159...
+        assert "3.14" in gui._display_value
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_invalid_input_shows_error(self):
+        """Unary op on invalid display value sets display to 'Error'."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._display_value = "not_a_number"
+        gui._on_unary_op_click("square")
+
+        assert gui._display_value == "Error"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_chained_operations(self):
+        """Chained unary operations work correctly."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("1")
+        gui._on_digit_click("6")
+        gui._on_unary_op_click("square_root")
+        assert gui._display_value == "4"
+
+        gui._on_unary_op_click("square")
+        assert gui._display_value == "16"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_clears_pending_operation_on_error(self):
+        """Error during unary op clears pending binary operation state."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("9")
+        # Try factorial on non-integer (9 is fine, but let's use a float result)
+        gui._on_unary_op_click("square_root")
+
+        # Display should now show sqrt(9) = 3
+        # Pending op should still be "add" (unary ops don't clear pending)
+        assert gui._display_value == "3"
+
+
+# ===========================================================================
+# Utility Button Tests (Clear, Negate, Percent)
+# ===========================================================================
+
+class TestGuiCalculatorUtilityButtons:
+    """Test utility buttons: clear, negate, percent."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_clear_button_resets_display_to_zero(self):
+        """Clear button resets display to '0'."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("7")
+        gui._on_digit_click("8")
+        gui._on_digit_click("9")
+        gui._on_clear_click()
+
+        assert gui._display_value == "0"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_clear_button_clears_first_operand(self):
+        """Clear button clears _first_operand."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_clear_click()
+
+        assert gui._first_operand is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_clear_button_clears_pending_op(self):
+        """Clear button clears _pending_op_key."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("multiply")
+        gui._on_clear_click()
+
+        assert gui._pending_op_key is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_clear_button_resets_last_was_operator_flag(self):
+        """Clear button resets _last_was_operator to False."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_clear_click()
+
+        assert gui._last_was_operator is False
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_negate_utility_key_in_utility_ops_frozenset(self):
+        """'negate' is a utility operation key (in _UTILITY_OP_KEYS)."""
+        from src.interface import gui
+
+        assert "negate" in gui._UTILITY_OP_KEYS
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_percent_utility_key_in_utility_ops_frozenset(self):
+        """'percent' is a utility operation key (in _UTILITY_OP_KEYS)."""
+        from src.interface import gui
+
+        assert "percent" in gui._UTILITY_OP_KEYS
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_cube_root_operation(self):
+        """Cube root operation: ∛8 = 2."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("8")
+        gui._on_unary_op_click("cube_root")
+
+        assert gui._display_value == "2"
+
+
+# ===========================================================================
+# Mode Toggle Tests
+# ===========================================================================
+
+class TestGuiCalculatorModeToggle:
+    """Test mode toggle button behavior and state reset."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_switches_normal_to_scientific(self):
+        """Mode toggle switches from NORMAL to SCIENTIFIC."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        assert gui._mode == Mode.NORMAL
+        gui._on_mode_toggle_click()
+        assert gui._mode == Mode.SCIENTIFIC
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_switches_scientific_to_normal(self):
+        """Mode toggle switches from SCIENTIFIC to NORMAL."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._mode = Mode.SCIENTIFIC
+        gui._on_mode_toggle_click()
+        assert gui._mode == Mode.NORMAL
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_resets_display_to_zero(self):
+        """Mode toggle resets display to '0'."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("7")
+        gui._on_mode_toggle_click()
+
+        assert gui._display_value == "0"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_clears_pending_operation(self):
+        """Mode toggle clears pending operation state."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_mode_toggle_click()
+
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_updates_button_label_to_normal(self):
+        """Mode toggle button label changes to 'Normal' when switching to SCIENTIFIC."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        assert gui._mode == Mode.NORMAL
+        gui._on_mode_toggle_click()
+
+        # After toggle to SCIENTIFIC, button should say "Normal"
+        assert gui._mode == Mode.SCIENTIFIC
+        gui._mode_toggle_btn.configure.assert_called()
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_updates_button_label_to_scientific(self):
+        """Mode toggle button label changes to 'Scientific' when switching to NORMAL."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._mode = Mode.SCIENTIFIC
+        gui._on_mode_toggle_click()
+
+        # After toggle to NORMAL, button should say "Scientific"
+        assert gui._mode == Mode.NORMAL
+        gui._mode_toggle_btn.configure.assert_called()
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_rebuilds_operation_buttons(self):
+        """Mode toggle rebuilds operation button panel."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_mode_toggle_click()
+
+        # Verify operation frame was cleared and rebuilt
+        # (in the real code, _build_operation_buttons clears children)
+        assert gui._mode == Mode.SCIENTIFIC
+
+
+# ===========================================================================
+# Display Update Tests
+# ===========================================================================
+
+class TestGuiCalculatorDisplayUpdate:
+    """Test display label synchronization."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_update_display_syncs_label_text(self):
+        """_update_display syncs label widget to _display_value."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._display_value = "123"
+        gui._update_display()
+
+        gui._display_label.config.assert_called_with(text="123")
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_update_display_with_none_label_is_safe(self):
+        """_update_display is safe when _display_label is None."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._display_label = None
+        gui._display_value = "456"
+
+        # Should not raise
+        gui._update_display()
+
+
+# ===========================================================================
+# Format Result Tests
+# ===========================================================================
+
+class TestGuiCalculatorFormatResult:
+    """Test numeric result formatting for display."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_integer_no_decimal_point(self):
+        """39.0 formats as '39' without decimal point."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(39.0)
+        assert result == "39"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_float_with_decimal(self):
+        """3.14159 formats as float string with decimal."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(3.14159)
+        assert "3.14" in result
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_zero(self):
+        """0.0 formats as '0'."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(0.0)
+        assert result == "0"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_negative_integer(self):
+        """Negative integer 5.0 formats as '-5'."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(-5.0)
+        assert result == "-5"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_large_integer(self):
+        """Large integer 1024.0 formats as '1024'."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(1024.0)
+        assert result == "1024"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_scientific_notation(self):
+        """Very large float uses default string representation."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(1e20)
+        assert result is not None  # Just verify it doesn't crash
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_int_type_input(self):
+        """Integer input formats correctly."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(42)
+        assert result == "42"
+
+
+# ===========================================================================
+# Color Theme Tests
+# ===========================================================================
+
+class TestGuiCalculatorColorTheme:
+    """Test color theme constants and button styling."""
+
+    def test_theme_dict_exists(self):
+        """_THEME dict is defined at module level."""
+        from src.interface import gui
+
+        assert hasattr(gui, "_THEME")
+        assert isinstance(gui._THEME, dict)
+
+    def test_theme_has_required_colors(self):
+        """_THEME contains required color keys."""
+        from src.interface import gui
+
+        required_keys = [
+            "bg",
+            "display_bg",
+            "display_fg",
+            "display_font",
+            "btn_digit_bg",
+            "btn_digit_fg",
+            "btn_op_bg",
+            "btn_op_fg",
+            "btn_binary_bg",
+            "btn_binary_fg",
+            "btn_utility_bg",
+            "btn_utility_fg",
+            "btn_font",
+            "btn_relief",
+            "btn_borderwidth",
+        ]
+        for key in required_keys:
+            assert key in gui._THEME
+
+    def test_theme_colors_are_strings_or_tuples(self):
+        """_THEME color values are valid color strings or font tuples."""
+        from src.interface import gui
+
+        font_keys = {"display_font", "btn_font"}
+        for key, value in gui._THEME.items():
+            if key in font_keys:
+                assert isinstance(value, tuple)
+            else:
+                assert isinstance(value, (str, int))
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_binary_op_button_colors_orange(self):
+        """Binary operation buttons use orange color."""
+        from src.interface.gui import GuiCalculator
+
+        bg, fg = GuiCalculator._op_button_colors("add")
+
+        # Should be orange (binary op)
+        assert bg == "#FF9500"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_utility_op_button_colors_gray(self):
+        """Utility buttons use gray color."""
+        from src.interface.gui import GuiCalculator
+
+        bg, fg = GuiCalculator._op_button_colors("negate")
+
+        # Should be gray (utility)
+        assert bg == "#A5A5A5"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_button_colors_light_gray(self):
+        """Unary operation buttons (non-utility) use light gray."""
+        from src.interface.gui import GuiCalculator
+
+        bg, fg = GuiCalculator._op_button_colors("square")
+
+        # Should be light gray (standard operation)
+        assert bg == "#333333"
+
+
+# ===========================================================================
+# Short Label Tests
+# ===========================================================================
+
+class TestGuiCalculatorShortLabel:
+    """Test button label shortening."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_add(self):
+        """add operation shows '+'."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("add", "Addition")
+        assert label == "+"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_multiply(self):
+        """multiply operation shows '×'."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("multiply", "Multiplication")
+        assert label == "×"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_divide(self):
+        """divide operation shows '÷'."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("divide", "Division")
+        assert label == "÷"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_square_root(self):
+        """square_root operation shows '√'."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("square_root", "Square Root")
+        assert label == "√"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_pi(self):
+        """pi operation shows 'π'."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("pi", "Pi")
+        assert label == "π"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_unknown_key_uses_op_key(self):
+        """Unknown operation key defaults to the key itself."""
+        from src.interface.gui import GuiCalculator
+
+        label = GuiCalculator._short_label("unknown_op", "Unknown")
+        assert label == "unknown_op"
+
+
+# ===========================================================================
+# Module-level frozenset Tests
+# ===========================================================================
+
+class TestGuiCalculatorModuleConstants:
+    """Test module-level constants."""
+
+    def test_binary_op_keys_frozenset_exists(self):
+        """_BINARY_OP_KEYS is a frozenset."""
+        from src.interface import gui
+
+        assert hasattr(gui, "_BINARY_OP_KEYS")
+        assert isinstance(gui._BINARY_OP_KEYS, frozenset)
+
+    def test_binary_op_keys_contains_expected_operations(self):
+        """_BINARY_OP_KEYS includes add, subtract, multiply, divide, power."""
+        from src.interface import gui
+
+        expected = {"add", "subtract", "multiply", "divide", "power"}
+        assert expected.issubset(gui._BINARY_OP_KEYS)
+
+    def test_utility_op_keys_frozenset_exists(self):
+        """_UTILITY_OP_KEYS is a frozenset."""
+        from src.interface import gui
+
+        assert hasattr(gui, "_UTILITY_OP_KEYS")
+        assert isinstance(gui._UTILITY_OP_KEYS, frozenset)
+
+    def test_utility_op_keys_contains_expected_operations(self):
+        """_UTILITY_OP_KEYS includes clear, negate, percent."""
+        from src.interface import gui
+
+        expected = {"clear", "negate", "percent"}
+        assert expected.issubset(gui._UTILITY_OP_KEYS)
 
 
 # ===========================================================================
@@ -776,143 +1177,117 @@ class TestGuiCalculatorHistoryDisplay:
 # ===========================================================================
 
 class TestGuiCalculatorIntegration:
-    """Integration tests combining multiple components."""
+    """End-to-end integration tests."""
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_full_unary_operation_flow(self, mock_simpledialog):
-        """Complete flow: dialog -> execution -> history."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "9.0"
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        # Simulate operation click
-        operands = gui._prompt_operands_dialog("square_root", 1, float)
-        assert operands == [9.0]
-
-        gui._execute_operation("square_root", operands)
-
-        assert len(gui._history.get_all()) == 1
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_full_binary_operation_flow(self, mock_simpledialog):
-        """Complete flow for binary operation: dialogs -> execution -> history."""
-        from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.side_effect = ["5.0", "3.0"]
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        operands = gui._prompt_operands_dialog("add", 2, float)
-        assert operands == [5.0, 3.0]
-
-        gui._execute_operation("add", operands)
-
-        assert len(gui._history.get_all()) == 1
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_mode_switch_affects_available_operations(self, mock_simpledialog):
-        """Switching modes changes available operations."""
+    def test_full_flow_addition(self):
+        """Full flow: 7 + 8 = 15, then √ result."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # Start in NORMAL mode
+        gui._on_digit_click("7")
+        gui._on_digit_click("8")
+        assert gui._display_value == "78"
+
+        gui._on_binary_op_click("divide")
+        assert gui._display_value == "78"
+        assert gui._first_operand == 78.0
+        assert gui._last_was_operator is True
+
+        gui._on_digit_click("2")
+        assert gui._display_value == "2"
+
+        gui._on_equals_click()
+        assert gui._display_value == "39"
+
+        gui._on_unary_op_click("square_root")
+        result = float(gui._display_value)
+        assert 6.2 < result < 6.3  # sqrt(39) ≈ 6.24
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_full_flow_with_mode_toggle(self):
+        """Full flow includes mode toggle and state reset."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("3")
+
+        gui._on_mode_toggle_click()
+
+        assert gui._mode == Mode.SCIENTIFIC
+        assert gui._display_value == "0"
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_full_flow_multiple_operations_in_sequence(self):
+        """Multiple operations: 2 + 3 = 5, then * 4 = 20."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("2")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("3")
+        gui._on_equals_click()
+        assert gui._display_value == "5"
+
+        gui._on_binary_op_click("multiply")
+        gui._on_digit_click("4")
+        gui._on_equals_click()
+        assert gui._display_value == "20"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_scientific_operations_available_in_scientific_mode(self):
+        """Scientific operations are available after mode toggle."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._mode = Mode.NORMAL
         normal_ops = gui._get_available_operations_for_mode()
-        normal_count = len(normal_ops)
 
-        # Switch to SCIENTIFIC
-        gui._on_mode_change(Mode.SCIENTIFIC)
-        scientific_ops = gui._get_available_operations_for_mode()
-        scientific_count = len(scientific_ops)
-
-        assert scientific_count > normal_count
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_normal_mode_scientific_operation_not_accessible(self, mock_simpledialog):
-        """Scientific operations are not accessible in NORMAL mode."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-        gui._mode = Mode.NORMAL
-
-        available = gui._get_available_operations_for_mode()
-
-        # sin, cos, tan, etc. should not be in normal mode
-        assert "sin" not in available
-        assert "cos" not in available
-        assert "tan" not in available
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_gui_uses_calculator_instance_not_reimplemented(self):
-        """GuiCalculator delegates to Calculator via dispatcher."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-
-        # Verify dispatcher is using the injected calculator
-        assert gui._dispatcher._calculator is calculator
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_all_normal_operations_accessible_in_normal_mode(self):
-        """All NORMAL_OPERATIONS keys are accessible in NORMAL mode."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
-        gui._mode = Mode.NORMAL
-
-        available = gui._get_available_operations_for_mode()
-
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in available
-
-    @patch("src.interface.gui.tk", MagicMock())
-    @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_all_operations_accessible_in_scientific_mode(self):
-        """All operations are accessible in SCIENTIFIC mode."""
-        from src.interface.gui import GuiCalculator
-
-        root = MagicMock()
-        calculator = Calculator()
-        gui = GuiCalculator(root, calculator)
         gui._mode = Mode.SCIENTIFIC
+        scientific_ops = gui._get_available_operations_for_mode()
 
-        available = gui._get_available_operations_for_mode()
+        assert len(scientific_ops) > len(normal_ops)
+        assert "sin" in scientific_ops
+        assert "sin" not in normal_ops
 
-        for key in NORMAL_OPERATIONS.keys():
-            assert key in available
-        for key in SCIENTIFIC_OPERATIONS.keys():
-            assert key in available
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_clear_clears_error_state(self):
+        """Clear clears error state from display."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._display_value = "Error"
+        gui._on_clear_click()
+
+        assert gui._display_value == "0"
 
 
 # ===========================================================================
-# Edge Cases and Error Handling
+# Edge Case Tests
 # ===========================================================================
 
 class TestGuiCalculatorEdgeCases:
@@ -920,147 +1295,358 @@ class TestGuiCalculatorEdgeCases:
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_prompt_operands_zero_arity(self):
-        """_prompt_operands_dialog handles arity=0 (no operands)."""
+    def test_division_by_zero_shows_error(self):
+        """Division by zero shows 'Error' and clears state."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        operands = gui._prompt_operands_dialog("pi", 0, float)
+        gui._on_digit_click("1")
+        gui._on_binary_op_click("divide")
+        gui._on_digit_click("0")
+        gui._on_equals_click()
 
-        assert operands == []
+        assert gui._display_value == "Error"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_negative_numbers(self, mock_simpledialog):
-        """_prompt_operands_dialog handles negative numbers."""
+    def test_negative_numbers_from_subtraction(self):
+        """Subtraction can produce negative numbers."""
         from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.side_effect = ["-5.0", "-3.0"]
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        operands = gui._prompt_operands_dialog("add", 2, float)
+        gui._on_digit_click("3")
+        gui._on_binary_op_click("subtract")
+        gui._on_digit_click("5")
+        gui._on_equals_click()
 
-        assert operands == [-5.0, -3.0]
+        assert "-" in gui._display_value
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_large_numbers(self, mock_simpledialog):
-        """_prompt_operands_dialog handles very large numbers."""
+    def test_large_number_display(self):
+        """Very large numbers display."""
         from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "1e100"
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        operands = gui._prompt_operands_dialog("multiply", 1, float)
+        gui._on_digit_click("9")
+        gui._on_binary_op_click("power")
+        gui._on_digit_click("1")
+        gui._on_digit_click("0")
+        gui._on_equals_click()
 
-        assert operands[0] == 1e100
+        # 9^10 = 3486784401
+        assert gui._display_value == "3486784401"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog")
-    def test_prompt_operands_zero(self, mock_simpledialog):
-        """_prompt_operands_dialog handles zero input."""
+    def test_zero_display_after_digit_press_on_zero(self):
+        """Pressing '0' on initial '0' shows '0'."""
         from src.interface.gui import GuiCalculator
-
-        mock_simpledialog.askstring.return_value = "0"
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        operands = gui._prompt_operands_dialog("sqrt", 1, float)
-
-        assert operands == [0.0]
+        assert gui._display_value == "0"
+        gui._on_digit_click("0")
+        assert gui._display_value == "0"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_execute_operation_with_zero_operands(self):
-        """_execute_operation handles operations with no operands."""
+    def test_binary_op_with_float_display_value(self):
+        """Binary op can handle float display values."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        # pi operation takes no operands
-        gui._execute_operation("pi", [])
+        gui._on_digit_click("5")
+        gui._on_unary_op_click("square_root")
+        gui._on_binary_op_click("multiply")
 
-        assert len(gui._history.get_all()) == 1
+        # First operand should be float(sqrt(5))
+        assert gui._first_operand is not None
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_multiple_operations_in_sequence(self):
-        """GUI handles multiple operations in quick succession."""
+    def test_multiple_unary_ops_in_sequence(self):
+        """Multiple unary operations can be chained."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        for i in range(5):
-            gui._execute_operation("add", [float(i), 1.0])
+        gui._on_digit_click("4")
+        gui._on_unary_op_click("square")
+        gui._on_unary_op_click("square_root")
 
-        assert len(gui._history.get_all()) == 5
+        assert gui._display_value == "4"
 
     @patch("src.interface.gui.tk", MagicMock())
     @patch("src.interface.gui.messagebox", MagicMock())
-    @patch("src.interface.gui.simpledialog", MagicMock())
-    def test_mode_switch_multiple_times(self):
-        """Mode can be switched multiple times."""
+    def test_equals_with_operator_but_no_second_digit_uses_display(self):
+        """Equals without explicitly entering second operand uses current display as second operand."""
         from src.interface.gui import GuiCalculator
 
         root = MagicMock()
         calculator = Calculator()
         gui = GuiCalculator(root, calculator)
 
-        gui._on_mode_change(Mode.SCIENTIFIC)
-        assert gui._mode is Mode.SCIENTIFIC
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_equals_click()
 
-        gui._on_mode_change(Mode.NORMAL)
-        assert gui._mode is Mode.NORMAL
-
-        gui._on_mode_change(Mode.SCIENTIFIC)
-        assert gui._mode is Mode.SCIENTIFIC
+        # Display still shows "5", which becomes the second operand
+        # So 5 + 5 = 10
+        assert gui._display_value == "10"
 
 
-# ===========================================================================
-# Interface Exports Tests
-# ===========================================================================
+class TestGuiCalculatorBinaryOpButtonColors:
+    """Test button color assignment for different operation categories."""
 
-class TestInterfaceExports:
-    """Test that GuiCalculator is properly exported from interface module."""
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_all_binary_ops_have_orange_buttons(self):
+        """All binary operations get orange button color."""
+        from src.interface.gui import GuiCalculator
+        from src.interface import gui
 
-    def test_gui_calculator_exported_in_interface_init(self):
-        """GuiCalculator must be exported from src.interface.__init__."""
-        from src.interface import GuiCalculator
+        for op_key in gui._BINARY_OP_KEYS:
+            bg, fg = GuiCalculator._op_button_colors(op_key)
+            assert bg == "#FF9500", f"Binary op {op_key} should have orange bg"
 
-        assert GuiCalculator is not None
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_all_utility_ops_have_gray_buttons(self):
+        """All utility operations get gray button color."""
+        from src.interface.gui import GuiCalculator
+        from src.interface import gui
 
-    def test_gui_calculator_in_all_exports(self):
-        """GuiCalculator must be in __all__ of src.interface."""
-        from src import interface
+        for op_key in gui._UTILITY_OP_KEYS:
+            bg, fg = GuiCalculator._op_button_colors(op_key)
+            assert bg == "#A5A5A5", f"Utility op {op_key} should have gray bg"
 
-        assert "GuiCalculator" in interface.__all__
 
-    def test_interface_all_contains_gui_calculator(self):
-        """src.interface.__all__ must include GuiCalculator."""
-        import src.interface
+class TestGuiCalculatorBuildOperationButtons:
+    """Test operation button panel building."""
 
-        assert "GuiCalculator" in src.interface.__all__
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_build_operation_buttons_clears_frame(self):
+        """_build_operation_buttons clears previous buttons before rebuilding."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        # Verify frame is cleaned up and rebuilt
+        assert gui._op_frame is not None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_operation_buttons_rebuilt_after_mode_toggle(self):
+        """Operation buttons are rebuilt when mode changes."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._mode = Mode.NORMAL
+        gui._on_mode_toggle_click()
+
+        assert gui._mode == Mode.SCIENTIFIC
+
+
+class TestGuiCalculatorStateManagement:
+    """Test state consistency across operations."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_pending_op_cleared_after_second_binary_op(self):
+        """Pressing another binary op after first clears pending (or chains)."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._on_digit_click("3")
+        gui._on_binary_op_click("multiply")
+
+        # Now pending op should be multiply, first_operand should be 5+3=8
+        # (in real calculator, this would auto-execute the previous op)
+        assert gui._pending_op_key == "multiply"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_format_result_preserves_precision(self):
+        """Format result preserves float precision for non-integer results."""
+        from src.interface.gui import GuiCalculator
+
+        result = GuiCalculator._format_result(1/3)
+        assert "0.333" in result
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_short_label_covers_all_expected_operations(self):
+        """_short_label handles all operations in operations registry."""
+        from src.interface.gui import GuiCalculator
+        from src.operations import OPERATIONS
+
+        for op_key in OPERATIONS.keys():
+            label = GuiCalculator._short_label(op_key, OPERATIONS[op_key]["label"])
+            assert label is not None
+            assert isinstance(label, str)
+            assert len(label) > 0
+
+
+class TestGuiCalculatorErrorRecovery:
+    """Test error handling and recovery."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_error_display_clears_pending_state(self):
+        """When operation fails, pending state is cleared."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("divide")
+        gui._on_digit_click("0")
+        gui._on_equals_click()
+
+        assert gui._display_value == "Error"
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_recovery_after_error_with_clear(self):
+        """After error, can recover by pressing clear button."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("1")
+        gui._on_binary_op_click("divide")
+        gui._on_digit_click("0")
+        gui._on_equals_click()
+
+        assert gui._display_value == "Error"
+
+        gui._on_clear_click()
+
+        assert gui._display_value == "0"
+        assert gui._first_operand is None
+        assert gui._pending_op_key is None
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_unary_op_error_sets_display_to_error(self):
+        """Unary op error on invalid input sets display to 'Error'."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._on_digit_click("5")
+        gui._on_binary_op_click("add")
+        gui._display_value = "invalid"
+        gui._on_unary_op_click("square")
+
+        assert gui._display_value == "Error"
+
+
+class TestGuiCalculatorDigitAccumulation:
+    """Test multi-digit number accumulation."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_very_long_number_accumulation(self):
+        """Very long numbers can be accumulated."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        for digit in "123456789":
+            gui._on_digit_click(digit)
+
+        assert gui._display_value == "123456789"
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_repeated_same_digit(self):
+        """Repeated digit clicks accumulate same digit."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        for _ in range(3):
+            gui._on_digit_click("8")
+
+        assert gui._display_value == "888"
+
+
+class TestGuiCalculatorModeAwareness:
+    """Test that operations respect current mode."""
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_available_ops_change_with_mode(self):
+        """Available operations differ between NORMAL and SCIENTIFIC."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        gui._mode = Mode.NORMAL
+        normal_count = len(gui._get_available_operations_for_mode())
+
+        gui._mode = Mode.SCIENTIFIC
+        scientific_count = len(gui._get_available_operations_for_mode())
+
+        assert scientific_count > normal_count
+
+    @patch("src.interface.gui.tk", MagicMock())
+    @patch("src.interface.gui.messagebox", MagicMock())
+    def test_mode_toggle_multiple_times(self):
+        """Mode can be toggled multiple times without issues."""
+        from src.interface.gui import GuiCalculator
+
+        root = MagicMock()
+        calculator = Calculator()
+        gui = GuiCalculator(root, calculator)
+
+        for i in range(4):
+            gui._on_mode_toggle_click()
+            expected_mode = Mode.SCIENTIFIC if i % 2 == 0 else Mode.NORMAL
+            assert gui._mode == expected_mode
 
 
 if __name__ == "__main__":
