@@ -1,0 +1,30 @@
+@startuml activity_diagram
+
+start
+
+:Instantiate Calculator;
+
+fork
+  :add(a, b);
+  :return a + b;
+fork again
+  :subtract(a, b);
+  :return a - b;
+fork again
+  :multiply(a, b);
+  :return a * b;
+fork again
+  :divide(a, b);
+  if (b == 0?) then (yes)
+    :raise ZeroDivisionError\n"Cannot divide by zero";
+    stop
+  else (no)
+    :return a / b;
+  endif
+end fork
+
+:Return result;
+
+stop
+
+@enduml
