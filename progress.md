@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-174-logic-separation
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `Operation` frozen dataclass with `name`, `arity`, `display_name`, `aliases` fields; added `OperationRegistry` class with `get_operations`, `get_operation`, `resolve`, `arity`, `get_operation_mapping`, `dispatch` methods and a dispatch note describing the logarithm special case; updated `REPLInterface` to add `_registry`, `_operations`, `_operation_keys` attributes and updated `_execute` note to reflect delegation to registry; updated `CLIHandler` to add `_registry` attribute and updated `get_operation_mapping` and `execute` notes to reflect registry delegation; added relationships `REPLInterface o-- OperationRegistry`, `CLIHandler o-- OperationRegistry`, `OperationRegistry o-- Calculator`, `OperationRegistry ..> Operation`
+  - `artifacts/activity_diagram.puml` — updated REPL `_execute` step to name `OperationRegistry.dispatch` as the intermediary; restructured the operation fork to split `logarithm` (registry special case with full domain validation) from Calculator-delegated operations; updated CLI dispatch section to replace direct `method_name == "logarithm"` check with `OperationRegistry.dispatch` call showing the same logarithm branch; added notes on REPLInterface and CLIHandler instantiation explaining they create an internal registry
+  - `artifacts/sequence_diagram.puml` — added `OperationRegistry` participant; REPL's `_execute` now shows REPL → OperationRegistry : dispatch → (logarithm handled in registry OR Calculator method per operation); CLI's execute now shows CLI → OperationRegistry : resolve + arity + dispatch → (logarithm OR Calculator); both CLI and REPL activate/deactivate OperationRegistry alongside their own lifetimes
+- **Purpose:** Sync PlantUML diagrams with current source after issue-174 introduced `OperationRegistry` and `Operation` in `src/operations.py` and refactored CLI and REPL to delegate all dispatch through the registry
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-171-error-logging
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `ErrorLogger` class with `error_file`, `INVALID_INPUT`, `UNSUPPORTED_OPERATION`, `CALCULATION_ERROR` constants, and `clear_errors`, `log_error`, `get_errors` methods; updated `REPLInterface` and `CLIHandler` to include `error_logger: ErrorLogger | None` attribute and constructor param; added `Main ..> ErrorLogger`, `REPLInterface o-- ErrorLogger`, and `CLIHandler o-- ErrorLogger` relationships; updated `Main` note to describe ErrorLogger instantiation

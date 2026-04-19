@@ -11,6 +11,10 @@ start
 if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
   :Instantiate REPLInterface(calculator, history, error_logger);
+  note right
+    REPLInterface creates an OperationRegistry
+    internally and uses it for all dispatch.
+  end note
   :repl.run();
 
   repeat
@@ -51,7 +55,7 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
       end note
     else (operation selected)
 
-      :Determine arity from OPERATIONS dict;
+      :Determine arity from OperationRegistry;
 
       repeat
         :get_operand(first prompt\nwith last_result default);
@@ -90,67 +94,11 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
         repeat while (retry?)
       endif
 
-      :_execute(operation, operands);
+      :_execute(operation, operands)\n→ OperationRegistry.dispatch(operation, operands);
 
-      fork
-        :add(a, b);
-        :return a + b;
-      fork again
-        :subtract(a, b);
-        :return a - b;
-      fork again
-        :multiply(a, b);
-        :return a * b;
-      fork again
-        :divide(a, b);
-        if (b == 0?) then (yes)
-          :raise ZeroDivisionError\n"Cannot divide by zero";
-        else (no)
-          :return a / b;
-        endif
-      fork again
-        :factorial(n);
-        if (n is float?) then (yes)
-          if (n != int(n)?) then (yes)
-            :raise TypeError\n"factorial() only accepts\ninteger values";
-          else (no)
-            :n = int(n);
-          endif
-        endif
-        if (n < 0?) then (yes)
-          :raise ValueError\n"factorial() not defined\nfor negative values";
-        else (no)
-          :result = 1;
-          :for i in range(2, n+1): result *= i;
-          :return result;
-        endif
-      fork again
-        :square(x);
-        :return x ** 2;
-      fork again
-        :cube(x);
-        :return x ** 3;
-      fork again
-        :square_root(x);
-        if (x < 0?) then (yes)
-          :raise ValueError\n"square_root() not defined\nfor negative values";
-        else (no)
-          :return math.sqrt(x);
-        endif
-      fork again
-        :cube_root(x);
-        if (x == 0?) then (yes)
-          :return 0.0;
-        else (no)
-          :return copysign(|x|^(1/3), x);
-        endif
-      fork again
-        :power(base, exponent);
-        :return base ** exponent;
-      fork again
-        :logarithm(x, base);
+      if (operation == "logarithm"?) then (yes — registry special case)
         if (base <= 0 or base == 1?) then (yes)
-          :raise ValueError\n"invalid base";
+          :raise ValueError\n"logarithm base must be positive\nand not equal to 1";
         else (no)
           if (x <= 0?) then (yes)
             :raise ValueError\n"logarithm() not defined\nfor non-positive values";
@@ -158,16 +106,73 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
             :return math.log(x, base);
           endif
         endif
-      fork again
-        :natural_logarithm(x);
-        if (x <= 0?) then (yes)
-          :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
-        else (no)
-          :return math.log(x);
-        endif
-      end fork
+      else (no — forwarded to Calculator via getattr)
+        fork
+          :add(a, b);
+          :return a + b;
+        fork again
+          :subtract(a, b);
+          :return a - b;
+        fork again
+          :multiply(a, b);
+          :return a * b;
+        fork again
+          :divide(a, b);
+          if (b == 0?) then (yes)
+            :raise ZeroDivisionError\n"Cannot divide by zero";
+          else (no)
+            :return a / b;
+          endif
+        fork again
+          :factorial(n);
+          if (n is float?) then (yes)
+            if (n != int(n)?) then (yes)
+              :raise TypeError\n"factorial() only accepts\ninteger values";
+            else (no)
+              :n = int(n);
+            endif
+          endif
+          if (n < 0?) then (yes)
+            :raise ValueError\n"factorial() not defined\nfor negative values";
+          else (no)
+            :result = 1;
+            :for i in range(2, n+1): result *= i;
+            :return result;
+          endif
+        fork again
+          :square(x);
+          :return x ** 2;
+        fork again
+          :cube(x);
+          :return x ** 3;
+        fork again
+          :square_root(x);
+          if (x < 0?) then (yes)
+            :raise ValueError\n"square_root() not defined\nfor negative values";
+          else (no)
+            :return math.sqrt(x);
+          endif
+        fork again
+          :cube_root(x);
+          if (x == 0?) then (yes)
+            :return 0.0;
+          else (no)
+            :return copysign(|x|^(1/3), x);
+          endif
+        fork again
+          :power(base, exponent);
+          :return base ** exponent;
+        fork again
+          :natural_logarithm(x);
+          if (x <= 0?) then (yes)
+            :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
+          else (no)
+            :return math.log(x);
+          endif
+        end fork
+      endif
 
-      if (Calculator raised an exception?) then (yes)
+      if (Calculator or registry raised an exception?) then (yes)
         :Print error message to user;
         if (error_logger is not None?) then (yes)
           :error_logger.log_error(\n  CALCULATION_ERROR,\n  user_input,\n  exception\n);
@@ -196,9 +201,13 @@ else (no — CLI mode)
   endif
 
   :Instantiate CLIHandler(calculator, history, error_logger);
+  note right
+    CLIHandler creates an OperationRegistry
+    internally and uses it for all dispatch.
+  end note
   :handler.execute(argv);
 
-  :parse_args(argv)\n→ (method_name, operands);
+  :parse_args(argv) via OperationRegistry\n→ (method_name, operands);
 
   if (operation unknown?) then (yes)
     if (error_logger is not None?) then (yes)
@@ -218,10 +227,20 @@ else (no — CLI mode)
     stop
   endif
 
-  if (method_name == "logarithm"?) then (yes)
-    :math.log(x, base);
+  :OperationRegistry.dispatch(method_name, operands);
+
+  if (method_name == "logarithm"?) then (yes — registry special case)
+    if (base <= 0 or base == 1?) then (yes)
+      :raise ValueError\n"invalid base";
+    else (no)
+      if (x <= 0?) then (yes)
+        :raise ValueError\n"non-positive x";
+      else (no)
+        :return math.log(x, base);
+      endif
+    endif
   else (no)
-    :calculator.<method_name>(*operands);
+    :getattr(calculator, method_name)(*operands);
   endif
 
   if (operation raised exception?) then (yes)

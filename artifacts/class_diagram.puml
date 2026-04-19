@@ -112,12 +112,76 @@ note right of OperationHistory::display_history
   Returns [] on FileNotFoundError or OSError.
 end note
 
+class Operation <<dataclass>> {
+    +name : str
+    +arity : int
+    +display_name : str
+    +aliases : tuple[str, ...]
+}
+
+note right of Operation
+  Frozen dataclass (src/operations.py).
+  Metadata for a single calculator operation.
+  Example: name="add", arity=2,
+  display_name="Addition", aliases=("+",).
+  12 operations defined in the module-level
+  _CATALOG list.
+end note
+
+class OperationRegistry {
+    -calculator : Any
+    -_operations : list[Operation]
+    -_lookup : dict[str, Operation]
+    +__init__(calculator: Any)
+    +get_operations() : list[Operation]
+    +get_operation(token: str) : Operation | None
+    +resolve(token: str) : str
+    +arity(token: str) : int
+    +get_operation_mapping() : dict[str, str]
+    +dispatch(operation: str, operands: list[float]) : float
+}
+
+note right of OperationRegistry::__init__
+  Builds _lookup from the module-level
+  _CATALOG (12 operations): every name
+  and alias maps to its Operation.
+end note
+
+note right of OperationRegistry::resolve
+  Returns the canonical operation name
+  for a given token (name or alias).
+  Raises ValueError if token unknown.
+end note
+
+note right of OperationRegistry::get_operation_mapping
+  Returns a flat dict: every accepted
+  token (name + aliases) → canonical name.
+  Useful for components that need a
+  simple token → method_name mapping.
+end note
+
+note right of OperationRegistry::dispatch
+  Executes the operation with operands.
+  "logarithm" is treated as a two-argument
+  log(x, base) via math.log(x, base) with
+  full domain validation — this special case
+  is isolated here so CLI and REPL do not
+  need to handle it independently.
+  All other operations are forwarded to the
+  injected Calculator via getattr.
+  Raises ValueError, ZeroDivisionError,
+  TypeError, or OverflowError.
+end note
+
 class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
     -history : OperationHistory | None
     -error_logger : ErrorLogger | None
     -last_result : float | None
+    -_registry : OperationRegistry
+    -_operations : list[Operation]
+    -_operation_keys : list[str]
     +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +run() : void
     +get_operation_selection() : str
@@ -130,9 +194,10 @@ class REPLInterface {
 }
 
 note right of REPLInterface::OPERATIONS
-  Module-level dict mapping operation
-  name → {arity, label} metadata
+  Module-level dict (backwards-compat shim)
+  mapping operation name → {arity, label}
   for all 12 supported operations.
+  Built from OperationRegistry._CATALOG.
 end note
 
 note right of REPLInterface::last_result
@@ -142,9 +207,10 @@ note right of REPLInterface::last_result
 end note
 
 note right of REPLInterface::_execute
-  Dispatches to Calculator methods.
-  Uses math.log(x, base) directly
-  for the 2-argument logarithm case.
+  Delegates entirely to
+  OperationRegistry.dispatch(operation, operands).
+  The two-argument logarithm special case
+  is handled inside the registry.
 end note
 
 note right of REPLInterface::get_operation_selection
@@ -176,6 +242,7 @@ class CLIHandler {
     -calculator : Calculator
     -history : OperationHistory | None
     -error_logger : ErrorLogger | None
+    -_registry : OperationRegistry
     +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +get_operation_mapping() : dict
     +parse_args(args: list[str]) : tuple[str, list[float]]
@@ -183,24 +250,23 @@ class CLIHandler {
 }
 
 note right of CLIHandler::get_operation_mapping
-  Maps names and symbols to
+  Delegates to OperationRegistry.
+  Maps names and symbols to canonical
   Calculator method names.
   Supports aliases: +, -, *, /,
   ^, sqrt, cbrt, log, ln.
 end note
 
 note right of CLIHandler::parse_args
-  Validates operation, expected
-  operand count (1 for unary,
-  2 for binary), and converts
-  operand strings to float.
-  Raises ValueError on error.
+  Uses OperationRegistry to resolve
+  the operation token and validate arity.
+  Converts operand strings to float.
+  Raises ValueError on any error.
 end note
 
 note right of CLIHandler::execute
-  Dispatches to Calculator methods.
-  "logarithm" uses math.log(x, base)
-  directly to support arbitrary bases.
+  Delegates dispatch to
+  OperationRegistry.dispatch(method_name, operands).
   Logs UNSUPPORTED_OPERATION, INVALID_INPUT,
   or CALCULATION_ERROR via error_logger if set.
   Records result to history if set.
@@ -229,9 +295,13 @@ Main ..> CLIHandler : instantiates (CLI mode)
 REPLInterface o-- Calculator : uses >
 REPLInterface o-- OperationHistory : uses (optional) >
 REPLInterface o-- ErrorLogger : uses (optional) >
+REPLInterface o-- OperationRegistry : uses >
 CLIHandler o-- Calculator : uses >
 CLIHandler o-- OperationHistory : uses (optional) >
 CLIHandler o-- ErrorLogger : uses (optional) >
+CLIHandler o-- OperationRegistry : uses >
+OperationRegistry o-- Calculator : dispatches to >
+OperationRegistry ..> Operation : manages >
 REPLInterface ..> MaxRetriesExceeded : raises
 
 @enduml
