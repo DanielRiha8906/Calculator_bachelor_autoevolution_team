@@ -1,6 +1,22 @@
 @startuml class_diagram
 
+class ArithmeticEngine {
+    +add(a: int|float, b: int|float) : int|float
+    +subtract(a: int|float, b: int|float) : int|float
+    +multiply(a: int|float, b: int|float) : int|float
+    +divide(a: int|float, b: int|float) : float
+    +factorial(n: int) : int
+    +square(x: int|float) : int|float
+    +cube(x: int|float) : int|float
+    +square_root(x: int|float) : float
+    +cube_root(x: int|float) : float
+    +power(base: int|float, exponent: int|float) : float
+    +log10(x: int|float) : float
+    +natural_log(x: int|float) : float
+}
+
 class Calculator {
+    -_engine: ArithmeticEngine
     -_history: OperationHistory
     +get_history() : list
     +clear_history() : None
@@ -76,7 +92,11 @@ class "logging_config" <<module>> {
     +setup_logging(log_file: str) : logging.Logger
 }
 
-Calculator "1" *-- "1" OperationHistory : contains
+class "calculator" <<module>> {
+}
+
+Calculator "1" *-- "1" ArithmeticEngine : delegates to
+Calculator "1" *-- "1" OperationHistory : records via
 OperationHistory "1" *-- "*" OperationRecord : stores
 
 Exception <|-- InvalidInputError
@@ -94,7 +114,23 @@ Exception <|-- RetryLimitExceeded
 "input_retry" ..> InputRetryConfig : uses
 "cli" ..> Calculator : uses
 "cli" ..> "logging_config" : uses logger
-Calculator ..> "logging_config" : uses logger
+ArithmeticEngine ..> "logging_config" : uses logger
+"calculator" ..> Calculator : re-exports
+
+note right of ArithmeticEngine
+  Stateless pure arithmetic layer
+  (src/logic/core.py). No history recording.
+  Raises documented exceptions; calls
+  logger.error() before each raise.
+  No imports from any presentation layer.
+end note
+
+note right of Calculator::_engine
+  Created in __init__; all arithmetic
+  operations delegate to this engine.
+  ArithmeticEngine is stateless — no
+  history recording occurs here.
+end note
 
 note right of Calculator::_history
   Created in __init__; shared across
@@ -107,59 +143,65 @@ note right of Calculator::get_history
 end note
 
 note right of Calculator::divide
-  Raises ZeroDivisionError when b == 0.
-  logger.error() is called before raising.
+  Delegates to ArithmeticEngine.divide().
+  ArithmeticEngine raises ZeroDivisionError
+  when b == 0 (logger.error() called before
+  raise inside ArithmeticEngine).
   History is NOT recorded on error.
 end note
 
 note right of Calculator::factorial
-  Raises TypeError if n is bool or
-  non-integer float. Raises ValueError
-  if n < 0. logger.error() is called
-  before each raise.
+  Delegates to ArithmeticEngine.factorial().
+  ArithmeticEngine raises TypeError if n is
+  bool or non-integer float; raises ValueError
+  if n < 0. logger.error() called inside
+  ArithmeticEngine before each raise.
   History recorded only on success.
 end note
 
 note right of Calculator::square
   Returns int for int input, float for
-  float input. Raises TypeError for bool
-  or non-numeric input; logger.error() on error.
+  float input. ArithmeticEngine raises TypeError
+  for bool or non-numeric input;
+  logger.error() called inside ArithmeticEngine.
 end note
 
 note right of Calculator::cube
   Returns int for int input, float for
-  float input. Raises TypeError for bool
-  or non-numeric input; logger.error() on error.
+  float input. ArithmeticEngine raises TypeError
+  for bool or non-numeric input;
+  logger.error() called inside ArithmeticEngine.
 end note
 
 note right of Calculator::square_root
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
-  ValueError if x < 0. logger.error() on error.
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
+  ValueError if x < 0. logger.error() called
+  inside ArithmeticEngine on error.
 end note
 
 note right of Calculator::cube_root
   Always returns float. Supports negative
   values (sign-preserving via copysign).
-  Raises TypeError for bool or non-numeric;
-  logger.error() on error.
+  ArithmeticEngine raises TypeError for bool
+  or non-numeric; logger.error() on error.
 end note
 
 note right of Calculator::power
-  Always returns float. Raises TypeError
-  if base or exponent is bool or
+  Always returns float. ArithmeticEngine raises
+  TypeError if base or exponent is bool or
   non-numeric. logger.error() on error.
 end note
 
 note right of Calculator::log10
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
   ValueError if x <= 0. logger.error() on error.
 end note
 
 note right of Calculator::natural_log
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
   ValueError if x <= 0. logger.error() on error.
 end note
 
@@ -228,6 +270,9 @@ note right of "cli"::_eval_node
   Recursively walks ast.expr nodes.
   Supports Constant, UnaryOp (USub/UAdd),
   and BinOp (+, -, *, /, **).
+  Calls Calculator methods directly;
+  history recording is handled internally
+  by Calculator (via ArithmeticEngine).
 end note
 
 note right of "cli"::parse_and_evaluate
@@ -262,9 +307,16 @@ end note
 note right of "logging_config"::logger
   Module-level convenience reference:
   logging.getLogger("calculator").
-  Calculator, cli, and user_input each
+  ArithmeticEngine, cli, and user_input each
   obtain the same named logger directly
   via logging.getLogger("calculator").
+end note
+
+note right of "calculator"
+  src/calculator.py is a backward-compatibility
+  re-export shim. Imports Calculator from
+  src.logic.state and re-exports it so
+  existing callers continue to work.
 end note
 
 @enduml

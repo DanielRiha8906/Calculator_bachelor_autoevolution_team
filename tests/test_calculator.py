@@ -2,7 +2,7 @@ import pytest
 import math
 import logging
 from datetime import datetime
-from src.calculator import Calculator
+from src.logic import Calculator
 from src.history import OperationRecord, OperationHistory
 
 

@@ -13,7 +13,7 @@ import ast
 import logging
 import sys
 
-from src.calculator import Calculator
+from src.logic import Calculator
 
 logger = logging.getLogger("calculator")
 

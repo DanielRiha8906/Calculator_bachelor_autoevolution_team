@@ -13,7 +13,7 @@ import tempfile
 import os
 from pathlib import Path
 
-from src.calculator import Calculator
+from src.logic import Calculator
 from src.cli import parse_and_evaluate, run_cli
 from src.user_input import parse_number, execute_operation, InvalidInputError
 from src.logging_config import setup_logging, logger

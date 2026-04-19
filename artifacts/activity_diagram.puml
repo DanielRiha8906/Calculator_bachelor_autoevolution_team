@@ -14,7 +14,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
             stop
         else (no)
             :Join args with spaces → expression string;
-            :Instantiate Calculator (with empty OperationHistory);
+            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory);
 
             partition "parse_and_evaluate(expression, calc)" {
                 :Strip expression;
@@ -32,33 +32,28 @@ if (sys.argv has arguments?) then (yes — CLI mode)
                             elseif (node is ast.UnaryOp?) then (yes)
                                 :Recurse on operand;
                                 if (USub?) then (yes)
-                                    :calc.multiply(operand, -1);
-                                    :calc._history.add_record("multiply", ...);
+                                    :calc.multiply(operand, -1)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
                                 else (UAdd)
                                     :Return operand as-is;
                                 endif
                             elseif (node is ast.BinOp?) then (yes)
                                 :Recurse on left and right nodes;
                                 if (Add?) then (yes)
-                                    :calc.add(left, right);
-                                    :calc._history.add_record("add", ...);
+                                    :calc.add(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
                                 elseif (Sub?) then (yes)
-                                    :calc.subtract(left, right);
-                                    :calc._history.add_record("subtract", ...);
+                                    :calc.subtract(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
                                 elseif (Mult?) then (yes)
-                                    :calc.multiply(left, right);
-                                    :calc._history.add_record("multiply", ...);
+                                    :calc.multiply(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
                                 elseif (Div?) then (yes)
-                                    :calc.divide(left, right);
-                                    if (b == 0?) then (yes)
-                                        :logger.error("divide: division by zero …");
-                                        :Raise ZeroDivisionError;
-                                    else (no)
-                                        :calc._history.add_record("divide", ...);
-                                    endif
+                                    :calc.divide(left, right)\n→ ArithmeticEngine computes;
+                                    note right
+                                        If b==0: ArithmeticEngine calls logger.error()
+                                        then raises ZeroDivisionError — caught at
+                                        run_cli level. On success, Calculator records
+                                        in OperationHistory.
+                                    end note
                                 else (Pow)
-                                    :calc.power(left, right);
-                                    :calc._history.add_record("power", ...);
+                                    :calc.power(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
                                 endif
                             else (unsupported node)
                                 :Raise ValueError "Unsupported expression node";
@@ -94,7 +89,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
 else (no — interactive mode)
 
     partition "run_interactive()" {
-        :Instantiate Calculator (with empty OperationHistory);
+        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory);
         :Build operation list from OPERATIONS keys;
         :Display numbered list of available operations;
         :op_attempts = 0;
@@ -144,7 +139,7 @@ else (no — interactive mode)
 
                     partition "execute_operation(calc, operation, operands)" {
                         :Resolve Calculator method name via OPERATIONS;
-                        :Call method(*operands) on Calculator instance;
+                        :Call Calculator.method(*operands)\n  → Calculator delegates to ArithmeticEngine\n  → ArithmeticEngine computes result;
                         if (exception raised?) then (ZeroDivisionError)
                             :logger.error("execute_operation: … ZeroDivisionError");
                             :Return "Error: Division by zero is not allowed.";
@@ -155,7 +150,7 @@ else (no — interactive mode)
                             :logger.error("execute_operation: … TypeError");
                             :Return "Error: <exception message>";
                         else (success)
-                            :calc._history.add_record(op, operands, result, now());
+                            :Calculator records in OperationHistory;
                             :Return numeric result;
                         endif
                     }

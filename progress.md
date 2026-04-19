@@ -1,5 +1,28 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-173-logic-separation
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect logic separation — new ArithmeticEngine class (src/logic/core.py) for pure stateless arithmetic, Calculator (src/logic/state.py) now delegates to ArithmeticEngine then records in OperationHistory, src/calculator.py is a backward-compat re-export shim
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 493.2s | Cost: $1.008632 USD | Turns: 19
+
+## Run: issue-173-logic-separation (2026-04-19)
+
+- branch: task/issue-173-logic-separation
+- files changed: src/logic/__init__.py (created), src/logic/core.py (created), src/logic/state.py (created), src/calculator.py (re-export), src/__init__.py (import update), src/cli.py (import update), src/user_input.py (import update), tests/test_logic_separation.py (created), tests/test_calculator.py (import update), tests/test_cli.py (import update), tests/test_logging.py (import update), tests/test_user_input.py (import update)
+- purpose: Separate calculator logic from interface — extract arithmetic operations into src/logic/core.py (ArithmeticEngine) and state management into src/logic/state.py (Calculator); presentation layers now import from src.logic with unidirectional dependency
+- risks: src/calculator.py is now a thin re-export; if removed, callers must update imports. No behavioral changes.
+- tests passed: yes — 895 tests (172 new logic separation tests + 723 existing)
+- worktree/branch: task/issue-173-logic-separation
+- PR target: exp2/naive-team
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/208
+
+Duration: 432.6s | Cost: $1.141002 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-170-error-logging
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to reflect error logging added in issue-170 — new logging_config module (setup_logging, logger), __main__ calling setup_logging(), and logger.error() calls at all error paths in Calculator, cli, and user_input
