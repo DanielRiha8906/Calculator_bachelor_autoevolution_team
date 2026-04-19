@@ -38,4 +38,4 @@ Duration: 55.5s | Cost: $0.188179 USD | Turns: 14
 - **Risks:** None — diagram-only artifacts, no source code modified.
 - **Tests passed:** N/A (no code changes)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 40.2s | Cost: $0.142323 USD | Turns: 10
