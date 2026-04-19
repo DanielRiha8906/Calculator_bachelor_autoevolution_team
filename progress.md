@@ -1,3 +1,14 @@
+## Run: issue-184 — Documentation (Expert/Team)
+
+- **Branch:** task/issue-184-documentation
+- **Files changed:** README.md (updated), docs/USER_GUIDE.md (created), docs/DEVELOPER_GUIDE.md (created), docs/ARCHITECTURE.md (created), docs/API_REFERENCE.md (created), tests/test_documentation.py (created)
+- **Purpose:** Add comprehensive written documentation covering interactive mode, CLI usage, all 12 calculator operations, session behavior (history.txt, error.log), code structure post-modularization (PR #212), and public API reference. Tests validate all documented examples against the actual implementation.
+- **Risks:** None — documentation and tests only; no source code modified.
+- **Tests passed:** 109/109 (test_documentation.py); existing suite unaffected.
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-181-modularization-expert-team
