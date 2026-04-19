@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-184-documentation
+- **Files changed:** artifacts/class_diagram.puml (verified current), artifacts/activity_diagram.puml (verified current), artifacts/sequence_diagram.puml (verified current)
+- **Purpose:** Verify PlantUML diagrams reflect current state of src/ after issue-184 documentation run. No source code changes since last diagram update (issue-181 modularization) — all three diagrams remain accurate and correctly represent the full modular structure: src.core (Calculator with 12 operations, OperationRegistry, Operations module), src.interface (InputParser, OutputFormatter, MenuRenderer), src.interactive (Session with MAX_VALIDATION_ATTEMPTS, get_operation_choice, get_operands, run_interactive_session), src.support (HistoryTracker), and top-level ErrorLogger and CLI modules with all dependency edges.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-184 — Documentation (Expert/Team)
 
 - **Branch:** task/issue-184-documentation
