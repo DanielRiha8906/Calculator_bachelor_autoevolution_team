@@ -7,4 +7,4 @@
 - tests passed: 4/4 (test_divide_by_zero_integer, test_divide_by_zero_float, test_divide_by_zero_negative_numerator, test_divide_with_invalid_inputs)
 - intended PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 109.4s | Cost: $0.315981 USD | Turns: 13
