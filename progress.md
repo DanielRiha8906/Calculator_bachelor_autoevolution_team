@@ -148,4 +148,4 @@ Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
 - **Tests passed:** 397/397 (126 new CLI tests, 4 fixed REPL main tests, 267 unchanged)
 - **PR target:** exp2/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
