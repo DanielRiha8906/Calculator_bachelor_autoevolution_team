@@ -15,15 +15,25 @@ package "src" {
         +log(x: int|float) : float
         +ln(x: int|float) : float
     }
+
+    class InputHandler <<module>> {
+        +get_operation_registry(calculator: Calculator) : dict
+        +display_menu(registry: dict) : None
+        +get_operation_choice(registry: dict) : tuple | None
+        +get_operands(arity: int) : list[float]
+        +run_interactive_session(calculator: Calculator) : None
+    }
 }
 
 package "__main__" {
     class EntryPoint <<module>> {
-        +main() : void
+        +main() : None
     }
 }
 
-EntryPoint ..> Calculator : instantiates & uses
+EntryPoint ..> Calculator : instantiates
+EntryPoint ..> InputHandler : calls run_interactive_session()
+InputHandler ..> Calculator : invokes methods via registry
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -53,6 +63,16 @@ end note
 note right of Calculator::ln
   Natural logarithm (ln).
   Raises ValueError if x <= 0.
+end note
+
+note right of InputHandler::get_operation_choice
+  Returns None on quit (q/quit/exit).
+  Accepts operation name or 1-based index.
+end note
+
+note right of InputHandler::run_interactive_session
+  Catches TypeError, ValueError,
+  ZeroDivisionError per iteration.
 end note
 
 @enduml

@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-151-user-input
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect new InputHandler module added in issue-151 (get_operation_registry, display_menu, get_operation_choice, get_operands, run_interactive_session) and updated __main__.py entry point that delegates to run_interactive_session.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-151 — Interactive user input session
 
 - **Branch:** task/issue-151-user-input
