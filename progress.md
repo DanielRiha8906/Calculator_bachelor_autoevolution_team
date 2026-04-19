@@ -1,4 +1,18 @@
 
+## Run: issue-183-documentation (2026-04-19)
+
+- **Branch:** task/issue-183-documentation
+- **Files changed:**
+  - `docs/FEATURES.md` (created) — Full operation catalog for all 12 operations with arity, aliases, examples, and error conditions
+  - `docs/PROJECT_STRUCTURE.md` (created) — Module overview, layered architecture description, data flow, design patterns, test structure map
+  - `docs/USER_GUIDE.md` (created) — End-user guide covering REPL and CLI modes, exit codes, file output formats, troubleshooting
+  - `README.md` (modified) — Replaced one-line placeholder with project description, documentation links, quick start, and test instructions
+- **Purpose:** Add comprehensive written documentation for the calculator application (issue #183) covering features, usage, and project structure for both developers and end users
+- **Risks:** None — documentation only, no source code changes
+- **Tests passed:** Yes — 716/716 tests pass, all documentation verified accurate against implementation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-174-logic-separation
