@@ -15,6 +15,9 @@ note over Calc, Engine
   (add/subtract/multiply/divide) to its internal
   CalculationEngine (src/core/engine.py).
   Scientific operations are handled directly by Calculator.
+  src/operations/ (arithmetic.py, roots.py, scientific.py)
+  provides standalone utility functions for direct import;
+  not invoked by the OperationRegistry dispatch chain.
 end note
 
 Main -> Calc : Calculator()

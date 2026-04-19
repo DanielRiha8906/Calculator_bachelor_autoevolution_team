@@ -4,9 +4,10 @@ start
 
 note right
   Modular package layout (issue-180):
-  src/core/   — CalculationEngine, Operation, OperationRegistry
-  src/interface/ — CLIHandler, REPLInterface
-  src/support/   — ErrorLogger, OperationHistory, MaxRetriesExceeded
+  src/core/       — CalculationEngine, Operation, OperationRegistry
+  src/interface/  — CLIHandler, REPLInterface
+  src/operations/ — standalone arithmetic/roots/scientific functions + re-exports
+  src/support/    — ErrorLogger, OperationHistory, MaxRetriesExceeded
   src/*.py shims re-export from canonical sub-package locations.
 end note
 

@@ -297,6 +297,51 @@ note right of CLIHandler::execute
   or TypeError on error.
 end note
 
+package "src/operations (standalone utilities)" {
+  class "arithmetic" <<module>> {
+    +add(a: float, b: float) : float
+    +subtract(a: float, b: float) : float
+    +multiply(a: float, b: float) : float
+    +divide(a: float, b: float) : float
+  }
+  class "roots" <<module>> {
+    +factorial(n) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+  }
+  class "scientific" <<module>> {
+    +power(base: float, exponent: float) : float
+    +logarithm(x: float) : float
+    +natural_logarithm(x: float) : float
+  }
+}
+
+note right of "arithmetic"
+  src/operations/arithmetic.py
+  Delegates to a module-level CalculationEngine
+  instance (_engine) to avoid code duplication.
+  Not used by the main dispatch chain (Calculator /
+  OperationRegistry); available for direct import.
+end note
+
+note right of "roots"
+  src/operations/roots.py
+  Standalone implementations of factorial, square,
+  cube, square_root, cube_root — mirror of the
+  corresponding Calculator methods.
+end note
+
+note right of "scientific"
+  src/operations/scientific.py
+  Standalone implementations of power, logarithm
+  (base-10), and natural_logarithm — mirror of
+  the corresponding Calculator methods.
+end note
+
+"arithmetic" ..> CalculationEngine : delegates to module-level _engine
+
 class "__main__" as Main {
     +main(argv: list[str] | None) : void
 }

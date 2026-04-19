@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-183-documentation
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `src/operations (standalone utilities)` package block with three `<<module>>` classes (`arithmetic`, `roots`, `scientific`) documenting the standalone function modules introduced in issue-180; added delegation arrow from `arithmetic` to `CalculationEngine`; added notes for each module describing their role and relationship to the main dispatch chain
+  - `artifacts/activity_diagram.puml` — updated module layout note at start to include `src/operations/` alongside `src/core/`, `src/interface/`, and `src/support/`
+  - `artifacts/sequence_diagram.puml` — expanded header note over Calculator/CalculationEngine to mention the `src/operations/` utility package and clarify it is not part of the `OperationRegistry` dispatch chain
+- **Purpose:** Sync PlantUML diagrams with current source — `src/operations/` (arithmetic.py, roots.py, scientific.py) added in issue-180 was not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-183-documentation (2026-04-19)
 
 - **Branch:** task/issue-183-documentation
