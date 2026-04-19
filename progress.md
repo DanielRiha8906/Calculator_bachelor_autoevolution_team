@@ -1,4 +1,20 @@
 
+## Run: issue-144-factorial (2026-04-19)
+
+- **Branch:** task/issue-144-factorial
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added `factorial(n) -> int` method to `Calculator` class; iterative implementation with `TypeError` for non-integer floats, `ValueError` for negatives
+  - `tests/test_calculator.py` — added 18 factorial tests: basic cases, edge cases, error handling, result chaining
+- **Purpose:** Add factorial as a supported calculator operation (issue #144)
+- **Risks:** None — backward-compatible addition; existing 68 tests unaffected
+- **Tests passed:** Yes — all 86 tests pass (68 existing + 18 new)
+- **Tokens used:** PENDING
+- **Cost (USD):** PENDING
+- **Turns:** PENDING
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-138-zero-division-error (2026-04-19)
 
 - **Branch:** task/issue-138-zero-division-error
