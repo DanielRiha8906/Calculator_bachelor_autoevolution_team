@@ -11,7 +11,7 @@ import logging
 from io import StringIO
 
 from src.cli import parse_and_evaluate, run_cli, _eval_node
-from src.calculator import Calculator
+from src.logic import Calculator
 
 
 @pytest.fixture

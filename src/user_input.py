@@ -6,7 +6,7 @@ interactive loop that drives the Calculator through user-supplied commands.
 
 import logging
 
-from src.calculator import Calculator
+from src.logic import Calculator
 from src.input_retry import DEFAULT_MAX_RETRIES
 
 logger = logging.getLogger("calculator")

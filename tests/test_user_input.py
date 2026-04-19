@@ -24,7 +24,7 @@ from src.user_input import (
     format_result,
     run_interactive,
 )
-from src.calculator import Calculator
+from src.logic import Calculator
 
 
 # ============================================================================
