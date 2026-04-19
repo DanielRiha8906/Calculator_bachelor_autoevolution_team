@@ -7,7 +7,7 @@
 - **Tests passed:** Yes — 283 tests passed (92 test_input_handler.py, 74 test_cli.py, 117 test_calculator.py), 0 failures.
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 309.6s | Cost: $0.757071 USD | Turns: 12
 
 ---
 
