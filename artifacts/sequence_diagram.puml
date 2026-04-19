@@ -2,39 +2,89 @@
 
 participant "main()" as Main
 participant "Calculator" as Calc
+participant "math" as Math
 
 Main -> Calc : <<create>>
 
-Main -> Calc : add(10, 5)
-Calc --> Main : 15
+group Basic Arithmetic
+    Main -> Calc : add(10, 5)
+    Calc --> Main : 15
 
-Main -> Calc : subtract(10, 5)
-Calc --> Main : 5
+    Main -> Calc : subtract(10, 5)
+    Calc --> Main : 5
 
-Main -> Calc : multiply(10, 5)
-Calc --> Main : 50
+    Main -> Calc : multiply(10, 5)
+    Calc --> Main : 50
 
-Main -> Calc : divide(10, 5)
-alt divisor != 0
-    Calc --> Main : 2.0
-else divisor == 0
-    Calc --> Main : ZeroDivisionError
+    Main -> Calc : divide(10, 5)
+    alt divisor != 0
+        Calc --> Main : 2.0
+    else divisor == 0
+        Calc --> Main : ZeroDivisionError
+    end
 end
 
-Main -> Calc : factorial(5)
-alt n is bool
-    Calc --> Main : TypeError
-else n is float and not integer
-    Calc --> Main : TypeError
-else n is not int
-    Calc --> Main : TypeError
-else n < 0
-    Calc --> Main : ValueError
-else valid n >= 0
-    Calc --> Main : 120
+group Factorial
+    Main -> Calc : factorial(5)
+    alt n is bool
+        Calc --> Main : TypeError
+    else n is float and not integer
+        Calc --> Main : TypeError
+    else n is not int
+        Calc --> Main : TypeError
+    else n < 0
+        Calc --> Main : ValueError
+    else valid n >= 0
+        Calc --> Main : 120
+    end
+
+    Main -> Calc : factorial(0)
+    Calc --> Main : 1
 end
 
-Main -> Calc : factorial(0)
-Calc --> Main : 1
+group Unary Power Operations
+    Main -> Calc : square(4)
+    Calc --> Main : 16
+
+    Main -> Calc : cube(3)
+    Calc --> Main : 27
+
+    Main -> Calc : square_root(9)
+    alt x < 0
+        Calc --> Main : ValueError
+    else x >= 0
+        Calc -> Math : sqrt(9)
+        Math --> Calc : 3.0
+        Calc --> Main : 3.0
+    end
+
+    Main -> Calc : cube_root(27)
+    Calc -> Math : copysign(abs(27)^(1/3), 27)
+    Math --> Calc : 3.0
+    Calc --> Main : 3.0
+
+    Main -> Calc : power(2, 10)
+    Calc --> Main : 1024.0
+end
+
+group Logarithms
+    Main -> Calc : log10(100)
+    alt x <= 0
+        Calc --> Main : ValueError
+    else x > 0
+        Calc -> Math : log10(100)
+        Math --> Calc : 2.0
+        Calc --> Main : 2.0
+    end
+
+    Main -> Calc : natural_log(1)
+    alt x <= 0
+        Calc --> Main : ValueError
+    else x > 0
+        Calc -> Math : log(1)
+        Math --> Calc : 0.0
+        Calc --> Main : 0.0
+    end
+end
 
 @enduml

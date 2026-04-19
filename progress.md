@@ -72,3 +72,13 @@ Duration: 31.8s | Cost: $0.146748 USD | Turns: 16
 - tests passed: N/A
 
 Duration: 56.9s | Cost: $0.205081 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-146-functions-naive-team
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include the 7 new Calculator methods added in issue-146 (square, cube, square_root, cube_root, power, log10, natural_log)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
