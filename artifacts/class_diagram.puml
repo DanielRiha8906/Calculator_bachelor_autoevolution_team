@@ -1,0 +1,23 @@
+@startuml class_diagram
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    +add(a, b) : float
+    +subtract(a, b) : float
+    +multiply(a, b) : float
+    +divide(a, b) : float
+}
+
+note right of Calculator::divide
+  Raises ZeroDivisionError
+  when b == 0
+end note
+
+class "__main__" as Main {
+    +main() : void
+}
+
+Main ..> Calculator : instantiates
+
+@enduml
