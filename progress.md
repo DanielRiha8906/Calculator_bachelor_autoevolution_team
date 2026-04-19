@@ -1,4 +1,19 @@
 
+## Run: issue-150-user-input (2026-04-19)
+
+- **Branch:** task/issue-150-user-input
+- **Files changed:**
+  - `src/repl.py` — new file; `REPLInterface` class with REPL loop, operation menu, operand prompting, result carry-over, error handling
+  - `src/__main__.py` — replaced demo prints with `main()` wiring `Calculator` + `REPLInterface`
+  - `src/__init__.py` — added `REPLInterface` to exports
+  - `tests/test_repl.py` — new file; 105 tests covering all REPL paths
+- **Purpose:** Add interactive CLI input (REPL) to calculator so users can select operations and enter values at runtime; result of each operation carries forward as default for next
+- **Risks:** `Calculator.logarithm` only accepts one argument (base-10); REPL uses `math.log(x, base)` directly for the 2-argument logarithm — a future cycle should add `Calculator.logarithm(x, base)` for uniform dispatch
+- **Tests passed:** 271/271 (166 pre-existing + 105 new)
+- **Intended PR target:** exp2/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-147-math-functions

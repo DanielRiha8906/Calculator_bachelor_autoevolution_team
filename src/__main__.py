@@ -1,11 +1,16 @@
 from .calculator import Calculator
+from .repl import REPLInterface
 
-def main():
+
+def main() -> None:
+    """Entry point for the calculator REPL application."""
     calc = Calculator()
-    print("Addition:", calc.add(10, 5))
-    print("Subtraction:", calc.subtract(10, 5))
-    print("Multiplication:", calc.multiply(10, 5))
-    print("Division:", calc.divide(10, 5))
+    repl = REPLInterface(calc)
+    try:
+        repl.run()
+    except (EOFError, KeyboardInterrupt):
+        print("\nCalculator closed.")
+
 
 if __name__ == "__main__":
     main()
