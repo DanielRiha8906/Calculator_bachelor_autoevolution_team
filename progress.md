@@ -1,3 +1,16 @@
+## Run: issue-169-history-tracking — Add session history tracking to calculator
+
+- **Branch:** task/issue-169-history-tracking
+- **Files changed:** src/history.py (created), src/input_handler.py (modified), src/__main__.py (modified), tests/test_history.py (created), tests/test_input_handler.py (modified)
+- **Purpose:** Add operation history to interactive mode. Each calculation is recorded in function-call format (e.g. add(2, 3) = 5). Users can view history via "h" menu shortcut. History is written to history.txt when the session ends. Each session starts with fresh history.
+- **Risks:** Low. get_operation_choice return shape changed from 2-tuple to 3-tuple (name, method, arity); only internal consumer (run_interactive_session) was updated in the same commit. File I/O errors on save are caught and printed to stderr without crashing.
+- **Tests passed:** Yes — 386 tests passed (86 new test_history.py, 15 new + 19 fixed in test_input_handler.py, all existing tests pass), 0 failures.
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-166-retry-logic
