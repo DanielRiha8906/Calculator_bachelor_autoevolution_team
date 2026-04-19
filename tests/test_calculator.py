@@ -565,6 +565,786 @@ class TestFactorial:
 # CROSS-OPERATION EDGE CASES (IDENTITY OPERATIONS)
 # ============================================================================
 
+class TestSquare:
+    """Test suite for the square operation."""
+
+    def test_square_positive_integer(self, calculator):
+        """Test squaring a positive integer."""
+        assert calculator.square(5) == 25
+        assert calculator.square(10) == 100
+
+    def test_square_positive_float(self, calculator):
+        """Test squaring a positive float."""
+        assert calculator.square(5.5) == pytest.approx(30.25)
+        assert calculator.square(2.5) == pytest.approx(6.25)
+
+    def test_square_negative_integer(self, calculator):
+        """Test squaring a negative integer."""
+        assert calculator.square(-5) == 25
+        assert calculator.square(-10) == 100
+
+    def test_square_negative_float(self, calculator):
+        """Test squaring a negative float."""
+        assert calculator.square(-5.5) == pytest.approx(30.25)
+        assert calculator.square(-2.5) == pytest.approx(6.25)
+
+    def test_square_zero(self, calculator):
+        """Test squaring zero."""
+        assert calculator.square(0) == 0
+        assert calculator.square(0.0) == 0.0
+
+    def test_square_one(self, calculator):
+        """Test squaring one."""
+        assert calculator.square(1) == 1
+        assert calculator.square(1.0) == 1.0
+
+    def test_square_negative_one(self, calculator):
+        """Test squaring negative one."""
+        assert calculator.square(-1) == 1
+
+    def test_square_large_integer(self, calculator):
+        """Test squaring a large integer."""
+        assert calculator.square(1000000) == 1000000000000
+
+    def test_square_large_float(self, calculator):
+        """Test squaring a large float."""
+        assert calculator.square(1e5) == pytest.approx(1e10)
+
+    def test_square_very_small_float(self, calculator):
+        """Test squaring a very small float."""
+        assert calculator.square(1e-5) == pytest.approx(1e-10)
+
+    def test_square_returns_int_for_int_input(self, calculator):
+        """Test that square returns int when given int input."""
+        result = calculator.square(5)
+        assert isinstance(result, int)
+
+    def test_square_returns_float_for_float_input(self, calculator):
+        """Test that square returns float when given float input."""
+        result = calculator.square(5.0)
+        assert isinstance(result, float)
+
+    def test_square_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square(True)
+
+        with pytest.raises(TypeError):
+            calculator.square(False)
+
+    def test_square_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square(None)
+
+    def test_square_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square("5")
+
+        with pytest.raises(TypeError):
+            calculator.square("")
+
+    def test_square_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square([5])
+
+    def test_square_dict_raises_typeerror(self, calculator):
+        """Test that dict input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square({"x": 5})
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0),
+        (1, 1),
+        (2, 4),
+        (3, 9),
+        (4, 16),
+        (5, 25),
+        (10, 100),
+        (-1, 1),
+        (-2, 4),
+        (-5, 25),
+    ])
+    def test_square_parametrized(self, calculator, x, expected):
+        """Parametrized test for square of various integers."""
+        assert calculator.square(x) == expected
+
+
+# ============================================================================
+# CUBE OPERATION TESTS
+# ============================================================================
+
+class TestCube:
+    """Test suite for the cube operation."""
+
+    def test_cube_positive_integer(self, calculator):
+        """Test cubing a positive integer."""
+        assert calculator.cube(2) == 8
+        assert calculator.cube(3) == 27
+        assert calculator.cube(5) == 125
+
+    def test_cube_positive_float(self, calculator):
+        """Test cubing a positive float."""
+        assert calculator.cube(2.5) == pytest.approx(15.625)
+        assert calculator.cube(1.5) == pytest.approx(3.375)
+
+    def test_cube_negative_integer(self, calculator):
+        """Test cubing a negative integer (result is negative)."""
+        assert calculator.cube(-2) == -8
+        assert calculator.cube(-3) == -27
+        assert calculator.cube(-5) == -125
+
+    def test_cube_negative_float(self, calculator):
+        """Test cubing a negative float (result is negative)."""
+        assert calculator.cube(-2.5) == pytest.approx(-15.625)
+        assert calculator.cube(-1.5) == pytest.approx(-3.375)
+
+    def test_cube_zero(self, calculator):
+        """Test cubing zero."""
+        assert calculator.cube(0) == 0
+        assert calculator.cube(0.0) == 0.0
+
+    def test_cube_one(self, calculator):
+        """Test cubing one."""
+        assert calculator.cube(1) == 1
+        assert calculator.cube(1.0) == 1.0
+
+    def test_cube_negative_one(self, calculator):
+        """Test cubing negative one."""
+        assert calculator.cube(-1) == -1
+
+    def test_cube_large_integer(self, calculator):
+        """Test cubing a large integer."""
+        assert calculator.cube(1000) == 1000000000
+
+    def test_cube_large_float(self, calculator):
+        """Test cubing a large float."""
+        assert calculator.cube(1e3) == pytest.approx(1e9)
+
+    def test_cube_very_small_float(self, calculator):
+        """Test cubing a very small float."""
+        assert calculator.cube(1e-5) == pytest.approx(1e-15)
+
+    def test_cube_returns_int_for_int_input(self, calculator):
+        """Test that cube returns int when given int input."""
+        result = calculator.cube(5)
+        assert isinstance(result, int)
+
+    def test_cube_returns_float_for_float_input(self, calculator):
+        """Test that cube returns float when given float input."""
+        result = calculator.cube(5.0)
+        assert isinstance(result, float)
+
+    def test_cube_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube(True)
+
+        with pytest.raises(TypeError):
+            calculator.cube(False)
+
+    def test_cube_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube(None)
+
+    def test_cube_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube("5")
+
+        with pytest.raises(TypeError):
+            calculator.cube("")
+
+    def test_cube_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube([5])
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0),
+        (1, 1),
+        (2, 8),
+        (3, 27),
+        (4, 64),
+        (5, 125),
+        (-1, -1),
+        (-2, -8),
+        (-3, -27),
+        (-5, -125),
+    ])
+    def test_cube_parametrized(self, calculator, x, expected):
+        """Parametrized test for cube of various integers."""
+        assert calculator.cube(x) == expected
+
+
+# ============================================================================
+# SQUARE ROOT OPERATION TESTS
+# ============================================================================
+
+class TestSquareRoot:
+    """Test suite for the square root operation."""
+
+    def test_square_root_perfect_squares(self, calculator):
+        """Test square root of perfect squares."""
+        assert calculator.square_root(0) == pytest.approx(0.0)
+        assert calculator.square_root(1) == pytest.approx(1.0)
+        assert calculator.square_root(4) == pytest.approx(2.0)
+        assert calculator.square_root(9) == pytest.approx(3.0)
+        assert calculator.square_root(16) == pytest.approx(4.0)
+        assert calculator.square_root(25) == pytest.approx(5.0)
+        assert calculator.square_root(100) == pytest.approx(10.0)
+
+    def test_square_root_non_perfect_squares(self, calculator):
+        """Test square root of non-perfect squares."""
+        assert calculator.square_root(2) == pytest.approx(1.41421356, rel=1e-7)
+        assert calculator.square_root(3) == pytest.approx(1.73205080, rel=1e-7)
+        assert calculator.square_root(5) == pytest.approx(2.23606797, rel=1e-7)
+        assert calculator.square_root(10) == pytest.approx(3.16227766, rel=1e-7)
+
+    def test_square_root_float_input(self, calculator):
+        """Test square root with float input."""
+        assert calculator.square_root(2.25) == pytest.approx(1.5)
+        assert calculator.square_root(6.25) == pytest.approx(2.5)
+
+    def test_square_root_large_number(self, calculator):
+        """Test square root of large numbers."""
+        assert calculator.square_root(1e6) == pytest.approx(1e3)
+        assert calculator.square_root(1e10) == pytest.approx(1e5)
+
+    def test_square_root_very_small_number(self, calculator):
+        """Test square root of very small positive number."""
+        assert calculator.square_root(1e-4) == pytest.approx(1e-2)
+        assert calculator.square_root(1e-10) == pytest.approx(1e-5)
+
+    def test_square_root_returns_float(self, calculator):
+        """Test that square root always returns float."""
+        result = calculator.square_root(25)
+        assert isinstance(result, float)
+
+    def test_square_root_negative_raises_valueerror(self, calculator):
+        """Test that negative input raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.square_root(-1)
+
+        with pytest.raises(ValueError):
+            calculator.square_root(-5)
+
+        with pytest.raises(ValueError):
+            calculator.square_root(-0.5)
+
+    def test_square_root_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square_root(True)
+
+        with pytest.raises(TypeError):
+            calculator.square_root(False)
+
+    def test_square_root_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square_root(None)
+
+    def test_square_root_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square_root("4")
+
+        with pytest.raises(TypeError):
+            calculator.square_root("")
+
+    def test_square_root_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.square_root([4])
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0.0),
+        (1, 1.0),
+        (4, 2.0),
+        (9, 3.0),
+        (16, 4.0),
+        (25, 5.0),
+        (100, 10.0),
+    ])
+    def test_square_root_parametrized(self, calculator, x, expected):
+        """Parametrized test for square root of perfect squares."""
+        assert calculator.square_root(x) == pytest.approx(expected)
+
+
+# ============================================================================
+# CUBE ROOT OPERATION TESTS
+# ============================================================================
+
+class TestCubeRoot:
+    """Test suite for the cube root operation."""
+
+    def test_cube_root_positive_perfect_cubes(self, calculator):
+        """Test cube root of positive perfect cubes."""
+        assert calculator.cube_root(0) == pytest.approx(0.0)
+        assert calculator.cube_root(1) == pytest.approx(1.0)
+        assert calculator.cube_root(8) == pytest.approx(2.0)
+        assert calculator.cube_root(27) == pytest.approx(3.0)
+        assert calculator.cube_root(64) == pytest.approx(4.0)
+        assert calculator.cube_root(125) == pytest.approx(5.0)
+        assert calculator.cube_root(1000) == pytest.approx(10.0)
+
+    def test_cube_root_negative_perfect_cubes(self, calculator):
+        """Test cube root of negative perfect cubes."""
+        assert calculator.cube_root(-1) == pytest.approx(-1.0)
+        assert calculator.cube_root(-8) == pytest.approx(-2.0)
+        assert calculator.cube_root(-27) == pytest.approx(-3.0)
+        assert calculator.cube_root(-64) == pytest.approx(-4.0)
+        assert calculator.cube_root(-125) == pytest.approx(-5.0)
+
+    def test_cube_root_positive_non_perfect_cubes(self, calculator):
+        """Test cube root of positive non-perfect cubes."""
+        assert calculator.cube_root(2) == pytest.approx(1.25992104, rel=1e-7)
+        assert calculator.cube_root(3) == pytest.approx(1.44224957, rel=1e-7)
+        assert calculator.cube_root(10) == pytest.approx(2.15443469, rel=1e-7)
+
+    def test_cube_root_negative_non_perfect_cubes(self, calculator):
+        """Test cube root of negative non-perfect cubes."""
+        assert calculator.cube_root(-2) == pytest.approx(-1.25992104, rel=1e-7)
+        assert calculator.cube_root(-3) == pytest.approx(-1.44224957, rel=1e-7)
+        assert calculator.cube_root(-10) == pytest.approx(-2.15443469, rel=1e-7)
+
+    def test_cube_root_float_input(self, calculator):
+        """Test cube root with float input."""
+        assert calculator.cube_root(8.0) == pytest.approx(2.0)
+        assert calculator.cube_root(27.0) == pytest.approx(3.0)
+
+    def test_cube_root_large_number(self, calculator):
+        """Test cube root of large numbers."""
+        assert calculator.cube_root(1e9) == pytest.approx(1e3)
+        assert calculator.cube_root(1e12) == pytest.approx(1e4)
+
+    def test_cube_root_large_negative_number(self, calculator):
+        """Test cube root of large negative numbers."""
+        assert calculator.cube_root(-1e9) == pytest.approx(-1e3)
+        assert calculator.cube_root(-1e12) == pytest.approx(-1e4)
+
+    def test_cube_root_very_small_number(self, calculator):
+        """Test cube root of very small positive number."""
+        assert calculator.cube_root(1e-6) == pytest.approx(1e-2)
+
+    def test_cube_root_very_small_negative_number(self, calculator):
+        """Test cube root of very small negative number."""
+        assert calculator.cube_root(-1e-6) == pytest.approx(-1e-2)
+
+    def test_cube_root_returns_float(self, calculator):
+        """Test that cube root always returns float."""
+        result = calculator.cube_root(8)
+        assert isinstance(result, float)
+
+    def test_cube_root_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube_root(True)
+
+        with pytest.raises(TypeError):
+            calculator.cube_root(False)
+
+    def test_cube_root_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube_root(None)
+
+    def test_cube_root_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube_root("8")
+
+        with pytest.raises(TypeError):
+            calculator.cube_root("")
+
+    def test_cube_root_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cube_root([8])
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0.0),
+        (1, 1.0),
+        (8, 2.0),
+        (27, 3.0),
+        (64, 4.0),
+        (125, 5.0),
+        (-1, -1.0),
+        (-8, -2.0),
+        (-27, -3.0),
+    ])
+    def test_cube_root_parametrized(self, calculator, x, expected):
+        """Parametrized test for cube root of perfect cubes."""
+        assert calculator.cube_root(x) == pytest.approx(expected)
+
+
+# ============================================================================
+# POWER OPERATION TESTS
+# ============================================================================
+
+class TestPower:
+    """Test suite for the power operation."""
+
+    def test_power_positive_base_positive_exponent_int(self, calculator):
+        """Test power with positive int base and positive int exponent."""
+        assert calculator.power(2, 3) == pytest.approx(8.0)
+        assert calculator.power(5, 2) == pytest.approx(25.0)
+        assert calculator.power(10, 3) == pytest.approx(1000.0)
+
+    def test_power_positive_base_positive_exponent_float(self, calculator):
+        """Test power with positive base and positive float exponent."""
+        assert calculator.power(2.0, 3.0) == pytest.approx(8.0)
+        assert calculator.power(4.0, 0.5) == pytest.approx(2.0)
+        assert calculator.power(27.0, 1.0 / 3.0) == pytest.approx(3.0, rel=1e-7)
+
+    def test_power_mixed_base_and_exponent(self, calculator):
+        """Test power with mixed int/float base and exponent."""
+        assert calculator.power(2, 3.0) == pytest.approx(8.0)
+        assert calculator.power(2.0, 3) == pytest.approx(8.0)
+        assert calculator.power(4, 0.5) == pytest.approx(2.0)
+
+    def test_power_zero_exponent(self, calculator):
+        """Test power with zero exponent (should return 1.0)."""
+        assert calculator.power(5, 0) == pytest.approx(1.0)
+        assert calculator.power(10, 0.0) == pytest.approx(1.0)
+        assert calculator.power(0, 0) == pytest.approx(1.0)
+        assert calculator.power(-5, 0) == pytest.approx(1.0)
+
+    def test_power_base_to_one(self, calculator):
+        """Test any base raised to exponent 1."""
+        assert calculator.power(5, 1) == pytest.approx(5.0)
+        assert calculator.power(10, 1.0) == pytest.approx(10.0)
+        assert calculator.power(-5, 1) == pytest.approx(-5.0)
+
+    def test_power_one_to_any_exponent(self, calculator):
+        """Test 1 raised to any exponent."""
+        assert calculator.power(1, 5) == pytest.approx(1.0)
+        assert calculator.power(1.0, 100) == pytest.approx(1.0)
+        assert calculator.power(1, 0) == pytest.approx(1.0)
+
+    def test_power_negative_base_positive_even_exponent(self, calculator):
+        """Test negative base with even exponent (positive result)."""
+        assert calculator.power(-2, 2) == pytest.approx(4.0)
+        assert calculator.power(-5, 4) == pytest.approx(625.0)
+
+    def test_power_negative_base_positive_odd_exponent(self, calculator):
+        """Test negative base with odd exponent (negative result)."""
+        assert calculator.power(-2, 3) == pytest.approx(-8.0)
+        assert calculator.power(-5, 3) == pytest.approx(-125.0)
+
+    def test_power_zero_base_positive_exponent(self, calculator):
+        """Test zero base with positive exponent."""
+        assert calculator.power(0, 1) == pytest.approx(0.0)
+        assert calculator.power(0, 5) == pytest.approx(0.0)
+        assert calculator.power(0.0, 10.0) == pytest.approx(0.0)
+
+    def test_power_negative_base_fractional_exponent(self, calculator):
+        """Test negative base with fractional exponent."""
+        # Note: negative base with fractional exponent may produce complex numbers
+        # Python's ** operator will raise ValueError for this
+        # We test that the behavior is consistent
+        with pytest.raises((ValueError, TypeError)):
+            calculator.power(-1, 0.5)
+
+    def test_power_large_numbers(self, calculator):
+        """Test power with large results."""
+        assert calculator.power(10, 6) == pytest.approx(1e6)
+        assert calculator.power(2, 20) == pytest.approx(1048576.0)
+
+    def test_power_fractional_base_large_exponent(self, calculator):
+        """Test fractional base with large exponent (approaches zero)."""
+        result = calculator.power(0.5, 10)
+        assert result == pytest.approx(1.0 / 1024.0)
+
+    def test_power_returns_float(self, calculator):
+        """Test that power always returns float."""
+        result = calculator.power(2, 3)
+        assert isinstance(result, float)
+
+    def test_power_bool_base_raises_typeerror(self, calculator):
+        """Test that bool as base raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(True, 2)
+
+        with pytest.raises(TypeError):
+            calculator.power(False, 2)
+
+    def test_power_bool_exponent_raises_typeerror(self, calculator):
+        """Test that bool as exponent raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(2, True)
+
+        with pytest.raises(TypeError):
+            calculator.power(2, False)
+
+    def test_power_none_base_raises_typeerror(self, calculator):
+        """Test that None as base raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(None, 2)
+
+    def test_power_none_exponent_raises_typeerror(self, calculator):
+        """Test that None as exponent raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(2, None)
+
+    def test_power_string_base_raises_typeerror(self, calculator):
+        """Test that string as base raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power("2", 3)
+
+    def test_power_string_exponent_raises_typeerror(self, calculator):
+        """Test that string as exponent raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(2, "3")
+
+    def test_power_list_base_raises_typeerror(self, calculator):
+        """Test that list as base raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power([2], 3)
+
+    def test_power_list_exponent_raises_typeerror(self, calculator):
+        """Test that list as exponent raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.power(2, [3])
+
+    @pytest.mark.parametrize("base,exp,expected", [
+        (2, 0, 1.0),
+        (2, 1, 2.0),
+        (2, 3, 8.0),
+        (2, 10, 1024.0),
+        (5, 2, 25.0),
+        (10, 3, 1000.0),
+        (-2, 2, 4.0),
+        (-2, 3, -8.0),
+        (0, 1, 0.0),
+        (1, 100, 1.0),
+    ])
+    def test_power_parametrized(self, calculator, base, exp, expected):
+        """Parametrized test for various power operations."""
+        assert calculator.power(base, exp) == pytest.approx(expected)
+
+
+# ============================================================================
+# LOG10 OPERATION TESTS
+# ============================================================================
+
+class TestLog10:
+    """Test suite for the base-10 logarithm operation."""
+
+    def test_log10_one(self, calculator):
+        """Test log10(1) == 0."""
+        assert calculator.log10(1) == pytest.approx(0.0)
+        assert calculator.log10(1.0) == pytest.approx(0.0)
+
+    def test_log10_ten(self, calculator):
+        """Test log10(10) == 1."""
+        assert calculator.log10(10) == pytest.approx(1.0)
+        assert calculator.log10(10.0) == pytest.approx(1.0)
+
+    def test_log10_hundred(self, calculator):
+        """Test log10(100) == 2."""
+        assert calculator.log10(100) == pytest.approx(2.0)
+        assert calculator.log10(100.0) == pytest.approx(2.0)
+
+    def test_log10_thousand(self, calculator):
+        """Test log10(1000) == 3."""
+        assert calculator.log10(1000) == pytest.approx(3.0)
+
+    def test_log10_tenth(self, calculator):
+        """Test log10(0.1) == -1."""
+        assert calculator.log10(0.1) == pytest.approx(-1.0)
+
+    def test_log10_hundredth(self, calculator):
+        """Test log10(0.01) == -2."""
+        assert calculator.log10(0.01) == pytest.approx(-2.0)
+
+    def test_log10_arbitrary_positive_numbers(self, calculator):
+        """Test log10 for arbitrary positive numbers."""
+        assert calculator.log10(2) == pytest.approx(0.30102999566, rel=1e-7)
+        assert calculator.log10(5) == pytest.approx(0.69897000433, rel=1e-7)
+        assert calculator.log10(100.5) == pytest.approx(2.00216606642, rel=1e-7)
+
+    def test_log10_large_positive_number(self, calculator):
+        """Test log10 of large positive numbers."""
+        assert calculator.log10(1e10) == pytest.approx(10.0)
+        assert calculator.log10(1e20) == pytest.approx(20.0)
+
+    def test_log10_very_small_positive_number(self, calculator):
+        """Test log10 of very small positive numbers."""
+        assert calculator.log10(1e-5) == pytest.approx(-5.0)
+        assert calculator.log10(1e-10) == pytest.approx(-10.0)
+
+    def test_log10_returns_float(self, calculator):
+        """Test that log10 always returns float."""
+        result = calculator.log10(10)
+        assert isinstance(result, float)
+
+    def test_log10_zero_raises_valueerror(self, calculator):
+        """Test that log10(0) raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.log10(0)
+
+        with pytest.raises(ValueError):
+            calculator.log10(0.0)
+
+    def test_log10_negative_raises_valueerror(self, calculator):
+        """Test that log10 of negative numbers raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.log10(-1)
+
+        with pytest.raises(ValueError):
+            calculator.log10(-10)
+
+        with pytest.raises(ValueError):
+            calculator.log10(-0.5)
+
+    def test_log10_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.log10(True)
+
+        with pytest.raises(TypeError):
+            calculator.log10(False)
+
+    def test_log10_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.log10(None)
+
+    def test_log10_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.log10("10")
+
+        with pytest.raises(TypeError):
+            calculator.log10("")
+
+    def test_log10_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.log10([10])
+
+    @pytest.mark.parametrize("x,expected", [
+        (1, 0.0),
+        (10, 1.0),
+        (100, 2.0),
+        (1000, 3.0),
+        (0.1, -1.0),
+        (0.01, -2.0),
+    ])
+    def test_log10_parametrized(self, calculator, x, expected):
+        """Parametrized test for log10 of specific values."""
+        assert calculator.log10(x) == pytest.approx(expected)
+
+
+# ============================================================================
+# NATURAL LOG OPERATION TESTS
+# ============================================================================
+
+class TestNaturalLog:
+    """Test suite for the natural logarithm (base e) operation."""
+
+    def test_natural_log_one(self, calculator):
+        """Test ln(1) == 0."""
+        assert calculator.natural_log(1) == pytest.approx(0.0)
+        assert calculator.natural_log(1.0) == pytest.approx(0.0)
+
+    def test_natural_log_e(self, calculator):
+        """Test ln(e) == 1."""
+        assert calculator.natural_log(math.e) == pytest.approx(1.0)
+
+    def test_natural_log_e_squared(self, calculator):
+        """Test ln(e^2) == 2."""
+        assert calculator.natural_log(math.e ** 2) == pytest.approx(2.0)
+
+    def test_natural_log_sqrt_e(self, calculator):
+        """Test ln(sqrt(e)) == 0.5."""
+        assert calculator.natural_log(math.sqrt(math.e)) == pytest.approx(0.5, rel=1e-7)
+
+    def test_natural_log_one_over_e(self, calculator):
+        """Test ln(1/e) == -1."""
+        assert calculator.natural_log(1.0 / math.e) == pytest.approx(-1.0, rel=1e-7)
+
+    def test_natural_log_arbitrary_positive_numbers(self, calculator):
+        """Test natural log for arbitrary positive numbers."""
+        assert calculator.natural_log(2) == pytest.approx(0.69314718055, rel=1e-7)
+        assert calculator.natural_log(10) == pytest.approx(2.30258509299, rel=1e-7)
+
+    def test_natural_log_large_positive_number(self, calculator):
+        """Test natural log of large positive numbers."""
+        assert calculator.natural_log(1e5) == pytest.approx(11.51292546497, rel=1e-7)
+
+    def test_natural_log_very_small_positive_number(self, calculator):
+        """Test natural log of very small positive numbers."""
+        assert calculator.natural_log(1e-5) == pytest.approx(-11.51292546497, rel=1e-7)
+
+    def test_natural_log_returns_float(self, calculator):
+        """Test that natural log always returns float."""
+        result = calculator.natural_log(10)
+        assert isinstance(result, float)
+
+    def test_natural_log_zero_raises_valueerror(self, calculator):
+        """Test that ln(0) raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.natural_log(0)
+
+        with pytest.raises(ValueError):
+            calculator.natural_log(0.0)
+
+    def test_natural_log_negative_raises_valueerror(self, calculator):
+        """Test that natural log of negative numbers raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.natural_log(-1)
+
+        with pytest.raises(ValueError):
+            calculator.natural_log(-10)
+
+        with pytest.raises(ValueError):
+            calculator.natural_log(-0.5)
+
+    def test_natural_log_bool_raises_typeerror(self, calculator):
+        """Test that bool input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.natural_log(True)
+
+        with pytest.raises(TypeError):
+            calculator.natural_log(False)
+
+    def test_natural_log_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.natural_log(None)
+
+    def test_natural_log_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.natural_log("10")
+
+        with pytest.raises(TypeError):
+            calculator.natural_log("")
+
+    def test_natural_log_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.natural_log([10])
+
+    @pytest.mark.parametrize("x,expected", [
+        (1, 0.0),
+        (math.e, 1.0),
+    ])
+    def test_natural_log_parametrized_special_values(self, calculator, x, expected):
+        """Parametrized test for natural log of special values."""
+        assert calculator.natural_log(x) == pytest.approx(expected, rel=1e-7)
+
+
+# ============================================================================
+# CROSS-OPERATION EDGE CASES (IDENTITY OPERATIONS)
+# ============================================================================
+
 class TestCrossOperationEdgeCases:
     """Test suite for identity operations and cross-operation edge cases."""
 

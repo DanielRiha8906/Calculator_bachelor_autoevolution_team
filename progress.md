@@ -1,3 +1,13 @@
+## Run: issue-146-functions-naive-team
+
+- branch: task/issue-146-functions-naive-team
+- files changed: src/calculator.py, tests/test_calculator.py
+- purpose: Add square, cube, square root, cube root, power, log10, and natural log to Calculator class (Issue #146)
+- risks: None — additive change only, no existing methods modified
+- tests passed: 164/164 new tests, 298/298 total suite
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-143-factorial-naive-team
 
 - branch: task/issue-143-factorial
