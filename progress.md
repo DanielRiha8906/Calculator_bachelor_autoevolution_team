@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-162-cli-mode
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CLIHandler` class with attributes and methods; added notes for `get_operation_mapping`, `parse_args`, and `execute`; added `Main ..> CLIHandler` and `CLIHandler o-- Calculator` relationships; updated `Main` note to describe both REPL and CLI modes with exit codes
+  - `artifacts/activity_diagram.puml` — restructured top-level to branch between REPL mode and CLI mode; CLI branch shows arg validation (exit 1/2/3), logarithm special-case dispatch, Calculator dispatch, result print, and exit codes
+  - `artifacts/sequence_diagram.puml` — added `CLIHandler` participant; wrapped existing REPL flow in alt block; added CLI mode alt block showing parse_args validation, logarithm special case, Calculator dispatch, stdout result, and stderr error exits
+- **Purpose:** Sync PlantUML diagrams with current source after issue-162 added `CLIHandler` and dual-mode dispatch in `__main__`
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-150-user-input
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `REPLInterface` class with all attributes and methods; added relationship `REPLInterface o-- Calculator`; added notes for `OPERATIONS`, `last_result`, and `_execute`

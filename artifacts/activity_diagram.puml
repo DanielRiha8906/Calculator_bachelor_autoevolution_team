@@ -3,110 +3,160 @@
 start
 
 :Instantiate Calculator;
-:Instantiate REPLInterface(calculator);
-:repl.run();
 
-repeat
-  :Display operation menu\n(get_operation_selection());
-  :User selects operation or "exit";
+if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
-  if (User chose "exit"?) then (yes)
+  :Instantiate REPLInterface(calculator);
+  :repl.run();
+
+  repeat
+    :Display operation menu\n(get_operation_selection());
+    :User selects operation or "exit";
+
+    if (User chose "exit"?) then (yes)
+      stop
+    endif
+
+    :Determine arity from OPERATIONS dict;
+
+    :get_operand(first prompt\nwith last_result default);
+    :Parse first operand as float;
+
+    if (arity == 2?) then (yes)
+      :get_operand(second prompt);
+      :Parse second operand as float;
+    endif
+
+    :_execute(operation, operands);
+
+    fork
+      :add(a, b);
+      :return a + b;
+    fork again
+      :subtract(a, b);
+      :return a - b;
+    fork again
+      :multiply(a, b);
+      :return a * b;
+    fork again
+      :divide(a, b);
+      if (b == 0?) then (yes)
+        :raise ZeroDivisionError\n"Cannot divide by zero";
+      else (no)
+        :return a / b;
+      endif
+    fork again
+      :factorial(n);
+      if (n is float?) then (yes)
+        if (n != int(n)?) then (yes)
+          :raise TypeError\n"factorial() only accepts\ninteger values";
+        else (no)
+          :n = int(n);
+        endif
+      endif
+      if (n < 0?) then (yes)
+        :raise ValueError\n"factorial() not defined\nfor negative values";
+      else (no)
+        :result = 1;
+        :for i in range(2, n+1): result *= i;
+        :return result;
+      endif
+    fork again
+      :square(x);
+      :return x ** 2;
+    fork again
+      :cube(x);
+      :return x ** 3;
+    fork again
+      :square_root(x);
+      if (x < 0?) then (yes)
+        :raise ValueError\n"square_root() not defined\nfor negative values";
+      else (no)
+        :return math.sqrt(x);
+      endif
+    fork again
+      :cube_root(x);
+      if (x == 0?) then (yes)
+        :return 0.0;
+      else (no)
+        :return copysign(|x|^(1/3), x);
+      endif
+    fork again
+      :power(base, exponent);
+      :return base ** exponent;
+    fork again
+      :logarithm(x, base);
+      if (base <= 0 or base == 1?) then (yes)
+        :raise ValueError\n"invalid base";
+      else (no)
+        if (x <= 0?) then (yes)
+          :raise ValueError\n"logarithm() not defined\nfor non-positive values";
+        else (no)
+          :return math.log(x, base);
+        endif
+      endif
+    fork again
+      :natural_logarithm(x);
+      if (x <= 0?) then (yes)
+        :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
+      else (no)
+        :return math.log(x);
+      endif
+    end fork
+
+    if (Calculator raised an exception?) then (yes)
+      :Print error message to user;
+    else (no)
+      :display_result(operation, operands, result);
+      :Store result as last_result;
+    endif
+
+  repeat while (continue?) is (yes)
+  -> no;
+
+  stop
+
+else (no — CLI mode)
+
+  if (argv has only 1 arg and not "--repl"?) then (yes)
+    :Print usage to stderr;
+    :sys.exit(1);
     stop
   endif
 
-  :Determine arity from OPERATIONS dict;
+  :Instantiate CLIHandler(calculator);
+  :handler.execute(argv);
 
-  :get_operand(first prompt\nwith last_result default);
-  :Parse first operand as float;
+  :parse_args(argv)\n→ (method_name, operands);
 
-  if (arity == 2?) then (yes)
-    :get_operand(second prompt);
-    :Parse second operand as float;
+  if (operation unknown?) then (yes)
+    :Print error to stderr;
+    :sys.exit(2);
+    stop
   endif
 
-  :_execute(operation, operands);
+  if (operand count wrong or non-numeric?) then (yes)
+    :Print error to stderr;
+    :sys.exit(3);
+    stop
+  endif
 
-  fork
-    :add(a, b);
-    :return a + b;
-  fork again
-    :subtract(a, b);
-    :return a - b;
-  fork again
-    :multiply(a, b);
-    :return a * b;
-  fork again
-    :divide(a, b);
-    if (b == 0?) then (yes)
-      :raise ZeroDivisionError\n"Cannot divide by zero";
-    else (no)
-      :return a / b;
-    endif
-  fork again
-    :factorial(n);
-    if (n is float?) then (yes)
-      if (n != int(n)?) then (yes)
-        :raise TypeError\n"factorial() only accepts\ninteger values";
-      else (no)
-        :n = int(n);
-      endif
-    endif
-    if (n < 0?) then (yes)
-      :raise ValueError\n"factorial() not defined\nfor negative values";
-    else (no)
-      :result = 1;
-      :for i in range(2, n+1): result *= i;
-      :return result;
-    endif
-  fork again
-    :square(x);
-    :return x ** 2;
-  fork again
-    :cube(x);
-    :return x ** 3;
-  fork again
-    :square_root(x);
-    if (x < 0?) then (yes)
-      :raise ValueError\n"square_root() not defined\nfor negative values";
-    else (no)
-      :return math.sqrt(x);
-    endif
-  fork again
-    :cube_root(x);
-    if (x == 0?) then (yes)
-      :return 0.0;
-    else (no)
-      :return copysign(|x|^(1/3), x);
-    endif
-  fork again
-    :power(base, exponent);
-    :return base ** exponent;
-  fork again
-    :logarithm(x);
-    if (x <= 0?) then (yes)
-      :raise ValueError\n"logarithm() not defined\nfor non-positive values";
-    else (no)
-      :return math.log10(x);
-    endif
-  fork again
-    :natural_logarithm(x);
-    if (x <= 0?) then (yes)
-      :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
-    else (no)
-      :return math.log(x);
-    endif
-  end fork
-
-  if (Calculator raised an exception?) then (yes)
-    :Print error message to user;
+  if (method_name == "logarithm"?) then (yes)
+    :math.log(x, base);
   else (no)
-    :display_result(operation, operands, result);
-    :Store result as last_result;
+    :calculator.<method_name>(*operands);
   endif
 
-repeat while (continue?) is (yes)
--> no;
+  if (operation raised exception?) then (yes)
+    :Print error to stderr;
+    :sys.exit(4);
+    stop
+  endif
 
-stop
+  :Print result to stdout;
+  :sys.exit(0);
+  stop
+
+endif
 
 @enduml
