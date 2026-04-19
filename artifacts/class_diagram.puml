@@ -6,6 +6,7 @@ package "src" {
         +subtract(a, b) : float
         +multiply(a, b) : float
         +divide(a, b) : float
+        +factorial(n: int) : int
     }
 }
 
@@ -16,5 +17,10 @@ package "__main__" {
 }
 
 EntryPoint ..> Calculator : instantiates & uses
+
+note right of Calculator::factorial
+  Raises TypeError if n is not int.
+  Raises ValueError if n < 0.
+end note
 
 @enduml
