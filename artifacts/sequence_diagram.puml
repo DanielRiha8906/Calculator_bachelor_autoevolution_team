@@ -16,96 +16,148 @@ alt REPL mode (argv empty or ["--repl"])
 
   Main -> REPL : run()
 
-  loop until user exits
+  loop until user exits or MaxRetriesExceeded
 
     REPL -> User : display operation menu
-    User -> REPL : select operation (e.g. "add")
 
-    REPL -> User : prompt first operand\n(with last_result as default)
-    User -> REPL : enter value (or press Enter for default)
-
-    alt arity == 2
-      REPL -> User : prompt second operand
-      User -> REPL : enter value
+    loop up to MAX_RETRIES attempts
+      User -> REPL : select operation (e.g. "add")
+      alt valid selection
+        REPL -> REPL : resolve operation key
+      else invalid input
+        REPL -> REPL : attempts++
+        alt attempts >= MAX_RETRIES
+          REPL -> REPL : raise MaxRetriesExceeded
+          REPL -> User : print "Maximum retry attempts exceeded. Session ended."
+          note over REPL
+            run() catches MaxRetriesExceeded,
+            prints the message, and returns.
+          end note
+        else
+          REPL -> User : "Invalid selection. Enter a number from the list or 'quit'."
+        end
+      end
     end
 
-    REPL -> REPL : _execute(operation, operands)
+    alt user entered "quit"
+      REPL -> User : "Calculator closed."
+    else valid operation selected
 
-    alt operation == "add"
-      REPL -> Calc : add(a, b)
-      Calc --> REPL : a + b
-    else operation == "subtract"
-      REPL -> Calc : subtract(a, b)
-      Calc --> REPL : a - b
-    else operation == "multiply"
-      REPL -> Calc : multiply(a, b)
-      Calc --> REPL : a * b
-    else operation == "divide"
-      REPL -> Calc : divide(a, b)
-      Calc -> Calc : check b != 0
-      Calc --> REPL : a / b
-      note over Calc
-        divide(a, 0) raises ZeroDivisionError
-      end note
-    else operation == "factorial"
-      REPL -> Calc : factorial(n)
-      Calc -> Calc : validate n (not negative,\nnot non-integer float)
-      Calc -> Calc : iterative multiply 1..n
-      Calc --> REPL : n!
-      note over Calc
-        factorial(-1) raises ValueError.
-        factorial(5.5) raises TypeError.
-        factorial(5.0) coerces to int → 120.
-      end note
-    else operation == "square"
-      REPL -> Calc : square(x)
-      Calc --> REPL : x ** 2
-    else operation == "cube"
-      REPL -> Calc : cube(x)
-      Calc --> REPL : x ** 3
-    else operation == "square_root"
-      REPL -> Calc : square_root(x)
-      Calc -> Calc : check x >= 0
-      Calc --> REPL : sqrt(x)
-      note over Calc
-        square_root(-1) raises ValueError.
-      end note
-    else operation == "cube_root"
-      REPL -> Calc : cube_root(x)
-      Calc -> Calc : copysign(|x|^(1/3), x)
-      Calc --> REPL : ∛x (sign-preserving)
-    else operation == "power"
-      REPL -> Calc : power(base, exponent)
-      Calc --> REPL : base ** exponent
-    else operation == "logarithm"
-      REPL -> REPL : math.log(x, base)
-      note over REPL
-        REPL calls math.log(x, base) directly
-        to support arbitrary bases —
-        Calculator.logarithm is base-10 only.
-      end note
-      REPL --> REPL : log_base(x)
-    else operation == "natural_logarithm"
-      REPL -> Calc : natural_logarithm(x)
-      Calc -> Calc : check x > 0
-      Calc --> REPL : ln(x)
-      note over Calc
-        natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
-      end note
-    end
+      REPL -> User : prompt first operand\n(with last_result as default)
 
-    alt result returned successfully
-      REPL -> REPL : store result as last_result
-      REPL -> User : display_result(operation, operands, result)
-    else exception raised
-      REPL -> User : print error message
+      loop up to MAX_RETRIES attempts
+        User -> REPL : enter value (or press Enter for default)
+        alt valid float or empty+last_result set
+          REPL -> REPL : parse operand
+        else invalid input
+          REPL -> REPL : attempts++
+          alt attempts >= MAX_RETRIES
+            REPL -> REPL : raise MaxRetriesExceeded
+            REPL -> User : print "Maximum retry attempts exceeded. Session ended."
+          else
+            REPL -> User : "Invalid number. Please enter a numeric value."
+          end
+        end
+      end
+
+      alt arity == 2
+        REPL -> User : prompt second operand
+        loop up to MAX_RETRIES attempts
+          User -> REPL : enter value
+          alt valid float
+            REPL -> REPL : parse second operand
+          else invalid input
+            REPL -> REPL : attempts++
+            alt attempts >= MAX_RETRIES
+              REPL -> REPL : raise MaxRetriesExceeded
+              REPL -> User : print "Maximum retry attempts exceeded. Session ended."
+            else
+              REPL -> User : "Invalid number. Please enter a numeric value."
+            end
+          end
+        end
+      end
+
+      REPL -> REPL : _execute(operation, operands)
+
+      alt operation == "add"
+        REPL -> Calc : add(a, b)
+        Calc --> REPL : a + b
+      else operation == "subtract"
+        REPL -> Calc : subtract(a, b)
+        Calc --> REPL : a - b
+      else operation == "multiply"
+        REPL -> Calc : multiply(a, b)
+        Calc --> REPL : a * b
+      else operation == "divide"
+        REPL -> Calc : divide(a, b)
+        Calc -> Calc : check b != 0
+        Calc --> REPL : a / b
+        note over Calc
+          divide(a, 0) raises ZeroDivisionError
+        end note
+      else operation == "factorial"
+        REPL -> Calc : factorial(n)
+        Calc -> Calc : validate n (not negative,\nnot non-integer float)
+        Calc -> Calc : iterative multiply 1..n
+        Calc --> REPL : n!
+        note over Calc
+          factorial(-1) raises ValueError.
+          factorial(5.5) raises TypeError.
+          factorial(5.0) coerces to int → 120.
+        end note
+      else operation == "square"
+        REPL -> Calc : square(x)
+        Calc --> REPL : x ** 2
+      else operation == "cube"
+        REPL -> Calc : cube(x)
+        Calc --> REPL : x ** 3
+      else operation == "square_root"
+        REPL -> Calc : square_root(x)
+        Calc -> Calc : check x >= 0
+        Calc --> REPL : sqrt(x)
+        note over Calc
+          square_root(-1) raises ValueError.
+        end note
+      else operation == "cube_root"
+        REPL -> Calc : cube_root(x)
+        Calc -> Calc : copysign(|x|^(1/3), x)
+        Calc --> REPL : ∛x (sign-preserving)
+      else operation == "power"
+        REPL -> Calc : power(base, exponent)
+        Calc --> REPL : base ** exponent
+      else operation == "logarithm"
+        REPL -> REPL : math.log(x, base)
+        note over REPL
+          REPL calls math.log(x, base) directly
+          to support arbitrary bases —
+          Calculator.logarithm is base-10 only.
+        end note
+        REPL --> REPL : log_base(x)
+      else operation == "natural_logarithm"
+        REPL -> Calc : natural_logarithm(x)
+        Calc -> Calc : check x > 0
+        Calc --> REPL : ln(x)
+        note over Calc
+          natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
+        end note
+      end
+
+      alt result returned successfully
+        REPL -> REPL : store result as last_result
+        REPL -> User : display_result(operation, operands, result)
+      else exception raised
+        REPL -> User : print error message
+      end
+
     end
 
   end
 
   note over User, REPL
-    Loop ends when user selects "exit"
-    or sends EOF (Ctrl-D) / KeyboardInterrupt (Ctrl-C).
+    Loop ends when user selects "quit",
+    sends EOF (Ctrl-D) / KeyboardInterrupt (Ctrl-C),
+    or MaxRetriesExceeded is raised after 3 bad inputs.
   end note
 
   deactivate REPL

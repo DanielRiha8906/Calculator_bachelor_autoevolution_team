@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-165-retry-logic
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `MaxRetriesExceeded` exception class with `Exception` inheritance and raise relationship to `REPLInterface`; added `_is_valid_operand` and `_is_valid_operation_input` private methods; updated OPERATIONS note to say module-level; added notes for `get_operation_selection` and `get_operand` retry behaviour
+  - `artifacts/activity_diagram.puml` — replaced flat operand/operation prompts with retry loops showing MAX_RETRIES counter and MaxRetriesExceeded raise path for both operation selection and each operand collection step
+  - `artifacts/sequence_diagram.puml` — added retry loop blocks for operation selection and both operand prompts; added MaxRetriesExceeded raise and catch path; updated termination note to include retry-exceeded case
+- **Purpose:** Sync PlantUML diagrams with current source after issue-165 added `MaxRetriesExceeded`, retry counting, and input validation helpers in the REPL
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-162-cli-mode
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `CLIHandler` class with attributes and methods; added notes for `get_operation_mapping`, `parse_args`, and `execute`; added `Main ..> CLIHandler` and `CLIHandler o-- Calculator` relationships; updated `Main` note to describe both REPL and CLI modes with exit codes

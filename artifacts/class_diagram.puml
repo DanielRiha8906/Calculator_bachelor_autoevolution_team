@@ -44,6 +44,18 @@ note right of Calculator::natural_logarithm
   Raises ValueError if x <= 0.
 end note
 
+class MaxRetriesExceeded {
+}
+
+note right of MaxRetriesExceeded
+  Raised when the user exceeds
+  MAX_RETRIES (3) consecutive
+  invalid inputs in the REPL.
+  Defined in src/exceptions.py.
+end note
+
+MaxRetriesExceeded --|> Exception
+
 class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
@@ -55,10 +67,12 @@ class REPLInterface {
     +display_result(operation: str, operands: list, result: float) : void
     -_first_operand_prompt(label: str) : str
     -_execute(operation: str, operands: list) : float
+    -_is_valid_operand(raw_input: str) : bool
+    -_is_valid_operation_input(raw_input: str) : bool
 }
 
 note right of REPLInterface::OPERATIONS
-  Class-level dict mapping operation
+  Module-level dict mapping operation
   name → {arity, label} metadata
   for all 12 supported operations.
 end note
@@ -73,6 +87,30 @@ note right of REPLInterface::_execute
   Dispatches to Calculator methods.
   Uses math.log(x, base) directly
   for the 2-argument logarithm case.
+end note
+
+note right of REPLInterface::get_operation_selection
+  Re-prompts on invalid input.
+  Raises MaxRetriesExceeded after
+  MAX_RETRIES (3) failed attempts.
+end note
+
+note right of REPLInterface::get_operand
+  Re-prompts on invalid input.
+  Returns last_result on empty Enter.
+  Raises MaxRetriesExceeded after
+  MAX_RETRIES (3) failed attempts.
+end note
+
+note right of REPLInterface::_is_valid_operand
+  Returns True if raw_input can
+  be parsed as a float.
+end note
+
+note right of REPLInterface::_is_valid_operation_input
+  Returns True if raw_input is
+  "quit" or a valid menu index
+  in [1, len(OPERATIONS)].
 end note
 
 class CLIHandler {
@@ -122,5 +160,6 @@ Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
 REPLInterface o-- Calculator : uses >
 CLIHandler o-- Calculator : uses >
+REPLInterface ..> MaxRetriesExceeded : raises
 
 @enduml
