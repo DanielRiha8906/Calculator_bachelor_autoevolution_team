@@ -7,9 +7,10 @@ from a non-interactive (CLI) context.
 
 import sys
 
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 from src.error_logger import ErrorLogger
 from src.core.operations import get_operation_registry
+from src.interface.input_parser import parse_cli_args, convert_operand
 
 _error_logger = ErrorLogger()
 
@@ -32,43 +33,7 @@ def parse_arguments(args: list[str]) -> tuple[str, list[str]]:
         >>> parse_arguments(["factorial", "5"])
         ('factorial', ['5'])
     """
-    operation_name = args[0]
-    operand_strs = args[1:]
-    return operation_name, operand_strs
-
-
-def convert_operand(value: str) -> int | float:
-    """Convert a string argument to a numeric type.
-
-    Parses the string as a float first. If the resulting float is a whole
-    number (i.e. ``float_val == int(float_val)``), returns an int;
-    otherwise returns the float.
-
-    Args:
-        value: A string representation of a number.
-
-    Returns:
-        An ``int`` if *value* represents a whole number, or a ``float``
-        otherwise.
-
-    Raises:
-        ValueError: If *value* cannot be parsed as a number.
-
-    Examples:
-        >>> convert_operand("3")
-        3
-        >>> convert_operand("3.0")
-        3
-        >>> convert_operand("3.5")
-        3.5
-    """
-    try:
-        float_val = float(value)
-    except ValueError:
-        raise ValueError(f"operand '{value}' is not a valid number.")
-    if float_val == int(float_val):
-        return int(float_val)
-    return float_val
+    return parse_cli_args(args)
 
 
 def execute_cli(
@@ -94,7 +59,7 @@ def execute_cli(
         registry: A dict mapping operation names to ``(method, arity)``
             2-tuples, as returned by
             :func:`src.input_handler.get_operation_registry`.
-        calculator: A :class:`src.calculator.Calculator` instance.
+        calculator: A :class:`src.core.calculator.Calculator` instance.
 
     Returns:
         ``0`` on success, ``1`` on any error.

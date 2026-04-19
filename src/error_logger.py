@@ -10,6 +10,9 @@ Log entries use the format::
     TIMESTAMP | ERROR_TYPE | OPERATION | OPERANDS | MESSAGE
 
 where *TIMESTAMP* is an ISO 8601 date-time string.
+
+The canonical class definition lives here; :mod:`src.support.error_logging`
+re-exports it for consumers that prefer the new package layout.
 """
 
 import logging

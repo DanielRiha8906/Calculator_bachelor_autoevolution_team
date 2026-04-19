@@ -1,6 +1,6 @@
 import pytest
 import math
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 
 
 # ==================== Addition Tests ====================

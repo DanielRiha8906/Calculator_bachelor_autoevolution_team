@@ -5,6 +5,9 @@ displaying the operation menu, reading and validating user choices and
 operands, and running the main session loop.  It delegates operation
 registration to :mod:`src.core.operations` and history persistence to
 :class:`~src.history.HistoryTracker`.
+
+Input collection functions are also accessible via
+:mod:`src.interactive.input_handler`, which re-exports them from here.
 """
 
 from __future__ import annotations
@@ -14,34 +17,16 @@ from typing import TYPE_CHECKING
 from ..error_logger import ErrorLogger
 from ..history import HistoryTracker
 from ..core.operations import get_operation_registry
+from ..interface.menu_renderer import display_menu
 
 if TYPE_CHECKING:
-    from ..calculator import Calculator
+    from ..core.calculator import Calculator
 
 _error_logger = ErrorLogger()
 
 MAX_VALIDATION_ATTEMPTS = 5
 
 _HISTORY_TOKEN = "h"
-
-
-def display_menu(registry: dict[str, tuple]) -> None:
-    """Print the list of available operations to stdout.
-
-    Args:
-        registry: The operation registry returned by
-            :func:`~src.core.operations.get_operation_registry`.
-
-    Returns:
-        None
-    """
-    print("\nAvailable operations:")
-    for index, name in enumerate(registry, start=1):
-        _method, arity = registry[name]
-        operand_hint = f"({arity} operand{'s' if arity != 1 else ''})"
-        print(f"  {index:2}. {name} {operand_hint}")
-    print("   h. View history")
-    print("   q. quit")
 
 
 def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:

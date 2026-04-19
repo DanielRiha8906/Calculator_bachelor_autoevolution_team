@@ -808,3 +808,35 @@ class TestModuleLevel:
 
         result = _ensure_handler()
         assert result is None
+
+
+# ==================== Backward Compatibility Tests ====================
+
+
+class TestBackwardCompatibility:
+    """Tests verifying backward compatibility with new support package layout."""
+
+    def test_import_error_logger_from_support_error_logging(self):
+        """Test that ErrorLogger can be imported from src.support.error_logging."""
+        from src.support.error_logging import ErrorLogger as SupportErrorLogger
+        assert SupportErrorLogger is not None
+        logger = SupportErrorLogger()
+        assert isinstance(logger, SupportErrorLogger)
+
+    def test_error_logger_both_imports_are_same_class(self):
+        """Test that both import paths give the same ErrorLogger class."""
+        from src.error_logger import ErrorLogger as CanonicalErrorLogger
+        from src.support.error_logging import ErrorLogger as SupportErrorLogger
+        assert CanonicalErrorLogger is SupportErrorLogger
+
+    def test_canonical_error_logger_still_works(self, tmp_path, monkeypatch):
+        """Test that canonical location still works for logging."""
+        monkeypatch.chdir(tmp_path)
+        import src.error_logger as el
+        el._handler_attached = False
+
+        logger = ErrorLogger()
+        logger.log_error("TEST", {"message": "backward compat test"})
+
+        content = (tmp_path / "error.log").read_text()
+        assert "backward compat test" in content

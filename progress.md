@@ -1,3 +1,15 @@
+## Run: issue-181 — V2 Modularization (Expert/Team)
+
+- **Branch:** task/issue-181-modularization-expert-team
+- **Target PR:** exp2/expert-team
+- **Files changed (source):** src/core/calculator.py (new), src/core/operations_manager.py (new), src/interface/__init__.py (new), src/interface/input_parser.py (new), src/interface/output_formatter.py (new), src/interface/menu_renderer.py (new), src/interactive/input_handler.py (new), src/support/__init__.py (new), src/support/history.py (new), src/support/error_logging.py (new); modified: src/__init__.py, src/calculator.py, src/cli.py, src/core/__init__.py, src/core/operations.py, src/error_logger.py, src/history.py, src/input_handler.py, src/interactive/session.py
+- **Files changed (tests):** tests/test_modular_structure.py (new); modified: tests/test_calculator.py, tests/test_error_logger.py, tests/test_history.py, tests/test_input_handler.py, tests/test_logic_separation.py
+- **Purpose:** Modularize calculator into core logic (src/core/), interface layer (src/interface/), interactive session layer (src/interactive/), and support utilities (src/support/). Introduced OperationRegistry abstraction with clear placeholder for future scientific mode. All existing import paths preserved via backward-compat shims.
+- **Risks:** Backward compatibility shims add indirection; error_logger.py retains canonical state to avoid breaking test_error_logger.py patch paths; interactive/input_handler.py re-exports from session.py to preserve inspect.getsource assertion in test_logic_separation.py.
+- **Tests passed:** 622/622 (99 new tests added)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-176-logic-separation

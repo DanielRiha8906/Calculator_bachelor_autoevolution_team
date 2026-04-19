@@ -10,7 +10,7 @@ import pytest
 import io
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 from src.core.operations import get_operation_registry
 from src.interactive.session import (
     display_menu,
