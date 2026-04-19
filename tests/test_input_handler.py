@@ -245,9 +245,10 @@ def test_get_operation_choice_invalid_number_then_valid():
 
 
 def test_get_operation_choice_multiple_invalid_then_valid():
-    """Test multiple invalid inputs before a valid one."""
+    """Test multiple invalid inputs before a valid one (within limit)."""
     calc = Calculator()
     registry = get_operation_registry(calc)
+    # 3 invalid inputs + 1 valid = 4 total, within the 5 limit
     with patch("builtins.input", side_effect=["xyz", "", "123abc", "add"]):
         with patch("builtins.print"):
             method, arity = get_operation_choice(registry)
@@ -292,6 +293,76 @@ def test_get_operation_choice_negative_number():
         with patch("builtins.print"):
             method, arity = get_operation_choice(registry)
             assert arity == 2
+
+
+def test_get_operation_choice_max_attempts_reached():
+    """Test that 5 consecutive invalid inputs return (None, None) sentinel."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    # 5 invalid invalid inputs should trigger max attempts
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            result = get_operation_choice(registry)
+            assert result == (None, None)
+            # Verify termination message was printed
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "Maximum invalid input attempts reached" in output
+
+
+def test_get_operation_choice_recovers_before_max():
+    """Test that 4 invalid then 1 valid succeeds before hitting limit."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    # 4 invalid + 1 valid = success before the 5th attempt
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "add"]):
+        with patch("builtins.print"):
+            method, arity = get_operation_choice(registry)
+            assert arity == 2
+            assert method(2, 3) == 5
+
+
+def test_get_operation_choice_displays_operations_on_invalid():
+    """Test that error message lists available operations."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    with patch("builtins.input", side_effect=["invalid", "add"]):
+        with patch("builtins.print") as mock_print:
+            get_operation_choice(registry)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Should show available operations
+            assert "Available operations" in output or "add" in output
+
+
+def test_get_operation_choice_mixed_invalid_types():
+    """Test that mixing bad names and bad numbers shares the counter."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    # Mix bad names and out-of-range numbers: all count toward the same limit
+    with patch("builtins.input", side_effect=["badname", "999", "xyz", "888", "badname"]):
+        with patch("builtins.print") as mock_print:
+            result = get_operation_choice(registry)
+            assert result == (None, None)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "Maximum invalid input attempts reached" in output
+
+
+def test_get_operation_choice_attempt_counting():
+    """Test attempt counter increments correctly for each invalid input."""
+    calc = Calculator()
+    registry = get_operation_registry(calc)
+    # Should print error message 3 times before valid input
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "add"]):
+        with patch("builtins.print") as mock_print:
+            method, arity = get_operation_choice(registry)
+            assert arity == 2
+            # Count error messages (should be 3 for the 3 invalid attempts)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Each invalid input should trigger an error message
+            assert "Unknown operation" in output or "Invalid number" in output
 
 
 # ==================== get_operands Tests ====================
@@ -401,6 +472,64 @@ def test_get_operands_mixed_valid_types():
     with patch("builtins.input", side_effect=["5", "3.14", "-2"]):
         operands = get_operands(3)
         assert operands == [5.0, 3.14, -2.0]
+
+
+def test_get_operands_max_attempts_reached():
+    """Test that 5 consecutive invalid numeric entries return None."""
+    # 5 invalid numeric inputs should trigger max attempts
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            result = get_operands(1)
+            assert result is None
+            # Verify termination message was printed
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "Maximum invalid input attempts reached" in output
+
+
+def test_get_operands_recovers_within_limit():
+    """Test that 3 invalid then 1 valid succeeds within 5-attempt limit."""
+    # 3 invalid + 1 valid = success before hitting 5
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "5"]):
+        with patch("builtins.print"):
+            operands = get_operands(1)
+            assert operands == [5.0]
+
+
+def test_get_operands_cross_slot_counting():
+    """Test that attempt count is shared across operand slots."""
+    # Binary operation: 3 bad on operand 1, 2 bad on operand 2 = 5 total = max
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            result = get_operands(2)
+            assert result is None
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "Maximum invalid input attempts reached" in output
+
+
+def test_get_operands_cross_slot_no_exceed():
+    """Test cross-slot counting when total attempts is below 5."""
+    # 2 bad on operand 1, then 1 valid, then 1 bad on operand 2, then 1 valid
+    # Total bad = 3, which is < 5, so should succeed
+    with patch("builtins.input", side_effect=["bad1", "bad2", "3.5", "bad3", "2.0"]):
+        with patch("builtins.print"):
+            operands = get_operands(2)
+            assert operands == [3.5, 2.0]
+
+
+def test_get_operands_exactly_at_limit_second_operand():
+    """Test that hitting limit on second operand returns None."""
+    # First operand: 1 valid
+    # Second operand: 4 invalid inputs (brings cumulative to 4)
+    # Fifth invalid should trigger max attempts
+    with patch("builtins.input", side_effect=["5", "bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            result = get_operands(2)
+            assert result is None
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "Maximum invalid input attempts reached" in output
 
 
 # ==================== run_interactive_session Tests ====================
@@ -664,6 +793,80 @@ def test_run_interactive_session_quit_token():
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
             output = "\n".join(str(p) for p in printed)
+            assert "Goodbye" in output
+
+
+def test_run_interactive_session_operation_max_attempts():
+    """Test session exits after 5 invalid operation selections."""
+    calc = Calculator()
+    # 5 invalid operations should trigger max attempts and exit
+    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Should show the termination message
+            assert "Maximum invalid input attempts reached" in output
+            # Should NOT show "Goodbye." (that's only for explicit quit)
+            assert "Goodbye" not in output
+
+
+def test_run_interactive_session_operand_max_attempts():
+    """Test session exits after 5 invalid operand entries."""
+    calc = Calculator()
+    # 1 valid operation, then 5 invalid operands should exit
+    with patch("builtins.input", side_effect=["add", "bad1", "bad2", "bad3", "bad4", "bad5"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Should show the termination message
+            assert "Maximum invalid input attempts reached" in output
+            # Should NOT show "Goodbye."
+            assert "Goodbye" not in output
+
+
+def test_run_interactive_session_terminates_without_goodbye_on_max_attempts():
+    """Verify the 'Goodbye.' message does NOT appear on max attempts."""
+    calc = Calculator()
+    # 5 invalid operations
+    with patch("builtins.input", side_effect=["x1", "x2", "x3", "x4", "x5"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Verify termination message present
+            assert "Maximum invalid input attempts reached" in output
+            # Verify Goodbye is NOT present
+            goodbye_count = output.count("Goodbye")
+            assert goodbye_count == 0, "Goodbye should not appear on max attempts"
+
+
+def test_run_interactive_session_normal_quit_still_prints_goodbye():
+    """Test that explicit quit (q) still prints Goodbye."""
+    calc = Calculator()
+    with patch("builtins.input", return_value="q"):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            # Explicit quit should show Goodbye
+            assert "Goodbye" in output
+            # But not the max attempts message
+            assert "Maximum invalid input attempts reached" not in output
+
+
+def test_run_interactive_session_successful_operation_continues():
+    """Test that successful operations continue normally without breaking."""
+    calc = Calculator()
+    # Add, then subtract, then quit
+    with patch("builtins.input", side_effect=["add", "2", "3", "subtract", "10", "4", "q"]):
+        with patch("builtins.print") as mock_print:
+            run_interactive_session(calc)
+            printed = [call.args[0] for call in mock_print.call_args_list]
+            output = "\n".join(str(p) for p in printed)
+            assert "5" in output  # 2 + 3
+            assert "6" in output  # 10 - 4
             assert "Goodbye" in output
 
 

@@ -17,10 +17,11 @@ package "src" {
     }
 
     class InputHandler <<module>> {
+        MAX_VALIDATION_ATTEMPTS : int = 5
         +get_operation_registry(calculator: Calculator) : dict
         +display_menu(registry: dict) : None
         +get_operation_choice(registry: dict) : tuple | None
-        +get_operands(arity: int) : list[float]
+        +get_operands(arity: int) : list[float] | None
         +run_interactive_session(calculator: Calculator) : None
     }
 
@@ -75,10 +76,17 @@ end note
 
 note right of InputHandler::get_operation_choice
   Returns None on quit (q/quit/exit).
+  Returns (None, None) when MAX_VALIDATION_ATTEMPTS exceeded.
   Accepts operation name or 1-based index.
 end note
 
+note right of InputHandler::get_operands
+  Returns None when MAX_VALIDATION_ATTEMPTS exceeded.
+end note
+
 note right of InputHandler::run_interactive_session
+  Breaks session if get_operation_choice returns (None, None)
+  or get_operands returns None (max attempts exhausted).
   Catches TypeError, ValueError,
   ZeroDivisionError per iteration.
 end note

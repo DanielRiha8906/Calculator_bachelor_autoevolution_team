@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-166-retry-logic
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect MAX_VALIDATION_ATTEMPTS retry cap added in issue-166: get_operation_choice now returns (None, None) on exhaustion, get_operands returns None on exhaustion, and run_interactive_session breaks on either sentinel.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 76.2s | Cost: $0.276978 USD | Turns: 16
+
+---
+
+## Run: issue-166-retry-logic — Add MAX_VALIDATION_ATTEMPTS retry cap to input_handler
+
+- **Branch:** task/issue-166-retry-logic
+- **Files changed:** src/input_handler.py
+- **Purpose:** Prevent infinite retry loops in the interactive session by capping invalid-input attempts at MAX_VALIDATION_ATTEMPTS (5). get_operation_choice now returns (None, None) on exhaustion; get_operands returns None; run_interactive_session breaks cleanly on either sentinel.
+- **Risks:** Low. The only interface that changes externally is the return type annotations (tuple | None becomes more specific). Existing callers (only run_interactive_session internally) are updated in the same commit. CLI mode (cli.py) is untouched.
+- **Tests passed:** Yes — 283 tests passed (92 test_input_handler.py, 74 test_cli.py, 117 test_calculator.py), 0 failures.
+- **PR target:** exp2/expert-team
+
+Duration: 309.6s | Cost: $0.757071 USD | Turns: 12
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-163-cli-mode
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect the new CLI module (cli.py) added in issue-163, including parse_arguments, convert_operand, and execute_cli functions, with CLI mode flows added to all three diagrams.

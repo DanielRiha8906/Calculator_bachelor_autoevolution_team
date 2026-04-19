@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .calculator import Calculator
 
+MAX_VALIDATION_ATTEMPTS = 5
+
 
 def get_operation_registry(calculator: "Calculator") -> dict[str, tuple]:
     """Build a registry of available calculator operations.
@@ -70,19 +72,24 @@ def display_menu(registry: dict[str, tuple]) -> None:
 def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
     """Prompt the user to select an operation.
 
-    Keeps reprompting until a valid selection or a quit command is given.
+    Keeps reprompting until a valid selection, a quit command, or the
+    maximum number of invalid attempts is reached.
 
     Args:
         registry: The operation registry returned by
             :func:`get_operation_registry`.
 
     Returns:
-        A ``(method, arity)`` tuple for the chosen operation, or ``None``
+        A ``(method, arity)`` tuple for the chosen operation, ``None``
         if the user entered a quit command (``"q"``, ``"quit"``, or
-        ``"exit"``).
+        ``"exit"``), or ``(None, None)`` when
+        :data:`MAX_VALIDATION_ATTEMPTS` consecutive invalid inputs have
+        been entered.
     """
     names = list(registry.keys())
     quit_tokens = {"q", "quit", "exit"}
+    available = ", ".join(names)
+    attempt_count = 0
 
     while True:
         raw = input("\nEnter operation name or number (q to quit): ").strip().lower()
@@ -96,27 +103,41 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
             if 0 <= index < len(names):
                 name = names[index]
                 return registry[name]
-            print(f"  Invalid number. Choose between 1 and {len(names)}.")
-            continue
-
-        if raw in registry:
+            attempt_count += 1
+            print(
+                f"  Invalid number. Choose between 1 and {len(names)}."
+                f" Available operations: {available}."
+            )
+        elif raw in registry:
             return registry[raw]
+        else:
+            attempt_count += 1
+            print(
+                f"  Unknown operation '{raw}'."
+                f" Available operations: {available}."
+            )
 
-        print(f"  Unknown operation '{raw}'. Type a name or number from the menu.")
+        if attempt_count >= MAX_VALIDATION_ATTEMPTS:
+            print("Maximum invalid input attempts reached. Ending session.")
+            return (None, None)
 
 
-def get_operands(arity: int) -> list[float]:
+def get_operands(arity: int) -> list[float] | None:
     """Prompt the user for the required number of operand values.
 
-    Parses each entry as a float and reprompts on invalid input.
+    Parses each entry as a float and reprompts on invalid input.  When
+    the cumulative number of invalid entries across all operand slots
+    reaches :data:`MAX_VALIDATION_ATTEMPTS`, the prompt is abandoned.
 
     Args:
         arity: The number of operand values to collect.
 
     Returns:
-        A list of *arity* floats entered by the user.
+        A list of *arity* floats entered by the user, or ``None`` when
+        :data:`MAX_VALIDATION_ATTEMPTS` invalid entries have been made.
     """
     operands: list[float] = []
+    attempt_count = 0
     for i in range(1, arity + 1):
         while True:
             raw = input(f"  Enter operand {i}: ").strip()
@@ -124,7 +145,11 @@ def get_operands(arity: int) -> list[float]:
                 operands.append(float(raw))
                 break
             except ValueError:
+                attempt_count += 1
                 print(f"  '{raw}' is not a valid number. Please enter a numeric value.")
+                if attempt_count >= MAX_VALIDATION_ATTEMPTS:
+                    print("Maximum invalid input attempts reached. Ending session.")
+                    return None
     return operands
 
 
@@ -144,13 +169,20 @@ def run_interactive_session(calculator: "Calculator") -> None:
     """
     registry = get_operation_registry(calculator)
     print("Welcome to the interactive calculator.")
+    failed_attempts = 0
 
     while True:
         display_menu(registry)
         choice = get_operation_choice(registry)
 
+        # Explicit quit by the user
         if choice is None:
             print("Goodbye.")
+            break
+
+        # Max-attempts sentinel: get_operation_choice already printed the
+        # termination message, so just exit the loop.
+        if choice == (None, None):
             break
 
         method, arity = choice
@@ -158,6 +190,11 @@ def run_interactive_session(calculator: "Calculator") -> None:
         # For factorial the operand must be an int; collect as float then
         # convert to int so that e.g. "5.0" is accepted gracefully.
         operands = get_operands(arity)
+
+        # Max-attempts sentinel: get_operands already printed the
+        # termination message, so just exit the loop.
+        if operands is None:
+            break
 
         # factorial requires an int — convert if the float is whole-valued.
         if method == calculator.factorial:
@@ -172,5 +209,6 @@ def run_interactive_session(calculator: "Calculator") -> None:
         try:
             result = method(*operands)
             print(f"  Result: {result}")
+            failed_attempts = 0
         except (TypeError, ValueError, ZeroDivisionError) as exc:
             print(f"  Error: {exc}")

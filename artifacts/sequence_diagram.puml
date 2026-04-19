@@ -19,21 +19,27 @@ alt Interactive Mode (python -m src)
 
         alt user quit (q / quit / exit)
             ih -> main : return\n(prints "Goodbye.")
+        else max validation attempts exceeded → (None, None)
+            ih -> main : return\n(prints "Too many invalid attempts. Exiting.")
         else operation selected
             ih -> ih : get_operands(arity)
 
-            opt method is factorial
-                ih -> ih : convert whole-valued floats to int
-            end
+            alt max validation attempts exceeded → None
+                ih -> main : return\n(prints "Too many invalid attempts. Exiting.")
+            else operands collected
+                opt method is factorial
+                    ih -> ih : convert whole-valued floats to int
+                end
 
-            ih -> calc : method(*operands)
+                ih -> calc : method(*operands)
 
-            alt success
-                calc --> ih : result
-                ih -> ih : print "Result: {result}"
-            else TypeError / ValueError / ZeroDivisionError
-                calc --> ih : raises exception
-                ih -> ih : print error message
+                alt success
+                    calc --> ih : result
+                    ih -> ih : print "Result: {result}"
+                else TypeError / ValueError / ZeroDivisionError
+                    calc --> ih : raises exception
+                    ih -> ih : print error message
+                end
             end
         end
     end
