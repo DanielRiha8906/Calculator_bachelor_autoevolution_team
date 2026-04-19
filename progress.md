@@ -279,4 +279,4 @@ Duration: 493.5s | Cost: $1.407888 USD | Turns: 13
 - **Risks:** src/operations.py deleted (conflicts with src/operations/ package); all existing imports preserved via backward-compat re-export wrappers
 - **Tests passed:** 1105/1105 (716 existing + 389 new tests all pass)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 739.6s | Cost: $2.044180 USD | Turns: 15
