@@ -138,3 +138,14 @@ Duration: 40.7s | Cost: $0.145565 USD | Turns: 11
 - **Tests passed:** N/A (no code changes)
 
 Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
+
+## Run: issue-162-cli-mode (2026-04-19)
+
+- **Branch:** task/issue-162-cli-mode
+- **Files changed:** src/cli.py (created), src/__main__.py (modified), tests/test_cli.py (created), tests/test_repl.py (fixed 4 tests)
+- **Purpose:** Add CLI mode so the calculator can be executed from bash using positional arguments (operation + operands); print result to stdout
+- **Risks:** None significant — REPL backward compatibility maintained; new src/cli.py is additive; __main__.py dispatches on argv length
+- **Tests passed:** 397/397 (126 new CLI tests, 4 fixed REPL main tests, 267 unchanged)
+- **PR target:** exp2/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
