@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-173-logic-separation
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect logic separation — new ArithmeticEngine class (src/logic/core.py) for pure stateless arithmetic, Calculator (src/logic/state.py) now delegates to ArithmeticEngine then records in OperationHistory, src/calculator.py is a backward-compat re-export shim
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-173-logic-separation (2026-04-19)
 
 - branch: task/issue-173-logic-separation

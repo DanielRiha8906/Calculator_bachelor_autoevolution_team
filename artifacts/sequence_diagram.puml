@@ -7,6 +7,7 @@ participant "cli" as CLI
 participant "user_input" as UI
 participant "input_retry" as IR
 participant "Calculator" as Calc
+participant "ArithmeticEngine" as Engine
 participant "OperationHistory" as Hist
 participant "math" as Math
 
@@ -26,6 +27,8 @@ alt sys.argv has arguments (CLI mode)
     CLI -> CLI : expression = " ".join(args)
     CLI -> Calc : <<create>>
     activate Calc
+    Calc -> Engine : <<create>>
+    activate Engine
     Calc -> Hist : <<create>>
     activate Hist
     CLI -> CLI : parse_and_evaluate(expression, calc)
@@ -43,35 +46,48 @@ alt sys.argv has arguments (CLI mode)
             CLI -> CLI : return constant value
         else ast.UnaryOp (USub)
             CLI -> Calc : multiply(operand, -1)
+            Calc -> Engine : multiply(operand, -1)
+            Engine --> Calc : result
             Calc -> Hist : add_record("multiply", [operand, -1], result, now())
             Calc --> CLI : negated value
         else ast.BinOp Add
             CLI -> Calc : add(left, right)
+            Calc -> Engine : add(left, right)
+            Engine --> Calc : result
             Calc -> Hist : add_record("add", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Sub
             CLI -> Calc : subtract(left, right)
+            Calc -> Engine : subtract(left, right)
+            Engine --> Calc : result
             Calc -> Hist : add_record("subtract", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Mult
             CLI -> Calc : multiply(left, right)
+            Calc -> Engine : multiply(left, right)
+            Engine --> Calc : result
             Calc -> Hist : add_record("multiply", [left, right], result, now())
             Calc --> CLI : result
         else ast.BinOp Div
             CLI -> Calc : divide(left, right)
+            Calc -> Engine : divide(left, right)
             alt b == 0
-                Calc -> LogConf : logger.error("divide: division by zero …")
-                Calc --> CLI : ZeroDivisionError
+                Engine -> LogConf : logger.error("divide: division by zero …")
+                Engine --> Calc : ZeroDivisionError raised
                 note right of Hist : history NOT recorded on error
+                Calc --> CLI : ZeroDivisionError propagated
                 CLI -> LogConf : logger.error("cli: division by zero in expression …")
                 CLI --> User : "Error: Division by zero is not allowed." (stderr)
                 CLI --> Main : exit code 1
             else b != 0
+                Engine --> Calc : a / b
                 Calc -> Hist : add_record("divide", [left, right], result, now())
                 Calc --> CLI : a / b
             end
         else ast.BinOp Pow
             CLI -> Calc : power(left, right)
+            Calc -> Engine : power(left, right)
+            Engine --> Calc : float result
             Calc -> Hist : add_record("power", [left, right], result, now())
             Calc --> CLI : float result
         else unsupported node / empty expression
@@ -84,6 +100,7 @@ alt sys.argv has arguments (CLI mode)
     CLI --> User : result (stdout)
     CLI --> Main : exit code 0
     deactivate Hist
+    deactivate Engine
     deactivate Calc
 
 else no arguments (interactive mode)
@@ -91,6 +108,8 @@ else no arguments (interactive mode)
     Main -> UI : run_interactive()
     UI -> Calc : <<create>>
     activate Calc
+    Calc -> Engine : <<create>>
+    activate Engine
     Calc -> Hist : <<create>>
     activate Hist
     note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
@@ -134,74 +153,104 @@ else no arguments (interactive mode)
                 UI -> Calc : resolved_method(*operands)
 
                 alt add / subtract / multiply
+                    Calc -> Engine : method(operands)
+                    Engine --> Calc : result
                     Calc -> Hist : add_record(op, operands, result, now())
                     Calc --> UI : numeric result
                 else divide — b == 0
-                    Calc -> LogConf : logger.error("divide: division by zero …")
-                    Calc --> UI : ZeroDivisionError
-                    UI -> LogConf : logger.error("execute_operation: … ZeroDivisionError")
+                    Calc -> Engine : divide(a, 0)
+                    Engine -> LogConf : logger.error("divide: division by zero …")
+                    Engine --> Calc : ZeroDivisionError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : ZeroDivisionError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ZeroDivisionError")
                     UI --> UI : "Error: Division by zero is not allowed."
                 else divide — b != 0
+                    Calc -> Engine : divide(a, b)
+                    Engine --> Calc : a / b
                     Calc -> Hist : add_record("divide", operands, result, now())
                     Calc --> UI : a / b
                 else factorial — invalid input (bool / non-integer float / negative)
-                    Calc -> LogConf : logger.error("factorial: … TypeError/ValueError")
-                    Calc --> UI : TypeError or ValueError
-                    UI -> LogConf : logger.error("execute_operation: … TypeError/ValueError")
+                    Calc -> Engine : factorial(n)
+                    Engine -> LogConf : logger.error("factorial: … TypeError/ValueError")
+                    Engine --> Calc : TypeError or ValueError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError or ValueError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError/ValueError")
                     UI --> UI : error string
                 else factorial — valid n
+                    Calc -> Engine : factorial(n)
+                    Engine --> Calc : n!
                     Calc -> Hist : add_record("factorial", [n], n!, now())
                     Calc --> UI : n!
                 else square / cube — invalid type
-                    Calc -> LogConf : logger.error("square/cube: invalid type … TypeError")
-                    Calc --> UI : TypeError
-                    UI -> LogConf : logger.error("execute_operation: … TypeError")
+                    Calc -> Engine : square/cube(x)
+                    Engine -> LogConf : logger.error("square/cube: invalid type … TypeError")
+                    Engine --> Calc : TypeError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
                     UI --> UI : error string
                 else square / cube — valid
+                    Calc -> Engine : square/cube(x)
+                    Engine --> Calc : result
                     Calc -> Hist : add_record(op, [x], result, now())
                     Calc --> UI : x*x or x*x*x
                 else square_root — x < 0 or invalid type
-                    Calc -> LogConf : logger.error("square_root: … ValueError/TypeError")
-                    Calc --> UI : ValueError or TypeError
-                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
+                    Calc -> Engine : square_root(x)
+                    Engine -> LogConf : logger.error("square_root: … ValueError/TypeError")
+                    Engine --> Calc : ValueError or TypeError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : ValueError or TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
                     UI --> UI : error string
                 else square_root — x >= 0
-                    Calc -> Math : sqrt(x)
-                    Math --> Calc : float
+                    Calc -> Engine : square_root(x)
+                    Engine -> Math : sqrt(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
                     Calc -> Hist : add_record("square_root", [x], result, now())
                     Calc --> UI : float result
                 else cube_root
-                    Calc -> Math : copysign(abs(x)^(1/3), x)
-                    Math --> Calc : float
+                    Calc -> Engine : cube_root(x)
+                    Engine -> Math : copysign(abs(x)^(1/3), x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
                     Calc -> Hist : add_record("cube_root", [x], result, now())
                     Calc --> UI : float result
                 else power — invalid types
-                    Calc -> LogConf : logger.error("power: invalid type … TypeError")
-                    Calc --> UI : TypeError
-                    UI -> LogConf : logger.error("execute_operation: … TypeError")
+                    Calc -> Engine : power(base, exponent)
+                    Engine -> LogConf : logger.error("power: invalid type … TypeError")
+                    Engine --> Calc : TypeError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
                     UI --> UI : error string
                 else power — valid
+                    Calc -> Engine : power(base, exponent)
+                    Engine --> Calc : float(base ** exponent)
                     Calc -> Hist : add_record("power", [base, exp], result, now())
                     Calc --> UI : float(base ** exponent)
                 else log10 / natural_log — x <= 0 or invalid type
-                    Calc -> LogConf : logger.error("log10/natural_log: … ValueError/TypeError")
-                    Calc --> UI : ValueError or TypeError
-                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
+                    Calc -> Engine : log10/natural_log(x)
+                    Engine -> LogConf : logger.error("log10/natural_log: … ValueError/TypeError")
+                    Engine --> Calc : ValueError or TypeError raised
                     note right of Hist : history NOT recorded on error
+                    Calc --> UI : ValueError or TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
                     UI --> UI : error string
                 else log10 — x > 0
-                    Calc -> Math : log10(x)
-                    Math --> Calc : float
+                    Calc -> Engine : log10(x)
+                    Engine -> Math : log10(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
                     Calc -> Hist : add_record("log10", [x], result, now())
                     Calc --> UI : float result
                 else natural_log — x > 0
-                    Calc -> Math : log(x)
-                    Math --> Calc : float
+                    Calc -> Engine : natural_log(x)
+                    Engine -> Math : log(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
                     Calc -> Hist : add_record("natural_log", [x], result, now())
                     Calc --> UI : float result
                 end
@@ -215,6 +264,7 @@ else no arguments (interactive mode)
     end
 
     deactivate Hist
+    deactivate Engine
     deactivate Calc
 
 end
@@ -238,8 +288,18 @@ note over Hist
   clear_history() wipes the log.
 end note
 
+note over Engine
+  ArithmeticEngine (src/logic/core.py) is
+  stateless — it performs pure computation
+  and calls logger.error() before raising
+  on invalid input. It never records history.
+  Calculator (src/logic/state.py) delegates
+  all arithmetic here, then records in
+  OperationHistory on success.
+end note
+
 note over LogConf
-  All modules (Calculator, cli, user_input)
+  All modules (ArithmeticEngine, cli, user_input)
   obtain the same "calculator" named logger
   via logging.getLogger("calculator").
   All error paths emit logger.error() before
