@@ -6,7 +6,7 @@
 - risks: None — diagram-only update, no source changes
 - tests passed: N/A
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 200.1s | Cost: $0.533709 USD | Turns: 20
 
 ## Run: issue-170-error-logging (2026-04-19)
 
