@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-150-user-input
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `REPLInterface` class with all attributes and methods; added relationship `REPLInterface o-- Calculator`; added notes for `OPERATIONS`, `last_result`, and `_execute`
+  - `artifacts/activity_diagram.puml` — restructured to show full REPL execution flow (instantiation → menu loop → operand prompting → Calculator dispatch → result display); retained all Calculator operation branches with guard conditions
+  - `artifacts/sequence_diagram.puml` — added `REPLInterface` and `User` participants; shows full interactive session: menu display, operand prompting, Calculator dispatch for all 12 operations, error handling, result carry-over
+- **Purpose:** Sync PlantUML diagrams with current source after issue-150 added `REPLInterface`
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-150-user-input (2026-04-19)
 
 - **Branch:** task/issue-150-user-input

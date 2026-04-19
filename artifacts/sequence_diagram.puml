@@ -1,80 +1,110 @@
 @startuml sequence_diagram
 
 participant "__main__" as Main
+participant "REPLInterface" as REPL
 participant "Calculator" as Calc
+actor "User" as User
 
 Main -> Calc : Calculator()
 activate Calc
 
-Main -> Calc : add(10, 5)
-Calc --> Main : 15
+Main -> REPL : REPLInterface(calculator)
+activate REPL
 
-Main -> Calc : subtract(10, 5)
-Calc --> Main : 5
+Main -> REPL : run()
 
-Main -> Calc : multiply(10, 5)
-Calc --> Main : 50
+loop until user exits
 
-Main -> Calc : divide(10, 5)
-Calc -> Calc : check b != 0
-Calc --> Main : 2.0
+  REPL -> User : display operation menu
+  User -> REPL : select operation (e.g. "add")
 
-note over Main, Calc
-  If divide(a, 0) is called:
-  ZeroDivisionError is raised
+  REPL -> User : prompt first operand\n(with last_result as default)
+  User -> REPL : enter value (or press Enter for default)
+
+  alt arity == 2
+    REPL -> User : prompt second operand
+    User -> REPL : enter value
+  end
+
+  REPL -> REPL : _execute(operation, operands)
+
+  alt operation == "add"
+    REPL -> Calc : add(a, b)
+    Calc --> REPL : a + b
+  else operation == "subtract"
+    REPL -> Calc : subtract(a, b)
+    Calc --> REPL : a - b
+  else operation == "multiply"
+    REPL -> Calc : multiply(a, b)
+    Calc --> REPL : a * b
+  else operation == "divide"
+    REPL -> Calc : divide(a, b)
+    Calc -> Calc : check b != 0
+    Calc --> REPL : a / b
+    note over Calc
+      divide(a, 0) raises ZeroDivisionError
+    end note
+  else operation == "factorial"
+    REPL -> Calc : factorial(n)
+    Calc -> Calc : validate n (not negative,\nnot non-integer float)
+    Calc -> Calc : iterative multiply 1..n
+    Calc --> REPL : n!
+    note over Calc
+      factorial(-1) raises ValueError.
+      factorial(5.5) raises TypeError.
+      factorial(5.0) coerces to int → 120.
+    end note
+  else operation == "square"
+    REPL -> Calc : square(x)
+    Calc --> REPL : x ** 2
+  else operation == "cube"
+    REPL -> Calc : cube(x)
+    Calc --> REPL : x ** 3
+  else operation == "square_root"
+    REPL -> Calc : square_root(x)
+    Calc -> Calc : check x >= 0
+    Calc --> REPL : sqrt(x)
+    note over Calc
+      square_root(-1) raises ValueError.
+    end note
+  else operation == "cube_root"
+    REPL -> Calc : cube_root(x)
+    Calc -> Calc : copysign(|x|^(1/3), x)
+    Calc --> REPL : ∛x (sign-preserving)
+  else operation == "power"
+    REPL -> Calc : power(base, exponent)
+    Calc --> REPL : base ** exponent
+  else operation == "logarithm"
+    REPL -> Calc : logarithm(x)
+    Calc -> Calc : check x > 0
+    Calc --> REPL : log10(x)
+    note over Calc
+      logarithm(0) and logarithm(-1) raise ValueError.
+    end note
+  else operation == "natural_logarithm"
+    REPL -> Calc : natural_logarithm(x)
+    Calc -> Calc : check x > 0
+    Calc --> REPL : ln(x)
+    note over Calc
+      natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
+    end note
+  end
+
+  alt result returned successfully
+    REPL -> REPL : store result as last_result
+    REPL -> User : display_result(operation, operands, result)
+  else exception raised
+    REPL -> User : print error message
+  end
+
+end
+
+note over User, REPL
+  Loop ends when user selects "exit"
+  or sends EOF (Ctrl-D) / KeyboardInterrupt (Ctrl-C).
 end note
 
-Main -> Calc : factorial(5)
-Calc -> Calc : validate n (not negative,\nnot non-integer float)
-Calc -> Calc : iterative multiply 1..5
-Calc --> Main : 120
-
-Main -> Calc : factorial(0)
-Calc --> Main : 1
-
-note over Main, Calc
-  factorial(-1) raises ValueError.
-  factorial(5.5) raises TypeError.
-  factorial(5.0) coerces to int and returns 120.
-end note
-
-Main -> Calc : square(4)
-Calc --> Main : 16.0
-
-Main -> Calc : cube(3)
-Calc --> Main : 27.0
-
-Main -> Calc : square_root(9)
-Calc -> Calc : check x >= 0
-Calc --> Main : 3.0
-
-note over Main, Calc
-  square_root(-1) raises ValueError.
-end note
-
-Main -> Calc : cube_root(-8)
-Calc -> Calc : copysign(|-8|^(1/3), -8)
-Calc --> Main : -2.0
-
-Main -> Calc : power(2, 10)
-Calc --> Main : 1024.0
-
-Main -> Calc : logarithm(100)
-Calc -> Calc : check x > 0
-Calc --> Main : 2.0
-
-note over Main, Calc
-  logarithm(0) and logarithm(-1) raise ValueError.
-end note
-
-Main -> Calc : natural_logarithm(2.718...)
-Calc -> Calc : check x > 0
-Calc --> Main : 1.0
-
-note over Main, Calc
-  natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
-end note
-
+deactivate REPL
 deactivate Calc
 
 @enduml
