@@ -1,5 +1,27 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-170-error-logging
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect error logging added in issue-170 — new logging_config module (setup_logging, logger), __main__ calling setup_logging(), and logger.error() calls at all error paths in Calculator, cli, and user_input
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 200.1s | Cost: $0.533709 USD | Turns: 20
+
+## Run: issue-170-error-logging (2026-04-19)
+
+- branch: task/issue-170-error-logging
+- files changed: src/logging_config.py (created), src/calculator.py (modified), src/cli.py (modified), src/user_input.py (modified), src/__main__.py (modified), tests/test_logging.py (created), tests/test_calculator.py (modified), tests/test_cli.py (modified), tests/test_user_input.py (modified)
+- purpose: Add error logging to the calculator — all error paths in calculator, CLI, and user_input now emit ERROR-level log entries via Python's stdlib logging module; logging_config.py provides centralized setup
+- risks: Log file (calculator.log) written to working directory; no sensitive data beyond operands; no behavior change to existing API or exception semantics
+- tests passed: yes — 723 tests (91 new logging tests, 632 existing tests unchanged)
+- worktree/branch: task/issue-170-error-logging
+- PR target: exp2/naive-team
+
+Duration: 446.8s | Cost: $1.352453 USD | Turns: 17
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-167-history
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to include OperationRecord and OperationHistory classes added in issue-167, Calculator._history field, get_history()/clear_history() methods, and history recording (add_record calls) after each successful Calculator operation

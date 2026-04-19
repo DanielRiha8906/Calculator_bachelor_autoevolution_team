@@ -71,6 +71,11 @@ class "cli" <<module>> {
     +run_cli(args: list[str]) : int
 }
 
+class "logging_config" <<module>> {
+    +logger : logging.Logger
+    +setup_logging(log_file: str) : logging.Logger
+}
+
 Calculator "1" *-- "1" OperationHistory : contains
 OperationHistory "1" *-- "*" OperationRecord : stores
 
@@ -79,13 +84,17 @@ Exception <|-- OperandRetryExceeded
 Exception <|-- RetryLimitExceeded
 "__main__" ..> "cli" : dispatches to (argv present)
 "__main__" ..> "user_input" : dispatches to (no argv)
+"__main__" ..> "logging_config" : calls setup_logging()
 "user_input" ..> Calculator : uses
 "user_input" ..> InvalidInputError : raises
 "user_input" ..> OperandRetryExceeded : raises
 "user_input" ..> "input_retry" : imports DEFAULT_MAX_RETRIES
+"user_input" ..> "logging_config" : uses logger
 "input_retry" ..> RetryLimitExceeded : raises
 "input_retry" ..> InputRetryConfig : uses
 "cli" ..> Calculator : uses
+"cli" ..> "logging_config" : uses logger
+Calculator ..> "logging_config" : uses logger
 
 note right of Calculator::_history
   Created in __init__; shared across
@@ -99,57 +108,59 @@ end note
 
 note right of Calculator::divide
   Raises ZeroDivisionError when b == 0.
+  logger.error() is called before raising.
   History is NOT recorded on error.
 end note
 
 note right of Calculator::factorial
   Raises TypeError if n is bool or
   non-integer float. Raises ValueError
-  if n < 0. Accepts float only when it
-  represents an exact integer.
+  if n < 0. logger.error() is called
+  before each raise.
   History recorded only on success.
 end note
 
 note right of Calculator::square
   Returns int for int input, float for
   float input. Raises TypeError for bool
-  or non-numeric input.
+  or non-numeric input; logger.error() on error.
 end note
 
 note right of Calculator::cube
   Returns int for int input, float for
   float input. Raises TypeError for bool
-  or non-numeric input.
+  or non-numeric input; logger.error() on error.
 end note
 
 note right of Calculator::square_root
   Always returns float. Raises TypeError
   for bool or non-numeric. Raises
-  ValueError if x < 0.
+  ValueError if x < 0. logger.error() on error.
 end note
 
 note right of Calculator::cube_root
   Always returns float. Supports negative
   values (sign-preserving via copysign).
-  Raises TypeError for bool or non-numeric.
+  Raises TypeError for bool or non-numeric;
+  logger.error() on error.
 end note
 
 note right of Calculator::power
   Always returns float. Raises TypeError
   if base or exponent is bool or
-  non-numeric.
+  non-numeric. logger.error() on error.
 end note
 
 note right of Calculator::log10
   Always returns float. Raises TypeError
   for bool or non-numeric. Raises
-  ValueError if x <= 0.
+  ValueError if x <= 0. logger.error() on error.
 end note
 
 note right of Calculator::natural_log
   Always returns float. Raises TypeError
   for bool or non-numeric. Raises
-  ValueError if x <= 0.
+  ValueError if x <= 0. logger.error() on error.
 end note
 
 note right of OperationRecord
@@ -184,7 +195,8 @@ end note
 
 note right of "user_input"::parse_number
   Tries int first, then float.
-  Raises InvalidInputError on failure.
+  Raises InvalidInputError on failure;
+  logger.error() is called before raising.
 end note
 
 note right of "user_input"::get_operands
@@ -195,8 +207,8 @@ end note
 
 note right of "user_input"::execute_operation
   Catches ZeroDivisionError, ValueError,
-  and TypeError; returns error string
-  instead of propagating exception.
+  and TypeError; calls logger.error() then
+  returns error string instead of propagating.
 end note
 
 note right of "input_retry"::validate_with_retry
@@ -221,18 +233,38 @@ end note
 note right of "cli"::parse_and_evaluate
   Parses expression with ast.parse
   (eval mode). Never calls eval().
-  Joins argv tokens with spaces first.
+  Calls logger.error() on SyntaxError
+  before re-raising as ValueError.
 end note
 
 note right of "cli"::run_cli
   Returns exit code 0 on success, 1
   on any error. Errors printed to stderr.
+  logger.error() called on each caught
+  ZeroDivisionError, ValueError, TypeError.
 end note
 
 note right of "__main__"::main
-  Dispatches: len(sys.argv) > 1 →
+  Calls setup_logging() first, then
+  dispatches: len(sys.argv) > 1 →
   run_cli(sys.argv[1:]); else →
   run_interactive().
+end note
+
+note right of "logging_config"::setup_logging
+  Configures the "calculator" named logger
+  with a FileHandler (ERROR level, timestamp
+  format). Idempotent — skips setup if
+  handlers already attached. Default log
+  file: calculator.log in working directory.
+end note
+
+note right of "logging_config"::logger
+  Module-level convenience reference:
+  logging.getLogger("calculator").
+  Calculator, cli, and user_input each
+  obtain the same named logger directly
+  via logging.getLogger("calculator").
 end note
 
 @enduml

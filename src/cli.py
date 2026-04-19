@@ -10,9 +10,12 @@ Unary minus is supported (e.g. ``-5 + 2``).
 """
 
 import ast
+import logging
 import sys
 
 from src.calculator import Calculator
+
+logger = logging.getLogger("calculator")
 
 
 def _eval_node(node: ast.expr, calc: Calculator) -> int | float:
@@ -91,6 +94,9 @@ def parse_and_evaluate(expression: str, calc: Calculator) -> int | float:
     try:
         tree = ast.parse(expression, mode="eval")
     except SyntaxError as exc:
+        logger.error(
+            f"parse_and_evaluate: invalid syntax in expression '{expression}'; SyntaxError: {exc}"
+        )
         raise ValueError(f"Invalid expression syntax: {exc}") from exc
 
     return _eval_node(tree.body, calc)
@@ -120,12 +126,15 @@ def run_cli(args: list[str]) -> int:
     try:
         result = parse_and_evaluate(expression, calc)
     except ZeroDivisionError:
+        logger.error(f"cli: division by zero in expression '{expression}'")
         print("Error: Division by zero is not allowed.", file=sys.stderr)
         return 1
     except ValueError as exc:
+        logger.error(f"cli: ValueError in expression '{expression}'; {exc}")
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     except TypeError as exc:
+        logger.error(f"cli: TypeError in expression '{expression}'; {exc}")
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
