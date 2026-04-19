@@ -5,10 +5,17 @@ interactive loop that drives the Calculator through user-supplied commands.
 """
 
 from src.calculator import Calculator
+from src.input_retry import DEFAULT_MAX_RETRIES
+
+MAX_RETRIES: int = DEFAULT_MAX_RETRIES
 
 
 class InvalidInputError(Exception):
     """Raised when user-supplied input cannot be parsed as a valid number."""
+
+
+class OperandRetryExceeded(Exception):
+    """Raised when the user fails to supply a valid operand within MAX_RETRIES attempts."""
 
 
 # Maps operation names to (Calculator method name, number of operands).
@@ -59,26 +66,43 @@ def parse_number(input_str: str) -> int | float:
 def get_operands(operation: str) -> list[int | float]:
     """Prompt the user for the operands required by *operation*.
 
-    The number of operands is determined by ``OPERATIONS``. Each prompt
-    re-tries until a valid number is entered.
+    The number of operands is determined by ``OPERATIONS``.  Each operand is
+    retried up to ``MAX_RETRIES`` times.  If the user fails to supply a valid
+    number within the allowed attempts for any single operand,
+    ``OperandRetryExceeded`` is raised so the caller can return to operation
+    selection.
 
     Args:
         operation: A key present in ``OPERATIONS``.
 
     Returns:
         A list of parsed numeric operands in input order.
+
+    Raises:
+        OperandRetryExceeded: If the user exhausts all retry attempts for any
+            single operand.
     """
     _, operand_count = OPERATIONS[operation]
     operands: list[int | float] = []
     for i in range(operand_count):
         label = f"operand {i + 1}" if operand_count > 1 else "operand"
+        attempt = 0
         while True:
+            attempt += 1
             raw = input(f"  Enter {label}: ")
             try:
                 operands.append(parse_number(raw))
                 break
             except InvalidInputError as exc:
                 print(f"  Error: {exc}")
+                if attempt >= MAX_RETRIES:
+                    print(
+                        "  Too many invalid inputs. Returning to operation selection."
+                    )
+                    raise OperandRetryExceeded(
+                        f"Exceeded {MAX_RETRIES} attempts for {label}."
+                    )
+                print(f"  Invalid input. Attempt {attempt} of {MAX_RETRIES}.")
     return operands
 
 
@@ -138,6 +162,7 @@ def run_interactive() -> None:
         print(f"  {idx:2}. {name}")
     print("  Type 'quit' or 'exit' to leave.\n")
 
+    op_attempt = 0
     while True:
         raw = input("Select operation: ").strip().lower()
 
@@ -146,12 +171,26 @@ def run_interactive() -> None:
             return
 
         if raw not in OPERATIONS:
+            op_attempt += 1
             print(
                 f"  Unknown operation '{raw}'. "
                 "Please choose from the list above or type 'quit'.\n"
+                f"  Invalid input. Attempt {op_attempt} of {MAX_RETRIES}.\n"
             )
+            if op_attempt >= MAX_RETRIES:
+                print(
+                    "  Too many invalid operation selections. Exiting."
+                )
+                return
             continue
 
-        operands = get_operands(raw)
+        # Valid operation entered — reset the operation-selection retry counter.
+        op_attempt = 0
+
+        try:
+            operands = get_operands(raw)
+        except OperandRetryExceeded:
+            continue
+
         result = execute_operation(calc, raw, operands)
         print(f"  Result: {format_result(result)}\n")
