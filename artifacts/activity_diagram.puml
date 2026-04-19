@@ -81,47 +81,68 @@ else (no — interactive mode)
         :Instantiate Calculator;
         :Build operation list from OPERATIONS keys;
         :Display numbered list of available operations;
+        :op_attempts = 0;
 
         repeat
 
             :Prompt "Select operation:";
+            :op_attempts += 1;
 
             if (input is 'quit' or 'exit'?) then (yes)
                 :Print "Bye!";
                 stop
             elseif (input not in OPERATIONS?) then (yes)
-                :Print unknown-operation error;
+                if (op_attempts >= MAX_RETRIES?) then (yes)
+                    :Print max-retries-exceeded error;
+                    stop
+                else (no)
+                    :Print unknown-operation error;
+                endif
             else (valid operation)
+                :op_attempts = 0;
 
                 partition "get_operands(operation)" {
                     :Look up operand_count in OPERATIONS;
+                    :operand_attempts = 0;
                     repeat
                         :Prompt user for next operand;
+                        :operand_attempts += 1;
                         if (parse_number(raw) succeeds?) then (yes)
                             :Append parsed number to operands list;
+                            :operand_attempts = 0;
                         else (InvalidInputError)
-                            :Print error message, retry same operand;
+                            if (operand_attempts >= MAX_RETRIES?) then (yes)
+                                :Raise OperandRetryExceeded;
+                            else (no)
+                                :Print error message, retry same operand;
+                            endif
                         endif
                     repeat while (all operands collected?) is (no)
                     -> yes;
                 }
 
-                partition "execute_operation(calc, operation, operands)" {
-                    :Resolve Calculator method name via OPERATIONS;
-                    :Call method(*operands) on Calculator instance;
-                    if (exception raised?) then (ZeroDivisionError)
-                        :Return "Error: Division by zero is not allowed.";
-                    elseif (ValueError)
-                        :Return "Error: <exception message>";
-                    elseif (TypeError)
-                        :Return "Error: <exception message>";
-                    else (success)
-                        :Return numeric result;
-                    endif
-                }
+                if (OperandRetryExceeded?) then (yes)
+                    :Print retry-exceeded error;
+                else (no)
 
-                :format_result(result) → str;
-                :Print "Result: <formatted_result>";
+                    partition "execute_operation(calc, operation, operands)" {
+                        :Resolve Calculator method name via OPERATIONS;
+                        :Call method(*operands) on Calculator instance;
+                        if (exception raised?) then (ZeroDivisionError)
+                            :Return "Error: Division by zero is not allowed.";
+                        elseif (ValueError)
+                            :Return "Error: <exception message>";
+                        elseif (TypeError)
+                            :Return "Error: <exception message>";
+                        else (success)
+                            :Return numeric result;
+                        endif
+                    }
+
+                    :format_result(result) → str;
+                    :Print "Result: <formatted_result>";
+
+                endif
 
             endif
 
