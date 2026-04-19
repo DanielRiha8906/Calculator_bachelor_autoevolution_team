@@ -1,0 +1,27 @@
+@startuml activity_diagram
+
+start
+
+:Instantiate Calculator;
+
+:Call add(a, b);
+:Return a + b;
+
+:Call subtract(a, b);
+:Return a - b;
+
+:Call multiply(a, b);
+:Return a * b;
+
+:Call divide(a, b);
+
+if (b == 0?) then (yes)
+    :Raise ZeroDivisionError;
+    stop
+else (no)
+    :Return a / b;
+endif
+
+stop
+
+@enduml
