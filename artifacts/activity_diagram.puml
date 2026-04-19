@@ -22,6 +22,21 @@ else (no)
     :Return a / b;
 endif
 
+:Call factorial(n);
+
+if (n is not int?) then (yes)
+    :Raise TypeError;
+    stop
+else (no)
+    if (n < 0?) then (yes)
+        :Raise ValueError;
+        stop
+    else (no)
+        :Compute product of 1..n;
+        :Return result;
+    endif
+endif
+
 stop
 
 @enduml

@@ -21,4 +21,13 @@ else b == 0
     calc --> main : raises ZeroDivisionError
 end
 
+main -> calc : factorial(5)
+alt n is int and n >= 0
+    calc --> main : 120
+else n is not int
+    calc --> main : raises TypeError
+else n < 0
+    calc --> main : raises ValueError
+end
+
 @enduml

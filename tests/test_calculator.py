@@ -258,3 +258,89 @@ def test_divide_with_none_argument():
     calc = Calculator()
     with pytest.raises(TypeError):
         calc.divide(None, 5)
+
+
+# ==================== Factorial Tests ====================
+
+def test_factorial_zero():
+    """Test boundary case: factorial(0) == 1."""
+    calc = Calculator()
+    result = calc.factorial(0)
+    assert result == 1
+
+
+def test_factorial_one():
+    """Test boundary case: factorial(1) == 1."""
+    calc = Calculator()
+    result = calc.factorial(1)
+    assert result == 1
+
+
+def test_factorial_small_integer():
+    """Test normal case: factorial(2) == 2."""
+    calc = Calculator()
+    result = calc.factorial(2)
+    assert result == 2
+
+
+def test_factorial_medium_integer():
+    """Test normal case: factorial(5) == 120."""
+    calc = Calculator()
+    result = calc.factorial(5)
+    assert result == 120
+
+
+def test_factorial_larger_integer():
+    """Test normal case: factorial(10) == 3628800."""
+    calc = Calculator()
+    result = calc.factorial(10)
+    assert result == 3628800
+
+
+def test_factorial_negative_integer():
+    """Test error case: factorial(-1) raises ValueError."""
+    calc = Calculator()
+    with pytest.raises(ValueError):
+        calc.factorial(-1)
+
+
+def test_factorial_negative_five():
+    """Test error case: factorial(-5) raises ValueError."""
+    calc = Calculator()
+    with pytest.raises(ValueError):
+        calc.factorial(-5)
+
+
+def test_factorial_float():
+    """Test error case: factorial(3.5) raises TypeError."""
+    calc = Calculator()
+    with pytest.raises(TypeError):
+        calc.factorial(3.5)
+
+
+def test_factorial_string():
+    """Test error case: factorial("5") raises TypeError."""
+    calc = Calculator()
+    with pytest.raises(TypeError):
+        calc.factorial("5")
+
+
+def test_factorial_none():
+    """Test error case: factorial(None) raises TypeError."""
+    calc = Calculator()
+    with pytest.raises(TypeError):
+        calc.factorial(None)
+
+
+def test_factorial_bool_true():
+    """Test edge case: factorial(True) returns 1 (bool is subclass of int)."""
+    calc = Calculator()
+    result = calc.factorial(True)
+    assert result == 1
+
+
+def test_factorial_bool_false():
+    """Test edge case: factorial(False) returns 1 (bool is subclass of int)."""
+    calc = Calculator()
+    result = calc.factorial(False)
+    assert result == 1

@@ -1,3 +1,29 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-145-factorial
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect factorial method added to Calculator in this branch (factorial with TypeError/ValueError validation).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 45.7s | Cost: $0.180180 USD | Turns: 16
+
+---
+
+## Run: issue-145 — Factorial operation for Calculator
+
+- **Branch:** task/issue-145-factorial
+- **PR target:** exp2/expert-team
+- **PR:** https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/159
+- **Files changed:** src/calculator.py (added factorial method), src/__main__.py (added demo call), tests/test_calculator.py (added 12 factorial tests)
+- **Purpose:** Add factorial as a unary calculator operation with strict input validation (TypeError for non-integers, ValueError for negatives); 0! and 1! return 1.
+- **Risks:** None — purely additive changes; no existing logic modified.
+- **Tests passed:** 47/47 (35 existing + 12 new)
+
+Duration: 171.4s | Cost: $0.429407 USD | Turns: 15
+
+---
+
 ## Run: issue-142 — Comprehensive unit test suite for calculator operations
 
 - **Branch:** task/issue-142-test-suite-expert-team
