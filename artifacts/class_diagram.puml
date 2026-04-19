@@ -83,41 +83,36 @@ package "Interaction Layer" {
     +main(argv: list[str] | None) : None
   }
 
-  class OperandInputWidget {
-    -_label : tk.Label
-    -_entry : tk.Entry
-    +__init__(parent: tk.Widget, label_text: str, row: int) : None
-    +get_value() : float
-    +clear() : None
-    +set_visible(visible: bool) : None
-  }
-
   class CalculatorGUI {
     -_calc : Calculator
-    -_history : OperationHistory
-    -_error_logger : ErrorLogger
-    -_current_mode : Mode
-    -_selected_operation : str | None
+    -_current_display : str
+    -_pending_operator : str | None
+    -_pending_operand : float | None
+    -_decimal_entered : bool
+    -_is_scientific_mode : bool
+    -_result_just_shown : bool
     -_root : tk.Tk
-    -_operation_buttons : list[tk.Button]
-    -_operand_widgets : list[OperandInputWidget]
-    -_result_var : tk.StringVar
-    -_error_var : tk.StringVar
+    -_display_var : tk.StringVar
+    -_mode_btn : tk.Button
+    -_btn_frame : tk.Frame
+    -_sci_frame : tk.Frame
     +__init__() : None
     +run() : None
-    -_create_mode_selector_frame() : None
-    -_create_operation_selector_frame() : None
-    -_create_input_frame() : None
-    -_create_result_frame() : None
-    -_create_history_frame() : None
-    -_on_mode_changed(new_mode: Mode) : None
-    -_on_mode_changed_from_radio() : None
-    -_on_operation_selected(operation: str) : None
-    -_perform_calculation() : None
-    -_update_operation_buttons() : None
-    -_refresh_history_display() : None
-    -_clear_operand_inputs() : None
-    -_show_error(message: str) : None
+    -_build_display() : None
+    -_build_mode_toggle() : None
+    -_build_button_grid() : None
+    -_rebuild_scientific_buttons() : None
+    -_update_display() : None
+    -_format_result(value: float) : str
+    -_on_digit_pressed(digit: int) : None
+    -_on_decimal_pressed() : None
+    -_on_operator_pressed(operator_key: str) : None
+    -_on_unary_pressed(function_key: str) : None
+    -_on_equals_pressed() : None
+    -_on_clear_pressed() : None
+    -_on_negate_pressed() : None
+    -_on_percent_pressed() : None
+    -_on_mode_toggle() : None
   }
 
   class CLI <<module>> {
@@ -173,11 +168,7 @@ Main --> CLI : calls run_cli()
 Main --> CalculatorGUI : creates / calls run() when --gui
 
 CalculatorGUI --> Calculator : uses via dispatch()
-CalculatorGUI --> OperationHistory : creates / records history
-CalculatorGUI --> ErrorLogger : creates / logs errors
-CalculatorGUI --> Mode : uses get_operations_for_mode()
 CalculatorGUI --> InputLoop : calls dispatch()
-CalculatorGUI *-- OperandInputWidget : contains two instances
 CLI --> OPERATIONS : reads operand count
 CLI --> Calculator : creates instance
 CLI --> InputLoop : calls dispatch()

@@ -28,54 +28,76 @@ end note
 User -> Main : sys.argv = ["--gui"]
 Main -> GUI : create CalculatorGUI()
 GUI -> Calculator : create Calculator()
-GUI -> OperationHistory : create OperationHistory() — clears history.txt
-GUI -> ErrorLogger : create ErrorLogger() — opens error.log in append mode
-GUI -> Mode : initialize current_mode = Mode.NORMAL
-GUI -> GUI : _update_operation_buttons() — build Normal mode buttons
+GUI -> GUI : _build_display() — display label shows "0"
+GUI -> GUI : _build_mode_toggle() — "Scientific" toggle button
+GUI -> GUI : _build_button_grid() — Normal rows + hidden sci_frame
 Main -> GUI : gui.run() — enter tkinter mainloop
 
-alt User selects an operation (e.g. "Add")
-  User -> GUI : click "Add (a + b)" button
-  GUI -> GUI : _on_operation_selected("add")
-  GUI -> GUI : show two OperandInputWidget fields
-  GUI -> GUI : enable Calculate button
-end
+alt User performs a binary calculation (5 + 3 = 8)
+  User -> GUI : press digit "5"
+  GUI -> GUI : _on_digit_pressed(5)
+  note right of GUI: _current_display = "5"\n_result_just_shown = False
+  GUI -> GUI : _update_display() — shows "5"
 
-alt User performs a calculation
-  User -> GUI : enter operands and click Calculate
-  GUI -> GUI : _perform_calculation()
-  GUI -> GUI : OperandInputWidget.get_value() for each operand
-  GUI -> InputLoop : dispatch("add", [3.0, 5.0], calc)
-  InputLoop -> Calculator : add(3.0, 5.0)
+  User -> GUI : press operator "+"
+  GUI -> GUI : _on_operator_pressed("add")
+  note right of GUI: _pending_operand = 5.0\n_pending_operator = "add"\n_result_just_shown = True
+
+  User -> GUI : press digit "3"
+  GUI -> GUI : _on_digit_pressed(3)
+  note right of GUI: _result_just_shown=True → reset\n_current_display = "3"
+  GUI -> GUI : _update_display() — shows "3"
+
+  User -> GUI : press "="
+  GUI -> GUI : _on_equals_pressed()
+  GUI -> InputLoop : dispatch("add", [5.0, 3.0], calc)
+  InputLoop -> Calculator : add(5.0, 3.0)
   Calculator --> InputLoop : return 8.0
   InputLoop --> GUI : return 8.0
-  GUI -> GUI : _result_var.set("8.0")
-  GUI -> OperationHistory : record_operation("add", [3.0, 5.0], 8.0)
-  GUI -> GUI : _refresh_history_display()
+  GUI -> GUI : _current_display = "8" (trailing .0 stripped)
+  GUI -> GUI : _pending_operator = None, _result_just_shown = True
+  GUI -> GUI : _update_display() — shows "8"
 end
 
 alt Calculation error (e.g. divide by zero)
-  User -> GUI : enter operands 10, 0 for "divide" and click Calculate
+  User -> GUI : press digits "1", "0", then "÷", then "0", then "="
+  GUI -> GUI : _on_equals_pressed()
   GUI -> InputLoop : dispatch("divide", [10.0, 0.0], calc)
   InputLoop -> Calculator : divide(10.0, 0.0)
   Calculator --> InputLoop : raise ValueError("Division by zero is not allowed")
   InputLoop --> GUI : raise ValueError
-  GUI -> ErrorLogger : log_error(CALCULATION_ERROR, message, context)
-  GUI -> GUI : _show_error("Error: Division by zero is not allowed")
+  GUI -> GUI : _current_display = "Error", reset pending state
+  GUI -> GUI : _update_display() — shows "Error"
 end
 
-alt Invalid input (non-numeric operand)
-  User -> GUI : enter "abc" in operand field and click Calculate
-  GUI -> GUI : OperandInputWidget.get_value() raises ValueError
-  GUI -> ErrorLogger : log_error(INVALID_INPUT, message, context)
-  GUI -> GUI : _show_error("Invalid input: Operand 1 must be a number.")
+alt Unary scientific function (e.g. √9)
+  User -> GUI : press "9"
+  GUI -> GUI : _on_digit_pressed(9) → _current_display = "9"
+  User -> GUI : press "√" (scientific mode must be active)
+  GUI -> GUI : _on_unary_pressed("square_root")
+  GUI -> InputLoop : dispatch("square_root", [9.0], calc)
+  InputLoop -> Calculator : square_root(9.0)
+  Calculator --> InputLoop : return 3.0
+  InputLoop --> GUI : return 3.0
+  GUI -> GUI : _current_display = "3", _result_just_shown = True
+  GUI -> GUI : _update_display() — shows "3"
 end
 
-alt Mode switch
-  User -> GUI : click "Scientific" radio button
-  GUI -> GUI : _on_mode_changed_from_radio()
-  GUI -> Mode : current_mode = Mode.SCIENTIFIC
-  GUI -> GUI : _update_operation_buttons() — rebuild for Scientific mode
+alt Mode toggle (Normal → Scientific)
+  User -> GUI : press "Scientific" toggle button
+  GUI -> GUI : _on_mode_toggle()
+  note right of GUI: _is_scientific_mode = True
+  GUI -> GUI : sci_frame.pack() — show √, x², x³, ∛, n!, ln, log rows
+  GUI -> GUI : mode button label → "Normal"
+  note right of GUI: Pending state (_pending_operator, _pending_operand) preserved
+end
+
+alt Mode toggle (Scientific → Normal)
+  User -> GUI : press "Normal" toggle button
+  GUI -> GUI : _on_mode_toggle()
+  note right of GUI: _is_scientific_mode = False
+  GUI -> GUI : sci_frame.pack_forget() — hide scientific rows
+  GUI -> GUI : mode button label → "Scientific"
 end
 
 == CLI mode (e.g. python -m src add 3 5) ==
