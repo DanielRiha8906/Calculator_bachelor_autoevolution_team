@@ -2,11 +2,11 @@
 
 start
 
-:Instantiate Calculator;
 :Instantiate OperationHistory(history_file="history.txt");
 :history.clear_history();
 :Instantiate ErrorLogger(error_file="error.log");
 :error_logger.clear_errors();
+:Instantiate Calculator;
 
 if (argv empty or ["--repl"]?) then (yes — REPL mode)
 

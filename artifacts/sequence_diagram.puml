@@ -9,9 +9,6 @@ participant "CLIHandler" as CLI
 participant "Calculator" as Calc
 actor "User" as User
 
-Main -> Calc : Calculator()
-activate Calc
-
 Main -> History : OperationHistory()
 activate History
 Main -> History : clear_history()
@@ -27,6 +24,9 @@ note over ErrLog
   Truncates or creates error.log
   at session start for isolation.
 end note
+
+Main -> Calc : Calculator()
+activate Calc
 
 alt REPL mode (argv empty or ["--repl"])
 

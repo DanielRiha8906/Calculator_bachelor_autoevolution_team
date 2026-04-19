@@ -1,4 +1,16 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-183-documentation
+- **Files changed:**
+  - `artifacts/activity_diagram.puml` — corrected initialization order to match `__main__.py`: OperationHistory → ErrorLogger → Calculator (was Calculator → OperationHistory → ErrorLogger)
+  - `artifacts/sequence_diagram.puml` — corrected same initialization order mismatch
+- **Purpose:** Sync PlantUML diagrams with current source; class diagram was accurate; fixed initialization ordering in activity and sequence diagrams to match actual `__main__.py` code
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-183-documentation (2026-04-19)
 
 - **Branch:** task/issue-183-documentation
