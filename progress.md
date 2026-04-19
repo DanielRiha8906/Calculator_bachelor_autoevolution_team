@@ -8,7 +8,7 @@
 - worktree/branch: task/issue-179-modularization-naive-team
 - PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 622.8s | Cost: $1.516451 USD | Turns: 16
 
 ## Run: update-diagrams (2026-04-19)
 
