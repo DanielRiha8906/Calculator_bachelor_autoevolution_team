@@ -134,4 +134,4 @@ Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
 - worktree/branch: task/issue-164-retry-logic
 - PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 453.3s | Cost: $1.005829 USD | Turns: 15
