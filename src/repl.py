@@ -8,6 +8,7 @@ import math
 from typing import TYPE_CHECKING, Optional
 
 from src.exceptions import MaxRetriesExceeded
+from src.error_logger import ErrorLogger
 
 if TYPE_CHECKING:
     from src.history import OperationHistory
@@ -44,11 +45,20 @@ class REPLInterface:
         history: An optional ``OperationHistory`` instance used to record each
             completed operation.  When ``None``, history recording and display
             are disabled.
+        error_logger: An optional ``ErrorLogger`` instance used to record
+            errors encountered during the session.  When ``None``, error
+            logging is disabled.
     """
 
-    def __init__(self, calculator, history: Optional["OperationHistory"] = None) -> None:
+    def __init__(
+        self,
+        calculator,
+        history: Optional["OperationHistory"] = None,
+        error_logger: Optional[ErrorLogger] = None,
+    ) -> None:
         self.calculator = calculator
         self.history = history
+        self.error_logger = error_logger
         self.last_result: Optional[float] = None
 
     def run(self) -> None:
@@ -115,6 +125,12 @@ class REPLInterface:
                 result = self._execute(operation, operands)
             except (ValueError, ZeroDivisionError, TypeError, OverflowError) as exc:
                 print(f"Error: {exc}")
+                if self.error_logger is not None:
+                    operand_str = ", ".join(str(o) for o in operands)
+                    user_input = f"{operation}({operand_str})"
+                    self.error_logger.log_error(
+                        ErrorLogger.CALCULATION_ERROR, user_input, exc
+                    )
                 continue
 
             self.display_result(operation, operands, result)

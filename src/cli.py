@@ -7,6 +7,8 @@ dispatches to the Calculator, and returns the raw numeric result.
 import math
 from typing import TYPE_CHECKING, Any
 
+from src.error_logger import ErrorLogger
+
 if TYPE_CHECKING:
     from src.history import OperationHistory
 
@@ -34,11 +36,20 @@ class CLIHandler:
         calculator: A Calculator instance whose methods will be called.
         history: An optional ``OperationHistory`` instance used to record each
             completed operation.  When ``None``, history recording is disabled.
+        error_logger: An optional ``ErrorLogger`` instance used to record
+            errors encountered during execution.  When ``None``, error
+            logging is disabled.
     """
 
-    def __init__(self, calculator: Any, history: "OperationHistory | None" = None) -> None:
+    def __init__(
+        self,
+        calculator: Any,
+        history: "OperationHistory | None" = None,
+        error_logger: ErrorLogger | None = None,
+    ) -> None:
         self.calculator = calculator
         self.history = history
+        self.error_logger = error_logger
 
     def get_operation_mapping(self) -> dict[str, str]:
         """Return a mapping from operation names and symbols to Calculator method names.
@@ -128,6 +139,13 @@ class CLIHandler:
         Calculator.  The "logarithm" operation is treated as a two-argument
         logarithm: log(x, base), matching the REPL behaviour.
 
+        Errors are logged via ``self.error_logger`` (if set) before being
+        re-raised:
+
+        - ``UNSUPPORTED_OPERATION`` when the operation name is not recognised.
+        - ``INVALID_INPUT`` when operand count or format is wrong.
+        - ``CALCULATION_ERROR`` when the calculator raises a numeric error.
+
         Args:
             args: A list of strings in the form [operation, operand, ...].
 
@@ -140,18 +158,41 @@ class CLIHandler:
             ZeroDivisionError: If the calculator raises a division-by-zero error.
             TypeError: Propagated from Calculator (e.g. factorial of a float).
         """
-        method_name, operands = self.parse_args(args)
+        raw_op = args[0] if args else ""
+        user_input = " ".join(args)
 
-        if method_name == "logarithm":
-            x, base = operands
-            if base <= 0 or base == 1:
-                raise ValueError("logarithm base must be positive and not equal to 1")
-            if x <= 0:
-                raise ValueError("logarithm() not defined for non-positive values")
-            result = math.log(x, base)
-        else:
-            method = getattr(self.calculator, method_name)
-            result = method(*operands)
+        try:
+            method_name, operands = self.parse_args(args)
+        except ValueError as exc:
+            if self.error_logger is not None:
+                error_message = str(exc)
+                if "Unknown operation" in error_message:
+                    self.error_logger.log_error(
+                        ErrorLogger.UNSUPPORTED_OPERATION, user_input, exc
+                    )
+                else:
+                    self.error_logger.log_error(
+                        ErrorLogger.INVALID_INPUT, user_input, exc
+                    )
+            raise
+
+        try:
+            if method_name == "logarithm":
+                x, base = operands
+                if base <= 0 or base == 1:
+                    raise ValueError("logarithm base must be positive and not equal to 1")
+                if x <= 0:
+                    raise ValueError("logarithm() not defined for non-positive values")
+                result = math.log(x, base)
+            else:
+                method = getattr(self.calculator, method_name)
+                result = method(*operands)
+        except (ValueError, ZeroDivisionError, TypeError) as exc:
+            if self.error_logger is not None:
+                self.error_logger.log_error(
+                    ErrorLogger.CALCULATION_ERROR, user_input, exc
+                )
+            raise
 
         if self.history is not None:
             operand_str = ", ".join(str(o) for o in operands)

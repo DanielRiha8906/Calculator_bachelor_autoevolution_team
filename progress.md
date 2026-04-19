@@ -1,6 +1,38 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-171-error-logging
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `ErrorLogger` class with `error_file`, `INVALID_INPUT`, `UNSUPPORTED_OPERATION`, `CALCULATION_ERROR` constants, and `clear_errors`, `log_error`, `get_errors` methods; updated `REPLInterface` and `CLIHandler` to include `error_logger: ErrorLogger | None` attribute and constructor param; added `Main ..> ErrorLogger`, `REPLInterface o-- ErrorLogger`, and `CLIHandler o-- ErrorLogger` relationships; updated `Main` note to describe ErrorLogger instantiation
+  - `artifacts/activity_diagram.puml` — added `ErrorLogger` instantiation and `clear_errors()` at session start; added `error_logger.log_error(CALCULATION_ERROR, ...)` in REPL exception handling path; added `error_logger.log_error(UNSUPPORTED_OPERATION, ...)` and `error_logger.log_error(INVALID_INPUT, ...)` in CLI parse error paths; added `error_logger.log_error(CALCULATION_ERROR, ...)` in CLI calculation error path; updated all constructor calls to include `error_logger`
+  - `artifacts/sequence_diagram.puml` — added `ErrorLogger` participant; added `ErrorLogger()` and `clear_errors()` calls from Main; added `log_error(CALCULATION_ERROR, ...)` call from REPL on exception; added `log_error(UNSUPPORTED_OPERATION, ...)` and `log_error(INVALID_INPUT, ...)` calls from CLI on parse errors; added `log_error(CALCULATION_ERROR, ...)` from CLI on calculation errors; updated `CLIHandler` and `REPLInterface` constructor signatures to include `error_logger`
+- **Purpose:** Sync PlantUML diagrams with current source after issue-171 added `ErrorLogger` and wired error logging into REPL and CLI interfaces
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 190.8s | Cost: $0.430244 USD | Turns: 15
+
+## Run: issue-171-error-logging (2026-04-19)
+
+- **Branch:** task/issue-171-error-logging
+- **PR:** https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/206 (targets exp2/structured-team)
+- **Files changed:**
+  - `src/error_logger.py` — new module, `ErrorLogger` class with `clear_errors`, `log_error`, `get_errors`; three error type constants
+  - `src/__init__.py` — exported `ErrorLogger`
+  - `src/__main__.py` — initialize `ErrorLogger`, pass to REPL and CLI
+  - `src/repl.py` — accept optional `error_logger` param; log `CALCULATION_ERROR` at exception points
+  - `src/cli.py` — accept optional `error_logger` param; log `UNSUPPORTED_OPERATION`, `INVALID_INPUT`, `CALCULATION_ERROR` at exception points
+  - `tests/test_error_logger.py` — 57 new tests for ErrorLogger unit and integration
+  - `tests/test_repl.py` — 6 new integration tests; fixtures updated
+  - `tests/test_cli.py` — 9 new integration tests; fixtures updated
+- **Purpose:** Add dedicated error logging separate from operation history (issue #171)
+- **Risks:** `error.log` written to cwd; no rotation (out of scope). Backward compatible via optional params.
+- **Tests:** 585 passed, 0 failed, 0 skipped
+
+Duration: 511.4s | Cost: $1.278239 USD | Turns: 19
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-168-history
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `OperationHistory` class with `history_file`, `clear_history`, `record_operation`, and `display_history`; updated `REPLInterface` and `CLIHandler` to include `history: OperationHistory | None` attribute and constructor param; added `Main ..> OperationHistory`, `REPLInterface o-- OperationHistory`, and `CLIHandler o-- OperationHistory` relationships; updated `Main` note to describe history instantiation
