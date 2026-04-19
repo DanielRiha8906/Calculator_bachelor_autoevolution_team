@@ -199,4 +199,4 @@ Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
 - **Tests passed:** 513/513 (52 new history tests, 461 existing tests all still pass)
 - **PR target:** exp2/structured-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 402.4s | Cost: $1.051931 USD | Turns: 14
