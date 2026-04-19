@@ -800,7 +800,7 @@ class TestMainFunction:
         from src.__main__ import main
         with patch("src.repl.REPLInterface.run") as mock_run:
             with patch("src.__main__.Calculator"):
-                main()
+                main(argv=[])
         mock_run.assert_called_once()
 
     def test_main_catches_eof_error(self):
@@ -808,20 +808,20 @@ class TestMainFunction:
         from src.__main__ import main
         with patch("src.repl.REPLInterface.run", side_effect=EOFError):
             # Should not raise
-            main()
+            main(argv=[])
 
     def test_main_catches_keyboard_interrupt(self):
         """Test that main() catches KeyboardInterrupt from repl.run()."""
         from src.__main__ import main
         with patch("src.repl.REPLInterface.run", side_effect=KeyboardInterrupt):
             # Should not raise
-            main()
+            main(argv=[])
 
     def test_main_prints_closed_message_on_eof(self, capsys):
         """Test that main() prints closed message on EOFError."""
         from src.__main__ import main
         with patch("src.repl.REPLInterface.run", side_effect=EOFError):
-            main()
+            main(argv=[])
         captured = capsys.readouterr()
         assert "Calculator closed." in captured.out
 

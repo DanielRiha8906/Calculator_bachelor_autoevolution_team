@@ -75,12 +75,52 @@ note right of REPLInterface::_execute
   for the 2-argument logarithm case.
 end note
 
-class "__main__" as Main {
-    +main() : void
+class CLIHandler {
+    -calculator : Calculator
+    +__init__(calculator: Calculator)
+    +get_operation_mapping() : dict
+    +parse_args(args: list[str]) : tuple[str, list[float]]
+    +execute(args: list[str]) : float
 }
 
+note right of CLIHandler::get_operation_mapping
+  Maps names and symbols to
+  Calculator method names.
+  Supports aliases: +, -, *, /,
+  ^, sqrt, cbrt, log, ln.
+end note
+
+note right of CLIHandler::parse_args
+  Validates operation, expected
+  operand count (1 for unary,
+  2 for binary), and converts
+  operand strings to float.
+  Raises ValueError on error.
+end note
+
+note right of CLIHandler::execute
+  Dispatches to Calculator methods.
+  "logarithm" uses math.log(x, base)
+  directly to support arbitrary bases.
+  Raises ValueError, ZeroDivisionError,
+  or TypeError on error.
+end note
+
+class "__main__" as Main {
+    +main(argv: list[str] | None) : void
+}
+
+note right of Main::main
+  REPL mode: argv is empty or ["--repl"].
+  CLI mode: argv has operation + operands.
+  Exit codes: 0=ok, 1=usage, 2=unknown op,
+  3=invalid operands, 4=operation error.
+end note
+
 Main ..> Calculator : instantiates
-Main ..> REPLInterface : instantiates
+Main ..> REPLInterface : instantiates (REPL mode)
+Main ..> CLIHandler : instantiates (CLI mode)
 REPLInterface o-- Calculator : uses >
+CLIHandler o-- Calculator : uses >
 
 @enduml

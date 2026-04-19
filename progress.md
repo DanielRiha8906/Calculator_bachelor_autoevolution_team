@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-162-cli-mode
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CLIHandler` class with attributes and methods; added notes for `get_operation_mapping`, `parse_args`, and `execute`; added `Main ..> CLIHandler` and `CLIHandler o-- Calculator` relationships; updated `Main` note to describe both REPL and CLI modes with exit codes
+  - `artifacts/activity_diagram.puml` — restructured top-level to branch between REPL mode and CLI mode; CLI branch shows arg validation (exit 1/2/3), logarithm special-case dispatch, Calculator dispatch, result print, and exit codes
+  - `artifacts/sequence_diagram.puml` — added `CLIHandler` participant; wrapped existing REPL flow in alt block; added CLI mode alt block showing parse_args validation, logarithm special case, Calculator dispatch, stdout result, and stderr error exits
+- **Purpose:** Sync PlantUML diagrams with current source after issue-162 added `CLIHandler` and dual-mode dispatch in `__main__`
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 136.1s | Cost: $0.358693 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-150-user-input
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `REPLInterface` class with all attributes and methods; added relationship `REPLInterface o-- Calculator`; added notes for `OPERATIONS`, `last_result`, and `_execute`
@@ -138,3 +151,14 @@ Duration: 40.7s | Cost: $0.145565 USD | Turns: 11
 - **Tests passed:** N/A (no code changes)
 
 Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
+
+## Run: issue-162-cli-mode (2026-04-19)
+
+- **Branch:** task/issue-162-cli-mode
+- **Files changed:** src/cli.py (created), src/__main__.py (modified), tests/test_cli.py (created), tests/test_repl.py (fixed 4 tests)
+- **Purpose:** Add CLI mode so the calculator can be executed from bash using positional arguments (operation + operands); print result to stdout
+- **Risks:** None significant — REPL backward compatibility maintained; new src/cli.py is additive; __main__.py dispatches on argv length
+- **Tests passed:** 397/397 (126 new CLI tests, 4 fixed REPL main tests, 267 unchanged)
+- **PR target:** exp2/structured-team
+
+Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
