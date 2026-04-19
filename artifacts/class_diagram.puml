@@ -206,8 +206,10 @@ end note
 
 note right of Calculator::_registry
   Created in __init__; populated by
-  register_basic_operations(). Provides
-  dynamic operation lookup by name string.
+  register_basic_operations() and
+  register_scientific_operations() (stub).
+  Provides dynamic operation lookup by
+  name string.
 end note
 
 note right of Calculator::get_history

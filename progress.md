@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-182-documentation
+- files changed: artifacts/class_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect that Calculator.__init__ calls both register_basic_operations() and register_scientific_operations() (stub); diagrams were otherwise accurate for the current src/ state
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-182-documentation (2026-04-19)
 
 - branch: task/issue-182-documentation

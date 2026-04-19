@@ -35,6 +35,7 @@ alt sys.argv has arguments (CLI mode)
     Calc -> Registry : <<create>>
     activate Registry
     Calc -> Registry : register_basic_operations(registry)\n[Add, Subtract, Multiply, Divide, Power,\nFactorial, Square, Cube, SquareRoot,\nCubeRoot, Log10, NaturalLog registered]
+    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
     CLI -> CLI : parse_and_evaluate(expression, calc)
 
     alt SyntaxError during ast.parse
@@ -120,6 +121,7 @@ else no arguments (interactive mode)
     Calc -> Registry : <<create>>
     activate Registry
     Calc -> Registry : register_basic_operations(registry)\n[12 operations registered]
+    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
     note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
     UI -> User : display numbered operation list
 
