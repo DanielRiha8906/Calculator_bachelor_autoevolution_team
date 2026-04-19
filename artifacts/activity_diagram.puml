@@ -7,14 +7,14 @@ start
 
 if (sys.argv has arguments?) then (yes — CLI mode)
 
-    partition "run_cli(args)" {
+    partition "presentation.cli.run_cli(args)" {
         if (args is empty?) then (yes)
             :Print usage error to stderr;
             :Return exit code 1;
             stop
         else (no)
             :Join args with spaces → expression string;
-            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory);
+            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
 
             partition "parse_and_evaluate(expression, calc)" {
                 :Strip expression;
@@ -88,8 +88,8 @@ if (sys.argv has arguments?) then (yes — CLI mode)
 
 else (no — interactive mode)
 
-    partition "run_interactive()" {
-        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory);
+    partition "presentation.interactive.run_interactive()" {
+        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
         :Build operation list from OPERATIONS keys;
         :Display numbered list of available operations;
         :op_attempts = 0;

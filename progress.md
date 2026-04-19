@@ -1,5 +1,27 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-179-modularization-naive-team
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect modularization from issue-179 — new operations/ package (Operation ABC, OperationRegistry, 12 concrete operation classes, register_basic_operations, register_scientific_operations stub), new presentation/ package (presentation.cli, presentation.interactive), Calculator._registry field, and backward-compat re-export shims for src/cli.py and src/user_input.py
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 215.8s | Cost: $0.569716 USD | Turns: 15
+
+## Run: issue-179-modularization-naive-team (2026-04-19)
+
+- branch: task/issue-179-modularization-naive-team
+- files changed: src/operations/__init__.py (created), src/operations/base.py (created), src/operations/basic.py (created), src/operations/scientific.py (created), src/presentation/__init__.py (created), src/presentation/cli.py (created), src/presentation/interactive.py (created), src/logic/state.py (modified — registry init), src/cli.py (re-export), src/user_input.py (re-export), src/__init__.py (added OperationRegistry export), src/__main__.py (updated imports), tests/test_operations_base.py (created), tests/test_operations_basic.py (created), tests/test_cli.py (added compat tests), tests/test_user_input.py (added compat tests), tests/test_logic_separation.py (added registry tests)
+- purpose: Modularize calculator into operations, logic, and presentation layers; add OperationRegistry extension point for future scientific mode
+- risks: Backward-compat re-exports add dual import paths; scientific.py is a stub with no implementation — future implementer must populate it
+- tests passed: yes — 1024 tests (129 new + 895 existing)
+- worktree/branch: task/issue-179-modularization-naive-team
+- PR target: exp2/naive-team
+
+Duration: 622.8s | Cost: $1.516451 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-173-logic-separation
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to reflect logic separation — new ArithmeticEngine class (src/logic/core.py) for pure stateless arithmetic, Calculator (src/logic/state.py) now delegates to ArithmeticEngine then records in OperationHistory, src/calculator.py is a backward-compat re-export shim

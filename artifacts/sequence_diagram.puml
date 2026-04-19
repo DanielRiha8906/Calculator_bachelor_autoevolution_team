@@ -3,10 +3,11 @@
 actor User
 participant "__main__" as Main
 participant "logging_config" as LogConf
-participant "cli" as CLI
-participant "user_input" as UI
+participant "presentation.cli" as CLI
+participant "presentation.interactive" as UI
 participant "input_retry" as IR
 participant "Calculator" as Calc
+participant "OperationRegistry" as Registry
 participant "ArithmeticEngine" as Engine
 participant "OperationHistory" as Hist
 participant "math" as Math
@@ -31,6 +32,9 @@ alt sys.argv has arguments (CLI mode)
     activate Engine
     Calc -> Hist : <<create>>
     activate Hist
+    Calc -> Registry : <<create>>
+    activate Registry
+    Calc -> Registry : register_basic_operations(registry)\n[Add, Subtract, Multiply, Divide, Power,\nFactorial, Square, Cube, SquareRoot,\nCubeRoot, Log10, NaturalLog registered]
     CLI -> CLI : parse_and_evaluate(expression, calc)
 
     alt SyntaxError during ast.parse
@@ -100,6 +104,7 @@ alt sys.argv has arguments (CLI mode)
     CLI --> User : result (stdout)
     CLI --> Main : exit code 0
     deactivate Hist
+    deactivate Registry
     deactivate Engine
     deactivate Calc
 
@@ -112,6 +117,9 @@ else no arguments (interactive mode)
     activate Engine
     Calc -> Hist : <<create>>
     activate Hist
+    Calc -> Registry : <<create>>
+    activate Registry
+    Calc -> Registry : register_basic_operations(registry)\n[12 operations registered]
     note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
     UI -> User : display numbered operation list
 
@@ -264,6 +272,7 @@ else no arguments (interactive mode)
     end
 
     deactivate Hist
+    deactivate Registry
     deactivate Engine
     deactivate Calc
 
@@ -275,8 +284,18 @@ note over IR
   - RetryLimitExceeded exception
   - InputRetryConfig dataclass
   - validate_with_retry() generic helper
-  user_input imports DEFAULT_MAX_RETRIES
+  presentation.interactive imports DEFAULT_MAX_RETRIES
   and enforces limits directly in its loops.
+end note
+
+note over Registry
+  OperationRegistry (src/operations/base.py)
+  maps operation name strings to Operation
+  instances. Populated once in Calculator.__init__
+  via register_basic_operations() from
+  src/operations/basic.py. Supports future
+  extension via register_scientific_operations()
+  (src/operations/scientific.py — stub).
 end note
 
 note over Hist
@@ -299,9 +318,10 @@ note over Engine
 end note
 
 note over LogConf
-  All modules (ArithmeticEngine, cli, user_input)
-  obtain the same "calculator" named logger
-  via logging.getLogger("calculator").
+  All modules (ArithmeticEngine, presentation.cli,
+  presentation.interactive) obtain the same
+  "calculator" named logger via
+  logging.getLogger("calculator").
   All error paths emit logger.error() before
   raising or returning an error string.
   Log destination: calculator.log (ERROR+).
