@@ -6,7 +6,7 @@
 - risks: None — additive change only, no existing methods modified
 - tests passed: 164/164 new tests, 298/298 total suite
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 269.9s | Cost: $0.718418 USD | Turns: 12
 
 ## Run: issue-143-factorial-naive-team
 
