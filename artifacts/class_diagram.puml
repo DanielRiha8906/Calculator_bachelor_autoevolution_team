@@ -5,11 +5,20 @@ class Calculator {
     +subtract(a, b) : float
     +multiply(a, b) : float
     +divide(a, b) : float
+    +factorial(n: int) : int
 }
 
 note right of Calculator::divide
   Raises ZeroDivisionError
   when b == 0
+end note
+
+note right of Calculator::factorial
+  Raises TypeError if n is bool
+  or non-integer float.
+  Raises ValueError if n < 0.
+  Accepts float only when it
+  represents an exact integer.
 end note
 
 @enduml

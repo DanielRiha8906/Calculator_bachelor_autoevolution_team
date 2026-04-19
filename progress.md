@@ -52,3 +52,13 @@ Duration: 45.7s | Cost: $0.159431 USD | Turns: 12
 - tests passed: N/A
 
 Duration: 31.8s | Cost: $0.146748 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-143-factorial
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include the factorial method added in issue-143
+- risks: None — diagram-only additions, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

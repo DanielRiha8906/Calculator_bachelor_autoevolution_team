@@ -21,4 +21,20 @@ else divisor == 0
     Calc --> Main : ZeroDivisionError
 end
 
+Main -> Calc : factorial(5)
+alt n is bool
+    Calc --> Main : TypeError
+else n is float and not integer
+    Calc --> Main : TypeError
+else n is not int
+    Calc --> Main : TypeError
+else n < 0
+    Calc --> Main : ValueError
+else valid n >= 0
+    Calc --> Main : 120
+end
+
+Main -> Calc : factorial(0)
+Calc --> Main : 1
+
 @enduml
