@@ -44,6 +44,9 @@ jobs:
       id-token: write
       actions: read
 
+    outputs:
+      task_branch: ${{ steps.detect-branch.outputs.task_branch }}
+
     steps:
       - name: Checkout experiment branch
         uses: actions/checkout@v4
@@ -85,9 +88,9 @@ jobs:
             - github-task-analyst: pass the issue number, title, and body only. Do NOT tell it to read source files or explore the repo.
             - system-architect: pass the analyst's requirements brief only.
             - python-code-implementer: pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/ — do not summarize, paraphrase, or delegate those steps. The implementer must receive zero test-related instructions. Tests are exclusively the pytest-edge-tester's responsibility.
-            - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.                                                        
+            - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
 
-            Constraints:                                                                                                                            
+            Constraints:
             - Never push directly to main
             - Follow CLAUDE.md strictly
             - Do not modify workflow or governance files unless explicitly required by the issue
@@ -120,6 +123,18 @@ jobs:
           echo "| Turns | $TURNS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Duration | ${DURATION_S}s |" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Detect task branch
+        id: detect-branch
+        if: always()
+        run: |
+          git fetch --all --quiet
+          TASK_BRANCH=$(git branch -r | grep -E "origin/task/issue-${{ inputs.issue_number }}[^0-9]" | head -1 | tr -d ' ')
+          if [ -z "$TASK_BRANCH" ]; then
+            TASK_BRANCH=$(git branch -r | grep "origin/task/issue-${{ inputs.issue_number }}-" | head -1 | tr -d ' ')
+          fi
+          LOCAL_BRANCH="${TASK_BRANCH#origin/}"
+          echo "task_branch=$LOCAL_BRANCH" >> "$GITHUB_OUTPUT"
+
       - name: Patch progress.md with actual cost
         if: always()
         run: |
@@ -139,18 +154,13 @@ jobs:
             COST_FMT="$COST"
           fi
 
-          git fetch --all --quiet
-          TASK_BRANCH=$(git branch -r | grep -E "origin/task/issue-${{ inputs.issue_number }}[^0-9]" | head -1 | tr -d ' ')
-          if [ -z "$TASK_BRANCH" ]; then
-            TASK_BRANCH=$(git branch -r | grep "origin/task/issue-${{ inputs.issue_number }}-" | head -1 | tr -d ' ')
-          fi
-          if [ -z "$TASK_BRANCH" ]; then
+          LOCAL_BRANCH="${{ steps.detect-branch.outputs.task_branch }}"
+          if [ -z "$LOCAL_BRANCH" ]; then
             echo "No task branch found for issue ${{ inputs.issue_number }}, skipping."
             exit 0
           fi
 
-          LOCAL_BRANCH="${TASK_BRANCH#origin/}"
-          git checkout -b "$LOCAL_BRANCH" "$TASK_BRANCH" 2>/dev/null || git checkout "$LOCAL_BRANCH"
+          git checkout -b "$LOCAL_BRANCH" "origin/$LOCAL_BRANCH" 2>/dev/null || git checkout "$LOCAL_BRANCH"
 
           if [ ! -f "progress.md" ] || ! grep -q "PENDING" progress.md; then
             echo "No PENDING placeholder in progress.md, skipping."
@@ -171,3 +181,90 @@ jobs:
           git add progress.md
           git commit -m "chore: update progress.md with actual workflow cost"
           git push origin "$LOCAL_BRANCH"
+
+  update-diagrams:
+    needs: claude-implement
+    if: ${{ needs.claude-implement.outputs.task_branch != '' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout task branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.claude-implement.outputs.task_branch }}
+          fetch-depth: 1
+
+      - name: Run Claude Code for diagram update
+        id: run-claude-diagrams
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.anthropic_api_key }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          claude_args: "--max-turns 20"
+          prompt: |
+            You are a system architect maintaining PlantUML diagrams for this project.
+
+            Your task: read the current source code in `src/` and create or update the three required diagram files in `artifacts/`:
+            - `artifacts/class_diagram.puml` — PlantUML class diagram covering all core classes and their relationships
+            - `artifacts/activity_diagram.puml` — PlantUML activity diagram showing the main calculation/execution flow
+            - `artifacts/sequence_diagram.puml` — PlantUML sequence diagram showing key interactions between components
+
+            Rules:
+            - All diagrams must be valid PlantUML (start with `@startuml`, end with `@enduml`)
+            - Create the `artifacts/` directory if it does not exist
+            - Base diagrams on the actual current state of `src/` — read the files first
+            - If a diagram file already exists, update it to reflect any changes; do not delete content that is still accurate
+            - After updating all three diagram files, append a new section to `progress.md` recording this diagram update run.
+              Include a line with exactly this text (do not estimate or fill in values):
+              Duration: PENDING | Cost: PENDING | Turns: PENDING
+              The workflow will replace PENDING with real values after this run completes.
+            - Commit all changes (diagrams + progress.md) with message "chore: update PlantUML diagrams" and push to the current branch
+
+      - name: Patch progress.md with diagram run cost
+        if: always()
+        run: |
+          EXEC_FILE="${{ steps.run-claude-diagrams.outputs.execution_file }}"
+          if [ -z "$EXEC_FILE" ] || [ ! -f "$EXEC_FILE" ]; then
+            echo "No execution file found, skipping diagram cost patch."
+            exit 0
+          fi
+          RESULT=$(jq '.[] | select(.type == "result")' "$EXEC_FILE")
+          COST=$(echo "$RESULT" | jq -r '.total_cost_usd // "N/A"')
+          TURNS=$(echo "$RESULT" | jq -r '.num_turns // "N/A"')
+          DURATION=$(echo "$RESULT" | jq -r '.duration_ms // 0')
+          DURATION_S=$(echo "scale=1; $DURATION / 1000" | bc)
+          if [ "$COST" != "N/A" ]; then
+            COST_FMT=$(printf "%.6f" "$COST" 2>/dev/null || echo "$COST")
+          else
+            COST_FMT="$COST"
+          fi
+
+          TASK_BRANCH="${{ needs.claude-implement.outputs.task_branch }}"
+          git fetch --all --quiet
+          git checkout -b "$TASK_BRANCH" "origin/$TASK_BRANCH" 2>/dev/null || git checkout "$TASK_BRANCH"
+          git pull origin "$TASK_BRANCH" --ff-only 2>/dev/null || true
+
+          if [ ! -f "progress.md" ] || ! grep -q "PENDING" progress.md; then
+            echo "No PENDING placeholder in progress.md, skipping."
+            exit 0
+          fi
+
+          export ACTUAL_LINE="Duration: ${DURATION_S}s | Cost: \$${COST_FMT} USD | Turns: ${TURNS}"
+          python3 - <<'PYEOF'
+          import os
+          content = open('progress.md').read()
+          actual = os.environ['ACTUAL_LINE']
+          new = content.replace('Duration: PENDING | Cost: PENDING | Turns: PENDING', actual, 1)
+          open('progress.md', 'w').write(new)
+          PYEOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add progress.md
+          git commit -m "chore: update progress.md with diagram run cost" || echo "Nothing to commit"
+          git push origin "$TASK_BRANCH"

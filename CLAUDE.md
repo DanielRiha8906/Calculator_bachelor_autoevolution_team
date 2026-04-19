@@ -35,7 +35,6 @@ These rules exist because the subject of this project is code that modifies itse
 
 ## Testing
 
-- Run tests before and after every non-trivial change: `python -m pytest`
 - All self-modification outputs (generated code, patches) must have a corresponding test asserting the output is syntactically valid Python before it is written to disk.
 - Tests live alongside source code; do not delete tests to make a failing suite pass.
 - Coverage is not the goal — correctness of the self-evolution loop is. Prioritize integration tests over unit tests for the core mutation/patch pipeline.
@@ -179,28 +178,20 @@ Passing the full architect plan to the implementer unfiltered is a pipeline viol
 
 Before any commit, append a run summary to `progress.md` including:
 
-Before any commit, append a run summary to `progress.md` including:
-
 - files changed
 - purpose of the change
 - risks
 - whether all tests passed
 - current branch/worktree name
 - intended merge or PR target
-- cost and duration, written as a single plain-text line with no markdown formatting:
-    Duration: PENDING | Cost: PENDING | Turns: PENDING
-  (the workflow will replace PENDING with real values after the run completes)
 
 
 ---
 
 ## Artifacts
 
-- Diagrams should be written in plant uml language and should be placed in folder 'artifacts/'
-- Development should be logged using these diagrams:
-    - Class diagram files for core classes
-    - Activity diagram
-    - Sequence Diagram
+- PlantUML diagrams are stored in `artifacts/`: `class_diagram.puml`, `activity_diagram.puml`, and `sequence_diagram.puml`.
+- **Do NOT create or update diagrams during the main implementation run.** Diagram updates are handled automatically by the `update-diagrams` workflow job that runs after each implementation. Do not touch `artifacts/` unless the task explicitly requires it.
 
 
 ---
