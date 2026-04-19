@@ -16,7 +16,7 @@
 - **Risks:** `error.log` written to cwd; no rotation (out of scope). Backward compatible via optional params.
 - **Tests:** 585 passed, 0 failed, 0 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 511.4s | Cost: $1.278239 USD | Turns: 19
 
 ## Run: update-diagrams (2026-04-19)
 
