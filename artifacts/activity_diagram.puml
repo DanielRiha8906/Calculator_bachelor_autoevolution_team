@@ -3,35 +3,69 @@
 start
 
 :Instantiate Calculator;
-:get_operation_registry(calculator);
-:Print welcome message;
 
-:display_menu(registry);
-:get_operation_choice(registry);
+if (Mode?) then (interactive — via __main__)
 
-while (choice is not None?) is (yes)
-
-    :Unpack (method, arity) from choice;
-    :get_operands(arity);
-
-    if (method is factorial?) then (yes)
-        :Convert whole-valued float operands to int;
-    endif
-
-    :method(*operands);
-
-    if (Exception raised?) then (yes)
-        :Print error message\n(TypeError / ValueError / ZeroDivisionError);
-    else (no)
-        :Print "Result: {result}";
-    endif
-
+    :get_operation_registry(calculator);
+    :Print welcome message;
     :display_menu(registry);
     :get_operation_choice(registry);
 
-endwhile (no — user quit)
+    while (choice is not None?) is (yes)
 
-:Print "Goodbye.";
+        :Unpack (method, arity) from choice;
+        :get_operands(arity);
+
+        if (method is factorial?) then (yes)
+            :Convert whole-valued float operands to int;
+        endif
+
+        :method(*operands);
+
+        if (Exception raised?) then (yes)
+            :Print error message\n(TypeError / ValueError / ZeroDivisionError);
+        else (no)
+            :Print "Result: {result}";
+        endif
+
+        :display_menu(registry);
+        :get_operation_choice(registry);
+
+    endwhile (no — user quit)
+
+    :Print "Goodbye.";
+
+else (CLI — via execute_cli)
+
+    :parse_arguments(sys.argv);
+    :get_operation_registry(calculator);
+
+    :Look up operation_name in registry;
+    if (operation found?) then (no)
+        :Print error to stderr;
+        :Return exit code 1;
+        stop
+    endif
+
+    :Validate operand count matches arity;
+    if (arity mismatch?) then (yes)
+        :Print error to stderr;
+        :Return exit code 1;
+        stop
+    endif
+
+    :convert_operand(value) for each operand;
+    :method(*operands);
+
+    if (Exception raised?) then (yes)
+        :Print error to stderr;
+        :Return exit code 1;
+    else (no)
+        :Print result to stdout;
+        :Return exit code 0;
+    endif
+
+endif
 
 stop
 

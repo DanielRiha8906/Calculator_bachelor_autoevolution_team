@@ -1,44 +1,74 @@
 @startuml sequence_diagram
 
 participant "__main__" as main
+participant "CLI" as cli
 participant "InputHandler" as ih
 participant "Calculator" as calc
 
-main -> calc : <<create>>
-main -> ih : run_interactive_session(calculator)
+alt Interactive Mode (python -m src)
 
-ih -> ih : get_operation_registry(calculator)
-ih -> ih : print welcome message
+    main -> calc : <<create>>
+    main -> ih : run_interactive_session(calculator)
 
-loop interactive session
-    ih -> ih : display_menu(registry)
-    ih -> ih : get_operation_choice(registry)
+    ih -> ih : get_operation_registry(calculator)
+    ih -> ih : print welcome message
 
-    alt user quit (q / quit / exit)
-        ih -> main : return\n(prints "Goodbye.")
-    else operation selected
-        ih -> ih : get_operands(arity)
+    loop interactive session
+        ih -> ih : display_menu(registry)
+        ih -> ih : get_operation_choice(registry)
 
-        opt method is factorial
-            ih -> ih : convert whole-valued floats to int
-        end
+        alt user quit (q / quit / exit)
+            ih -> main : return\n(prints "Goodbye.")
+        else operation selected
+            ih -> ih : get_operands(arity)
 
-        ih -> calc : method(*operands)
+            opt method is factorial
+                ih -> ih : convert whole-valued floats to int
+            end
 
-        alt success
-            calc --> ih : result
-            ih -> ih : print "Result: {result}"
-        else TypeError
-            calc --> ih : raises TypeError
-            ih -> ih : print error message
-        else ValueError
-            calc --> ih : raises ValueError
-            ih -> ih : print error message
-        else ZeroDivisionError
-            calc --> ih : raises ZeroDivisionError
-            ih -> ih : print error message
+            ih -> calc : method(*operands)
+
+            alt success
+                calc --> ih : result
+                ih -> ih : print "Result: {result}"
+            else TypeError / ValueError / ZeroDivisionError
+                calc --> ih : raises exception
+                ih -> ih : print error message
+            end
         end
     end
+
+else CLI Mode (execute_cli)
+
+    main -> calc : <<create>>
+    main -> cli : parse_arguments(sys.argv)
+    cli --> main : (operation_name, operand_strs)
+
+    main -> ih : get_operation_registry(calculator)
+    ih --> main : registry
+
+    main -> cli : execute_cli(operation_name, operand_strs, registry, calculator)
+
+    cli -> cli : lookup operation in registry
+
+    alt invalid operation or arity mismatch
+        cli -> cli : print error to stderr
+        cli --> main : return 1
+    else valid
+        cli -> cli : convert_operand(value) for each operand
+        cli -> calc : method(*operands)
+
+        alt success
+            calc --> cli : result
+            cli -> cli : print result to stdout
+            cli --> main : return 0
+        else TypeError / ValueError / ZeroDivisionError
+            calc --> cli : raises exception
+            cli -> cli : print error to stderr
+            cli --> main : return 1
+        end
+    end
+
 end
 
 @enduml
