@@ -1,3 +1,15 @@
+## Run: issue-182-documentation (2026-04-19)
+
+- branch: task/issue-182-documentation
+- files changed: README.md, docs/README.md, docs/ARCHITECTURE.md, docs/API_REFERENCE.md, docs/USER_GUIDE.md, docs/EXTENDING.md, tests/test_documentation.py
+- purpose: Add comprehensive documentation for the calculator application (issue #182) — user guide, architecture reference, API reference, extension guide, and updated root README
+- risks: None — purely additive changes; no existing source or test files modified
+- tests passed: Yes — 44 new tests pass; full suite (1,068 tests) passes
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/214
+- target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-179-modularization-naive-team
