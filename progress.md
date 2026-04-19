@@ -269,3 +269,14 @@ Duration: 402.4s | Cost: $1.051931 USD | Turns: 14
 - **PR target:** exp2/structured-team
 
 Duration: 493.5s | Cost: $1.407888 USD | Turns: 13
+
+## Run: issue-180-modularization (2026-04-19)
+
+- **Branch:** task/issue-180-modularization
+- **PR target:** exp2/structured-team
+- **Files changed:** 34 files (14 new src sub-package files, 7 root-level backward-compat wrappers updated, 13 new test files, src/operations.py removed/renamed to src/core/operations.py)
+- **Purpose:** Refactor calculator into modular package structure — src/core/, src/operations/, src/interface/, src/support/ sub-packages with clear separation of concerns; extensible operations architecture for future scientific functionality
+- **Risks:** src/operations.py deleted (conflicts with src/operations/ package); all existing imports preserved via backward-compat re-export wrappers
+- **Tests passed:** 1105/1105 (716 existing + 389 new tests all pass)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
