@@ -1,5 +1,27 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-167-history
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include OperationRecord and OperationHistory classes added in issue-167, Calculator._history field, get_history()/clear_history() methods, and history recording (add_record calls) after each successful Calculator operation
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 166.6s | Cost: $0.438934 USD | Turns: 17
+
+## Run: issue-167-history (2026-04-19)
+
+- branch: task/issue-167-history
+- files changed: src/history.py (created), src/calculator.py (modified), src/__init__.py (modified), tests/test_history.py (created), tests/test_calculator.py (modified)
+- purpose: Add session-based operation history to calculator — records operation name, operands, result, and timestamp for each successful arithmetic call; exposes get_history() and clear_history()
+- risks: Unbounded memory growth for long-running sessions; thread safety not guaranteed (single-threaded CLI usage assumed)
+- tests passed: 76 new tests (34 unit + 42 integration); all 374 pre-existing tests pass
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/200
+- merge target: exp2/naive-team
+
+Duration: 306.3s | Cost: $0.930125 USD | Turns: 18
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-164-retry-logic
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to include input_retry module (RetryLimitExceeded, InputRetryConfig, validate_with_retry, DEFAULT_MAX_RETRIES) and retry-limit logic added to user_input (OperandRetryExceeded, MAX_RETRIES, op/operand retry counters)
