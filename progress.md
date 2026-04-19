@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-147-math-functions
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added 7 new methods: `square`, `cube`, `square_root`, `cube_root`, `power`, `logarithm`, `natural_logarithm`; added notes for `square_root`, `logarithm`, `natural_logarithm` error conditions
+  - `artifacts/activity_diagram.puml` — added activity branches for all 7 new math methods with guard conditions
+  - `artifacts/sequence_diagram.puml` — added example interactions for all 7 new methods
+- **Purpose:** Sync PlantUML diagrams with current `src/calculator.py` state after issue-147 additions
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-147-math-functions (2026-04-19)
 
 - **Branch:** task/issue-147-math-functions
