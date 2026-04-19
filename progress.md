@@ -1,3 +1,16 @@
+## Run: issue-151 — Interactive user input session
+
+- **Branch:** task/issue-151-user-input
+- **PR target:** exp2/expert-team
+- **Files changed:** src/input_handler.py (created), src/__main__.py (modified), tests/test_input_handler.py (created)
+- **Purpose:** Add runtime interactive REPL so users can select operations and enter operands without code changes between calculations. Handles unary/binary arity, factorial int-conversion, and calculator exceptions gracefully.
+- **Risks:** Low — calculator core unchanged; __main__.py demo replaced by interactive session; new module is isolated.
+- **Tests passed:** 194/194 (117 existing + 77 new)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-148-functions-expert-team
