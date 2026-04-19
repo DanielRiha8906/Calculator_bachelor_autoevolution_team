@@ -68,3 +68,16 @@ Duration: 175.2s | Cost: $0.390062 USD | Turns: 14
 - **Tests passed:** N/A (no code changes)
 
 Duration: 40.7s | Cost: $0.145565 USD | Turns: 11
+
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-144-factorial
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `factorial(n) : int` method and a note describing its TypeError/ValueError guards
+  - `artifacts/activity_diagram.puml` — added factorial flow branch: float coercion check, negative check, iterative multiply loop
+  - `artifacts/sequence_diagram.puml` — added factorial interaction examples (n=5, n=0) and error-case note
+- **Purpose:** Update PlantUML diagrams to reflect `factorial` method added in issue #144
+- **Risks:** None — diagram-only changes, no source modifications
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

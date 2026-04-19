@@ -24,6 +24,20 @@ note over Main, Calc
   ZeroDivisionError is raised
 end note
 
+Main -> Calc : factorial(5)
+Calc -> Calc : validate n (not negative,\nnot non-integer float)
+Calc -> Calc : iterative multiply 1..5
+Calc --> Main : 120
+
+Main -> Calc : factorial(0)
+Calc --> Main : 1
+
+note over Main, Calc
+  factorial(-1) raises ValueError.
+  factorial(5.5) raises TypeError.
+  factorial(5.0) coerces to int and returns 120.
+end note
+
 deactivate Calc
 
 @enduml

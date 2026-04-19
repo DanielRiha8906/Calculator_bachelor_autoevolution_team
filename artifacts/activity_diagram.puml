@@ -21,6 +21,24 @@ fork again
   else (no)
     :return a / b;
   endif
+fork again
+  :factorial(n);
+  if (n is float?) then (yes)
+    if (n != int(n)?) then (yes)
+      :raise TypeError\n"factorial() only accepts\ninteger values";
+      stop
+    else (no)
+      :n = int(n);
+    endif
+  endif
+  if (n < 0?) then (yes)
+    :raise ValueError\n"factorial() not defined\nfor negative values";
+    stop
+  else (no)
+    :result = 1;
+    :for i in range(2, n+1): result *= i;
+    :return result;
+  endif
 end fork
 
 :Return result;
