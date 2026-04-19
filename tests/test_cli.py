@@ -689,3 +689,39 @@ class TestCLIErrorLogging:
 
         # This should succeed, so no error logs
         assert exit_code == 0
+
+
+# ============================================================================
+# BACKWARD COMPATIBILITY TESTS
+# ============================================================================
+
+
+class TestBackwardCompatCLI:
+    """Test that src.cli re-exports work correctly."""
+
+    def test_run_cli_importable_from_src_cli(self):
+        """Test that run_cli is importable from src.cli."""
+        from src.cli import run_cli as cli_run_cli
+        assert callable(cli_run_cli)
+
+    def test_parse_and_evaluate_importable_from_src_cli(self):
+        """Test that parse_and_evaluate is importable from src.cli."""
+        from src.cli import parse_and_evaluate as cli_parse_and_evaluate
+        assert callable(cli_parse_and_evaluate)
+
+    def test_run_cli_same_as_presentation_cli(self):
+        """Test that src.cli.run_cli is the same as src.presentation.cli.run_cli."""
+        from src.cli import run_cli as cli_run_cli
+        from src.presentation.cli import run_cli as presentation_run_cli
+        assert cli_run_cli is presentation_run_cli
+
+    def test_parse_and_evaluate_same_as_presentation_cli(self):
+        """Test that src.cli.parse_and_evaluate is from src.presentation.cli."""
+        from src.cli import parse_and_evaluate as cli_parse_and_evaluate
+        from src.presentation.cli import parse_and_evaluate as presentation_parse_and_evaluate
+        assert cli_parse_and_evaluate is presentation_parse_and_evaluate
+
+    def test_eval_node_importable_from_src_cli(self):
+        """Test that _eval_node is importable from src.cli."""
+        from src.cli import _eval_node as cli_eval_node
+        assert callable(cli_eval_node)

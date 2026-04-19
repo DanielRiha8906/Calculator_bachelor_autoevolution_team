@@ -12,6 +12,7 @@ from datetime import datetime
 
 from src.history import OperationHistory
 from src.logic.core import ArithmeticEngine
+from src.operations import OperationRegistry, register_basic_operations, register_scientific_operations
 
 
 class Calculator:
@@ -26,6 +27,9 @@ class Calculator:
     def __init__(self) -> None:
         self._engine: ArithmeticEngine = ArithmeticEngine()
         self._history: OperationHistory = OperationHistory()
+        self._registry: OperationRegistry = OperationRegistry()
+        register_basic_operations(self._registry)
+        register_scientific_operations(self._registry)
 
     # ------------------------------------------------------------------
     # History management

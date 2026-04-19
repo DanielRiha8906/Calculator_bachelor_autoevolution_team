@@ -1,3 +1,15 @@
+## Run: issue-179-modularization-naive-team (2026-04-19)
+
+- branch: task/issue-179-modularization-naive-team
+- files changed: src/operations/__init__.py (created), src/operations/base.py (created), src/operations/basic.py (created), src/operations/scientific.py (created), src/presentation/__init__.py (created), src/presentation/cli.py (created), src/presentation/interactive.py (created), src/logic/state.py (modified — registry init), src/cli.py (re-export), src/user_input.py (re-export), src/__init__.py (added OperationRegistry export), src/__main__.py (updated imports), tests/test_operations_base.py (created), tests/test_operations_basic.py (created), tests/test_cli.py (added compat tests), tests/test_user_input.py (added compat tests), tests/test_logic_separation.py (added registry tests)
+- purpose: Modularize calculator into operations, logic, and presentation layers; add OperationRegistry extension point for future scientific mode
+- risks: Backward-compat re-exports add dual import paths; scientific.py is a stub with no implementation — future implementer must populate it
+- tests passed: yes — 1024 tests (129 new + 895 existing)
+- worktree/branch: task/issue-179-modularization-naive-team
+- PR target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-173-logic-separation

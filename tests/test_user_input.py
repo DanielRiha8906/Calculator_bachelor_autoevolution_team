@@ -1088,3 +1088,65 @@ class TestUserInputErrorLogging:
         assert isinstance(result, str)
         assert "Error" in result
         assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+
+# ============================================================================
+# BACKWARD COMPATIBILITY TESTS
+# ============================================================================
+
+
+class TestBackwardCompatUserInput:
+    """Test that src.user_input re-exports work correctly."""
+
+    def test_run_interactive_importable_from_src_user_input(self):
+        """Test that run_interactive is importable from src.user_input."""
+        from src.user_input import run_interactive as user_input_run_interactive
+        assert callable(user_input_run_interactive)
+
+    def test_operations_importable_from_src_user_input(self):
+        """Test that OPERATIONS is importable from src.user_input."""
+        from src.user_input import OPERATIONS as user_input_operations
+        assert isinstance(user_input_operations, dict)
+        assert len(user_input_operations) > 0
+
+    def test_run_interactive_same_as_presentation_interactive(self):
+        """Test that src.user_input.run_interactive is the same as src.presentation.interactive.run_interactive."""
+        from src.user_input import run_interactive as user_input_run_interactive
+        from src.presentation.interactive import run_interactive as presentation_run_interactive
+        assert user_input_run_interactive is presentation_run_interactive
+
+    def test_operations_same_as_presentation_interactive(self):
+        """Test that src.user_input.OPERATIONS is from src.presentation.interactive."""
+        from src.user_input import OPERATIONS as user_input_operations
+        from src.presentation.interactive import OPERATIONS as presentation_operations
+        assert user_input_operations is presentation_operations
+
+    def test_parse_number_importable_from_src_user_input(self):
+        """Test that parse_number is importable from src.user_input."""
+        from src.user_input import parse_number as user_input_parse_number
+        assert callable(user_input_parse_number)
+
+    def test_get_operands_importable_from_src_user_input(self):
+        """Test that get_operands is importable from src.user_input."""
+        from src.user_input import get_operands as user_input_get_operands
+        assert callable(user_input_get_operands)
+
+    def test_execute_operation_importable_from_src_user_input(self):
+        """Test that execute_operation is importable from src.user_input."""
+        from src.user_input import execute_operation as user_input_execute_operation
+        assert callable(user_input_execute_operation)
+
+    def test_format_result_importable_from_src_user_input(self):
+        """Test that format_result is importable from src.user_input."""
+        from src.user_input import format_result as user_input_format_result
+        assert callable(user_input_format_result)
+
+    def test_invalid_input_error_importable_from_src_user_input(self):
+        """Test that InvalidInputError is importable from src.user_input."""
+        from src.user_input import InvalidInputError as user_input_invalid_input_error
+        assert issubclass(user_input_invalid_input_error, Exception)
+
+    def test_operand_retry_exceeded_importable_from_src_user_input(self):
+        """Test that OperandRetryExceeded is importable from src.user_input."""
+        from src.user_input import OperandRetryExceeded as user_input_operand_retry_exceeded
+        assert issubclass(user_input_operand_retry_exceeded, Exception)

@@ -1,8 +1,8 @@
 import sys
 
-from src.cli import run_cli
+from src.presentation.cli import run_cli
 from src.logging_config import setup_logging
-from src.user_input import run_interactive
+from src.presentation.interactive import run_interactive
 
 
 def main() -> None:

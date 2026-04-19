@@ -1141,3 +1141,142 @@ class TestCalculatorIntegration:
 
         with pytest.raises(TypeError):
             calculator.factorial("5")
+
+
+# ============================================================================
+# CALCULATOR REGISTRY INTEGRATION TESTS
+# ============================================================================
+
+
+class TestCalculatorRegistryIntegration:
+    """Test that Calculator has integrated OperationRegistry correctly."""
+
+    def test_calculator_has_registry_attribute(self, calculator):
+        """Test that Calculator has a _registry attribute."""
+        assert hasattr(calculator, '_registry')
+        assert calculator._registry is not None
+
+    def test_registry_is_operation_registry_instance(self, calculator):
+        """Test that _registry is an OperationRegistry instance."""
+        from src.operations.base import OperationRegistry
+        assert isinstance(calculator._registry, OperationRegistry)
+
+    def test_registry_has_all_12_basic_operations(self, calculator):
+        """Test that the registry has all 12 basic operations registered."""
+        operations = calculator._registry.list_operations()
+        assert len(operations) >= 12
+
+        expected_operations = [
+            "add", "subtract", "multiply", "divide",
+            "factorial", "square", "cube",
+            "square_root", "cube_root",
+            "power", "log10", "natural_log"
+        ]
+
+        for op_name in expected_operations:
+            assert op_name in operations, f"Operation '{op_name}' not found in registry"
+
+    def test_calculator_registry_has_add_operation(self, calculator):
+        """Test that the registry has the 'add' operation."""
+        assert calculator._registry.is_registered("add")
+        add_op = calculator._registry.get("add")
+        assert add_op is not None
+
+    def test_calculator_registry_has_multiply_operation(self, calculator):
+        """Test that the registry has the 'multiply' operation."""
+        assert calculator._registry.is_registered("multiply")
+        multiply_op = calculator._registry.get("multiply")
+        assert multiply_op is not None
+
+    def test_calculator_registry_has_divide_operation(self, calculator):
+        """Test that the registry has the 'divide' operation."""
+        assert calculator._registry.is_registered("divide")
+        divide_op = calculator._registry.get("divide")
+        assert divide_op is not None
+
+    def test_calculator_registry_has_factorial_operation(self, calculator):
+        """Test that the registry has the 'factorial' operation."""
+        assert calculator._registry.is_registered("factorial")
+        factorial_op = calculator._registry.get("factorial")
+        assert factorial_op is not None
+
+    def test_calculator_registry_has_square_operation(self, calculator):
+        """Test that the registry has the 'square' operation."""
+        assert calculator._registry.is_registered("square")
+        square_op = calculator._registry.get("square")
+        assert square_op is not None
+
+    def test_calculator_registry_has_power_operation(self, calculator):
+        """Test that the registry has the 'power' operation."""
+        assert calculator._registry.is_registered("power")
+        power_op = calculator._registry.get("power")
+        assert power_op is not None
+
+    def test_registry_operations_are_callable(self, calculator):
+        """Test that each registered operation can be executed."""
+        # Test Add
+        add_op = calculator._registry.get("add")
+        result = add_op.execute(3, 4)
+        assert result == 7.0
+
+        # Test Multiply
+        multiply_op = calculator._registry.get("multiply")
+        result = multiply_op.execute(3, 4)
+        assert result == 12.0
+
+        # Test Square
+        square_op = calculator._registry.get("square")
+        result = square_op.execute(4)
+        assert result == 16.0
+
+        # Test Factorial
+        factorial_op = calculator._registry.get("factorial")
+        result = factorial_op.execute(5)
+        assert result == 120.0
+
+    def test_registry_operations_have_correct_operand_counts(self, calculator):
+        """Test that operations report correct operand counts."""
+        # Binary operations
+        assert calculator._registry.get("add").operand_count() == 2
+        assert calculator._registry.get("subtract").operand_count() == 2
+        assert calculator._registry.get("multiply").operand_count() == 2
+        assert calculator._registry.get("divide").operand_count() == 2
+        assert calculator._registry.get("power").operand_count() == 2
+
+        # Unary operations
+        assert calculator._registry.get("factorial").operand_count() == 1
+        assert calculator._registry.get("square").operand_count() == 1
+        assert calculator._registry.get("cube").operand_count() == 1
+        assert calculator._registry.get("square_root").operand_count() == 1
+        assert calculator._registry.get("cube_root").operand_count() == 1
+        assert calculator._registry.get("log10").operand_count() == 1
+        assert calculator._registry.get("natural_log").operand_count() == 1
+
+    def test_multiple_calculator_instances_have_independent_registries(self):
+        """Test that each Calculator instance has its own independent registry."""
+        from src.logic import Calculator
+
+        calc1 = Calculator()
+        calc2 = Calculator()
+
+        # They should be different instances
+        assert calc1._registry is not calc2._registry
+
+        # But they should both have the same operations
+        assert set(calc1._registry.list_operations()) == set(calc2._registry.list_operations())
+
+    def test_registry_does_not_affect_calculator_arithmetic(self, calculator):
+        """Test that adding registry doesn't break Calculator arithmetic."""
+        # The Calculator should still work normally
+        result = calculator.add(5, 3)
+        assert result == 8
+
+        result = calculator.multiply(4, 5)
+        assert result == 20
+
+        result = calculator.divide(10, 2)
+        assert result == 5.0
+
+        # And history should be recorded
+        history = calculator.get_history()
+        assert len(history) == 3
