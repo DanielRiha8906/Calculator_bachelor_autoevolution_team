@@ -1,1062 +1,916 @@
 """Tests for the GUI layer (src/gui.py).
 
-Tests the CalculatorGUI and OperandInputWidget classes. Since the environment
-is headless (no X11 display), we use mocking for tkinter and fixtures to
-manage temporary files for history and logging.
+Tests the CalculatorGUI class. Since the environment is headless (no X11 display),
+we mock tkinter components to allow instantiation and testing of state machine
+methods without a real display.
 """
 
 from __future__ import annotations
 
 import sys
-import os
-import tempfile
-from unittest.mock import MagicMock, Mock, patch, call
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Mock tkinter before importing gui module
 sys.modules['tkinter'] = MagicMock()
 
-from src.gui import OperandInputWidget, CalculatorGUI
-from src.mode import Mode
-from src.error_logger import INVALID_INPUT, CALCULATION_ERROR
+from src.gui import CalculatorGUI
 
 
 # ===========================================================================
-# Fixtures for headless testing
+# Fixtures
 # ===========================================================================
 
 
 @pytest.fixture
-def mock_tk_root():
-    """Mock tkinter Tk root for testing without X11 display."""
-    with patch("src.gui.tk.Tk"):
-        yield
-
-
-@pytest.fixture
-def temp_history_log_dir(tmp_path, monkeypatch):
-    """Create temporary directories for history and error log files."""
-    history_file = tmp_path / "history.txt"
-    error_log_file = tmp_path / "error.log"
-
-    # Change to temp directory so history.txt and error.log are created there
-    monkeypatch.chdir(tmp_path)
-
-    return {
-        "history_file": history_file,
-        "error_log_file": error_log_file,
-        "tmp_path": tmp_path,
-    }
-
-
-@pytest.fixture
-def mock_root_window():
-    """Create a mock tk.Tk root window."""
-    mock_root = MagicMock()
-    mock_root.title = MagicMock()
-    mock_root.resizable = MagicMock()
-    mock_root.pack = MagicMock()
-    mock_root.mainloop = MagicMock()
-    return mock_root
-
-
-@pytest.fixture
-def mock_tkinter_components(mock_root_window):
+def mock_tkinter_components():
     """Patch all tkinter components needed for GUI testing."""
-    with patch("src.gui.tk.Tk", return_value=mock_root_window) as mock_tk, \
-         patch("src.gui.tk.LabelFrame") as mock_labelframe, \
-         patch("src.gui.tk.Frame") as mock_frame, \
-         patch("src.gui.tk.Label") as mock_label, \
-         patch("src.gui.tk.Entry") as mock_entry, \
-         patch("src.gui.tk.Radiobutton") as mock_radiobutton, \
-         patch("src.gui.tk.Button") as mock_button, \
-         patch("src.gui.tk.StringVar") as mock_stringvar, \
-         patch("src.gui.tk.Listbox") as mock_listbox, \
-         patch("src.gui.tk.Scrollbar") as mock_scrollbar, \
-         patch("src.gui.tk.END", "end"):
+    with patch('src.gui.tk.Tk') as mock_tk, \
+         patch('src.gui.tk.Frame') as mock_frame, \
+         patch('src.gui.tk.Label') as mock_label, \
+         patch('src.gui.tk.Button') as mock_button, \
+         patch('src.gui.tk.StringVar') as mock_stringvar:
 
-        # Configure StringVar to track values
-        string_var_values = {}
+        # Create a mock root window
+        mock_root = MagicMock()
+        mock_tk.return_value = mock_root
+
+        # Configure StringVar to store and retrieve values
+        stringvar_values = {}
         def stringvar_init(value=""):
             var = MagicMock()
-            var.get = MagicMock(return_value=value)
-            var.set = MagicMock(side_effect=lambda v: string_var_values.update({"var": v}))
+            stringvar_values['value'] = value
+            var.set = MagicMock(side_effect=lambda v: stringvar_values.update({'value': v}))
+            var.get = MagicMock(side_effect=lambda: stringvar_values.get('value', ''))
             return var
         mock_stringvar.side_effect = stringvar_init
 
-        # Configure Entry widget
-        entry_values = {}
-        def entry_init(parent, **kwargs):
-            widget = MagicMock()
-            widget.get = MagicMock(return_value="")
-            widget.delete = MagicMock()
-            widget.grid = MagicMock()
-            widget.grid_remove = MagicMock()
-            return widget
-        mock_entry.side_effect = entry_init
+        # Configure Frame to return mock
+        mock_frame.return_value = MagicMock()
 
-        # Configure Label widget
-        def label_init(parent, **kwargs):
-            widget = MagicMock()
-            widget.grid = MagicMock()
-            widget.grid_remove = MagicMock()
-            widget.pack = MagicMock()
-            return widget
-        mock_label.side_effect = label_init
+        # Configure Label to return mock
+        mock_label.return_value = MagicMock()
 
-        # Configure Button widget
-        def button_init(parent, **kwargs):
-            widget = MagicMock()
-            widget.grid = MagicMock()
-            widget.pack = MagicMock()
-            widget.config = MagicMock()
-            widget.destroy = MagicMock()
-            return widget
-        mock_button.side_effect = button_init
-
-        # Configure Listbox
-        def listbox_init(parent, **kwargs):
-            widget = MagicMock()
-            widget.delete = MagicMock()
-            widget.insert = MagicMock()
-            widget.pack = MagicMock()
-            widget.size = MagicMock(return_value=0)
-            widget.see = MagicMock()
-            return widget
-        mock_listbox.side_effect = listbox_init
+        # Configure Button to return mock
+        mock_button.return_value = MagicMock()
 
         yield {
-            "tk": mock_tk,
-            "labelframe": mock_labelframe,
-            "frame": mock_frame,
-            "label": mock_label,
-            "entry": mock_entry,
-            "radiobutton": mock_radiobutton,
-            "button": mock_button,
-            "stringvar": mock_stringvar,
-            "listbox": mock_listbox,
-            "scrollbar": mock_scrollbar,
+            'mock_tk': mock_tk,
+            'mock_frame': mock_frame,
+            'mock_label': mock_label,
+            'mock_button': mock_button,
+            'mock_stringvar': mock_stringvar,
+            'mock_root': mock_root,
+            'stringvar_values': stringvar_values,
         }
 
 
-# ===========================================================================
-# Tests for OperandInputWidget
-# ===========================================================================
-
-
-class TestOperandInputWidget:
-    """Tests for the OperandInputWidget helper class."""
-
-    def test_operand_widget_get_value_valid_positive_float(self):
-        """Valid positive float string is parsed correctly."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "42.5"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            result = widget.get_value()
-
-            assert result == 42.5
-
-    def test_operand_widget_get_value_valid_negative_float(self):
-        """Valid negative float string is parsed correctly."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "-15.25"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            result = widget.get_value()
-
-            assert result == -15.25
-
-    def test_operand_widget_get_value_valid_integer(self):
-        """Valid integer string is parsed as float."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "100"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            result = widget.get_value()
-
-            assert result == 100.0
-
-    def test_operand_widget_get_value_with_whitespace(self):
-        """String with leading/trailing whitespace is stripped and parsed."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "  25.5  "
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            result = widget.get_value()
-
-            assert result == 25.5
-
-    def test_operand_widget_get_value_empty_string_raises_valueerror(self):
-        """Empty string raises ValueError."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = ""
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-
-            with pytest.raises(ValueError):
-                widget.get_value()
-
-    def test_operand_widget_get_value_whitespace_only_raises_valueerror(self):
-        """Whitespace-only string raises ValueError."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "   "
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-
-            with pytest.raises(ValueError):
-                widget.get_value()
-
-    def test_operand_widget_get_value_non_numeric_raises_valueerror(self):
-        """Non-numeric string raises ValueError."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "abc"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-
-            with pytest.raises(ValueError):
-                widget.get_value()
-
-    def test_operand_widget_get_value_special_chars_raises_valueerror(self):
-        """String with special characters raises ValueError."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "42@#$%"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-
-            with pytest.raises(ValueError):
-                widget.get_value()
-
-    def test_operand_widget_clear_deletes_entry_text(self):
-        """clear() deletes all text from the entry widget."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            widget.clear()
-
-            # Verify delete was called with (0, tk.END)
-            mock_entry.delete.assert_called_once()
-            args = mock_entry.delete.call_args[0]
-            assert args[0] == 0
-
-    def test_operand_widget_set_visible_true_shows_widgets(self):
-        """set_visible(True) calls grid() on label and entry."""
-        mock_parent = MagicMock()
-        mock_label = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label", return_value=mock_label), \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            # Reset the mocks after __init__
-            mock_label.reset_mock()
-            mock_entry.reset_mock()
-            widget.set_visible(True)
-
-            mock_label.grid.assert_called_once()
-            mock_entry.grid.assert_called_once()
-
-    def test_operand_widget_set_visible_false_hides_widgets(self):
-        """set_visible(False) calls grid_remove() on label and entry."""
-        mock_parent = MagicMock()
-        mock_label = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label", return_value=mock_label), \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            widget.set_visible(False)
-
-            mock_label.grid_remove.assert_called_once()
-            mock_entry.grid_remove.assert_called_once()
-
-    def test_operand_widget_zero_value(self):
-        """Zero value is parsed correctly."""
-        mock_parent = MagicMock()
-        mock_entry = MagicMock()
-
-        with patch("src.gui.tk.Label") as mock_label, \
-             patch("src.gui.tk.Entry", return_value=mock_entry):
-            mock_label.return_value = MagicMock()
-            mock_entry.get.return_value = "0"
-
-            widget = OperandInputWidget(mock_parent, "Test:", 0)
-            result = widget.get_value()
-
-            assert result == 0.0
+@pytest.fixture
+def gui(mock_tkinter_components):
+    """Create a CalculatorGUI instance with mocked tkinter."""
+    return CalculatorGUI()
 
 
 # ===========================================================================
-# Tests for CalculatorGUI Initialization
+# TestGUIStateInitialization
 # ===========================================================================
 
 
-class TestGUIInitialization:
-    """Tests for CalculatorGUI initialization."""
+class TestGUIStateInitialization:
+    """Verify that CalculatorGUI initializes with correct state."""
 
-    def test_gui_creates_root_window(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI __init__ creates and configures the root Tk window."""
-        gui = CalculatorGUI()
+    def test_gui_instantiation(self, gui):
+        """Verify that CalculatorGUI can be instantiated."""
+        assert gui is not None
+        assert isinstance(gui, CalculatorGUI)
 
-        assert gui._root is not None
-        gui._root.title.assert_called_once_with("Calculator")
-        gui._root.resizable.assert_called_once_with(False, False)
+    def test_initial_display_state(self, gui):
+        """Verify initial display is "0"."""
+        assert gui._current_display == "0"
 
-    def test_gui_initializes_calculator(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI creates a Calculator instance."""
-        gui = CalculatorGUI()
+    def test_initial_pending_operator_none(self, gui):
+        """Verify initial pending operator is None."""
+        assert gui._pending_operator is None
 
-        assert gui._calc is not None
-        from src.calculator import Calculator
-        assert isinstance(gui._calc, Calculator)
+    def test_initial_pending_operand_none(self, gui):
+        """Verify initial pending operand is None."""
+        assert gui._pending_operand is None
 
-    def test_gui_initializes_operation_history(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI creates an OperationHistory instance."""
-        gui = CalculatorGUI()
+    def test_initial_decimal_entered_false(self, gui):
+        """Verify initial decimal_entered flag is False."""
+        assert gui._decimal_entered is False
 
-        assert gui._history is not None
-        from src.history import OperationHistory
-        assert isinstance(gui._history, OperationHistory)
+    def test_initial_scientific_mode_false(self, gui):
+        """Verify initial scientific mode is False."""
+        assert gui._is_scientific_mode is False
 
-    def test_gui_initializes_error_logger(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI creates an ErrorLogger instance."""
-        gui = CalculatorGUI()
-
-        assert gui._error_logger is not None
-        from src.error_logger import ErrorLogger
-        assert isinstance(gui._error_logger, ErrorLogger)
-
-    def test_gui_initializes_in_normal_mode(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI starts in Normal mode."""
-        gui = CalculatorGUI()
-
-        assert gui._current_mode == Mode.NORMAL
-
-    def test_gui_initializes_with_no_operation_selected(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI starts with no operation selected."""
-        gui = CalculatorGUI()
-
-        assert gui._selected_operation is None
-
-    def test_gui_initializes_operand_widgets_list(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI creates a list to store operand widgets."""
-        gui = CalculatorGUI()
-
-        assert isinstance(gui._operand_widgets, list)
-        assert len(gui._operand_widgets) == 2
-
-    def test_gui_initializes_operation_buttons_list(self, mock_tkinter_components, temp_history_log_dir):
-        """GUI creates a list to store operation buttons."""
-        gui = CalculatorGUI()
-
-        assert isinstance(gui._operation_buttons, list)
+    def test_initial_result_just_shown_false(self, gui):
+        """Verify initial result_just_shown flag is False."""
+        assert gui._result_just_shown is False
 
 
 # ===========================================================================
-# Tests for Mode Selection
+# TestDigitInput
 # ===========================================================================
 
 
-class TestModeSelection:
-    """Tests for mode switching functionality."""
+class TestDigitInput:
+    """Test digit input behavior."""
 
-    def test_switch_to_scientific_mode(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching to scientific mode updates _current_mode."""
-        gui = CalculatorGUI()
-        gui._on_mode_changed(Mode.SCIENTIFIC)
+    def test_single_digit_5_on_initial_state(self, gui):
+        """Pressing digit 5 when display is "0": display becomes "5"."""
+        gui._on_digit_pressed(5)
+        assert gui._current_display == "5"
 
-        assert gui._current_mode == Mode.SCIENTIFIC
+    def test_consecutive_digits_5_then_3(self, gui):
+        """Pressing digit 5 then 3: display becomes "53"."""
+        gui._on_digit_pressed(5)
+        gui._on_digit_pressed(3)
+        assert gui._current_display == "53"
 
-    def test_switch_to_normal_mode(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching to normal mode updates _current_mode."""
-        gui = CalculatorGUI()
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-        gui._on_mode_changed(Mode.NORMAL)
+    def test_digit_after_result_shown(self, gui):
+        """Pressing digit after result shown resets display to new digit."""
+        gui._current_display = "8"
+        gui._result_just_shown = True
+        gui._on_digit_pressed(5)
+        assert gui._current_display == "5"
 
-        assert gui._current_mode == Mode.NORMAL
+    def test_result_just_shown_cleared_after_digit(self, gui):
+        """_result_just_shown is False after digit press."""
+        gui._current_display = "8"
+        gui._result_just_shown = True
+        gui._on_digit_pressed(5)
+        assert gui._result_just_shown is False
 
-    def test_mode_switch_clears_selected_operation(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode sets _selected_operation to None."""
-        gui = CalculatorGUI()
-        gui._selected_operation = "add"
-        gui._on_mode_changed(Mode.SCIENTIFIC)
+    def test_digit_appends_to_existing_number(self, gui):
+        """Digits append to non-zero display."""
+        gui._current_display = "5"
+        gui._result_just_shown = False
+        gui._on_digit_pressed(3)
+        assert gui._current_display == "53"
 
-        assert gui._selected_operation is None
+    def test_digit_zero_on_zero_display(self, gui):
+        """Pressing 0 on "0" display stays "0"."""
+        gui._current_display = "0"
+        gui._on_digit_pressed(0)
+        assert gui._current_display == "0"
 
-    def test_mode_switch_clears_operand_inputs(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode clears operand entry fields."""
-        gui = CalculatorGUI()
-        # Mock the clear method
-        for widget in gui._operand_widgets:
-            widget.clear = MagicMock()
+    @pytest.mark.parametrize("digit", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    def test_all_digits_input(self, gui, digit):
+        """Test all digits 0-9 can be pressed."""
+        gui._on_digit_pressed(digit)
+        assert gui._current_display == str(digit)
 
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        # Verify clear was called on all widgets
-        for widget in gui._operand_widgets:
-            widget.clear.assert_called_once()
-
-    def test_mode_switch_clears_result_display(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode clears the result display."""
-        gui = CalculatorGUI()
-        gui._result_var.set("some value")
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        gui._result_var.set.assert_called()
-
-    def test_mode_switch_clears_error_display(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode clears the error display."""
-        gui = CalculatorGUI()
-        gui._error_var.set("some error")
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        gui._error_var.set.assert_called()
-
-    def test_mode_switch_disables_calculate_button(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode disables the Calculate button."""
-        gui = CalculatorGUI()
-        gui._calc_button.config = MagicMock()
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        gui._calc_button.config.assert_called_with(state="disabled")
-
-    def test_mode_switch_hides_operand_widgets(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode hides all operand widgets."""
-        gui = CalculatorGUI()
-        for widget in gui._operand_widgets:
-            widget.set_visible = MagicMock()
-
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        for widget in gui._operand_widgets:
-            widget.set_visible.assert_called_with(False)
-
-    def test_mode_switch_rebuilds_operation_buttons(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode calls _update_operation_buttons."""
-        gui = CalculatorGUI()
-        gui._update_operation_buttons = MagicMock()
-
-        # Reset the mock (since __init__ already calls this)
-        gui._update_operation_buttons.reset_mock()
-
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        gui._update_operation_buttons.assert_called_once()
-
-    def test_normal_mode_shows_four_operations(self, mock_tkinter_components, temp_history_log_dir):
-        """Normal mode displays 4 operation buttons (add, subtract, multiply, divide)."""
-        gui = CalculatorGUI()
-
-        # Get the number of buttons in normal mode
-        num_buttons = len(gui._operation_buttons)
-
-        # Normal mode should have 4 operations: add, subtract, multiply, divide
-        assert num_buttons == 4
-
-    def test_scientific_mode_shows_more_operations(self, mock_tkinter_components, temp_history_log_dir):
-        """Scientific mode displays more than 4 operation buttons."""
-        gui = CalculatorGUI()
-
-        # Get initial button count in normal mode
-        normal_count = len(gui._operation_buttons)
-
-        # Switch to scientific mode
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        # Get count in scientific mode
-        scientific_count = len(gui._operation_buttons)
-
-        # Scientific should have more operations
-        assert scientific_count > normal_count
-        assert scientific_count >= 8  # Should have at least 8-12 operations
-
-    def test_mode_switch_preserves_history_in_memory(self, mock_tkinter_components, temp_history_log_dir):
-        """Switching mode does not clear the in-memory history."""
-        gui = CalculatorGUI()
-
-        # Manually add an entry to history
-        gui._history.record_operation("add", [2, 3], 5)
-        initial_history = gui._history.get_history()
-
-        # Switch mode
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        # Check history is unchanged
-        final_history = gui._history.get_history()
-        assert final_history == initial_history
+    def test_decimal_entered_reset_after_digit_press(self, gui):
+        """decimal_entered flag is reset when replacing display."""
+        gui._current_display = "5.0"
+        gui._decimal_entered = True
+        gui._result_just_shown = True
+        gui._on_digit_pressed(3)
+        assert gui._decimal_entered is False
 
 
 # ===========================================================================
-# Tests for Operation Selection
+# TestDecimalInput
 # ===========================================================================
 
 
-class TestOperationSelection:
-    """Tests for operation selection functionality."""
+class TestDecimalInput:
+    """Test decimal point input behavior."""
 
-    def test_select_binary_operation_shows_two_input_fields(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting a binary operation (e.g., 'add') makes both operand widgets visible."""
-        gui = CalculatorGUI()
+    def test_decimal_appends_to_display(self, gui):
+        """Pressing decimal when display is "5": display becomes "5."."""
+        gui._current_display = "5"
+        gui._on_decimal_pressed()
+        assert gui._current_display == "5."
 
-        # Mock set_visible on operand widgets
-        for widget in gui._operand_widgets:
-            widget.set_visible = MagicMock()
+    def test_decimal_entered_flag_set(self, gui):
+        """_decimal_entered becomes True after decimal press."""
+        gui._current_display = "5"
+        gui._on_decimal_pressed()
+        assert gui._decimal_entered is True
 
-        gui._on_operation_selected("add")
+    def test_no_second_decimal(self, gui):
+        """Pressing decimal again when _decimal_entered=True: display unchanged."""
+        gui._current_display = "5."
+        gui._decimal_entered = True
+        gui._on_decimal_pressed()
+        assert gui._current_display == "5."
 
-        # Both widgets should be visible
-        gui._operand_widgets[0].set_visible.assert_called_with(True)
-        gui._operand_widgets[1].set_visible.assert_called_with(True)
+    def test_decimal_when_result_just_shown(self, gui):
+        """Pressing decimal when _result_just_shown=True: display becomes "0."."""
+        gui._current_display = "8"
+        gui._result_just_shown = True
+        gui._on_decimal_pressed()
+        assert gui._current_display == "0."
 
-    def test_select_unary_operation_shows_one_input_field(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting a unary operation (e.g., 'square') shows only the first widget."""
-        gui = CalculatorGUI()
+    def test_decimal_entered_true_after_result_shown_decimal(self, gui):
+        """_decimal_entered=True after decimal pressed on result_just_shown."""
+        gui._current_display = "8"
+        gui._result_just_shown = True
+        gui._on_decimal_pressed()
+        assert gui._decimal_entered is True
 
-        # Mock set_visible on operand widgets
-        for widget in gui._operand_widgets:
-            widget.set_visible = MagicMock()
+    def test_result_just_shown_false_after_result_decimal(self, gui):
+        """_result_just_shown=False after decimal pressed on result_just_shown."""
+        gui._current_display = "8"
+        gui._result_just_shown = True
+        gui._on_decimal_pressed()
+        assert gui._result_just_shown is False
 
-        gui._on_operation_selected("square")
-
-        # Only first widget should be visible
-        gui._operand_widgets[0].set_visible.assert_called_with(True)
-        gui._operand_widgets[1].set_visible.assert_called_with(False)
-
-    def test_operation_selection_clears_previous_inputs(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting an operation clears any previously entered values."""
-        gui = CalculatorGUI()
-
-        # Mock clear on operand widgets
-        for widget in gui._operand_widgets:
-            widget.clear = MagicMock()
-
-        gui._on_operation_selected("add")
-
-        # Both widgets should be cleared
-        gui._operand_widgets[0].clear.assert_called_once()
-        gui._operand_widgets[1].clear.assert_called_once()
-
-    def test_operation_selection_stores_selected_operation(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting an operation stores it in _selected_operation."""
-        gui = CalculatorGUI()
-
-        gui._on_operation_selected("multiply")
-
-        assert gui._selected_operation == "multiply"
-
-    def test_operation_selection_clears_result_display(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting an operation clears the result label."""
-        gui = CalculatorGUI()
-
-        gui._on_operation_selected("add")
-
-        gui._result_var.set.assert_called_with("")
-
-    def test_operation_selection_clears_error_display(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting an operation clears the error label."""
-        gui = CalculatorGUI()
-
-        gui._on_operation_selected("add")
-
-        gui._error_var.set.assert_called_with("")
-
-    def test_operation_selection_enables_calculate_button(self, mock_tkinter_components, temp_history_log_dir):
-        """Selecting an operation enables the Calculate button."""
-        gui = CalculatorGUI()
-        gui._calc_button.config = MagicMock()
-
-        gui._on_operation_selected("add")
-
-        gui._calc_button.config.assert_called_with(state="normal")
+    def test_decimal_on_initial_display(self, gui):
+        """Pressing decimal on initial "0": display becomes "0."."""
+        gui._on_decimal_pressed()
+        assert gui._current_display == "0."
 
 
 # ===========================================================================
-# Tests for Calculation Execution
+# TestOperatorPress
 # ===========================================================================
 
 
-class TestCalculationExecution:
-    """Tests for calculation execution and error handling."""
+class TestOperatorPress:
+    """Test operator button behavior."""
 
-    def test_binary_operation_with_valid_operands_shows_result(self, mock_tkinter_components, temp_history_log_dir):
-        """Performing a binary operation displays the correct result."""
-        gui = CalculatorGUI()
+    def test_plus_operator_sets_pending_operand(self, gui):
+        """Pressing "+" operator: _pending_operand set to float of display."""
+        gui._current_display = "5"
+        gui._on_operator_pressed("add")
+        assert gui._pending_operand == 5.0
 
-        # Setup
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=5.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=3.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
-        gui._refresh_history_display = MagicMock()
+    def test_plus_operator_sets_pending_operator(self, gui):
+        """Pressing "+" operator: _pending_operator set to "add"."""
+        gui._current_display = "5"
+        gui._on_operator_pressed("add")
+        assert gui._pending_operator == "add"
 
-        gui._perform_calculation()
+    def test_plus_operator_sets_result_just_shown(self, gui):
+        """Pressing operator: _result_just_shown set to True."""
+        gui._current_display = "5"
+        gui._on_operator_pressed("add")
+        assert gui._result_just_shown is True
 
-        # Result should be 8
-        gui._result_var.set.assert_called_with("8.0")
-        # Error should be cleared
-        gui._error_var.set.assert_called_with("")
+    def test_plus_operator_resets_decimal_entered(self, gui):
+        """Pressing operator: _decimal_entered reset to False."""
+        gui._current_display = "5.5"
+        gui._decimal_entered = True
+        gui._on_operator_pressed("add")
+        assert gui._decimal_entered is False
 
-    def test_unary_operation_with_valid_operand_shows_result(self, mock_tkinter_components, temp_history_log_dir):
-        """Performing a unary operation displays the correct result."""
-        gui = CalculatorGUI()
+    @pytest.mark.parametrize("op_key,op_name", [
+        ("add", "add"),
+        ("subtract", "subtract"),
+        ("multiply", "multiply"),
+        ("divide", "divide"),
+    ])
+    def test_all_operators(self, gui, op_key, op_name):
+        """Test all binary operators set pending_operator correctly."""
+        gui._current_display = "10"
+        gui._on_operator_pressed(op_key)
+        assert gui._pending_operator == op_name
+        assert gui._pending_operand == 10.0
 
-        # Setup for square operation
-        gui._selected_operation = "square"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=4.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
-        gui._refresh_history_display = MagicMock()
-
-        gui._perform_calculation()
-
-        # Result should be 16
-        gui._result_var.set.assert_called_with("16.0")
-
-    def test_division_by_zero_shows_error(self, mock_tkinter_components, temp_history_log_dir):
-        """Division by zero displays an error message."""
-        gui = CalculatorGUI()
-
-        # Setup
-        gui._selected_operation = "divide"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=10.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=0.0)
-        gui._error_var.set = MagicMock()
-        gui._result_var.set = MagicMock()
-        gui._error_logger.log_error = MagicMock()
-
-        gui._perform_calculation()
-
-        # Error message should be set
-        assert gui._error_var.set.called
-        error_msg = gui._error_var.set.call_args[0][0]
-        assert "Error:" in error_msg
-
-    def test_invalid_operand_format_shows_error(self, mock_tkinter_components, temp_history_log_dir):
-        """Invalid operand format (non-numeric) shows error."""
-        gui = CalculatorGUI()
-
-        # Setup
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(side_effect=ValueError("could not convert"))
-        gui._error_var.set = MagicMock()
-        gui._result_var.set = MagicMock()
-        gui._error_logger.log_error = MagicMock()
-
-        gui._perform_calculation()
-
-        # Error should be logged
-        gui._error_logger.log_error.assert_called_once()
-        call_args = gui._error_logger.log_error.call_args
-        assert call_args[0][0] == INVALID_INPUT
-
-    def test_successful_operation_records_history(self, mock_tkinter_components, temp_history_log_dir):
-        """Successful calculation is recorded in history."""
-        gui = CalculatorGUI()
-
-        # Setup
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=2.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=3.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
-        gui._refresh_history_display = MagicMock()
-
-        gui._perform_calculation()
-
-        # History should be recorded
-        gui._history.record_operation.assert_called_once_with("add", [2.0, 3.0], 5.0)
-
-    def test_calculation_error_is_logged(self, mock_tkinter_components, temp_history_log_dir):
-        """Calculation errors are logged to the error logger."""
-        gui = CalculatorGUI()
-
-        # Setup
-        gui._selected_operation = "divide"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=10.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=0.0)
-        gui._error_var.set = MagicMock()
-        gui._result_var.set = MagicMock()
-        gui._error_logger.log_error = MagicMock()
-
-        gui._perform_calculation()
-
-        # Error should be logged with CALCULATION_ERROR category
-        gui._error_logger.log_error.assert_called_once()
-        call_args = gui._error_logger.log_error.call_args
-        assert call_args[0][0] == CALCULATION_ERROR
-
-    def test_invalid_input_error_is_logged(self, mock_tkinter_components, temp_history_log_dir):
-        """Invalid input errors are logged to the error logger."""
-        gui = CalculatorGUI()
-
-        # Setup
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(side_effect=ValueError("invalid"))
-        gui._error_var.set = MagicMock()
-        gui._result_var.set = MagicMock()
-        gui._error_logger.log_error = MagicMock()
-
-        gui._perform_calculation()
-
-        # Error should be logged with INVALID_INPUT category
-        gui._error_logger.log_error.assert_called_once()
-        call_args = gui._error_logger.log_error.call_args
-        assert call_args[0][0] == INVALID_INPUT
+    def test_operator_with_decimal_operand(self, gui):
+        """Pressing operator with decimal display."""
+        gui._current_display = "5.5"
+        gui._on_operator_pressed("add")
+        assert gui._pending_operand == 5.5
 
 
 # ===========================================================================
-# Tests for History Display
+# TestEqualsPress
 # ===========================================================================
 
 
-class TestHistoryDisplay:
-    """Tests for history display functionality."""
+class TestEqualsPress:
+    """Test equals button behavior."""
 
-    def test_history_list_empty_at_startup(self, mock_tkinter_components, temp_history_log_dir):
-        """History listbox is empty when GUI starts."""
-        gui = CalculatorGUI()
+    def test_equals_with_no_pending_operator(self, gui):
+        """Pressing = with no pending operator: nothing changes."""
+        gui._current_display = "5"
+        gui._on_equals_pressed()
+        assert gui._current_display == "5"
+        assert gui._pending_operator is None
 
-        # Mock _refresh_history_display to check listbox state
-        gui._history_listbox.size = MagicMock(return_value=0)
+    def test_full_calculation_5_plus_3(self, gui):
+        """Full chain: 5 + 3 = displays "8"."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(3)
+        gui._on_equals_pressed()
+        assert gui._current_display == "8"
 
-        assert gui._history.get_history() == []
+    def test_equals_clears_pending_operator(self, gui):
+        """_pending_operator is None after =."""
+        gui._current_display = "5"
+        gui._pending_operator = "add"
+        gui._pending_operand = 3.0
+        gui._on_equals_pressed()
+        assert gui._pending_operator is None
 
-    def test_history_list_populated_after_calculation(self, mock_tkinter_components, temp_history_log_dir):
-        """History listbox is populated after a calculation."""
-        gui = CalculatorGUI()
+    def test_equals_clears_pending_operand(self, gui):
+        """_pending_operand is None after =."""
+        gui._current_display = "5"
+        gui._pending_operator = "add"
+        gui._pending_operand = 3.0
+        gui._on_equals_pressed()
+        assert gui._pending_operand is None
 
-        # Setup
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=2.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=3.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
+    def test_equals_sets_result_just_shown(self, gui):
+        """_result_just_shown is True after =."""
+        gui._current_display = "5"
+        gui._pending_operator = "add"
+        gui._pending_operand = 3.0
+        gui._on_equals_pressed()
+        assert gui._result_just_shown is True
 
-        gui._perform_calculation()
+    def test_full_calculation_10_minus_4(self, gui):
+        """Chain: 10 - 4 = displays "6"."""
+        gui._on_digit_pressed(1)
+        gui._on_digit_pressed(0)
+        gui._on_operator_pressed("subtract")
+        gui._on_digit_pressed(4)
+        gui._on_equals_pressed()
+        assert gui._current_display == "6"
 
-        # History should have one entry
-        assert len(gui._history.get_history()) == 1
+    def test_full_calculation_3_multiply_4(self, gui):
+        """Chain: 3 × 4 = displays "12"."""
+        gui._on_digit_pressed(3)
+        gui._on_operator_pressed("multiply")
+        gui._on_digit_pressed(4)
+        gui._on_equals_pressed()
+        assert gui._current_display == "12"
 
-    def test_history_list_shows_all_operations(self, mock_tkinter_components, temp_history_log_dir):
-        """History listbox displays all recorded operations."""
-        gui = CalculatorGUI()
-
-        # Setup and perform multiple calculations
-        operations = [
-            ("add", [2.0, 3.0]),
-            ("multiply", [4.0, 5.0]),
-            ("subtract", [10.0, 3.0]),
-        ]
-
-        for op, operands in operations:
-            gui._selected_operation = op
-            for i, val in enumerate(operands):
-                gui._operand_widgets[i].get_value = MagicMock(return_value=val)
-            gui._result_var.set = MagicMock()
-            gui._error_var.set = MagicMock()
-            gui._perform_calculation()
-
-        # History should have all three entries
-        assert len(gui._history.get_history()) == 3
-
-    def test_refresh_history_display_calls_listbox_delete(self, mock_tkinter_components, temp_history_log_dir):
-        """_refresh_history_display clears the listbox."""
-        gui = CalculatorGUI()
-        gui._history_listbox.delete = MagicMock()
-
-        gui._refresh_history_display()
-
-        gui._history_listbox.delete.assert_called_once()
-
-
-# ===========================================================================
-# Tests for Error Handling
-# ===========================================================================
-
-
-class TestErrorHandling:
-    """Tests for error handling in the GUI."""
-
-    def test_error_display_cleared_on_new_calculation(self, mock_tkinter_components, temp_history_log_dir):
-        """Starting a new operation clears previous error messages."""
-        gui = CalculatorGUI()
-
-        # Simulate previous error
-        gui._error_var.set("Previous error")
-
-        # Select new operation
-        gui._on_operation_selected("add")
-
-        # Error should be cleared
-        # Check that set was called with empty string
-        calls = [c for c in gui._error_var.set.call_args_list if c[0][0] == ""]
-        assert len(calls) > 0
-
-    def test_show_error_displays_error_message(self, mock_tkinter_components, temp_history_log_dir):
-        """_show_error displays the error message and clears result."""
-        gui = CalculatorGUI()
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-
-        gui._show_error("Test error message")
-
-        gui._result_var.set.assert_called_with("")
-        gui._error_var.set.assert_called_with("Test error message")
-
-    def test_no_operation_selected_shows_error(self, mock_tkinter_components, temp_history_log_dir):
-        """Attempting to calculate with no operation selected shows error."""
-        gui = CalculatorGUI()
-        gui._selected_operation = None
-        gui._error_var.set = MagicMock()
-        gui._result_var.set = MagicMock()
-
-        gui._perform_calculation()
-
-        gui._error_var.set.assert_called()
+    def test_equals_with_decimal_result(self, gui):
+        """Chain: 5 ÷ 2 = displays "2.5"."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("divide")
+        gui._on_digit_pressed(2)
+        gui._on_equals_pressed()
+        assert gui._current_display == "2.5"
 
 
 # ===========================================================================
-# Tests for Integration with Calculator
+# TestClearButton
 # ===========================================================================
 
 
-class TestIntegrationWithCalculator:
-    """Tests for integration with the Calculator engine."""
+class TestClearButton:
+    """Test clear button behavior."""
 
-    def test_add_operation_via_gui(self, mock_tkinter_components, temp_history_log_dir):
-        """Addition via GUI works correctly."""
-        gui = CalculatorGUI()
+    def test_clear_resets_display(self, gui):
+        """After pressing C: display shows "0"."""
+        gui._current_display = "123"
+        gui._on_clear_pressed()
+        assert gui._current_display == "0"
 
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=10.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=5.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
+    def test_clear_resets_pending_operator(self, gui):
+        """After pressing C: _pending_operator is None."""
+        gui._pending_operator = "add"
+        gui._on_clear_pressed()
+        assert gui._pending_operator is None
 
-        gui._perform_calculation()
+    def test_clear_resets_pending_operand(self, gui):
+        """After pressing C: _pending_operand is None."""
+        gui._pending_operand = 5.0
+        gui._on_clear_pressed()
+        assert gui._pending_operand is None
 
-        gui._result_var.set.assert_called_with("15.0")
+    def test_clear_resets_decimal_entered(self, gui):
+        """After pressing C: _decimal_entered is False."""
+        gui._decimal_entered = True
+        gui._on_clear_pressed()
+        assert gui._decimal_entered is False
 
-    def test_subtract_operation_via_gui(self, mock_tkinter_components, temp_history_log_dir):
-        """Subtraction via GUI works correctly."""
-        gui = CalculatorGUI()
+    def test_clear_resets_result_just_shown(self, gui):
+        """After pressing C: _result_just_shown is False."""
+        gui._result_just_shown = True
+        gui._on_clear_pressed()
+        assert gui._result_just_shown is False
 
-        gui._selected_operation = "subtract"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=10.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=3.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
+    def test_clear_after_partial_calculation(self, gui):
+        """Clear resets all state after partial calculation."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(3)
+        gui._on_clear_pressed()
 
-        gui._perform_calculation()
-
-        gui._result_var.set.assert_called_with("7.0")
-
-    def test_multiply_operation_via_gui(self, mock_tkinter_components, temp_history_log_dir):
-        """Multiplication via GUI works correctly."""
-        gui = CalculatorGUI()
-
-        gui._selected_operation = "multiply"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=4.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=5.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
-
-        gui._perform_calculation()
-
-        gui._result_var.set.assert_called_with("20.0")
-
-    def test_square_operation_via_gui(self, mock_tkinter_components, temp_history_log_dir):
-        """Square operation via GUI works correctly."""
-        gui = CalculatorGUI()
-
-        gui._selected_operation = "square"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=5.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-        gui._history.record_operation = MagicMock()
-
-        gui._perform_calculation()
-
-        gui._result_var.set.assert_called_with("25.0")
-
-    def test_calculator_instance_shared_across_operations(self, mock_tkinter_components, temp_history_log_dir):
-        """The same Calculator instance is used for all operations."""
-        gui = CalculatorGUI()
-
-        calc1 = gui._calc
-
-        gui._selected_operation = "add"
-        gui._operand_widgets[0].get_value = MagicMock(return_value=1.0)
-        gui._operand_widgets[1].get_value = MagicMock(return_value=1.0)
-        gui._result_var.set = MagicMock()
-        gui._error_var.set = MagicMock()
-
-        gui._perform_calculation()
-
-        calc2 = gui._calc
-
-        assert calc1 is calc2
+        assert gui._current_display == "0"
+        assert gui._pending_operator is None
+        assert gui._pending_operand is None
+        assert gui._decimal_entered is False
+        assert gui._result_just_shown is False
 
 
 # ===========================================================================
-# Tests for Main GUI Flag Routing
+# TestNegateButton
 # ===========================================================================
 
 
-class TestMainGuiFlag:
-    """Tests for GUI routing in __main__.py."""
+class TestNegateButton:
+    """Test negate (+/-) button behavior."""
 
-    def test_gui_flag_invokes_calculator_gui(self):
-        """Passing --gui flag invokes CalculatorGUI and calls run()."""
-        with patch("src.gui.CalculatorGUI") as mock_gui_class:
-            mock_gui_instance = MagicMock()
-            mock_gui_class.return_value = mock_gui_instance
+    def test_negate_positive_to_negative(self, gui):
+        """Pressing +/−: display "5" becomes "-5"."""
+        gui._current_display = "5"
+        gui._on_negate_pressed()
+        assert gui._current_display == "-5"
 
-            from src.__main__ import main
-            main(["--gui"])
+    def test_negate_negative_to_positive(self, gui):
+        """Pressing +/−: display "-5" becomes "5"."""
+        gui._current_display = "-5"
+        gui._on_negate_pressed()
+        assert gui._current_display == "5"
 
-            mock_gui_class.assert_called_once()
-            mock_gui_instance.run.assert_called_once()
+    def test_negate_zero_stays_zero(self, gui):
+        """Pressing +/−: display "0" becomes "-0" (formatting quirk)."""
+        gui._current_display = "0"
+        gui._on_negate_pressed()
+        # Note: -0.0 formatted as "-0" due to str(float) behavior
+        assert gui._current_display in ("0", "-0")
 
-    def test_no_gui_flag_does_not_invoke_gui(self):
-        """Without --gui flag, GUI is not invoked."""
-        with patch("src.gui.CalculatorGUI") as mock_gui_class, \
-             patch("src.__main__.run_cli") as mock_cli:
+    def test_negate_decimal_number(self, gui):
+        """Pressing +/−: display "3.14" becomes "-3.14"."""
+        gui._current_display = "3.14"
+        gui._on_negate_pressed()
+        assert gui._current_display == "-3.14"
 
-            from src.__main__ import main
-            main(["--cli"])
+    def test_negate_integer_display_format(self, gui):
+        """Pressing +/−: integer floats display without .0."""
+        gui._current_display = "5.0"
+        gui._on_negate_pressed()
+        assert gui._current_display == "-5"
 
-            mock_gui_class.assert_not_called()
-
-    def test_gui_flag_with_other_args_still_invokes_gui(self):
-        """GUI flag takes precedence even with other arguments."""
-        with patch("src.gui.CalculatorGUI") as mock_gui_class:
-            mock_gui_instance = MagicMock()
-            mock_gui_class.return_value = mock_gui_instance
-
-            from src.__main__ import main
-            main(["--gui", "some_arg"])
-
-            mock_gui_class.assert_called_once()
-            mock_gui_instance.run.assert_called_once()
-
-
-# ===========================================================================
-# Tests for Update Operation Buttons
-# ===========================================================================
-
-
-class TestUpdateOperationButtons:
-    """Tests for the _update_operation_buttons method."""
-
-    def test_update_destroys_existing_buttons(self, mock_tkinter_components, temp_history_log_dir):
-        """_update_operation_buttons destroys old buttons before creating new ones."""
-        gui = CalculatorGUI()
-
-        # Get first button
-        if gui._operation_buttons:
-            first_button = gui._operation_buttons[0]
-            first_button.destroy = MagicMock()
-
-        # Reset buttons list
-        gui._operation_buttons = [MagicMock() for _ in range(3)]
-        for btn in gui._operation_buttons:
-            btn.destroy = MagicMock()
-
-        # Update buttons
-        gui._update_operation_buttons()
-
-        # All buttons should be destroyed
-        for btn in [MagicMock() for _ in range(3)]:
-            btn.destroy = MagicMock()
-
-    def test_normal_mode_button_count(self, mock_tkinter_components, temp_history_log_dir):
-        """Normal mode has exactly 4 operation buttons."""
-        gui = CalculatorGUI()
-
-        assert gui._current_mode == Mode.NORMAL
-        assert len(gui._operation_buttons) == 4
-
-    def test_scientific_mode_button_count(self, mock_tkinter_components, temp_history_log_dir):
-        """Scientific mode has more than 4 operation buttons."""
-        gui = CalculatorGUI()
-        gui._on_mode_changed(Mode.SCIENTIFIC)
-
-        assert len(gui._operation_buttons) > 4
+    def test_negate_on_error_display(self, gui):
+        """Pressing +/−: error display stays unchanged."""
+        gui._current_display = "Error"
+        gui._on_negate_pressed()
+        assert gui._current_display == "Error"
 
 
 # ===========================================================================
-# Tests for Clear Operand Inputs
+# TestPercentButton
 # ===========================================================================
 
 
-class TestClearOperandInputs:
-    """Tests for the _clear_operand_inputs method."""
+class TestPercentButton:
+    """Test percent (%) button behavior."""
 
-    def test_clear_operand_inputs_clears_all_widgets(self, mock_tkinter_components, temp_history_log_dir):
-        """_clear_operand_inputs calls clear on all operand widgets."""
-        gui = CalculatorGUI()
+    def test_percent_50_becomes_0_5(self, gui):
+        """Pressing % on "50": display shows "0.5"."""
+        gui._current_display = "50"
+        gui._on_percent_pressed()
+        assert gui._current_display == "0.5"
 
-        for widget in gui._operand_widgets:
-            widget.clear = MagicMock()
+    def test_percent_100_becomes_1(self, gui):
+        """Pressing % on "100": display shows "1"."""
+        gui._current_display = "100"
+        gui._on_percent_pressed()
+        assert gui._current_display == "1"
 
-        gui._clear_operand_inputs()
+    def test_percent_25_becomes_0_25(self, gui):
+        """Pressing % on "25": display shows "0.25"."""
+        gui._current_display = "25"
+        gui._on_percent_pressed()
+        assert gui._current_display == "0.25"
 
-        for widget in gui._operand_widgets:
-            widget.clear.assert_called_once()
+    def test_percent_1_becomes_0_01(self, gui):
+        """Pressing % on "1": display shows "0.01"."""
+        gui._current_display = "1"
+        gui._on_percent_pressed()
+        assert gui._current_display == "0.01"
+
+    def test_percent_zero(self, gui):
+        """Pressing % on "0": display shows "0"."""
+        gui._current_display = "0"
+        gui._on_percent_pressed()
+        assert gui._current_display == "0"
+
+    def test_percent_on_error_display(self, gui):
+        """Pressing % on error display: stays unchanged."""
+        gui._current_display = "Error"
+        gui._on_percent_pressed()
+        assert gui._current_display == "Error"
+
+    def test_percent_updates_decimal_entered_flag(self, gui):
+        """_decimal_entered updated to reflect result."""
+        gui._current_display = "50"
+        gui._on_percent_pressed()
+        assert gui._decimal_entered is True
+
+
+# ===========================================================================
+# TestUnaryFunctions
+# ===========================================================================
+
+
+class TestUnaryFunctions:
+    """Test unary scientific functions."""
+
+    def test_square_root_of_9(self, gui):
+        """_on_unary_pressed("square_root") with display "9" → "3"."""
+        gui._current_display = "9"
+        gui._on_unary_pressed("square_root")
+        # Result could be "3.0" or "3" depending on formatting
+        assert gui._current_display in ("3.0", "3")
+
+    def test_square_of_4(self, gui):
+        """_on_unary_pressed("square") with display "4" → "16"."""
+        gui._current_display = "4"
+        gui._on_unary_pressed("square")
+        assert gui._current_display == "16"
+
+    def test_unary_sets_result_just_shown(self, gui):
+        """_result_just_shown is True after unary press."""
+        gui._current_display = "4"
+        gui._on_unary_pressed("square")
+        assert gui._result_just_shown is True
+
+    def test_cube_of_2(self, gui):
+        """_on_unary_pressed("cube") with display "2" → "8"."""
+        gui._current_display = "2"
+        gui._on_unary_pressed("cube")
+        assert gui._current_display == "8"
+
+    def test_cube_root_of_8(self, gui):
+        """_on_unary_pressed("cube_root") with display "8" → "2"."""
+        gui._current_display = "8"
+        gui._on_unary_pressed("cube_root")
+        assert gui._current_display in ("2.0", "2")
+
+    def test_factorial_of_5(self, gui):
+        """_on_unary_pressed("factorial") with display "5" → "120"."""
+        gui._current_display = "5"
+        gui._on_unary_pressed("factorial")
+        assert gui._current_display == "120"
+
+    def test_ln_function(self, gui):
+        """_on_unary_pressed("ln") executes without error."""
+        gui._current_display = "2.718281828"
+        gui._on_unary_pressed("ln")
+        # Should be approximately "1"
+        assert gui._current_display != "Error"
+
+    def test_log_function(self, gui):
+        """_on_unary_pressed("log") executes without error."""
+        gui._current_display = "100"
+        gui._on_unary_pressed("log")
+        # Should be "2"
+        assert gui._current_display in ("2.0", "2")
+
+    def test_unary_with_invalid_operation(self, gui):
+        """_on_unary_pressed with invalid key → display "Error"."""
+        gui._current_display = "5"
+        gui._on_unary_pressed("invalid_operation")
+        assert gui._current_display == "Error"
+
+    def test_unary_error_clears_pending_state(self, gui):
+        """Error in unary function clears pending operator and operand."""
+        gui._pending_operator = "add"
+        gui._pending_operand = 5.0
+        gui._current_display = "5"
+        gui._on_unary_pressed("invalid_operation")
+
+        assert gui._current_display == "Error"
+        assert gui._pending_operator is None
+        assert gui._pending_operand is None
+
+    def test_unary_error_resets_decimal_flag(self, gui):
+        """Error in unary function resets decimal_entered."""
+        gui._decimal_entered = True
+        gui._current_display = "5"
+        gui._on_unary_pressed("invalid_operation")
+        assert gui._decimal_entered is False
+
+    def test_unary_square_root_negative_number(self, gui):
+        """_on_unary_pressed("square_root") with negative number → "Error"."""
+        gui._current_display = "-4"
+        gui._on_unary_pressed("square_root")
+        assert gui._current_display == "Error"
+
+
+# ===========================================================================
+# TestModeToggle
+# ===========================================================================
+
+
+class TestModeToggle:
+    """Test scientific mode toggle behavior."""
+
+    def test_initial_mode_normal(self, gui):
+        """Initially _is_scientific_mode == False."""
+        assert gui._is_scientific_mode is False
+
+    def test_first_mode_toggle_sets_scientific(self, gui):
+        """After mode toggle: _is_scientific_mode == True."""
+        gui._on_mode_toggle()
+        assert gui._is_scientific_mode is True
+
+    def test_second_mode_toggle_resets_normal(self, gui):
+        """After second mode toggle: _is_scientific_mode == False."""
+        gui._on_mode_toggle()
+        gui._on_mode_toggle()
+        assert gui._is_scientific_mode is False
+
+    def test_mode_toggle_preserves_display(self, gui):
+        """Mode toggle preserves _current_display."""
+        gui._current_display = "42"
+        gui._on_mode_toggle()
+        assert gui._current_display == "42"
+
+    def test_mode_toggle_preserves_pending_operator(self, gui):
+        """Mode toggle preserves _pending_operator."""
+        gui._pending_operator = "add"
+        gui._on_mode_toggle()
+        assert gui._pending_operator == "add"
+
+    def test_mode_toggle_preserves_pending_operand(self, gui):
+        """Mode toggle preserves _pending_operand."""
+        gui._pending_operand = 5.0
+        gui._on_mode_toggle()
+        assert gui._pending_operand == 5.0
+
+    def test_mode_toggle_preserves_all_state(self, gui):
+        """Mode toggle preserves all calculation state."""
+        gui._current_display = "12"
+        gui._pending_operator = "multiply"
+        gui._pending_operand = 3.0
+        gui._decimal_entered = True
+        gui._result_just_shown = True
+
+        gui._on_mode_toggle()
+
+        assert gui._current_display == "12"
+        assert gui._pending_operator == "multiply"
+        assert gui._pending_operand == 3.0
+        assert gui._decimal_entered is True
+        assert gui._result_just_shown is True
+        assert gui._is_scientific_mode is True
+
+
+# ===========================================================================
+# TestFormatResult
+# ===========================================================================
+
+
+class TestFormatResult:
+    """Test the _format_result helper method."""
+
+    def test_format_integer_float_8_0(self):
+        """_format_result(8.0) returns "8"."""
+        result = CalculatorGUI._format_result(8.0)
+        assert result == "8"
+
+    def test_format_decimal_3_14(self):
+        """_format_result(3.14) returns "3.14"."""
+        result = CalculatorGUI._format_result(3.14)
+        assert result == "3.14"
+
+    def test_format_negative_integer_5_0(self):
+        """_format_result(-5.0) returns "-5"."""
+        result = CalculatorGUI._format_result(-5.0)
+        assert result == "-5"
+
+    def test_format_decimal_0_5(self):
+        """_format_result(0.5) returns "0.5"."""
+        result = CalculatorGUI._format_result(0.5)
+        assert result == "0.5"
+
+    def test_format_zero(self):
+        """_format_result(0.0) returns "0"."""
+        result = CalculatorGUI._format_result(0.0)
+        assert result == "0"
+
+    def test_format_negative_decimal(self):
+        """_format_result(-3.14) returns "-3.14"."""
+        result = CalculatorGUI._format_result(-3.14)
+        assert result == "-3.14"
+
+    def test_format_large_integer(self):
+        """_format_result(1000.0) returns "1000"."""
+        result = CalculatorGUI._format_result(1000.0)
+        assert result == "1000"
+
+    def test_format_very_small_decimal(self):
+        """_format_result(0.001) returns "0.001"."""
+        result = CalculatorGUI._format_result(0.001)
+        assert result == "0.001"
+
+    def test_format_many_decimal_places(self):
+        """_format_result with many decimals preserves them."""
+        result = CalculatorGUI._format_result(3.14159265)
+        assert "3.14159" in result
+
+
+# ===========================================================================
+# TestUpdateDisplay
+# ===========================================================================
+
+
+class TestUpdateDisplay:
+    """Test display update mechanism."""
+
+    def test_update_display_calls_stringvar_set(self, gui, mock_tkinter_components):
+        """_update_display() updates the display variable."""
+        gui._current_display = "42"
+        gui._update_display()
+        # Verify the StringVar was set to the display value
+        assert mock_tkinter_components['stringvar_values']['value'] == "42"
+
+    def test_update_display_after_digit_press(self, gui, mock_tkinter_components):
+        """Display updates after digit press."""
+        gui._on_digit_pressed(5)
+        assert mock_tkinter_components['stringvar_values']['value'] == "5"
+
+    def test_update_display_after_operator_press(self, gui, mock_tkinter_components):
+        """Display updates after operator press (doesn't change display)."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        # Display should still show "5" after operator
+        assert gui._current_display == "5"
+
+
+# ===========================================================================
+# TestComplexScenarios
+# ===========================================================================
+
+
+class TestComplexScenarios:
+    """Test complex multi-step scenarios."""
+
+    def test_chained_calculations(self, gui):
+        """Test: 2 + 3 = (result 5), then + 2 = (result 7)."""
+        gui._on_digit_pressed(2)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(3)
+        gui._on_equals_pressed()
+        assert gui._current_display == "5"
+
+        # Continue with the result
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(2)
+        gui._on_equals_pressed()
+        assert gui._current_display == "7"
+
+    def test_mixed_operations(self, gui):
+        """Test: 10 × 2 - 5 = (result 15)."""
+        gui._on_digit_pressed(1)
+        gui._on_digit_pressed(0)
+        gui._on_operator_pressed("multiply")
+        gui._on_digit_pressed(2)
+        gui._on_equals_pressed()
+        assert gui._current_display == "20"
+
+        gui._on_operator_pressed("subtract")
+        gui._on_digit_pressed(5)
+        gui._on_equals_pressed()
+        assert gui._current_display == "15"
+
+    def test_calculation_with_decimals(self, gui):
+        """Test: 2.5 + 1.5 = 4."""
+        gui._on_digit_pressed(2)
+        gui._on_decimal_pressed()
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(1)
+        gui._on_decimal_pressed()
+        gui._on_digit_pressed(5)
+        gui._on_equals_pressed()
+        assert gui._current_display == "4"
+
+    def test_unary_then_binary_operation(self, gui):
+        """Test: square of 3 (9), then add 1 = 10."""
+        gui._on_digit_pressed(3)
+        gui._on_unary_pressed("square")
+        assert gui._current_display == "9"
+
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(1)
+        gui._on_equals_pressed()
+        assert gui._current_display == "10"
+
+    def test_percent_then_operation(self, gui):
+        """Test: 200 as 2 (%), then add 5 = 7."""
+        gui._on_digit_pressed(2)
+        gui._on_digit_pressed(0)
+        gui._on_digit_pressed(0)
+        gui._on_percent_pressed()
+        assert gui._current_display == "2"
+
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(5)
+        gui._on_equals_pressed()
+        assert gui._current_display == "7"
+
+    def test_negate_then_operation(self, gui):
+        """Test: negate 5 to -5, then add 10 = 5."""
+        gui._on_digit_pressed(5)
+        gui._on_negate_pressed()
+        assert gui._current_display == "-5"
+
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(1)
+        gui._on_digit_pressed(0)
+        gui._on_equals_pressed()
+        assert gui._current_display == "5"
+
+    def test_clear_in_middle_of_calculation(self, gui):
+        """Test: 5 + 3, then clear, then 2 + 1 = 3."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(3)
+        gui._on_clear_pressed()
+
+        gui._on_digit_pressed(2)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(1)
+        gui._on_equals_pressed()
+        assert gui._current_display == "3"
+
+
+# ===========================================================================
+# TestEdgeCases
+# ===========================================================================
+
+
+class TestEdgeCases:
+    """Test edge cases and boundary conditions."""
+
+    def test_very_large_number_input(self, gui):
+        """Test input of very large number."""
+        for digit in [9] * 10:
+            gui._on_digit_pressed(digit)
+        assert len(gui._current_display) == 10
+
+    def test_very_small_decimal(self, gui):
+        """Test input of very small decimal."""
+        gui._current_display = "0.0000001"
+        gui._on_percent_pressed()
+        # Result is a very small number in scientific notation
+        assert "e-" in gui._current_display or gui._current_display.startswith("0.")
+
+    def test_division_by_zero_handling(self, gui):
+        """Test division by zero."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("divide")
+        gui._on_digit_pressed(0)
+        gui._on_equals_pressed()
+        # Result depends on calculator implementation
+        assert gui._current_display in ("Error", "inf")
+
+    def test_multiple_decimal_attempts(self, gui):
+        """Test multiple decimal point attempts."""
+        gui._on_digit_pressed(5)
+        gui._on_decimal_pressed()
+        gui._on_decimal_pressed()
+        gui._on_decimal_pressed()
+        assert gui._current_display == "5."
+
+    def test_negate_multiple_times(self, gui):
+        """Test negating multiple times."""
+        gui._on_digit_pressed(5)
+        gui._on_negate_pressed()
+        gui._on_negate_pressed()
+        assert gui._current_display == "5"
+
+    def test_equals_multiple_times(self, gui):
+        """Test pressing equals multiple times."""
+        gui._on_digit_pressed(5)
+        gui._on_operator_pressed("add")
+        gui._on_digit_pressed(3)
+        gui._on_equals_pressed()
+        first_result = gui._current_display
+
+        gui._on_equals_pressed()
+        # Second equals should do nothing since no pending operator
+        assert gui._current_display == first_result
+
+    def test_operator_without_operand(self, gui):
+        """Test operator pressed on initial state."""
+        gui._on_operator_pressed("add")
+        assert gui._pending_operator == "add"
+        assert gui._pending_operand == 0.0
+
+    def test_decimal_on_zero(self, gui):
+        """Test decimal on zero display."""
+        gui._on_decimal_pressed()
+        assert gui._current_display == "0."
+
+    def test_operations_on_error_state(self, gui):
+        """Test digit pressed after error state."""
+        # When error occurs, _result_just_shown is False, so digit appends
+        gui._current_display = "Error"
+        gui._result_just_shown = False
+        gui._on_digit_pressed(5)
+        # Digit appends to error display (current behavior)
+        assert gui._current_display == "Error5"
+
+    def test_mode_toggle_multiple_times(self, gui):
+        """Test toggling mode multiple times."""
+        initial = gui._is_scientific_mode
+        gui._on_mode_toggle()
+        gui._on_mode_toggle()
+        gui._on_mode_toggle()
+        gui._on_mode_toggle()
+        assert gui._is_scientific_mode == initial

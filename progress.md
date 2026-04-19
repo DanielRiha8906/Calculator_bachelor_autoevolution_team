@@ -295,3 +295,22 @@ Risks: tkinter is not available on headless CI; mitigated by mocking tkinter in 
 Tests: 1112 total (1047 pre-existing + 65 new), all pass, 0 failures.
 
 Duration: 582.4s | Cost: $1.315426 USD | Turns: 14
+
+## Run: Issue #128 — iOS-style GUI redesign (task/issue-128-ios-gui-redesign)
+
+Branch: task/issue-128-ios-gui-redesign
+PR target: exp/structured-team
+
+Files changed:
+- src/gui.py: complete rewrite — iOS-inspired dark calculator replacing the form-based GUI with a button-grid state-machine GUI; removed OperandInputWidget class; added _on_digit_pressed, _on_decimal_pressed, _on_operator_pressed, _on_unary_pressed, _on_equals_pressed, _on_clear_pressed, _on_negate_pressed, _on_percent_pressed, _on_mode_toggle, _update_display, _format_result, _build_display, _build_mode_toggle, _build_button_grid, _rebuild_scientific_buttons; state machine uses _current_display, _pending_operator, _pending_operand, _decimal_entered, _is_scientific_mode, _result_just_shown; all arithmetic delegated to dispatch()
+- artifacts/class_diagram.puml: replaced OperandInputWidget class and old CalculatorGUI attributes/methods with new state machine attributes and button-handler methods; removed OperandInputWidget composition relationship
+- artifacts/activity_diagram.puml: replaced generic "gui.run()" entry with button-type branching flow showing all 9 button categories and their state transitions
+- artifacts/sequence_diagram.puml: replaced form-based interaction scenarios with button-press sequences showing the 5+3=8 happy path, divide-by-zero error path, unary function path, and mode toggle paths
+
+Purpose: Redesign GUI presentation layer to iOS-inspired dark calculator with a button-grid interface and explicit state machine; no calculation logic changed.
+
+Risks: tests/test_gui.py imports OperandInputWidget which no longer exists — Tester must rewrite GUI tests against the new button-driven architecture. Calculator logic tests (1047) all pass unaffected.
+
+Tests: 1047 non-GUI tests pass. GUI tests require Tester rewrite (OperandInputWidget removed as intended by architecture).
+
+Duration: 553.0s | Cost: $1.424852 USD | Turns: 14

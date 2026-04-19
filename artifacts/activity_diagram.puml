@@ -6,10 +6,120 @@ start
 partition "Interaction Layer" {
   if ("--gui" in sys.argv?) then (yes)
     :Create CalculatorGUI();
+    note right
+      _current_display = "0"
+      _pending_operator = None
+      _pending_operand = None
+      _decimal_entered = False
+      _is_scientific_mode = False
+      _result_just_shown = False
+    end note
+    :Display "0" in result label;
     :gui.run() — enter tkinter mainloop;
+
+    repeat
+      :User presses a button;
+
+      if (Button type?) then (Digit 0-9)
+        if (_result_just_shown or _current_display == "0"?) then (yes)
+          :_current_display = str(digit);
+          :_decimal_entered = False;
+        else (no)
+          :_current_display += str(digit);
+        endif
+        :_result_just_shown = False;
+        :Update display label;
+
+      elseif (Decimal (.)) then
+        if (_result_just_shown?) then (yes)
+          :_current_display = "0.";
+          :_decimal_entered = True;
+          :_result_just_shown = False;
+        elseif (not _decimal_entered?) then (yes)
+          :_current_display += ".";
+          :_decimal_entered = True;
+        endif
+        :Update display label;
+
+      elseif (Operator (+, −, ×, ÷)) then
+        :_pending_operand = float(_current_display);
+        :_pending_operator = operator_key;
+        :_result_just_shown = True;
+        :_decimal_entered = False;
+        note right: Display not cleared — shows pending operand
+
+      elseif (Unary function (√, x², x³, ∛, n!, ln, log)) then
+        :current_float = float(_current_display);
+        group try
+          :result = dispatch(function_key, [current_float], calc);
+          :_current_display = format_result(result);
+          :_decimal_entered = "." in _current_display;
+          :_result_just_shown = True;
+        end group
+        if (ValueError or KeyError raised?) then (yes)
+          :_current_display = "Error";
+          :Reset pending state;
+        endif
+        :Update display label;
+
+      elseif (Equals (=)) then
+        if (_pending_operator is None?) then (yes)
+          :Do nothing;
+        else (no)
+          :current_float = float(_current_display);
+          group try
+            :result = dispatch(_pending_operator, [_pending_operand, current_float], calc);
+            :_current_display = format_result(result);
+            :_pending_operator = None;
+            :_pending_operand = None;
+            :_decimal_entered = "." in _current_display;
+            :_result_just_shown = True;
+          end group
+          if (ValueError or KeyError raised?) then (yes)
+            :_current_display = "Error";
+            :Reset pending state;
+          endif
+          :Update display label;
+        endif
+
+      elseif (Clear (C)) then
+        :_current_display = "0";
+        :_pending_operator = None;
+        :_pending_operand = None;
+        :_decimal_entered = False;
+        :_result_just_shown = False;
+        :Update display label;
+
+      elseif (Negate (+/-)) then
+        :current_float = float(_current_display);
+        :_current_display = format_result(-current_float);
+        :Update display label;
+
+      elseif (Percent (%)) then
+        :current_float = float(_current_display);
+        :_current_display = format_result(current_float / 100.0);
+        :_decimal_entered = "." in _current_display;
+        :Update display label;
+
+      elseif (Mode toggle) then
+        :_is_scientific_mode = not _is_scientific_mode;
+        if (_is_scientific_mode?) then (yes)
+          :Show scientific button rows (√, x², x³, ∛, n!, ln, log);
+          :Mode button label → "Normal";
+        else (no)
+          :Hide scientific button rows;
+          :Mode button label → "Scientific";
+        endif
+        note right: Pending state preserved
+
+      endif
+
+    repeat while (window open?) is (yes)
     stop
+
   else (no)
   endif
+
   if (CLI arguments present? (sys.argv[1:])) then (yes)
     :Parse arguments with argparse (run_cli);
     if (Operation recognised in OPERATIONS?) then (no)
