@@ -13,8 +13,18 @@ if (Mode?) then (interactive — via __main__)
 
     while (choice is not None?) is (yes)
 
+        if (choice is (None, None)?) then (yes — max attempts exhausted)
+            :Print "Too many invalid attempts. Exiting.";
+            stop
+        endif
+
         :Unpack (method, arity) from choice;
         :get_operands(arity);
+
+        if (operands is None?) then (yes — max attempts exhausted)
+            :Print "Too many invalid attempts. Exiting.";
+            stop
+        endif
 
         if (method is factorial?) then (yes)
             :Convert whole-valued float operands to int;

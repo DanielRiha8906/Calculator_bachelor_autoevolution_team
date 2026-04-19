@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-166-retry-logic
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect MAX_VALIDATION_ATTEMPTS retry cap added in issue-166: get_operation_choice now returns (None, None) on exhaustion, get_operands returns None on exhaustion, and run_interactive_session breaks on either sentinel.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-166-retry-logic — Add MAX_VALIDATION_ATTEMPTS retry cap to input_handler
 
 - **Branch:** task/issue-166-retry-logic
