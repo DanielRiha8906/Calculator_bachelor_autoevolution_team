@@ -1,5 +1,17 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-176-logic-separation
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-176 logic separation: InputHandler reduced to backward-compat shim; new src.core package with Operations module (get_operation_registry); new src.interactive package with Session module (display_menu, get_operation_choice, get_operands, run_interactive_session, MAX_VALIDATION_ATTEMPTS). Class diagram restructured with new packages and updated dependency edges. Sequence diagram updated to use core.Operations and interactive.Session participants, replacing InputHandler. Activity diagram updated to attribute get_operation_registry calls to core.Operations and to include error logging in interactive exception handler.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 250.2s | Cost: $0.677241 USD | Turns: 21
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-172-error-logging
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect ErrorLogger class added in issue-172: new ErrorLogger class node in class diagram with log_error method and note on error types/format; CLI→ErrorLogger dependency added; activity diagram updated with log_error steps before each stderr error print in CLI branch; sequence diagram updated with ErrorLogger participant and all log_error calls from CLI (UNSUPPORTED_OPERATION, ARGUMENT_COUNT_MISMATCH, INVALID_OPERAND, DIVISION_BY_ZERO).
@@ -215,3 +227,20 @@ Duration: 281.6s | Cost: $0.675011 USD | Turns: 14
 - **PR target:** exp2/expert-team
 
 Duration: 426.9s | Cost: $1.200818 USD | Turns: 15
+
+---
+
+## Run: Issue #176 — V2 Task 11: Logic Separation (Expert/Team)
+- **Branch:** task/issue-176-logic-separation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - Created: `src/core/__init__.py`, `src/core/operations.py`
+  - Created: `src/interactive/__init__.py`, `src/interactive/session.py`
+  - Modified: `src/input_handler.py` (backward-compat shim), `src/cli.py` (import update), `src/__init__.py` (new exports)
+  - Modified: `tests/test_cli.py`, `tests/test_input_handler.py` (import updates)
+  - Created: `tests/test_logic_separation.py` (54 new tests)
+- **Purpose:** Separate core calculation logic (`src/core/`) from interactive UI (`src/interactive/`). `input_handler.py` becomes a backward-compat re-export shim. CLI now depends directly on core, not interactive layer.
+- **Risks:** Low — all logic moved verbatim; no behavioral changes; backward-compat shim preserves all existing import paths.
+- **Tests passed:** Yes — 523 tests passed (54 new), 0 failures.
+
+Duration: 364.0s | Cost: $0.993583 USD | Turns: 13
