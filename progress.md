@@ -7,7 +7,7 @@
 - **Tests passed:** 109/109 (test_documentation.py); existing suite unaffected.
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 593.1s | Cost: $1.347870 USD | Turns: 15
 
 ## Run: update-diagrams — PlantUML diagram update
 
