@@ -6,7 +6,7 @@
 - risks: None — diagram-only update, no source changes
 - tests passed: N/A
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 215.8s | Cost: $0.569716 USD | Turns: 15
 
 ## Run: issue-179-modularization-naive-team (2026-04-19)
 
