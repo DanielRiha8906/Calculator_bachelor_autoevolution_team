@@ -11,20 +11,63 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
   repeat
     :Display operation menu\n(get_operation_selection());
-    :User selects operation or "exit";
 
-    if (User chose "exit"?) then (yes)
+    repeat
+      :User selects operation or "quit";
+      if (input valid (number or "quit")?) then (yes)
+        break
+      else (no)
+        :attempts++;
+        if (attempts >= MAX_RETRIES?) then (yes)
+          :raise MaxRetriesExceeded;
+          stop
+        else (no)
+          :Print invalid selection message;
+        endif
+      endif
+    repeat while (retry?)
+
+    if (User chose "quit"?) then (yes)
       stop
     endif
 
     :Determine arity from OPERATIONS dict;
 
-    :get_operand(first prompt\nwith last_result default);
-    :Parse first operand as float;
+    repeat
+      :get_operand(first prompt\nwith last_result default);
+      if (input empty and last_result set?) then (yes)
+        :use last_result as operand;
+        break
+      elseif (input is valid float?) then (yes)
+        :parse operand as float;
+        break
+      else (no)
+        :attempts++;
+        if (attempts >= MAX_RETRIES?) then (yes)
+          :raise MaxRetriesExceeded;
+          stop
+        else (no)
+          :Print invalid number message;
+        endif
+      endif
+    repeat while (retry?)
 
     if (arity == 2?) then (yes)
-      :get_operand(second prompt);
-      :Parse second operand as float;
+      repeat
+        :get_operand(second prompt);
+        if (input is valid float?) then (yes)
+          :parse second operand as float;
+          break
+        else (no)
+          :attempts++;
+          if (attempts >= MAX_RETRIES?) then (yes)
+            :raise MaxRetriesExceeded;
+            stop
+          else (no)
+            :Print invalid number message;
+          endif
+        endif
+      repeat while (retry?)
     endif
 
     :_execute(operation, operands);
