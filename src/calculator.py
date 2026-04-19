@@ -1,18 +1,44 @@
 import math
+from datetime import datetime
+
+from .history import OperationHistory
 
 
 class Calculator:
+    def __init__(self) -> None:
+        self._history: OperationHistory = OperationHistory()
+
+    def get_history(self) -> list:
+        """Return a copy of all recorded operation history entries.
+
+        Returns:
+            A list of ``OperationRecord`` instances in insertion order.
+        """
+        return self._history.get_history()
+
+    def clear_history(self) -> None:
+        """Remove all entries from the operation history."""
+        self._history.clear_history()
+
     def add(self, a, b):
-        return a + b
+        result = a + b
+        self._history.add_record("add", [a, b], result, datetime.now())
+        return result
 
     def subtract(self, a, b):
-        return a - b
+        result = a - b
+        self._history.add_record("subtract", [a, b], result, datetime.now())
+        return result
 
     def multiply(self, a, b):
-        return a * b
+        result = a * b
+        self._history.add_record("multiply", [a, b], result, datetime.now())
+        return result
 
     def divide(self, a, b):
-        return a / b
+        result = a / b
+        self._history.add_record("divide", [a, b], result, datetime.now())
+        return result
 
     def factorial(self, n: int) -> int:
         """Compute the factorial of a non-negative integer.
@@ -52,6 +78,7 @@ class Calculator:
         result: int = 1
         for i in range(2, n + 1):
             result *= i
+        self._history.add_record("factorial", [n], result, datetime.now())
         return result
 
     def square(self, x: int | float) -> int | float:
@@ -74,7 +101,9 @@ class Calculator:
             raise TypeError(
                 f"Expected an int or float, got {type(x).__name__}."
             )
-        return x * x
+        result = x * x
+        self._history.add_record("square", [x], result, datetime.now())
+        return result
 
     def cube(self, x: int | float) -> int | float:
         """Compute the cube of a number.
@@ -96,7 +125,9 @@ class Calculator:
             raise TypeError(
                 f"Expected an int or float, got {type(x).__name__}."
             )
-        return x * x * x
+        result = x * x * x
+        self._history.add_record("cube", [x], result, datetime.now())
+        return result
 
     def square_root(self, x: int | float) -> float:
         """Compute the square root of a non-negative number.
@@ -124,7 +155,9 @@ class Calculator:
             raise ValueError(
                 f"Square root is not defined for negative numbers; got {x}."
             )
-        return math.sqrt(x)
+        result = math.sqrt(x)
+        self._history.add_record("square_root", [x], result, datetime.now())
+        return result
 
     def cube_root(self, x: int | float) -> float:
         """Compute the cube root of a number.
@@ -147,7 +180,9 @@ class Calculator:
             raise TypeError(
                 f"Expected an int or float, got {type(x).__name__}."
             )
-        return math.copysign(abs(x) ** (1 / 3), x)
+        result = math.copysign(abs(x) ** (1 / 3), x)
+        self._history.add_record("cube_root", [x], result, datetime.now())
+        return result
 
     def power(self, base: int | float, exponent: int | float) -> float:
         """Raise base to the power of exponent.
@@ -180,7 +215,9 @@ class Calculator:
             raise TypeError(
                 f"Expected an int or float for exponent, got {type(exponent).__name__}."
             )
-        return float(base ** exponent)
+        result = float(base ** exponent)
+        self._history.add_record("power", [base, exponent], result, datetime.now())
+        return result
 
     def log10(self, x: int | float) -> float:
         """Compute the base-10 logarithm of a positive number.
@@ -208,7 +245,9 @@ class Calculator:
             raise ValueError(
                 f"log10 is not defined for non-positive numbers; got {x}."
             )
-        return math.log10(x)
+        result = math.log10(x)
+        self._history.add_record("log10", [x], result, datetime.now())
+        return result
 
     def natural_log(self, x: int | float) -> float:
         """Compute the natural logarithm (base e) of a positive number.
@@ -236,4 +275,6 @@ class Calculator:
             raise ValueError(
                 f"Natural log is not defined for non-positive numbers; got {x}."
             )
-        return math.log(x)
+        result = math.log(x)
+        self._history.add_record("natural_log", [x], result, datetime.now())
+        return result
