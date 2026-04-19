@@ -9,7 +9,7 @@
 - PR target: exp2/naive-team
 - PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/208
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 432.6s | Cost: $1.141002 USD | Turns: 16
 
 ## Run: update-diagrams (2026-04-19)
 
