@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-168-history
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `OperationHistory` class with `history_file`, `clear_history`, `record_operation`, and `display_history`; updated `REPLInterface` and `CLIHandler` to include `history: OperationHistory | None` attribute and constructor param; added `Main ..> OperationHistory`, `REPLInterface o-- OperationHistory`, and `CLIHandler o-- OperationHistory` relationships; updated `Main` note to describe history instantiation
+  - `artifacts/activity_diagram.puml` — added OperationHistory instantiation and `clear_history()` at session start; added "history" menu selection path in REPL (calls `display_history`); added `record_operation` step after each successful REPL operation; added `record_operation` step in CLI success path
+  - `artifacts/sequence_diagram.puml` — added `OperationHistory` participant; added `OperationHistory()` and `clear_history()` calls from Main; added "history" alt branch in REPL loop calling `display_history()`; added `record_operation` call after successful REPL result display; added `record_operation` call in CLI success path; added `CLIHandler(calculator, history)` and `REPLInterface(calculator, history)` constructor signatures
+- **Purpose:** Sync PlantUML diagrams with current source after issue-168 added `OperationHistory` and wired history recording into REPL and CLI interfaces
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 170.0s | Cost: $0.476383 USD | Turns: 21
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-165-retry-logic
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `MaxRetriesExceeded` exception class with `Exception` inheritance and raise relationship to `REPLInterface`; added `_is_valid_operand` and `_is_valid_operation_input` private methods; updated OPERATIONS note to say module-level; added notes for `get_operation_selection` and `get_operand` retry behaviour
@@ -189,3 +202,14 @@ Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
 - **PR target:** exp2/structured-team
 
 Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
+
+## Run: issue-168-history (2026-04-19)
+
+- **Branch:** task/issue-168-history
+- **Files changed:** src/history.py (created), src/__main__.py (modified), src/repl.py (modified), src/cli.py (modified), tests/test_history.py (created)
+- **Purpose:** Add session-scoped operation history: records calculations to history.txt, cleared at session start, displayable via "history" command in interactive mode
+- **Risks:** history.txt is created in the working directory at runtime; tests use tmp_path fixture to avoid interference; existing tests unaffected
+- **Tests passed:** 513/513 (52 new history tests, 461 existing tests all still pass)
+- **PR target:** exp2/structured-team
+
+Duration: 402.4s | Cost: $1.051931 USD | Turns: 14

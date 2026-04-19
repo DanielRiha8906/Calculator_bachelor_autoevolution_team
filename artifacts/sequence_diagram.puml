@@ -1,6 +1,7 @@
 @startuml sequence_diagram
 
 participant "__main__" as Main
+participant "OperationHistory" as History
 participant "REPLInterface" as REPL
 participant "CLIHandler" as CLI
 participant "Calculator" as Calc
@@ -9,9 +10,17 @@ actor "User" as User
 Main -> Calc : Calculator()
 activate Calc
 
+Main -> History : OperationHistory()
+activate History
+Main -> History : clear_history()
+note over History
+  Truncates or creates history.txt
+  at session start for isolation.
+end note
+
 alt REPL mode (argv empty or ["--repl"])
 
-  Main -> REPL : REPLInterface(calculator)
+  Main -> REPL : REPLInterface(calculator, history)
   activate REPL
 
   Main -> REPL : run()
@@ -21,7 +30,7 @@ alt REPL mode (argv empty or ["--repl"])
     REPL -> User : display operation menu
 
     loop up to MAX_RETRIES attempts
-      User -> REPL : select operation (e.g. "add")
+      User -> REPL : select operation (e.g. "add", "history", or "quit")
       alt valid selection
         REPL -> REPL : resolve operation key
       else invalid input
@@ -41,6 +50,10 @@ alt REPL mode (argv empty or ["--repl"])
 
     alt user entered "quit"
       REPL -> User : "Calculator closed."
+    else user entered "history"
+      REPL -> History : display_history()
+      History --> REPL : list[str]
+      REPL -> User : print each history entry (or "No history recorded yet.")
     else valid operation selected
 
       REPL -> User : prompt first operand\n(with last_result as default)
@@ -146,6 +159,7 @@ alt REPL mode (argv empty or ["--repl"])
       alt result returned successfully
         REPL -> REPL : store result as last_result
         REPL -> User : display_result(operation, operands, result)
+        REPL -> History : record_operation("op(args) = result")
       else exception raised
         REPL -> User : print error message
       end
@@ -164,7 +178,7 @@ alt REPL mode (argv empty or ["--repl"])
 
 else CLI mode (argv has operation + operands)
 
-  Main -> CLI : CLIHandler(calculator)
+  Main -> CLI : CLIHandler(calculator, history)
   activate CLI
 
   Main -> CLI : execute(argv)
@@ -192,6 +206,7 @@ else CLI mode (argv has operation + operands)
   end
 
   alt operation succeeded
+    CLI -> History : record_operation("op(args) = result")
     CLI --> Main : result
     Main -> User : print result to stdout; exit(0)
   else ZeroDivisionError / domain error
@@ -203,6 +218,7 @@ else CLI mode (argv has operation + operands)
 
 end
 
+deactivate History
 deactivate Calc
 
 @enduml

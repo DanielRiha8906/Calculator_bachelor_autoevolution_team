@@ -5,7 +5,10 @@ dispatches to the Calculator, and returns the raw numeric result.
 """
 
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from src.history import OperationHistory
 
 # Operations that take exactly one operand.
 _UNARY_OPS: frozenset[str] = frozenset(
@@ -29,10 +32,13 @@ class CLIHandler:
 
     Args:
         calculator: A Calculator instance whose methods will be called.
+        history: An optional ``OperationHistory`` instance used to record each
+            completed operation.  When ``None``, history recording is disabled.
     """
 
-    def __init__(self, calculator: Any) -> None:
+    def __init__(self, calculator: Any, history: "OperationHistory | None" = None) -> None:
         self.calculator = calculator
+        self.history = history
 
     def get_operation_mapping(self) -> dict[str, str]:
         """Return a mapping from operation names and symbols to Calculator method names.
@@ -142,7 +148,14 @@ class CLIHandler:
                 raise ValueError("logarithm base must be positive and not equal to 1")
             if x <= 0:
                 raise ValueError("logarithm() not defined for non-positive values")
-            return math.log(x, base)
+            result = math.log(x, base)
+        else:
+            method = getattr(self.calculator, method_name)
+            result = method(*operands)
 
-        method = getattr(self.calculator, method_name)
-        return method(*operands)
+        if self.history is not None:
+            operand_str = ", ".join(str(o) for o in operands)
+            entry = f"{method_name}({operand_str}) = {result}"
+            self.history.record_operation(entry)
+
+        return result
