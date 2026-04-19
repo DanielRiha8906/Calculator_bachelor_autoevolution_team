@@ -17,6 +17,8 @@ Duration: 90.9s | Cost: $0.320149 USD | Turns: 18
 - risks: __main__.py now exits with a non-zero code on CLI errors; existing interactive mode is unchanged
 - tests passed: 88 new CLI tests passed; 482 total tests passed, 0 regressions
 
+Duration: 275.9s | Cost: $0.750325 USD | Turns: 15
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-149-user-input
