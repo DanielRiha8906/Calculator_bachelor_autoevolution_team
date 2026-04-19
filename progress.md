@@ -12,6 +12,20 @@
 
 Duration: 136.1s | Cost: $0.358693 USD | Turns: 16
 
+## Run: issue-165-retry-logic (2026-04-19)
+
+- **Branch:** task/issue-165-retry-logic
+- **Files changed:**
+  - `src/exceptions.py` — created; defines `MaxRetriesExceeded(Exception)` for signaling max retry exhaustion
+  - `src/repl.py` — added `MAX_RETRIES = 3` constant, `_is_valid_operand()` and `_is_valid_operation_input()` helpers, retry counter logic in `get_operand()` and `get_operation_selection()`, and `MaxRetriesExceeded` catch blocks in `run()`
+  - `tests/test_repl.py` — added 64 new tests: `TestInputValidationHelpers`, `TestRetryLogicAndMaxAttempts`, `TestMaxRetriesExceededException`
+- **Purpose:** Add input validation and retry logic to guided interactive (REPL) mode; CLI mode behavior unchanged
+- **Risks:** Low — changes isolated to REPL; backward compatible method signatures; no new dependencies
+- **Tests passed:** 169/169 (all pass)
+- **PR target:** exp2/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-150-user-input

@@ -8,6 +8,8 @@ Tests cover:
 - REPLInterface integration
 - src/__init__ exports
 - src/__main__ main() function
+- Retry logic: MAX_RETRIES, MaxRetriesExceeded exception
+- Input validation helpers: _is_valid_operand, _is_valid_operation_input
 """
 
 import pytest
@@ -15,8 +17,9 @@ import math
 from unittest.mock import Mock, patch, call, MagicMock
 from io import StringIO
 
-from src.repl import REPLInterface, OPERATIONS
+from src.repl import REPLInterface, OPERATIONS, MAX_RETRIES
 from src.calculator import Calculator
+from src.exceptions import MaxRetriesExceeded
 from src import REPLInterface as ImportedREPLInterface
 
 
@@ -122,8 +125,9 @@ class TestGetOperationSelection:
         assert result == "power"
 
     def test_multiple_invalid_then_valid(self, repl):
-        """Test multiple invalid inputs before valid selection."""
-        with patch("builtins.input", side_effect=["abc", "99", "0", "7"]):
+        """Test two invalid inputs before valid selection."""
+        # 3 inputs will raise exception, so use only 2 invalid before valid
+        with patch("builtins.input", side_effect=["abc", "99", "7"]):
             result = repl.get_operation_selection()
         assert result == "factorial"
 
@@ -199,8 +203,9 @@ class TestGetOperand:
         assert result == 5.0
 
     def test_multiple_invalid_inputs_before_valid(self, repl):
-        """Test multiple invalid inputs before valid."""
-        with patch("builtins.input", side_effect=["xyz", "!", "not_a_number", "2.718"]):
+        """Test two invalid inputs before valid."""
+        # 3 inputs will raise exception, so use only 2 invalid before valid
+        with patch("builtins.input", side_effect=["xyz", "!", "2.718"]):
             result = repl.get_operand("Enter value: ")
         assert result == 2.718
 
@@ -827,6 +832,444 @@ class TestMainFunction:
 
 
 # ==============================================================================
+# TESTS: Input Validation Helpers
+# ==============================================================================
+
+class TestInputValidationHelpers:
+    """Test suite for input validation helper methods."""
+
+    # =========================================================================
+    # _is_valid_operand Tests
+    # =========================================================================
+
+    def test_is_valid_operand_integer(self, repl):
+        """Test _is_valid_operand returns True for valid integer."""
+        assert repl._is_valid_operand("42") is True
+
+    def test_is_valid_operand_negative_integer(self, repl):
+        """Test _is_valid_operand returns True for negative integer."""
+        assert repl._is_valid_operand("-42") is True
+
+    def test_is_valid_operand_float(self, repl):
+        """Test _is_valid_operand returns True for valid float."""
+        assert repl._is_valid_operand("3.14") is True
+
+    def test_is_valid_operand_negative_float(self, repl):
+        """Test _is_valid_operand returns True for negative float."""
+        assert repl._is_valid_operand("-2.718") is True
+
+    def test_is_valid_operand_zero(self, repl):
+        """Test _is_valid_operand returns True for zero."""
+        assert repl._is_valid_operand("0") is True
+
+    def test_is_valid_operand_zero_float(self, repl):
+        """Test _is_valid_operand returns True for 0.0."""
+        assert repl._is_valid_operand("0.0") is True
+
+    def test_is_valid_operand_scientific_notation(self, repl):
+        """Test _is_valid_operand returns True for scientific notation."""
+        assert repl._is_valid_operand("1e5") is True
+        assert repl._is_valid_operand("1.5e-10") is True
+        assert repl._is_valid_operand("-3.2e4") is True
+
+    def test_is_valid_operand_leading_whitespace(self, repl):
+        """Test _is_valid_operand strips leading whitespace."""
+        assert repl._is_valid_operand("  42") is True
+
+    def test_is_valid_operand_trailing_whitespace(self, repl):
+        """Test _is_valid_operand strips trailing whitespace."""
+        assert repl._is_valid_operand("42  ") is True
+
+    def test_is_valid_operand_both_whitespace(self, repl):
+        """Test _is_valid_operand strips both leading and trailing whitespace."""
+        assert repl._is_valid_operand("  42  ") is True
+
+    def test_is_valid_operand_empty_string(self, repl):
+        """Test _is_valid_operand returns False for empty string."""
+        assert repl._is_valid_operand("") is False
+
+    def test_is_valid_operand_whitespace_only(self, repl):
+        """Test _is_valid_operand returns False for whitespace-only string."""
+        assert repl._is_valid_operand("   ") is False
+
+    def test_is_valid_operand_alphabetic_string(self, repl):
+        """Test _is_valid_operand returns False for alphabetic string."""
+        assert repl._is_valid_operand("abc") is False
+
+    def test_is_valid_operand_mixed_alphanumeric(self, repl):
+        """Test _is_valid_operand returns False for mixed alphanumeric."""
+        assert repl._is_valid_operand("123abc") is False
+        assert repl._is_valid_operand("abc123") is False
+
+    def test_is_valid_operand_special_characters(self, repl):
+        """Test _is_valid_operand returns False for special characters."""
+        assert repl._is_valid_operand("!@#$%") is False
+        assert repl._is_valid_operand("1+2") is False
+        assert repl._is_valid_operand("1.2.3") is False
+
+    def test_is_valid_operand_infinity(self, repl):
+        """Test _is_valid_operand with infinity."""
+        assert repl._is_valid_operand("inf") is True
+        assert repl._is_valid_operand("-inf") is True
+
+    def test_is_valid_operand_very_large_number(self, repl):
+        """Test _is_valid_operand with very large number."""
+        assert repl._is_valid_operand("1e308") is True
+
+    def test_is_valid_operand_very_small_number(self, repl):
+        """Test _is_valid_operand with very small number."""
+        assert repl._is_valid_operand("1e-308") is True
+
+    # =========================================================================
+    # _is_valid_operation_input Tests
+    # =========================================================================
+
+    def test_is_valid_operation_input_quit_lowercase(self, repl):
+        """Test _is_valid_operation_input returns True for 'quit'."""
+        assert repl._is_valid_operation_input("quit") is True
+
+    def test_is_valid_operation_input_quit_uppercase(self, repl):
+        """Test _is_valid_operation_input returns True for 'QUIT'."""
+        assert repl._is_valid_operation_input("QUIT") is True
+
+    def test_is_valid_operation_input_quit_mixed_case(self, repl):
+        """Test _is_valid_operation_input returns True for 'QuIt'."""
+        assert repl._is_valid_operation_input("QuIt") is True
+
+    def test_is_valid_operation_input_quit_with_whitespace(self, repl):
+        """Test _is_valid_operation_input strips whitespace for 'quit'."""
+        assert repl._is_valid_operation_input("  quit  ") is True
+
+    def test_is_valid_operation_input_minimum_index(self, repl):
+        """Test _is_valid_operation_input returns True for minimum valid index (1)."""
+        assert repl._is_valid_operation_input("1") is True
+
+    def test_is_valid_operation_input_maximum_index(self, repl):
+        """Test _is_valid_operation_input returns True for maximum valid index (12)."""
+        assert repl._is_valid_operation_input("12") is True
+
+    def test_is_valid_operation_input_middle_index(self, repl):
+        """Test _is_valid_operation_input returns True for middle valid index."""
+        assert repl._is_valid_operation_input("6") is True
+
+    def test_is_valid_operation_input_zero(self, repl):
+        """Test _is_valid_operation_input returns False for 0."""
+        assert repl._is_valid_operation_input("0") is False
+
+    def test_is_valid_operation_input_negative(self, repl):
+        """Test _is_valid_operation_input returns False for negative number."""
+        assert repl._is_valid_operation_input("-1") is False
+
+    def test_is_valid_operation_input_beyond_max(self, repl):
+        """Test _is_valid_operation_input returns False for number > 12."""
+        assert repl._is_valid_operation_input("13") is False
+        assert repl._is_valid_operation_input("99") is False
+
+    def test_is_valid_operation_input_float(self, repl):
+        """Test _is_valid_operation_input returns False for float."""
+        assert repl._is_valid_operation_input("1.5") is False
+
+    def test_is_valid_operation_input_alphabetic(self, repl):
+        """Test _is_valid_operation_input returns False for alphabetic string."""
+        assert repl._is_valid_operation_input("abc") is False
+
+    def test_is_valid_operation_input_empty_string(self, repl):
+        """Test _is_valid_operation_input returns False for empty string."""
+        assert repl._is_valid_operation_input("") is False
+
+    def test_is_valid_operation_input_whitespace_only(self, repl):
+        """Test _is_valid_operation_input returns False for whitespace-only string."""
+        assert repl._is_valid_operation_input("   ") is False
+
+    def test_is_valid_operation_input_special_characters(self, repl):
+        """Test _is_valid_operation_input returns False for special characters."""
+        assert repl._is_valid_operation_input("!@#$") is False
+
+    def test_is_valid_operation_input_with_leading_whitespace(self, repl):
+        """Test _is_valid_operation_input strips leading whitespace."""
+        assert repl._is_valid_operation_input("  1") is True
+
+    def test_is_valid_operation_input_with_trailing_whitespace(self, repl):
+        """Test _is_valid_operation_input strips trailing whitespace."""
+        assert repl._is_valid_operation_input("1  ") is True
+
+
+# ==============================================================================
+# TESTS: Retry Logic and MAX_RETRIES
+# ==============================================================================
+
+class TestRetryLogicAndMaxAttempts:
+    """Test suite for retry logic and maximum attempt handling."""
+
+    # =========================================================================
+    # get_operand Retry Tests
+    # =========================================================================
+
+    def test_get_operand_invalid_then_valid_no_exception(self, repl):
+        """Test get_operand accepts valid input after 1 invalid input."""
+        with patch("builtins.input", side_effect=["invalid", "42"]):
+            result = repl.get_operand("Enter value: ")
+        assert result == 42.0
+
+    def test_get_operand_exactly_two_invalid_then_valid(self, repl):
+        """Test get_operand accepts valid input after exactly 2 invalid inputs."""
+        with patch("builtins.input", side_effect=["bad1", "bad2", "3.14"]):
+            result = repl.get_operand("Enter value: ")
+        assert result == 3.14
+
+    def test_get_operand_exactly_two_invalid_then_valid_resets(self, repl):
+        """Test get_operand accepts valid input after exactly 2 invalid inputs (does not reach MAX_RETRIES)."""
+        # 2 invalid attempts (attempts = 1, then 2), both < 3, so should continue and accept 3rd valid input
+        with patch("builtins.input", side_effect=["!@#", "xyz", "100"]):
+            result = repl.get_operand("Enter value: ")
+        assert result == 100.0
+
+    def test_get_operand_three_invalid_raises_exception(self, repl):
+        """Test get_operand raises MaxRetriesExceeded after exactly 3 invalid inputs."""
+        # After 3rd invalid input, attempts >= MAX_RETRIES (3 >= 3), so exception is raised
+        with patch("builtins.input", side_effect=["bad1", "bad2", "bad3"]):
+            with pytest.raises(MaxRetriesExceeded) as exc_info:
+                repl.get_operand("Enter value: ")
+        assert "Maximum retry attempts exceeded" in str(exc_info.value)
+
+    def test_get_operand_many_invalid_raises_exception(self, repl):
+        """Test get_operand raises MaxRetriesExceeded with many invalid inputs."""
+        invalid_inputs = ["bad" + str(i) for i in range(10)]
+        with patch("builtins.input", side_effect=invalid_inputs):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operand("Enter value: ")
+
+    def test_get_operand_exception_message(self, repl):
+        """Test get_operand exception has correct message."""
+        with patch("builtins.input", side_effect=["x", "y", "z", "w"]):
+            with pytest.raises(MaxRetriesExceeded) as exc_info:
+                repl.get_operand("Enter value: ")
+        assert str(exc_info.value) == "Maximum retry attempts exceeded. Session ended."
+
+    def test_get_operand_empty_strings_count_as_invalid(self, repl):
+        """Test that empty strings count as invalid attempts when last_result is None."""
+        repl.last_result = None
+        with patch("builtins.input", side_effect=["", "", "", ""]):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operand("Enter value: ")
+
+    def test_get_operand_max_retries_constant(self, repl):
+        """Test that MAX_RETRIES is exactly 3."""
+        assert MAX_RETRIES == 3
+
+    # =========================================================================
+    # get_operation_selection Retry Tests
+    # =========================================================================
+
+    def test_get_operation_selection_invalid_then_valid_no_exception(self, repl):
+        """Test get_operation_selection accepts valid input after 1 invalid input."""
+        with patch("builtins.input", side_effect=["invalid", "1"]):
+            result = repl.get_operation_selection()
+        assert result == "add"
+
+    def test_get_operation_selection_exactly_two_invalid_then_valid(self, repl):
+        """Test get_operation_selection accepts valid input after exactly 2 invalid inputs."""
+        with patch("builtins.input", side_effect=["0", "99", "2"]):
+            result = repl.get_operation_selection()
+        assert result == "subtract"
+
+    def test_get_operation_selection_exactly_two_invalid_then_valid(self, repl):
+        """Test get_operation_selection accepts valid input after exactly 2 invalid inputs (does not reach MAX_RETRIES)."""
+        # 2 invalid attempts, attempts = 1 then 2, both < 3, so should accept 3rd valid input
+        with patch("builtins.input", side_effect=["abc", "0", "1"]):
+            result = repl.get_operation_selection()
+        assert result == "add"
+
+    def test_get_operation_selection_three_invalid_raises_exception(self, repl):
+        """Test get_operation_selection raises MaxRetriesExceeded after exactly 3 invalid inputs."""
+        # After 3rd invalid input, attempts >= MAX_RETRIES (3 >= 3), so exception is raised
+        with patch("builtins.input", side_effect=["bad1", "bad2", "bad3"]):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operation_selection()
+
+    def test_get_operation_selection_three_out_of_range_raises_exception(self, repl):
+        """Test get_operation_selection raises MaxRetriesExceeded after 3 out-of-range inputs."""
+        with patch("builtins.input", side_effect=["0", "13", "99"]):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operation_selection()
+
+    def test_get_operation_selection_mixed_invalid_types_raises_exception(self, repl):
+        """Test get_operation_selection with mixed invalid types raises MaxRetriesExceeded."""
+        with patch("builtins.input", side_effect=["abc", "0", "-1"]):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operation_selection()
+
+    def test_get_operation_selection_non_integer_string_then_valid(self, repl):
+        """Test get_operation_selection counts non-integer strings as invalid attempt."""
+        with patch("builtins.input", side_effect=["2.5", "1"]):
+            result = repl.get_operation_selection()
+        assert result == "add"
+
+    def test_get_operation_selection_exception_message(self, repl):
+        """Test get_operation_selection exception has correct message."""
+        with patch("builtins.input", side_effect=["x", "y", "z", "w"]):
+            with pytest.raises(MaxRetriesExceeded) as exc_info:
+                repl.get_operation_selection()
+        assert str(exc_info.value) == "Maximum retry attempts exceeded. Session ended."
+
+    # =========================================================================
+    # Retry Counter Reset Tests
+    # =========================================================================
+
+    def test_retry_counter_resets_between_operations(self, repl, capsys):
+        """Test that retry counter resets after successful input between different operations."""
+        # Goal: show that retry counter for one context (e.g., get_operation_selection) is independent
+        # Perform one operation successfully with some retries, then another with retries
+        # Operation 1 (Add): 5 + 3 = 8
+        # Operation 2 (Multiply): 8 * 2 = 16
+        with patch("builtins.input", side_effect=[
+            "abc",      # Invalid operation selection (attempts=1)
+            "0",        # Invalid operation selection (attempts=2)
+            "1",        # Valid: add
+            "bad1",     # Invalid operand (attempts=1)
+            "5",        # Valid first operand
+            "3",        # Valid second operand
+            "xyz",      # Invalid operation selection (attempts=1) - counter reset
+            "3",        # Valid: multiply
+            "bad2",     # Invalid operand (attempts=1) - counter reset
+            "8",        # Valid first operand
+            "2",        # Valid second operand
+            "quit"      # Quit
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        # First operation should succeed: add 5 + 3 = 8
+        # Second operation should succeed: multiply 8 * 2 = 16
+        assert "Addition" in captured.out
+        assert "Multiplication" in captured.out
+
+    def test_retry_counter_independent_between_operands(self, repl, capsys):
+        """Test that retry counter is independent for each operand prompt."""
+        # Single binary operation with retry attempts in both operands
+        with patch("builtins.input", side_effect=[
+            "1",        # Valid operation: add
+            "bad1",     # Invalid first operand
+            "5",        # Valid first operand
+            "bad2",     # Invalid second operand
+            "10",       # Valid second operand
+            "quit"
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Addition(5.0, 10.0) = 15.0" in captured.out
+
+    def test_multiple_failed_operations_then_raises(self, repl, capsys):
+        """Test that 3 invalid operation selections raises MaxRetriesExceeded."""
+        with patch("builtins.input", side_effect=[
+            "abc",      # Invalid (attempts=1)
+            "0",        # Invalid (attempts=2)
+            "99"        # Invalid (attempts=3) -> raises MaxRetriesExceeded
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Maximum retry attempts exceeded" in captured.out
+
+    # =========================================================================
+    # run() with MaxRetriesExceeded Tests
+    # =========================================================================
+
+    def test_run_catches_max_retries_exceeded_during_operation_selection(self, repl, capsys):
+        """Test run() catches MaxRetriesExceeded from get_operation_selection."""
+        with patch("builtins.input", side_effect=["x", "y", "z", "w"]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Maximum retry attempts exceeded. Session ended." in captured.out
+
+    def test_run_catches_max_retries_exceeded_during_operand_collection_first_operand(self, repl, capsys):
+        """Test run() catches MaxRetriesExceeded from get_operand (first operand)."""
+        with patch("builtins.input", side_effect=[
+            "1",        # Valid operation: add
+            "x", "y", "z", "w"  # Invalid operands (4 attempts)
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Maximum retry attempts exceeded. Session ended." in captured.out
+
+    def test_run_catches_max_retries_exceeded_during_operand_collection_second_operand(self, repl, capsys):
+        """Test run() catches MaxRetriesExceeded from get_operand (second operand)."""
+        with patch("builtins.input", side_effect=[
+            "1",        # Valid operation: add
+            "5",        # Valid first operand
+            "x", "y", "z", "w"  # Invalid second operands (4 attempts)
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Maximum retry attempts exceeded. Session ended." in captured.out
+
+    def test_run_returns_after_max_retries_exceeded(self, repl):
+        """Test run() returns cleanly after MaxRetriesExceeded."""
+        with patch("builtins.input", side_effect=["x", "y", "z", "w"]):
+            repl.run()  # Should not raise, should return cleanly
+
+    def test_run_eof_takes_precedence_over_max_retries(self, repl, capsys):
+        """Test that EOFError is caught before MaxRetriesExceeded could be raised."""
+        inputs = iter(["1", "x", "y"])
+        def mock_input(prompt=""):
+            try:
+                return next(inputs)
+            except StopIteration:
+                raise EOFError
+
+        with patch("builtins.input", side_effect=mock_input):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Calculator closed." in captured.out
+
+    def test_run_keyboard_interrupt_takes_precedence_over_max_retries(self, repl, capsys):
+        """Test that KeyboardInterrupt is caught before MaxRetriesExceeded could be raised."""
+        inputs = iter(["1", "x", "y"])
+        def mock_input(prompt=""):
+            try:
+                return next(inputs)
+            except StopIteration:
+                raise KeyboardInterrupt
+
+        with patch("builtins.input", side_effect=mock_input):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "Calculator closed." in captured.out
+
+
+# ==============================================================================
+# TESTS: MaxRetriesExceeded Exception
+# ==============================================================================
+
+class TestMaxRetriesExceededException:
+    """Test suite for MaxRetriesExceeded exception class."""
+
+    def test_max_retries_exceeded_is_exception(self):
+        """Test MaxRetriesExceeded is a subclass of Exception."""
+        assert issubclass(MaxRetriesExceeded, Exception)
+
+    def test_max_retries_exceeded_can_be_instantiated(self):
+        """Test MaxRetriesExceeded can be instantiated."""
+        exc = MaxRetriesExceeded("Test message")
+        assert isinstance(exc, MaxRetriesExceeded)
+        assert isinstance(exc, Exception)
+
+    def test_max_retries_exceeded_stores_message(self):
+        """Test MaxRetriesExceeded stores the message."""
+        msg = "Custom error message"
+        exc = MaxRetriesExceeded(msg)
+        assert str(exc) == msg
+
+    def test_max_retries_exceeded_can_be_raised_and_caught(self):
+        """Test MaxRetriesExceeded can be raised and caught."""
+        with pytest.raises(MaxRetriesExceeded):
+            raise MaxRetriesExceeded("Test")
+
+    def test_max_retries_exceeded_can_be_caught_as_exception(self):
+        """Test MaxRetriesExceeded can be caught as generic Exception."""
+        with pytest.raises(Exception):
+            raise MaxRetriesExceeded("Test")
+
+
+# ==============================================================================
 # EDGE CASES AND ADDITIONAL COVERAGE
 # ==============================================================================
 
@@ -925,13 +1368,12 @@ class TestEdgeCasesAndAdditionalCoverage:
 class TestStressAndRobustness:
     """Stress tests for robustness."""
 
-    def test_many_invalid_inputs_eventually_valid(self, repl):
-        """Test that many invalid inputs eventually work."""
-        invalid_inputs = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")"]
-        inputs = invalid_inputs + ["1"]
-        with patch("builtins.input", side_effect=inputs):
-            result = repl.get_operation_selection()
-        assert result == "add"
+    def test_many_invalid_inputs_raises_exception(self, repl):
+        """Test that many invalid inputs raises MaxRetriesExceeded after 3."""
+        invalid_inputs = ["!", "@", "#"]  # Exactly 3 invalid inputs
+        with patch("builtins.input", side_effect=invalid_inputs):
+            with pytest.raises(MaxRetriesExceeded):
+                repl.get_operation_selection()
 
     def test_repeated_error_operations(self, repl, capsys):
         """Test multiple error operations in a row."""

@@ -7,6 +7,10 @@ operations via a numbered menu driven command-line interface.
 import math
 from typing import Optional
 
+from src.exceptions import MaxRetriesExceeded
+
+MAX_RETRIES = 3
+
 OPERATIONS: dict[str, dict] = {
     "add": {"arity": 2, "name": "Addition"},
     "subtract": {"arity": 2, "name": "Subtraction"},
@@ -54,6 +58,9 @@ class REPLInterface:
             except (EOFError, KeyboardInterrupt):
                 print("\nCalculator closed.")
                 return
+            except MaxRetriesExceeded as exc:
+                print(str(exc))
+                return
 
             if operation == "quit":
                 print("Calculator closed.")
@@ -79,6 +86,9 @@ class REPLInterface:
                     operands.append(second)
             except (EOFError, KeyboardInterrupt):
                 print("\nCalculator closed.")
+                return
+            except MaxRetriesExceeded as exc:
+                print(str(exc))
                 return
 
             try:
@@ -138,22 +148,61 @@ class REPLInterface:
         method = getattr(self.calculator, operation)
         return method(*operands)
 
+    def _is_valid_operand(self, raw_input: str) -> bool:
+        """Return True if raw_input can be parsed as a float.
+
+        Args:
+            raw_input: The raw string supplied by the user.
+
+        Returns:
+            True when the stripped string is a valid float, False otherwise.
+        """
+        try:
+            float(raw_input.strip())
+            return True
+        except ValueError:
+            return False
+
+    def _is_valid_operation_input(self, raw_input: str) -> bool:
+        """Return True if raw_input is a valid operation selection or "quit".
+
+        A valid selection is either the string "quit" (case-insensitive) or an
+        integer in the range [1, len(_OPERATION_KEYS)].
+
+        Args:
+            raw_input: The raw string supplied by the user.
+
+        Returns:
+            True when the input is "quit" or a valid menu index, False otherwise.
+        """
+        if raw_input.lower().strip() == "quit":
+            return True
+        try:
+            choice = int(raw_input.strip())
+            return 1 <= choice <= len(_OPERATION_KEYS)
+        except ValueError:
+            return False
+
     def get_operation_selection(self) -> str:
         """Display the operation menu and return a validated operation key.
 
-        Re-prompts until the user enters a valid menu number or "quit".
+        Re-prompts until the user enters a valid menu number or "quit".  Raises
+        MaxRetriesExceeded after MAX_RETRIES consecutive invalid inputs.
 
         Returns:
             A key from OPERATIONS, or the string "quit".
 
         Raises:
             EOFError: If stdin is exhausted (propagated to caller).
+            MaxRetriesExceeded: If the user provides invalid input MAX_RETRIES
+                times in a row.
         """
         print("\nAvailable operations:")
         for idx, key in enumerate(_OPERATION_KEYS, start=1):
             print(f"  {idx}. {OPERATIONS[key]['name']}")
         print("  quit. Exit")
 
+        attempts = 0
         while True:
             raw = input("Select operation: ").strip()
             if raw.lower() == "quit":
@@ -161,10 +210,20 @@ class REPLInterface:
             try:
                 choice = int(raw)
             except ValueError:
+                attempts += 1
+                if attempts >= MAX_RETRIES:
+                    raise MaxRetriesExceeded(
+                        "Maximum retry attempts exceeded. Session ended."
+                    )
                 print("Invalid selection. Enter a number from the list or 'quit'.")
                 continue
             if 1 <= choice <= len(_OPERATION_KEYS):
                 return _OPERATION_KEYS[choice - 1]
+            attempts += 1
+            if attempts >= MAX_RETRIES:
+                raise MaxRetriesExceeded(
+                    "Maximum retry attempts exceeded. Session ended."
+                )
             print(
                 f"Invalid selection. Enter a number between 1 and "
                 f"{len(_OPERATION_KEYS)}, or 'quit'."
@@ -174,7 +233,8 @@ class REPLInterface:
         """Prompt the user for a numeric value, re-prompting on invalid input.
 
         If self.last_result is set and the user presses Enter without typing a
-        value, last_result is returned as the default.
+        value, last_result is returned as the default.  Raises
+        MaxRetriesExceeded after MAX_RETRIES consecutive invalid inputs.
 
         Args:
             prompt: The prompt string displayed to the user.
@@ -184,7 +244,10 @@ class REPLInterface:
 
         Raises:
             EOFError: If stdin is exhausted (propagated to caller).
+            MaxRetriesExceeded: If the user provides invalid input MAX_RETRIES
+                times in a row.
         """
+        attempts = 0
         while True:
             raw = input(prompt).strip()
             if raw == "" and self.last_result is not None:
@@ -192,6 +255,11 @@ class REPLInterface:
             try:
                 return float(raw)
             except ValueError:
+                attempts += 1
+                if attempts >= MAX_RETRIES:
+                    raise MaxRetriesExceeded(
+                        "Maximum retry attempts exceeded. Session ended."
+                    )
                 print("Invalid number. Please enter a numeric value.")
 
     def display_result(self, operation: str, operands: list, result) -> None:
