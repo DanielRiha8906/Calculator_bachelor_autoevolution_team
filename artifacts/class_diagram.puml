@@ -56,11 +56,38 @@ end note
 
 MaxRetriesExceeded --|> Exception
 
+class OperationHistory {
+    +history_file : str
+    +__init__(history_file: str = "history.txt")
+    +clear_history() : None
+    +record_operation(entry: str) : None
+    +display_history() : list[str]
+}
+
+note right of OperationHistory::clear_history
+  Truncates or creates the history file.
+  Called once at session start for
+  session isolation.
+end note
+
+note right of OperationHistory::record_operation
+  Appends entry + newline to history file.
+  File I/O errors are logged to stderr
+  and silently swallowed.
+end note
+
+note right of OperationHistory::display_history
+  Returns list of recorded entries,
+  trailing newlines stripped.
+  Returns [] on FileNotFoundError or OSError.
+end note
+
 class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
+    -history : OperationHistory | None
     -last_result : float | None
-    +__init__(calculator: Calculator)
+    +__init__(calculator: Calculator, history: OperationHistory | None)
     +run() : void
     +get_operation_selection() : str
     +get_operand(prompt: str) : float
@@ -93,6 +120,7 @@ note right of REPLInterface::get_operation_selection
   Re-prompts on invalid input.
   Raises MaxRetriesExceeded after
   MAX_RETRIES (3) failed attempts.
+  Returns "history" for history display.
 end note
 
 note right of REPLInterface::get_operand
@@ -109,13 +137,14 @@ end note
 
 note right of REPLInterface::_is_valid_operation_input
   Returns True if raw_input is
-  "quit" or a valid menu index
-  in [1, len(OPERATIONS)].
+  "quit", "history", or a valid
+  menu index in [1, len(OPERATIONS)].
 end note
 
 class CLIHandler {
     -calculator : Calculator
-    +__init__(calculator: Calculator)
+    -history : OperationHistory | None
+    +__init__(calculator: Calculator, history: OperationHistory | None)
     +get_operation_mapping() : dict
     +parse_args(args: list[str]) : tuple[str, list[float]]
     +execute(args: list[str]) : float
@@ -140,6 +169,7 @@ note right of CLIHandler::execute
   Dispatches to Calculator methods.
   "logarithm" uses math.log(x, base)
   directly to support arbitrary bases.
+  Records result to history if set.
   Raises ValueError, ZeroDivisionError,
   or TypeError on error.
 end note
@@ -149,6 +179,7 @@ class "__main__" as Main {
 }
 
 note right of Main::main
+  Instantiates OperationHistory and clears it.
   REPL mode: argv is empty or ["--repl"].
   CLI mode: argv has operation + operands.
   Exit codes: 0=ok, 1=usage, 2=unknown op,
@@ -156,10 +187,13 @@ note right of Main::main
 end note
 
 Main ..> Calculator : instantiates
+Main ..> OperationHistory : instantiates
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
 REPLInterface o-- Calculator : uses >
+REPLInterface o-- OperationHistory : uses (optional) >
 CLIHandler o-- Calculator : uses >
+CLIHandler o-- OperationHistory : uses (optional) >
 REPLInterface ..> MaxRetriesExceeded : raises
 
 @enduml

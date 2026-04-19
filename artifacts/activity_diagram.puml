@@ -3,18 +3,20 @@
 start
 
 :Instantiate Calculator;
+:Instantiate OperationHistory(history_file="history.txt");
+:history.clear_history();
 
 if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
-  :Instantiate REPLInterface(calculator);
+  :Instantiate REPLInterface(calculator, history);
   :repl.run();
 
   repeat
     :Display operation menu\n(get_operation_selection());
 
     repeat
-      :User selects operation or "quit";
-      if (input valid (number or "quit")?) then (yes)
+      :User selects operation, "history", or "quit";
+      if (input valid (number, "history", or "quit")?) then (yes)
         break
       else (no)
         :attempts++;
@@ -31,32 +33,31 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
       stop
     endif
 
-    :Determine arity from OPERATIONS dict;
-
-    repeat
-      :get_operand(first prompt\nwith last_result default);
-      if (input empty and last_result set?) then (yes)
-        :use last_result as operand;
-        break
-      elseif (input is valid float?) then (yes)
-        :parse operand as float;
-        break
-      else (no)
-        :attempts++;
-        if (attempts >= MAX_RETRIES?) then (yes)
-          :raise MaxRetriesExceeded;
-          stop
+    if (User chose "history"?) then (yes)
+      if (history is not None?) then (yes)
+        :entries = history.display_history();
+        if (entries non-empty?) then (yes)
+          :Print each history entry;
         else (no)
-          :Print invalid number message;
+          :Print "No history recorded yet.";
         endif
+      else (no)
+        :Print "History is not available in this session.";
       endif
-    repeat while (retry?)
+      note right
+        Continue to next menu iteration
+      end note
+    else (operation selected)
 
-    if (arity == 2?) then (yes)
+      :Determine arity from OPERATIONS dict;
+
       repeat
-        :get_operand(second prompt);
-        if (input is valid float?) then (yes)
-          :parse second operand as float;
+        :get_operand(first prompt\nwith last_result default);
+        if (input empty and last_result set?) then (yes)
+          :use last_result as operand;
+          break
+        elseif (input is valid float?) then (yes)
+          :parse operand as float;
           break
         else (no)
           :attempts++;
@@ -68,90 +69,112 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
           endif
         endif
       repeat while (retry?)
-    endif
 
-    :_execute(operation, operands);
-
-    fork
-      :add(a, b);
-      :return a + b;
-    fork again
-      :subtract(a, b);
-      :return a - b;
-    fork again
-      :multiply(a, b);
-      :return a * b;
-    fork again
-      :divide(a, b);
-      if (b == 0?) then (yes)
-        :raise ZeroDivisionError\n"Cannot divide by zero";
-      else (no)
-        :return a / b;
+      if (arity == 2?) then (yes)
+        repeat
+          :get_operand(second prompt);
+          if (input is valid float?) then (yes)
+            :parse second operand as float;
+            break
+          else (no)
+            :attempts++;
+            if (attempts >= MAX_RETRIES?) then (yes)
+              :raise MaxRetriesExceeded;
+              stop
+            else (no)
+              :Print invalid number message;
+            endif
+          endif
+        repeat while (retry?)
       endif
-    fork again
-      :factorial(n);
-      if (n is float?) then (yes)
-        if (n != int(n)?) then (yes)
-          :raise TypeError\n"factorial() only accepts\ninteger values";
+
+      :_execute(operation, operands);
+
+      fork
+        :add(a, b);
+        :return a + b;
+      fork again
+        :subtract(a, b);
+        :return a - b;
+      fork again
+        :multiply(a, b);
+        :return a * b;
+      fork again
+        :divide(a, b);
+        if (b == 0?) then (yes)
+          :raise ZeroDivisionError\n"Cannot divide by zero";
         else (no)
-          :n = int(n);
+          :return a / b;
         endif
-      endif
-      if (n < 0?) then (yes)
-        :raise ValueError\n"factorial() not defined\nfor negative values";
-      else (no)
-        :result = 1;
-        :for i in range(2, n+1): result *= i;
-        :return result;
-      endif
-    fork again
-      :square(x);
-      :return x ** 2;
-    fork again
-      :cube(x);
-      :return x ** 3;
-    fork again
-      :square_root(x);
-      if (x < 0?) then (yes)
-        :raise ValueError\n"square_root() not defined\nfor negative values";
-      else (no)
-        :return math.sqrt(x);
-      endif
-    fork again
-      :cube_root(x);
-      if (x == 0?) then (yes)
-        :return 0.0;
-      else (no)
-        :return copysign(|x|^(1/3), x);
-      endif
-    fork again
-      :power(base, exponent);
-      :return base ** exponent;
-    fork again
-      :logarithm(x, base);
-      if (base <= 0 or base == 1?) then (yes)
-        :raise ValueError\n"invalid base";
-      else (no)
+      fork again
+        :factorial(n);
+        if (n is float?) then (yes)
+          if (n != int(n)?) then (yes)
+            :raise TypeError\n"factorial() only accepts\ninteger values";
+          else (no)
+            :n = int(n);
+          endif
+        endif
+        if (n < 0?) then (yes)
+          :raise ValueError\n"factorial() not defined\nfor negative values";
+        else (no)
+          :result = 1;
+          :for i in range(2, n+1): result *= i;
+          :return result;
+        endif
+      fork again
+        :square(x);
+        :return x ** 2;
+      fork again
+        :cube(x);
+        :return x ** 3;
+      fork again
+        :square_root(x);
+        if (x < 0?) then (yes)
+          :raise ValueError\n"square_root() not defined\nfor negative values";
+        else (no)
+          :return math.sqrt(x);
+        endif
+      fork again
+        :cube_root(x);
+        if (x == 0?) then (yes)
+          :return 0.0;
+        else (no)
+          :return copysign(|x|^(1/3), x);
+        endif
+      fork again
+        :power(base, exponent);
+        :return base ** exponent;
+      fork again
+        :logarithm(x, base);
+        if (base <= 0 or base == 1?) then (yes)
+          :raise ValueError\n"invalid base";
+        else (no)
+          if (x <= 0?) then (yes)
+            :raise ValueError\n"logarithm() not defined\nfor non-positive values";
+          else (no)
+            :return math.log(x, base);
+          endif
+        endif
+      fork again
+        :natural_logarithm(x);
         if (x <= 0?) then (yes)
-          :raise ValueError\n"logarithm() not defined\nfor non-positive values";
+          :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
         else (no)
-          :return math.log(x, base);
+          :return math.log(x);
+        endif
+      end fork
+
+      if (Calculator raised an exception?) then (yes)
+        :Print error message to user;
+      else (no)
+        :display_result(operation, operands, result);
+        :Store result as last_result;
+        if (history is not None?) then (yes)
+          :history.record_operation(entry);
         endif
       endif
-    fork again
-      :natural_logarithm(x);
-      if (x <= 0?) then (yes)
-        :raise ValueError\n"natural_logarithm() not defined\nfor non-positive values";
-      else (no)
-        :return math.log(x);
-      endif
-    end fork
 
-    if (Calculator raised an exception?) then (yes)
-      :Print error message to user;
-    else (no)
-      :display_result(operation, operands, result);
-      :Store result as last_result;
     endif
 
   repeat while (continue?) is (yes)
@@ -167,7 +190,7 @@ else (no — CLI mode)
     stop
   endif
 
-  :Instantiate CLIHandler(calculator);
+  :Instantiate CLIHandler(calculator, history);
   :handler.execute(argv);
 
   :parse_args(argv)\n→ (method_name, operands);
@@ -194,6 +217,10 @@ else (no — CLI mode)
     :Print error to stderr;
     :sys.exit(4);
     stop
+  endif
+
+  if (history is not None?) then (yes)
+    :history.record_operation(entry);
   endif
 
   :Print result to stdout;
