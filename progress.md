@@ -1,3 +1,17 @@
+## Run: issue-148 — Mathematical functions for Calculator
+
+- **Branch:** task/issue-148-functions-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:** src/calculator.py (added 7 methods: square, cube, square_root, cube_root, power, log, ln), tests/test_calculator.py (added 70 new tests)
+- **Purpose:** Add square, cube, square root, cube root, power, log₁₀, and natural log as Calculator operations with type and domain validation.
+- **Risks:** None — purely additive changes; no existing logic modified.
+- **Tests passed:** 117/117 (47 existing + 70 new)
+- **Worktree/branch:** task/issue-148-functions-expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-145-factorial
