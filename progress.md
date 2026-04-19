@@ -13,7 +13,7 @@
 - **Cost (USD):** PENDING
 - **Turns:** PENDING
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 248.8s | Cost: $0.546812 USD | Turns: 14
 
 ## Run: issue-138-zero-division-error (2026-04-19)
 
