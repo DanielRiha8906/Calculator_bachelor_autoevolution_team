@@ -123,3 +123,15 @@ Duration: 56.9s | Cost: $0.205081 USD | Turns: 15
 - tests passed: N/A
 
 Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
+
+## Run: issue-164-retry-logic (2026-04-19)
+
+- branch: task/issue-164-retry-logic
+- files changed: src/input_retry.py (created), src/user_input.py (modified), tests/test_input_retry.py (created), tests/test_user_input.py (modified)
+- purpose: Add input validation with retry logic (MAX_RETRIES=3) for interactive calculator mode — operation selection and operand input both enforce retry limits
+- risks: Existing tests that expected infinite retries could break; mitigated by running full suite (170 tests pass)
+- tests passed: yes — 170 tests (49 new unit tests for input_retry module, 25 new integration tests for user_input retry behavior, 96 existing tests unchanged)
+- worktree/branch: task/issue-164-retry-logic
+- PR target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
