@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-180-modularization
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CalculationEngine` class (src/core/engine.py) with four arithmetic methods; added `_engine: CalculationEngine` attribute to `Calculator`; added `Calculator *-- CalculationEngine` composition relationship; updated `MaxRetriesExceeded` note to reference `src/support/exceptions.py`; updated `Operation` note to reference `src/core/operations.py`; added facade note on `Calculator` describing the delegation pattern
+  - `artifacts/sequence_diagram.puml` — added `CalculationEngine` participant with explanatory note; updated arithmetic operation calls (add/subtract/multiply/divide) in REPL flow to show Calculator → CalculationEngine delegation chain; split CLI dispatch alt block into arithmetic (via CalculationEngine) and scientific (direct Calculator) branches
+  - `artifacts/activity_diagram.puml` — added module layout note at start describing the src/core/, src/interface/, src/support/ subpackage structure and shim re-exports; added note on Calculator instantiation describing CalculationEngine delegation; annotated arithmetic operation branches with "Calculator → CalculationEngine" delegation notes
+- **Purpose:** Sync PlantUML diagrams with current source after issue-180 introduced CalculationEngine (src/core/engine.py) and reorganized the codebase into src/core/, src/interface/, src/support/ subpackages with backward-compat shims at src/*.py
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-174-logic-separation
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `Operation` frozen dataclass with `name`, `arity`, `display_name`, `aliases` fields; added `OperationRegistry` class with `get_operations`, `get_operation`, `resolve`, `arity`, `get_operation_mapping`, `dispatch` methods and a dispatch note describing the logarithm special case; updated `REPLInterface` to add `_registry`, `_operations`, `_operation_keys` attributes and updated `_execute` note to reflect delegation to registry; updated `CLIHandler` to add `_registry` attribute and updated `get_operation_mapping` and `execute` notes to reflect registry delegation; added relationships `REPLInterface o-- OperationRegistry`, `CLIHandler o-- OperationRegistry`, `OperationRegistry o-- Calculator`, `OperationRegistry ..> Operation`

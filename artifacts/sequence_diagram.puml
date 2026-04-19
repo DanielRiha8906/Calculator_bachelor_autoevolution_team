@@ -7,7 +7,15 @@ participant "REPLInterface" as REPL
 participant "OperationRegistry" as OperReg
 participant "CLIHandler" as CLI
 participant "Calculator" as Calc
+participant "CalculationEngine" as Engine
 actor "User" as User
+
+note over Calc, Engine
+  Calculator (src/calculator.py) delegates arithmetic
+  (add/subtract/multiply/divide) to its internal
+  CalculationEngine (src/core/engine.py).
+  Scientific operations are handled directly by Calculator.
+end note
 
 Main -> Calc : Calculator()
 activate Calc
@@ -120,22 +128,30 @@ alt REPL mode (argv empty or ["--repl"])
         OperReg --> REPL : log_base(x)
       else operation == "add"
         OperReg -> Calc : add(a, b)
-        Calc --> OperReg : a + b
+        Calc -> Engine : add(a, b)
+        Engine --> Calc : a + b
+        Calc --> OperReg : result
         OperReg --> REPL : result
       else operation == "subtract"
         OperReg -> Calc : subtract(a, b)
-        Calc --> OperReg : a - b
+        Calc -> Engine : subtract(a, b)
+        Engine --> Calc : a - b
+        Calc --> OperReg : result
         OperReg --> REPL : result
       else operation == "multiply"
         OperReg -> Calc : multiply(a, b)
-        Calc --> OperReg : a * b
+        Calc -> Engine : multiply(a, b)
+        Engine --> Calc : a * b
+        Calc --> OperReg : result
         OperReg --> REPL : result
       else operation == "divide"
         OperReg -> Calc : divide(a, b)
-        Calc -> Calc : check b != 0
-        Calc --> OperReg : a / b
+        Calc -> Engine : divide(a, b)
+        Engine -> Engine : check b != 0
+        Engine --> Calc : a / b
+        Calc --> OperReg : result
         OperReg --> REPL : result
-        note over Calc
+        note over Engine
           divide(a, 0) raises ZeroDivisionError
         end note
       else operation == "factorial"
@@ -243,7 +259,13 @@ else CLI mode (argv has operation + operands)
       math.log(x, base) with domain validation.
     end note
     OperReg --> CLI : result
-  else any other operation
+  else arithmetic operation (add/subtract/multiply/divide)
+    OperReg -> Calc : <method_name>(*operands)
+    Calc -> Engine : <method_name>(*operands)
+    Engine --> Calc : result
+    Calc --> OperReg : result
+    OperReg --> CLI : result
+  else scientific operation (factorial/square/etc.)
     OperReg -> Calc : <method_name>(*operands)
     Calc --> OperReg : result
     OperReg --> CLI : result
