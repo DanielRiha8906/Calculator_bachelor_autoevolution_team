@@ -5,9 +5,12 @@ operations via a numbered menu driven command-line interface.
 """
 
 import math
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from src.exceptions import MaxRetriesExceeded
+
+if TYPE_CHECKING:
+    from src.history import OperationHistory
 
 MAX_RETRIES = 3
 
@@ -38,10 +41,14 @@ class REPLInterface:
 
     Args:
         calculator: A Calculator instance whose methods will be called.
+        history: An optional ``OperationHistory`` instance used to record each
+            completed operation.  When ``None``, history recording and display
+            are disabled.
     """
 
-    def __init__(self, calculator) -> None:
+    def __init__(self, calculator, history: Optional["OperationHistory"] = None) -> None:
         self.calculator = calculator
+        self.history = history
         self.last_result: Optional[float] = None
 
     def run(self) -> None:
@@ -65,6 +72,19 @@ class REPLInterface:
             if operation == "quit":
                 print("Calculator closed.")
                 return
+
+            if operation == "history":
+                if self.history is not None:
+                    entries = self.history.display_history()
+                    if entries:
+                        print("\nOperation history:")
+                        for entry in entries:
+                            print(f"  {entry}")
+                    else:
+                        print("No history recorded yet.")
+                else:
+                    print("History is not available in this session.")
+                continue
 
             meta = OPERATIONS[operation]
             arity: int = meta["arity"]
@@ -99,6 +119,11 @@ class REPLInterface:
 
             self.display_result(operation, operands, result)
             self.last_result = result
+
+            if self.history is not None:
+                operand_str = ", ".join(str(o) for o in operands)
+                entry = f"{operation}({operand_str}) = {result}"
+                self.history.record_operation(entry)
 
     def _first_operand_prompt(self, label: str) -> str:
         """Build a prompt string that includes the last result if available.
@@ -175,7 +200,7 @@ class REPLInterface:
         Returns:
             True when the input is "quit" or a valid menu index, False otherwise.
         """
-        if raw_input.lower().strip() == "quit":
+        if raw_input.lower().strip() in ("quit", "history"):
             return True
         try:
             choice = int(raw_input.strip())
@@ -200,6 +225,7 @@ class REPLInterface:
         print("\nAvailable operations:")
         for idx, key in enumerate(_OPERATION_KEYS, start=1):
             print(f"  {idx}. {OPERATIONS[key]['name']}")
+        print("  history. Show operation history")
         print("  quit. Exit")
 
         attempts = 0
@@ -207,6 +233,8 @@ class REPLInterface:
             raw = input("Select operation: ").strip()
             if raw.lower() == "quit":
                 return "quit"
+            if raw.lower() == "history":
+                return "history"
             try:
                 choice = int(raw)
             except ValueError:
@@ -215,7 +243,7 @@ class REPLInterface:
                     raise MaxRetriesExceeded(
                         "Maximum retry attempts exceeded. Session ended."
                     )
-                print("Invalid selection. Enter a number from the list or 'quit'.")
+                print("Invalid selection. Enter a number from the list, 'history', or 'quit'.")
                 continue
             if 1 <= choice <= len(_OPERATION_KEYS):
                 return _OPERATION_KEYS[choice - 1]
@@ -226,7 +254,7 @@ class REPLInterface:
                 )
             print(
                 f"Invalid selection. Enter a number between 1 and "
-                f"{len(_OPERATION_KEYS)}, or 'quit'."
+                f"{len(_OPERATION_KEYS)}, 'history', or 'quit'."
             )
 
     def get_operand(self, prompt: str) -> float:

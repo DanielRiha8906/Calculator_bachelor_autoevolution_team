@@ -189,3 +189,14 @@ Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
 - **PR target:** exp2/structured-team
 
 Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
+
+## Run: issue-168-history (2026-04-19)
+
+- **Branch:** task/issue-168-history
+- **Files changed:** src/history.py (created), src/__main__.py (modified), src/repl.py (modified), src/cli.py (modified), tests/test_history.py (created)
+- **Purpose:** Add session-scoped operation history: records calculations to history.txt, cleared at session start, displayable via "history" command in interactive mode
+- **Risks:** history.txt is created in the working directory at runtime; tests use tmp_path fixture to avoid interference; existing tests unaffected
+- **Tests passed:** 513/513 (52 new history tests, 461 existing tests all still pass)
+- **PR target:** exp2/structured-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
