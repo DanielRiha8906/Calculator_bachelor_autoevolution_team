@@ -2,6 +2,7 @@ import sys
 
 from .calculator import Calculator
 from .cli import CLIHandler
+from .history import HistoryManager
 from .repl import REPLInterface
 
 
@@ -28,6 +29,8 @@ def main(argv: list[str] | None = None) -> None:
         argv = sys.argv[1:]
 
     calc = Calculator()
+    history_manager = HistoryManager()
+    history_manager.clear()
 
     if len(argv) == 0 or (len(argv) == 1 and argv[0] == "--repl"):
         # REPL mode — existing behaviour unchanged.

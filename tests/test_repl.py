@@ -1288,6 +1288,24 @@ class TestEdgeCasesAndAdditionalCoverage:
             result = repl.get_operand("Enter: ")
         assert result == 1e-308
 
+    def test_history_selection_returns_history_sentinel(self, repl):
+        """Test get_operation_selection returns 'history' when selected."""
+        with patch("builtins.input", return_value="history"):
+            result = repl.get_operation_selection()
+        assert result == "history"
+
+    def test_history_lowercase_selection(self, repl):
+        """Test 'history' input in lowercase."""
+        with patch("builtins.input", return_value="history"):
+            result = repl.get_operation_selection()
+        assert result == "history"
+
+    def test_history_uppercase_selection(self, repl):
+        """Test 'history' input in uppercase."""
+        with patch("builtins.input", return_value="HISTORY"):
+            result = repl.get_operation_selection()
+        assert result == "history"
+
     def test_operations_dict_integrity(self):
         """Test that OPERATIONS dict has correct structure."""
         assert len(OPERATIONS) == 12
@@ -1387,3 +1405,179 @@ class TestStressAndRobustness:
         captured = capsys.readouterr()
         # Should have three error messages
         assert captured.out.count("Error:") == 3
+
+
+# ==============================================================================
+# TESTS: History Integration (NEW)
+# ==============================================================================
+
+class TestHistoryIntegration:
+    """Test suite for history feature integration with REPL."""
+
+    def test_repl_has_history_manager(self, repl):
+        """Test REPLInterface initializes with HistoryManager."""
+        assert hasattr(repl, 'history_manager')
+        from src.history import HistoryManager
+        assert isinstance(repl.history_manager, HistoryManager)
+
+    def test_run_clears_history_at_start(self, repl, tmp_path):
+        """Test run() clears history at session start."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        # Pre-populate the file
+        with open(history_path, "w") as f:
+            f.write("old_entry\n")
+
+        with patch("builtins.input", side_effect=["quit"]):
+            repl.run()
+
+        # Verify file was cleared
+        with open(history_path, "r") as f:
+            content = f.read()
+        assert content == ""
+
+    def test_run_records_operation_after_execution(self, repl, tmp_path):
+        """Test run() records operation after successful execution."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        with patch("builtins.input", side_effect=["1", "3", "4", "quit"]):
+            repl.run()
+
+        history = repl.history_manager.get_history()
+        assert len(history) >= 1
+        assert "add(3.0, 4.0) = 7.0" in history[0]
+
+    def test_run_does_not_record_failed_operation(self, repl, tmp_path):
+        """Test run() does not record operation that raises exception."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        with patch("builtins.input", side_effect=["4", "10", "0", "quit"]):
+            repl.run()
+
+        history = repl.history_manager.get_history()
+        # Division by zero should not be recorded
+        assert len(history) == 0
+
+    def test_is_valid_operation_input_accepts_history(self, repl):
+        """Test _is_valid_operation_input returns True for 'history'."""
+        assert repl._is_valid_operation_input("history") is True
+
+    def test_is_valid_operation_input_accepts_history_uppercase(self, repl):
+        """Test _is_valid_operation_input accepts 'HISTORY'."""
+        assert repl._is_valid_operation_input("HISTORY") is True
+
+    def test_get_operation_selection_history_option_in_menu(self, repl, capsys):
+        """Test operation menu displays 'history' option."""
+        with patch("builtins.input", return_value="quit"):
+            repl.get_operation_selection()
+        captured = capsys.readouterr()
+        assert "history" in captured.out.lower()
+
+    def test_display_history_method_exists(self, repl):
+        """Test REPLInterface has display_history method."""
+        assert hasattr(repl, 'display_history')
+        assert callable(repl.display_history)
+
+    def test_display_history_empty_state(self, repl, capsys):
+        """Test display_history shows message when no operations recorded."""
+        repl.history_manager.clear()
+        repl.display_history()
+        captured = capsys.readouterr()
+        assert "No operations recorded yet." in captured.out
+
+    def test_display_history_with_operations(self, repl, capsys, tmp_path):
+        """Test display_history shows recorded operations."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+        repl.history_manager.clear()
+        repl.history_manager.record_operation("add", [1.0, 2.0], 3.0)
+        repl.display_history()
+        captured = capsys.readouterr()
+        assert "Operation History:" in captured.out
+        assert "add(1.0, 2.0) = 3.0" in captured.out
+
+    def test_run_handles_history_selection_and_continues(self, repl, capsys):
+        """Test run() handles 'history' selection and continues loop."""
+        with patch("builtins.input", side_effect=[
+            "1", "2", "3",     # add 2 + 3 = 5
+            "history",         # display history
+            "quit"
+        ]):
+            repl.run()
+        captured = capsys.readouterr()
+        # Both the operation and history display should be in output
+        assert "add(2.0, 3.0) = 5.0" in captured.out
+
+    def test_run_history_before_any_operations(self, repl, capsys):
+        """Test displaying history before any operations are recorded."""
+        with patch("builtins.input", side_effect=["history", "quit"]):
+            repl.run()
+        captured = capsys.readouterr()
+        assert "No operations recorded yet." in captured.out
+
+    def test_run_multiple_operations_then_display_history(self, repl, capsys, tmp_path):
+        """Test recording multiple operations and displaying history."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        with patch("builtins.input", side_effect=[
+            "1", "2", "3",     # add 2 + 3 = 5
+            "3", "", "4",      # multiply 5 * 4 = 20
+            "history",         # display history
+            "quit"
+        ]):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Operation History:" in captured.out
+        # Both operations should be in history output
+        history_text = captured.out[captured.out.find("Operation History:"):]
+        assert "add(2.0, 3.0) = 5.0" in history_text
+        assert "multiply(5.0, 4.0) = 20.0" in history_text
+
+    def test_run_history_case_variations(self, repl, capsys):
+        """Test 'history' accepts various case combinations."""
+        for history_input in ["history", "HISTORY", "History", "hisTORY"]:
+            with patch("builtins.input", side_effect=[history_input, "quit"]):
+                repl.run()
+            # Should not raise, should handle gracefully
+
+    def test_operation_error_does_not_record_in_history(self, repl, tmp_path):
+        """Test that operations raising exceptions are not recorded."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        with patch("builtins.input", side_effect=[
+            "10", "-4",         # square_root of negative - error
+            "quit"
+        ]):
+            repl.run()
+
+        history = repl.history_manager.get_history()
+        assert len(history) == 0
+
+    def test_successful_operations_recorded_after_error(self, repl, tmp_path):
+        """Test that operations are recorded after recovery from error."""
+        from src.history import HistoryManager
+        history_path = str(tmp_path / "history.txt")
+        repl.history_manager = HistoryManager(history_path)
+
+        with patch("builtins.input", side_effect=[
+            "4", "10", "0",    # divide by zero - error
+            "1", "5", "10",    # add 5 + 10 = 15 - success
+            "quit"
+        ]):
+            repl.run()
+
+        history = repl.history_manager.get_history()
+        assert len(history) == 1
+        assert "add(5.0, 10.0) = 15.0" in history[0]

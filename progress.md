@@ -1,4 +1,22 @@
 
+## Run: issue-168-history (2026-04-19)
+
+- **Branch:** task/issue-168-history
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/history.py` (new) — HistoryManager class for session-scoped operation recording and display
+  - `src/__main__.py` — import HistoryManager and call clear() at session start for both CLI and REPL modes
+  - `src/repl.py` — integrate HistoryManager: clear at start, record after success, display_history() method, "history" menu option
+  - `tests/test_history.py` (new) — 67 tests covering all HistoryManager methods and edge cases
+  - `tests/test_repl.py` — 16 new history integration tests added to existing suite
+  - `.gitignore` — added history.txt to prevent committing session artifact
+- **Purpose:** Implement session-scoped operation history (issue #168): record operations to history.txt, allow display on request in interactive mode, clear between sessions
+- **Risks:** history.txt created in current working directory; concurrent calculator instances would share the file
+- **Tests passed:** yes — 547 total tests pass
+- **Tokens used:** PENDING
+- **Cost (USD):** PENDING
+- **Turns:** PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-165-retry-logic

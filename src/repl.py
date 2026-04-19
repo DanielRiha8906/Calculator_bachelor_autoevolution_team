@@ -8,6 +8,7 @@ import math
 from typing import Optional
 
 from src.exceptions import MaxRetriesExceeded
+from src.history import HistoryManager
 
 MAX_RETRIES = 3
 
@@ -43,6 +44,7 @@ class REPLInterface:
     def __init__(self, calculator) -> None:
         self.calculator = calculator
         self.last_result: Optional[float] = None
+        self.history_manager = HistoryManager()
 
     def run(self) -> None:
         """Start the REPL loop.
@@ -52,6 +54,7 @@ class REPLInterface:
         "quit" or sends EOF.
         """
         print("Welcome to the Calculator REPL. Type 'quit' to exit.")
+        self.history_manager.clear()
         while True:
             try:
                 operation = self.get_operation_selection()
@@ -61,6 +64,10 @@ class REPLInterface:
             except MaxRetriesExceeded as exc:
                 print(str(exc))
                 return
+
+            if operation == "history":
+                self.display_history()
+                continue
 
             if operation == "quit":
                 print("Calculator closed.")
@@ -98,6 +105,7 @@ class REPLInterface:
                 continue
 
             self.display_result(operation, operands, result)
+            self.history_manager.record_operation(operation, operands, result)
             self.last_result = result
 
     def _first_operand_prompt(self, label: str) -> str:
@@ -175,7 +183,7 @@ class REPLInterface:
         Returns:
             True when the input is "quit" or a valid menu index, False otherwise.
         """
-        if raw_input.lower().strip() == "quit":
+        if raw_input.lower().strip() in ("quit", "history"):
             return True
         try:
             choice = int(raw_input.strip())
@@ -200,6 +208,7 @@ class REPLInterface:
         print("\nAvailable operations:")
         for idx, key in enumerate(_OPERATION_KEYS, start=1):
             print(f"  {idx}. {OPERATIONS[key]['name']}")
+        print("  history. Show operation history")
         print("  quit. Exit")
 
         attempts = 0
@@ -207,6 +216,8 @@ class REPLInterface:
             raw = input("Select operation: ").strip()
             if raw.lower() == "quit":
                 return "quit"
+            if raw.lower() == "history":
+                return "history"
             try:
                 choice = int(raw)
             except ValueError:
@@ -273,3 +284,18 @@ class REPLInterface:
         op_name = OPERATIONS[operation]["name"]
         operand_str = ", ".join(str(o) for o in operands)
         print(f"{op_name}({operand_str}) = {result}")
+
+    def display_history(self) -> None:
+        """Print all recorded operations for the current session.
+
+        Retrieves the history entries from the HistoryManager and prints each
+        entry on a separate line.  If no operations have been recorded yet,
+        prints an informational message instead.
+        """
+        entries = self.history_manager.get_history()
+        if not entries:
+            print("No operations recorded yet.")
+        else:
+            print("Operation History:")
+            for entry in entries:
+                print(entry)
