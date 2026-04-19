@@ -1,5 +1,28 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-184-documentation
+- **Files changed:** artifacts/class_diagram.puml (verified current), artifacts/activity_diagram.puml (verified current), artifacts/sequence_diagram.puml (verified current)
+- **Purpose:** Verify PlantUML diagrams reflect current state of src/ after issue-184 documentation run. No source code changes since last diagram update (issue-181 modularization) — all three diagrams remain accurate and correctly represent the full modular structure: src.core (Calculator with 12 operations, OperationRegistry, Operations module), src.interface (InputParser, OutputFormatter, MenuRenderer), src.interactive (Session with MAX_VALIDATION_ATTEMPTS, get_operation_choice, get_operands, run_interactive_session), src.support (HistoryTracker), and top-level ErrorLogger and CLI modules with all dependency edges.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 96.6s | Cost: $0.384865 USD | Turns: 19
+
+---
+
+## Run: issue-184 — Documentation (Expert/Team)
+
+- **Branch:** task/issue-184-documentation
+- **Files changed:** README.md (updated), docs/USER_GUIDE.md (created), docs/DEVELOPER_GUIDE.md (created), docs/ARCHITECTURE.md (created), docs/API_REFERENCE.md (created), tests/test_documentation.py (created)
+- **Purpose:** Add comprehensive written documentation covering interactive mode, CLI usage, all 12 calculator operations, session behavior (history.txt, error.log), code structure post-modularization (PR #212), and public API reference. Tests validate all documented examples against the actual implementation.
+- **Risks:** None — documentation and tests only; no source code modified.
+- **Tests passed:** 109/109 (test_documentation.py); existing suite unaffected.
+- **PR target:** exp2/expert-team
+
+Duration: 593.1s | Cost: $1.347870 USD | Turns: 15
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-181-modularization-expert-team
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect issue-181 modularization: new OperationRegistry class in src/core/operations_manager.py (with _normal_operations, _scientific_operations, get_all_operations, get_normal_operations); new src/interface/ package with InputParser (parse_cli_args, convert_operand), OutputFormatter (format_result), and MenuRenderer (display_menu) modules; HistoryTracker and ErrorLogger canonical homes moved to src/support/. Class diagram restructured with new src.interface and src.support packages, OperationRegistry node added, and dependency edges updated. Sequence diagram updated with interface.InputParser, interface.MenuRenderer, and core.OperationRegistry participants showing full delegation chain. Activity diagram updated to reference interface.InputParser and interface.MenuRenderer at call sites.
