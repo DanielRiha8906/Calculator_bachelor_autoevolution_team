@@ -1,3 +1,13 @@
+## Run: issue-143-factorial-naive-team
+
+- branch: task/issue-143-factorial
+- files changed: src/calculator.py, src/__main__.py, tests/test_calculator.py
+- purpose: Add factorial unary operation to Calculator class (Issue #143)
+- risks: None — additive change only, no existing methods modified
+- tests passed: 45/45 new tests, 134/134 total suite
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-137-zerodivisionerror-naive-team
 
 - branch: task/issue-137-zerodivisionerror-naive-team

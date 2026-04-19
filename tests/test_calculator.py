@@ -394,6 +394,174 @@ class TestDivide:
 
 
 # ============================================================================
+# FACTORIAL OPERATION TESTS
+# ============================================================================
+
+class TestFactorial:
+    """Test suite for the factorial operation."""
+
+    def test_factorial_base_case_zero(self, calculator):
+        """Test factorial(0) == 1."""
+        assert calculator.factorial(0) == 1
+
+    def test_factorial_base_case_one(self, calculator):
+        """Test factorial(1) == 1."""
+        assert calculator.factorial(1) == 1
+
+    def test_factorial_small_positive_integers(self, calculator):
+        """Test factorial for small positive integers."""
+        assert calculator.factorial(2) == 2
+        assert calculator.factorial(3) == 6
+        assert calculator.factorial(4) == 24
+        assert calculator.factorial(5) == 120
+
+    def test_factorial_moderate_integer(self, calculator):
+        """Test factorial(10) == 3628800."""
+        assert calculator.factorial(10) == 3628800
+
+    def test_factorial_large_integer(self, calculator):
+        """Test factorial(20) handles large Python integers."""
+        assert calculator.factorial(20) == 2432902008176640000
+
+    def test_factorial_even_larger_integer(self, calculator):
+        """Test factorial(30) to verify Python handles very large integers."""
+        assert calculator.factorial(30) == 265252859812191058636308480000000
+
+    def test_factorial_float_equal_to_integer(self, calculator):
+        """Test that float values equal to integers are accepted."""
+        assert calculator.factorial(5.0) == 120
+        assert calculator.factorial(0.0) == 1
+        assert calculator.factorial(10.0) == 3628800
+
+    def test_factorial_negative_integer_raises_valueerror(self, calculator):
+        """Test that negative integers raise ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(-1)
+
+        with pytest.raises(ValueError):
+            calculator.factorial(-5)
+
+        with pytest.raises(ValueError):
+            calculator.factorial(-100)
+
+    def test_factorial_negative_float_raises_valueerror(self, calculator):
+        """Test that negative floats equal to integers raise ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(-1.0)
+
+        with pytest.raises(ValueError):
+            calculator.factorial(-5.0)
+
+    def test_factorial_non_integer_float_raises_typeerror(self, calculator):
+        """Test that float values not equal to integers raise TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial(1.5)
+
+        with pytest.raises(TypeError):
+            calculator.factorial(5.5)
+
+        with pytest.raises(TypeError):
+            calculator.factorial(0.1)
+
+        with pytest.raises(TypeError):
+            calculator.factorial(10.9)
+
+    def test_factorial_string_raises_typeerror(self, calculator):
+        """Test that string input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial("5")
+
+        with pytest.raises(TypeError):
+            calculator.factorial("")
+
+    def test_factorial_none_raises_typeerror(self, calculator):
+        """Test that None input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial(None)
+
+    def test_factorial_bool_true_raises_typeerror(self, calculator):
+        """Test that boolean True raises TypeError (not treated as 1)."""
+        with pytest.raises(TypeError):
+            calculator.factorial(True)
+
+    def test_factorial_bool_false_raises_typeerror(self, calculator):
+        """Test that boolean False raises TypeError (not treated as 0)."""
+        with pytest.raises(TypeError):
+            calculator.factorial(False)
+
+    def test_factorial_list_raises_typeerror(self, calculator):
+        """Test that list input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial([5])
+
+        with pytest.raises(TypeError):
+            calculator.factorial([])
+
+    def test_factorial_dict_raises_typeerror(self, calculator):
+        """Test that dict input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial({"n": 5})
+
+    def test_factorial_tuple_raises_typeerror(self, calculator):
+        """Test that tuple input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial((5,))
+
+    def test_factorial_set_raises_typeerror(self, calculator):
+        """Test that set input raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial({5})
+
+    @pytest.mark.parametrize("n,expected", [
+        (0, 1),
+        (1, 1),
+        (2, 2),
+        (3, 6),
+        (4, 24),
+        (5, 120),
+        (6, 720),
+        (7, 5040),
+        (8, 40320),
+        (9, 362880),
+        (10, 3628800),
+    ])
+    def test_factorial_parametrized_small_values(self, calculator, n, expected):
+        """Parametrized test for factorials of small values."""
+        assert calculator.factorial(n) == expected
+
+    @pytest.mark.parametrize("n", [
+        0.0,
+        1.0,
+        5.0,
+        10.0,
+    ])
+    def test_factorial_parametrized_integer_floats(self, calculator, n):
+        """Parametrized test that integer-valued floats are accepted."""
+        result = calculator.factorial(n)
+        assert isinstance(result, int)
+        assert result > 0
+
+    @pytest.mark.parametrize("invalid_input", [
+        -1,
+        -10,
+        -0.5,
+        1.5,
+        5.5,
+        "5",
+        None,
+        True,
+        False,
+        [],
+        {},
+        (),
+    ])
+    def test_factorial_invalid_inputs(self, calculator, invalid_input):
+        """Parametrized test that invalid inputs raise appropriate exceptions."""
+        with pytest.raises((ValueError, TypeError)):
+            calculator.factorial(invalid_input)
+
+
+# ============================================================================
 # CROSS-OPERATION EDGE CASES (IDENTITY OPERATIONS)
 # ============================================================================
 
