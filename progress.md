@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-180-modularization
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CalculationEngine` class (src/core/engine.py) with four arithmetic methods; added `_engine: CalculationEngine` attribute to `Calculator`; added `Calculator *-- CalculationEngine` composition relationship; updated `MaxRetriesExceeded` note to reference `src/support/exceptions.py`; updated `Operation` note to reference `src/core/operations.py`; added facade note on `Calculator` describing the delegation pattern
+  - `artifacts/sequence_diagram.puml` — added `CalculationEngine` participant with explanatory note; updated arithmetic operation calls (add/subtract/multiply/divide) in REPL flow to show Calculator → CalculationEngine delegation chain; split CLI dispatch alt block into arithmetic (via CalculationEngine) and scientific (direct Calculator) branches
+  - `artifacts/activity_diagram.puml` — added module layout note at start describing the src/core/, src/interface/, src/support/ subpackage structure and shim re-exports; added note on Calculator instantiation describing CalculationEngine delegation; annotated arithmetic operation branches with "Calculator → CalculationEngine" delegation notes
+- **Purpose:** Sync PlantUML diagrams with current source after issue-180 introduced CalculationEngine (src/core/engine.py) and reorganized the codebase into src/core/, src/interface/, src/support/ subpackages with backward-compat shims at src/*.py
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 177.7s | Cost: $0.609432 USD | Turns: 21
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-174-logic-separation
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `Operation` frozen dataclass with `name`, `arity`, `display_name`, `aliases` fields; added `OperationRegistry` class with `get_operations`, `get_operation`, `resolve`, `arity`, `get_operation_mapping`, `dispatch` methods and a dispatch note describing the logarithm special case; updated `REPLInterface` to add `_registry`, `_operations`, `_operation_keys` attributes and updated `_execute` note to reflect delegation to registry; updated `CLIHandler` to add `_registry` attribute and updated `get_operation_mapping` and `execute` notes to reflect registry delegation; added relationships `REPLInterface o-- OperationRegistry`, `CLIHandler o-- OperationRegistry`, `OperationRegistry o-- Calculator`, `OperationRegistry ..> Operation`
@@ -269,3 +282,14 @@ Duration: 402.4s | Cost: $1.051931 USD | Turns: 14
 - **PR target:** exp2/structured-team
 
 Duration: 493.5s | Cost: $1.407888 USD | Turns: 13
+
+## Run: issue-180-modularization (2026-04-19)
+
+- **Branch:** task/issue-180-modularization
+- **PR target:** exp2/structured-team
+- **Files changed:** 34 files (14 new src sub-package files, 7 root-level backward-compat wrappers updated, 13 new test files, src/operations.py removed/renamed to src/core/operations.py)
+- **Purpose:** Refactor calculator into modular package structure — src/core/, src/operations/, src/interface/, src/support/ sub-packages with clear separation of concerns; extensible operations architecture for future scientific functionality
+- **Risks:** src/operations.py deleted (conflicts with src/operations/ package); all existing imports preserved via backward-compat re-export wrappers
+- **Tests passed:** 1105/1105 (716 existing + 389 new tests all pass)
+
+Duration: 739.6s | Cost: $2.044180 USD | Turns: 15

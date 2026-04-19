@@ -2,7 +2,20 @@
 
 start
 
+note right
+  Modular package layout (issue-180):
+  src/core/   — CalculationEngine, Operation, OperationRegistry
+  src/interface/ — CLIHandler, REPLInterface
+  src/support/   — ErrorLogger, OperationHistory, MaxRetriesExceeded
+  src/*.py shims re-export from canonical sub-package locations.
+end note
+
 :Instantiate Calculator;
+note right
+  Calculator._engine = CalculationEngine()
+  Arithmetic ops delegate to CalculationEngine.
+  Scientific ops implemented directly on Calculator.
+end note
 :Instantiate OperationHistory(history_file="history.txt");
 :history.clear_history();
 :Instantiate ErrorLogger(error_file="error.log");
@@ -109,15 +122,19 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
       else (no — forwarded to Calculator via getattr)
         fork
           :add(a, b);
+          note right: Calculator → CalculationEngine
           :return a + b;
         fork again
           :subtract(a, b);
+          note right: Calculator → CalculationEngine
           :return a - b;
         fork again
           :multiply(a, b);
+          note right: Calculator → CalculationEngine
           :return a * b;
         fork again
           :divide(a, b);
+          note right: Calculator → CalculationEngine
           if (b == 0?) then (yes)
             :raise ZeroDivisionError\n"Cannot divide by zero";
           else (no)

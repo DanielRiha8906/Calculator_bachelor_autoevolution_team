@@ -3,6 +3,7 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
+    -_engine : CalculationEngine
     +add(a, b) : float
     +subtract(a, b) : float
     +multiply(a, b) : float
@@ -17,9 +18,16 @@ class Calculator {
     +natural_logarithm(x: float) : float
 }
 
+note right of Calculator
+  Facade (src/calculator.py).
+  Arithmetic methods (add/subtract/multiply/divide)
+  delegate to internal CalculationEngine.
+  Scientific methods are implemented directly.
+end note
+
 note right of Calculator::divide
-  Raises ZeroDivisionError
-  when b == 0
+  Delegates to CalculationEngine.divide().
+  Raises ZeroDivisionError when b == 0.
 end note
 
 note right of Calculator::factorial
@@ -44,6 +52,20 @@ note right of Calculator::natural_logarithm
   Raises ValueError if x <= 0.
 end note
 
+class CalculationEngine {
+    +add(a: float, b: float) : float
+    +subtract(a: float, b: float) : float
+    +multiply(a: float, b: float) : float
+    +divide(a: float, b: float) : float
+}
+
+note right of CalculationEngine
+  Core arithmetic engine (src/core/engine.py).
+  Handles the four basic arithmetic operations.
+  divide() raises ZeroDivisionError if b == 0.
+  Calculator owns exactly one instance via _engine.
+end note
+
 class MaxRetriesExceeded {
 }
 
@@ -51,7 +73,8 @@ note right of MaxRetriesExceeded
   Raised when the user exceeds
   MAX_RETRIES (3) consecutive
   invalid inputs in the REPL.
-  Defined in src/exceptions.py.
+  Defined in src/support/exceptions.py;
+  re-exported by src/exceptions.py shim.
 end note
 
 MaxRetriesExceeded --|> Exception
@@ -120,7 +143,7 @@ class Operation <<dataclass>> {
 }
 
 note right of Operation
-  Frozen dataclass (src/operations.py).
+  Frozen dataclass (src/core/operations.py).
   Metadata for a single calculator operation.
   Example: name="add", arity=2,
   display_name="Addition", aliases=("+",).
@@ -292,6 +315,7 @@ Main ..> OperationHistory : instantiates
 Main ..> ErrorLogger : instantiates
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
+Calculator *-- CalculationEngine : owns >
 REPLInterface o-- Calculator : uses >
 REPLInterface o-- OperationHistory : uses (optional) >
 REPLInterface o-- ErrorLogger : uses (optional) >

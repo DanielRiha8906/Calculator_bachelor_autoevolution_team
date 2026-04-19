@@ -1,10 +1,10 @@
 import sys
 
 from .calculator import Calculator
-from .cli import CLIHandler
-from .error_logger import ErrorLogger
-from .history import OperationHistory
-from .repl import REPLInterface
+from .interface.cli import CLIHandler
+from .interface.repl import REPLInterface
+from .support.error_logger import ErrorLogger
+from .support.history import OperationHistory
 
 
 def main(argv: list[str] | None = None) -> None:
