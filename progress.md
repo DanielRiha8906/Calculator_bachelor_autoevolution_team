@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-148-functions-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect 7 new methods added to Calculator in this branch (square, cube, square_root, cube_root, power, log, ln) with their type and domain validation.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-148 — Mathematical functions for Calculator
 
 - **Branch:** task/issue-148-functions-expert-team

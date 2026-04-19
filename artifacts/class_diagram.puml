@@ -7,6 +7,13 @@ package "src" {
         +multiply(a, b) : float
         +divide(a, b) : float
         +factorial(n: int) : int
+        +square(x: int|float) : int|float
+        +cube(x: int|float) : int|float
+        +square_root(x: int|float) : float
+        +cube_root(x: int|float) : float
+        +power(base: int|float, exponent: int|float) : int|float
+        +log(x: int|float) : float
+        +ln(x: int|float) : float
     }
 }
 
@@ -21,6 +28,31 @@ EntryPoint ..> Calculator : instantiates & uses
 note right of Calculator::factorial
   Raises TypeError if n is not int.
   Raises ValueError if n < 0.
+end note
+
+note right of Calculator::square_root
+  Raises TypeError if x is not numeric.
+  Raises ValueError if x < 0.
+end note
+
+note right of Calculator::cube_root
+  Supports negative inputs via sign handling.
+  Raises TypeError if x is not numeric.
+end note
+
+note right of Calculator::power
+  Raises ValueError if base < 0 and
+  exponent is non-integer (complex result).
+end note
+
+note right of Calculator::log
+  Base-10 logarithm (log₁₀).
+  Raises ValueError if x <= 0.
+end note
+
+note right of Calculator::ln
+  Natural logarithm (ln).
+  Raises ValueError if x <= 0.
 end note
 
 @enduml
