@@ -1,0 +1,20 @@
+@startuml class_diagram
+
+package "src" {
+    class Calculator {
+        +add(a, b) : float
+        +subtract(a, b) : float
+        +multiply(a, b) : float
+        +divide(a, b) : float
+    }
+}
+
+package "__main__" {
+    class EntryPoint <<module>> {
+        +main() : void
+    }
+}
+
+EntryPoint ..> Calculator : instantiates & uses
+
+@enduml

@@ -8,3 +8,13 @@
 - **Tests passed:** 4/4 (test_divide_integer_by_zero_raises_error, test_divide_float_by_zero_raises_error, test_divide_negative_by_zero_raises_error, test_divide_normal_division_works)
 
 Duration: 124.9s | Cost: $0.353112 USD | Turns: 16
+
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-139-zero-division-error
+- **Files changed:** artifacts/class_diagram.puml (created), artifacts/activity_diagram.puml (created), artifacts/sequence_diagram.puml (created)
+- **Purpose:** Generate initial PlantUML diagrams reflecting current state of src/ (Calculator class with add, subtract, multiply, divide methods; main() entry point).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
