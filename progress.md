@@ -51,4 +51,4 @@ Duration: 175.2s | Cost: $0.390062 USD | Turns: 14
 - **Risks:** None — diagrams already accurate; only progress.md updated
 - **Tests passed:** N/A (no code changes)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 40.7s | Cost: $0.145565 USD | Turns: 11
