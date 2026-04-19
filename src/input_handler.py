@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .history import HistoryTracker
+
 if TYPE_CHECKING:
     from .calculator import Calculator
 
@@ -66,23 +68,28 @@ def display_menu(registry: dict[str, tuple]) -> None:
         _method, arity = registry[name]
         operand_hint = f"({arity} operand{'s' if arity != 1 else ''})"
         print(f"  {index:2}. {name} {operand_hint}")
+    print("   h. View history")
     print("   q. quit")
+
+
+_HISTORY_TOKEN = "h"
 
 
 def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
     """Prompt the user to select an operation.
 
-    Keeps reprompting until a valid selection, a quit command, or the
-    maximum number of invalid attempts is reached.
+    Keeps reprompting until a valid selection, a quit command, a history
+    request, or the maximum number of invalid attempts is reached.
 
     Args:
         registry: The operation registry returned by
             :func:`get_operation_registry`.
 
     Returns:
-        A ``(method, arity)`` tuple for the chosen operation, ``None``
-        if the user entered a quit command (``"q"``, ``"quit"``, or
-        ``"exit"``), or ``(None, None)`` when
+        A ``(name, method, arity)`` tuple for the chosen operation,
+        ``None`` if the user entered a quit command (``"q"``, ``"quit"``,
+        or ``"exit"``), ``(_HISTORY_TOKEN, None, None)`` when the user
+        requests history (``"h"``), or ``(None, None, None)`` when
         :data:`MAX_VALIDATION_ATTEMPTS` consecutive invalid inputs have
         been entered.
     """
@@ -92,24 +99,29 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
     attempt_count = 0
 
     while True:
-        raw = input("\nEnter operation name or number (q to quit): ").strip().lower()
+        raw = input("\nEnter operation name or number (h for history, q to quit): ").strip().lower()
 
         if raw in quit_tokens:
             return None
+
+        if raw == _HISTORY_TOKEN:
+            return (_HISTORY_TOKEN, None, None)
 
         # Allow numeric selection
         if raw.isdigit():
             index = int(raw) - 1
             if 0 <= index < len(names):
                 name = names[index]
-                return registry[name]
+                method, arity = registry[name]
+                return (name, method, arity)
             attempt_count += 1
             print(
                 f"  Invalid number. Choose between 1 and {len(names)}."
                 f" Available operations: {available}."
             )
         elif raw in registry:
-            return registry[raw]
+            method, arity = registry[raw]
+            return (raw, method, arity)
         else:
             attempt_count += 1
             print(
@@ -119,7 +131,7 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
 
         if attempt_count >= MAX_VALIDATION_ATTEMPTS:
             print("Maximum invalid input attempts reached. Ending session.")
-            return (None, None)
+            return (None, None, None)
 
 
 def get_operands(arity: int) -> list[float] | None:
@@ -153,7 +165,10 @@ def get_operands(arity: int) -> list[float] | None:
     return operands
 
 
-def run_interactive_session(calculator: "Calculator") -> None:
+def run_interactive_session(
+    calculator: "Calculator",
+    history_tracker: HistoryTracker | None = None,
+) -> None:
     """Run the main interactive calculator session.
 
     Displays the menu, collects input, executes operations, and prints
@@ -161,12 +176,21 @@ def run_interactive_session(calculator: "Calculator") -> None:
     (``TypeError``, ``ValueError``, ``ZeroDivisionError``) are caught and
     displayed without terminating the session.
 
+    Each successful operation is recorded in *history_tracker*.  When the
+    session ends the history is saved to ``history.txt`` via
+    :meth:`~history.HistoryTracker.save_to_file`.
+
     Args:
         calculator: A ``Calculator`` instance to perform operations with.
+        history_tracker: An optional :class:`~history.HistoryTracker`
+            instance.  If ``None``, a new one is created internally.
 
     Returns:
         None
     """
+    if history_tracker is None:
+        history_tracker = HistoryTracker()
+
     registry = get_operation_registry(calculator)
     print("Welcome to the interactive calculator.")
     failed_attempts = 0
@@ -180,12 +204,17 @@ def run_interactive_session(calculator: "Calculator") -> None:
             print("Goodbye.")
             break
 
+        # History display request
+        if choice == (_HISTORY_TOKEN, None, None):
+            history_tracker.display()
+            continue
+
         # Max-attempts sentinel: get_operation_choice already printed the
         # termination message, so just exit the loop.
-        if choice == (None, None):
+        if choice == (None, None, None):
             break
 
-        method, arity = choice
+        operation_name, method, arity = choice
 
         # For factorial the operand must be an int; collect as float then
         # convert to int so that e.g. "5.0" is accepted gracefully.
@@ -209,6 +238,9 @@ def run_interactive_session(calculator: "Calculator") -> None:
         try:
             result = method(*operands)
             print(f"  Result: {result}")
+            history_tracker.record(operation_name, operands, result)
             failed_attempts = 0
         except (TypeError, ValueError, ZeroDivisionError) as exc:
             print(f"  Error: {exc}")
+
+    history_tracker.save_to_file()

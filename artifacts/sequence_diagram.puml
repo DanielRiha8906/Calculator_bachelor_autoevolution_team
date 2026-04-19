@@ -4,11 +4,13 @@ participant "__main__" as main
 participant "CLI" as cli
 participant "InputHandler" as ih
 participant "Calculator" as calc
+participant "HistoryTracker" as ht
 
 alt Interactive Mode (python -m src)
 
     main -> calc : <<create>>
-    main -> ih : run_interactive_session(calculator)
+    main -> ht : <<create>>
+    main -> ih : run_interactive_session(calculator, history_tracker)
 
     ih -> ih : get_operation_registry(calculator)
     ih -> ih : print welcome message
@@ -18,14 +20,19 @@ alt Interactive Mode (python -m src)
         ih -> ih : get_operation_choice(registry)
 
         alt user quit (q / quit / exit)
+            ih -> ht : save_to_file("history.txt")
             ih -> main : return\n(prints "Goodbye.")
-        else max validation attempts exceeded → (None, None)
-            ih -> main : return\n(prints "Too many invalid attempts. Exiting.")
+        else history request ("h")
+            ih -> ht : display()
+        else max validation attempts exceeded → (None, None, None)
+            ih -> ht : save_to_file("history.txt")
+            ih -> main : return
         else operation selected
             ih -> ih : get_operands(arity)
 
             alt max validation attempts exceeded → None
-                ih -> main : return\n(prints "Too many invalid attempts. Exiting.")
+                ih -> ht : save_to_file("history.txt")
+                ih -> main : return
             else operands collected
                 opt method is factorial
                     ih -> ih : convert whole-valued floats to int
@@ -36,6 +43,7 @@ alt Interactive Mode (python -m src)
                 alt success
                     calc --> ih : result
                     ih -> ih : print "Result: {result}"
+                    ih -> ht : record(operation_name, operands, result)
                 else TypeError / ValueError / ZeroDivisionError
                     calc --> ih : raises exception
                     ih -> ih : print error message

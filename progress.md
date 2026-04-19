@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-169-history-tracking
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect HistoryTracker class added in issue-169: new class diagram node with record/get_history/display/save_to_file/clear methods; activity diagram updated with history recording, display, and save-to-file steps; sequence diagram updated with HistoryTracker participant and all interactions.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 110.4s | Cost: $0.325730 USD | Turns: 19
+
+---
+
+## Run: issue-169-history-tracking — Add session history tracking to calculator
+
+- **Branch:** task/issue-169-history-tracking
+- **Files changed:** src/history.py (created), src/input_handler.py (modified), src/__main__.py (modified), tests/test_history.py (created), tests/test_input_handler.py (modified)
+- **Purpose:** Add operation history to interactive mode. Each calculation is recorded in function-call format (e.g. add(2, 3) = 5). Users can view history via "h" menu shortcut. History is written to history.txt when the session ends. Each session starts with fresh history.
+- **Risks:** Low. get_operation_choice return shape changed from 2-tuple to 3-tuple (name, method, arity); only internal consumer (run_interactive_session) was updated in the same commit. File I/O errors on save are caught and printed to stderr without crashing.
+- **Tests passed:** Yes — 386 tests passed (86 new test_history.py, 15 new + 19 fixed in test_input_handler.py, all existing tests pass), 0 failures.
+- **PR target:** exp2/expert-team
+
+Duration: 485.1s | Cost: $1.255291 USD | Turns: 17
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-166-retry-logic
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect MAX_VALIDATION_ATTEMPTS retry cap added in issue-166: get_operation_choice now returns (None, None) on exhaustion, get_operands returns None on exhaustion, and run_interactive_session breaks on either sentinel.
