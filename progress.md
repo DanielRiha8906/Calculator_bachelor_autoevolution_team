@@ -1,6 +1,77 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-180-modularization
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CalculationEngine` class (src/core/engine.py) with four arithmetic methods; added `_engine: CalculationEngine` attribute to `Calculator`; added `Calculator *-- CalculationEngine` composition relationship; updated `MaxRetriesExceeded` note to reference `src/support/exceptions.py`; updated `Operation` note to reference `src/core/operations.py`; added facade note on `Calculator` describing the delegation pattern
+  - `artifacts/sequence_diagram.puml` — added `CalculationEngine` participant with explanatory note; updated arithmetic operation calls (add/subtract/multiply/divide) in REPL flow to show Calculator → CalculationEngine delegation chain; split CLI dispatch alt block into arithmetic (via CalculationEngine) and scientific (direct Calculator) branches
+  - `artifacts/activity_diagram.puml` — added module layout note at start describing the src/core/, src/interface/, src/support/ subpackage structure and shim re-exports; added note on Calculator instantiation describing CalculationEngine delegation; annotated arithmetic operation branches with "Calculator → CalculationEngine" delegation notes
+- **Purpose:** Sync PlantUML diagrams with current source after issue-180 introduced CalculationEngine (src/core/engine.py) and reorganized the codebase into src/core/, src/interface/, src/support/ subpackages with backward-compat shims at src/*.py
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 177.7s | Cost: $0.609432 USD | Turns: 21
+
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-174-logic-separation
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `Operation` frozen dataclass with `name`, `arity`, `display_name`, `aliases` fields; added `OperationRegistry` class with `get_operations`, `get_operation`, `resolve`, `arity`, `get_operation_mapping`, `dispatch` methods and a dispatch note describing the logarithm special case; updated `REPLInterface` to add `_registry`, `_operations`, `_operation_keys` attributes and updated `_execute` note to reflect delegation to registry; updated `CLIHandler` to add `_registry` attribute and updated `get_operation_mapping` and `execute` notes to reflect registry delegation; added relationships `REPLInterface o-- OperationRegistry`, `CLIHandler o-- OperationRegistry`, `OperationRegistry o-- Calculator`, `OperationRegistry ..> Operation`
+  - `artifacts/activity_diagram.puml` — updated REPL `_execute` step to name `OperationRegistry.dispatch` as the intermediary; restructured the operation fork to split `logarithm` (registry special case with full domain validation) from Calculator-delegated operations; updated CLI dispatch section to replace direct `method_name == "logarithm"` check with `OperationRegistry.dispatch` call showing the same logarithm branch; added notes on REPLInterface and CLIHandler instantiation explaining they create an internal registry
+  - `artifacts/sequence_diagram.puml` — added `OperationRegistry` participant; REPL's `_execute` now shows REPL → OperationRegistry : dispatch → (logarithm handled in registry OR Calculator method per operation); CLI's execute now shows CLI → OperationRegistry : resolve + arity + dispatch → (logarithm OR Calculator); both CLI and REPL activate/deactivate OperationRegistry alongside their own lifetimes
+- **Purpose:** Sync PlantUML diagrams with current source after issue-174 introduced `OperationRegistry` and `Operation` in `src/operations.py` and refactored CLI and REPL to delegate all dispatch through the registry
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 321.5s | Cost: $0.740562 USD | Turns: 22
+
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-171-error-logging
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `ErrorLogger` class with `error_file`, `INVALID_INPUT`, `UNSUPPORTED_OPERATION`, `CALCULATION_ERROR` constants, and `clear_errors`, `log_error`, `get_errors` methods; updated `REPLInterface` and `CLIHandler` to include `error_logger: ErrorLogger | None` attribute and constructor param; added `Main ..> ErrorLogger`, `REPLInterface o-- ErrorLogger`, and `CLIHandler o-- ErrorLogger` relationships; updated `Main` note to describe ErrorLogger instantiation
+  - `artifacts/activity_diagram.puml` — added `ErrorLogger` instantiation and `clear_errors()` at session start; added `error_logger.log_error(CALCULATION_ERROR, ...)` in REPL exception handling path; added `error_logger.log_error(UNSUPPORTED_OPERATION, ...)` and `error_logger.log_error(INVALID_INPUT, ...)` in CLI parse error paths; added `error_logger.log_error(CALCULATION_ERROR, ...)` in CLI calculation error path; updated all constructor calls to include `error_logger`
+  - `artifacts/sequence_diagram.puml` — added `ErrorLogger` participant; added `ErrorLogger()` and `clear_errors()` calls from Main; added `log_error(CALCULATION_ERROR, ...)` call from REPL on exception; added `log_error(UNSUPPORTED_OPERATION, ...)` and `log_error(INVALID_INPUT, ...)` calls from CLI on parse errors; added `log_error(CALCULATION_ERROR, ...)` from CLI on calculation errors; updated `CLIHandler` and `REPLInterface` constructor signatures to include `error_logger`
+- **Purpose:** Sync PlantUML diagrams with current source after issue-171 added `ErrorLogger` and wired error logging into REPL and CLI interfaces
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 190.8s | Cost: $0.430244 USD | Turns: 15
+
+## Run: issue-171-error-logging (2026-04-19)
+
+- **Branch:** task/issue-171-error-logging
+- **PR:** https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/206 (targets exp2/structured-team)
+- **Files changed:**
+  - `src/error_logger.py` — new module, `ErrorLogger` class with `clear_errors`, `log_error`, `get_errors`; three error type constants
+  - `src/__init__.py` — exported `ErrorLogger`
+  - `src/__main__.py` — initialize `ErrorLogger`, pass to REPL and CLI
+  - `src/repl.py` — accept optional `error_logger` param; log `CALCULATION_ERROR` at exception points
+  - `src/cli.py` — accept optional `error_logger` param; log `UNSUPPORTED_OPERATION`, `INVALID_INPUT`, `CALCULATION_ERROR` at exception points
+  - `tests/test_error_logger.py` — 57 new tests for ErrorLogger unit and integration
+  - `tests/test_repl.py` — 6 new integration tests; fixtures updated
+  - `tests/test_cli.py` — 9 new integration tests; fixtures updated
+- **Purpose:** Add dedicated error logging separate from operation history (issue #171)
+- **Risks:** `error.log` written to cwd; no rotation (out of scope). Backward compatible via optional params.
+- **Tests:** 585 passed, 0 failed, 0 skipped
+
+Duration: 511.4s | Cost: $1.278239 USD | Turns: 19
+
+## Run: update-diagrams (2026-04-19)
+
+- **Branch:** task/issue-168-history
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `OperationHistory` class with `history_file`, `clear_history`, `record_operation`, and `display_history`; updated `REPLInterface` and `CLIHandler` to include `history: OperationHistory | None` attribute and constructor param; added `Main ..> OperationHistory`, `REPLInterface o-- OperationHistory`, and `CLIHandler o-- OperationHistory` relationships; updated `Main` note to describe history instantiation
+  - `artifacts/activity_diagram.puml` — added OperationHistory instantiation and `clear_history()` at session start; added "history" menu selection path in REPL (calls `display_history`); added `record_operation` step after each successful REPL operation; added `record_operation` step in CLI success path
+  - `artifacts/sequence_diagram.puml` — added `OperationHistory` participant; added `OperationHistory()` and `clear_history()` calls from Main; added "history" alt branch in REPL loop calling `display_history()`; added `record_operation` call after successful REPL result display; added `record_operation` call in CLI success path; added `CLIHandler(calculator, history)` and `REPLInterface(calculator, history)` constructor signatures
+- **Purpose:** Sync PlantUML diagrams with current source after issue-168 added `OperationHistory` and wired history recording into REPL and CLI interfaces
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 170.0s | Cost: $0.476383 USD | Turns: 21
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-165-retry-logic
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `MaxRetriesExceeded` exception class with `Exception` inheritance and raise relationship to `REPLInterface`; added `_is_valid_operand` and `_is_valid_operation_input` private methods; updated OPERATIONS note to say module-level; added notes for `get_operation_selection` and `get_operand` retry behaviour
@@ -189,3 +260,36 @@ Duration: 70.8s | Cost: $0.197360 USD | Turns: 14
 - **PR target:** exp2/structured-team
 
 Duration: 469.7s | Cost: $1.140854 USD | Turns: 15
+
+## Run: issue-168-history (2026-04-19)
+
+- **Branch:** task/issue-168-history
+- **Files changed:** src/history.py (created), src/__main__.py (modified), src/repl.py (modified), src/cli.py (modified), tests/test_history.py (created)
+- **Purpose:** Add session-scoped operation history: records calculations to history.txt, cleared at session start, displayable via "history" command in interactive mode
+- **Risks:** history.txt is created in the working directory at runtime; tests use tmp_path fixture to avoid interference; existing tests unaffected
+- **Tests passed:** 513/513 (52 new history tests, 461 existing tests all still pass)
+- **PR target:** exp2/structured-team
+
+Duration: 402.4s | Cost: $1.051931 USD | Turns: 14
+
+## Run: issue-174-logic-separation (2026-04-19)
+
+- **Branch:** task/issue-174-logic-separation
+- **Files changed:** src/operations.py (created), src/cli.py (modified), src/repl.py (modified), tests/test_operations.py (created)
+- **Purpose:** Refactor calculator to separate calculation dispatch logic from user interaction layers by introducing a centralized OperationRegistry; CLI and REPL now delegate operation metadata and dispatch to the registry
+- **Risks:** Backwards-compatible shim kept for `OPERATIONS` dict in repl.py and `get_operation_mapping()` in cli.py so existing tests pass without modification
+- **Tests passed:** 716/716 (131 new operations tests, 585 existing tests all still pass)
+- **PR target:** exp2/structured-team
+
+Duration: 493.5s | Cost: $1.407888 USD | Turns: 13
+
+## Run: issue-180-modularization (2026-04-19)
+
+- **Branch:** task/issue-180-modularization
+- **PR target:** exp2/structured-team
+- **Files changed:** 34 files (14 new src sub-package files, 7 root-level backward-compat wrappers updated, 13 new test files, src/operations.py removed/renamed to src/core/operations.py)
+- **Purpose:** Refactor calculator into modular package structure — src/core/, src/operations/, src/interface/, src/support/ sub-packages with clear separation of concerns; extensible operations architecture for future scientific functionality
+- **Risks:** src/operations.py deleted (conflicts with src/operations/ package); all existing imports preserved via backward-compat re-export wrappers
+- **Tests passed:** 1105/1105 (716 existing + 389 new tests all pass)
+
+Duration: 739.6s | Cost: $2.044180 USD | Turns: 15

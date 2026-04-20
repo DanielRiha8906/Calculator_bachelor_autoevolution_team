@@ -36,7 +36,7 @@ def calculator():
 @pytest.fixture
 def repl(calculator):
     """Provide a REPLInterface instance with a real Calculator."""
-    return REPLInterface(calculator)
+    return REPLInterface(calculator, error_logger=None)
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def mock_calculator():
 @pytest.fixture
 def mock_repl(mock_calculator):
     """Provide a REPLInterface instance with a mocked Calculator."""
-    return REPLInterface(mock_calculator)
+    return REPLInterface(mock_calculator, error_logger=None)
 
 
 # ==============================================================================
@@ -1387,3 +1387,147 @@ class TestStressAndRobustness:
         captured = capsys.readouterr()
         # Should have three error messages
         assert captured.out.count("Error:") == 3
+
+
+# ==============================================================================
+# TESTS: REPLInterface Error Logging Integration
+# ==============================================================================
+
+class TestREPLInterfaceErrorLogging:
+    """Test suite for error logging integration in REPLInterface."""
+
+    def test_repl_logs_division_by_zero_error(self):
+        """Test that REPL logs CALCULATION_ERROR on division by zero."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            repl = REPLInterface(calc, error_logger=error_logger)
+
+            with patch("builtins.input", side_effect=[
+                "4",  # Operation: divide
+                "10",  # First operand
+                "0",   # Second operand (divide by 0)
+                "quit"
+            ]):
+                repl.run()
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "CALCULATION_ERROR" in errors[0]
+            assert "divide" in errors[0]
+
+    def test_repl_logs_value_error_for_invalid_math(self):
+        """Test that REPL logs CALCULATION_ERROR on value error."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            repl = REPLInterface(calc, error_logger=error_logger)
+
+            with patch("builtins.input", side_effect=[
+                "7",     # Operation: square_root
+                "-5",    # Negative number (invalid for square root)
+                "quit"
+            ]):
+                repl.run()
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "CALCULATION_ERROR" in errors[0]
+
+    def test_repl_logs_type_error_for_factorial_of_float(self):
+        """Test that REPL logs CALCULATION_ERROR on type error."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            repl = REPLInterface(calc, error_logger=error_logger)
+
+            with patch("builtins.input", side_effect=[
+                "7",     # Operation: factorial (index 7)
+                "3.5",   # Float (invalid for factorial)
+                "quit"
+            ]):
+                repl.run()
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 1
+            assert "CALCULATION_ERROR" in errors[0]
+
+    def test_repl_successful_operation_not_logged_as_error(self):
+        """Test that successful operations are not logged to error log."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            repl = REPLInterface(calc, error_logger=error_logger)
+
+            with patch("builtins.input", side_effect=[
+                "1",   # Operation: add
+                "5",   # First operand
+                "3",   # Second operand
+                "quit"
+            ]):
+                repl.run()
+
+            errors = error_logger.get_errors()
+            assert errors == []
+
+    def test_repl_multiple_errors_all_logged(self):
+        """Test that multiple errors are all logged."""
+        import tempfile
+        from src.error_logger import ErrorLogger
+
+        calc = Calculator()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            error_log_path = f"{tmpdir}/error.log"
+            error_logger = ErrorLogger(error_file=error_log_path)
+            error_logger.clear_errors()
+
+            repl = REPLInterface(calc, error_logger=error_logger)
+
+            with patch("builtins.input", side_effect=[
+                "4", "10", "0",      # Divide by 0 - error 1
+                "4", "20", "0",      # Divide by 0 - error 2
+                "7", "-1",           # Square root of negative - error 3
+                "quit"
+            ]):
+                repl.run()
+
+            errors = error_logger.get_errors()
+            assert len(errors) == 3
+            for error_line in errors:
+                assert "CALCULATION_ERROR" in error_line
+
+    def test_repl_with_none_error_logger_still_runs(self):
+        """Test that REPL runs correctly with error_logger=None."""
+        calc = Calculator()
+        repl = REPLInterface(calc, error_logger=None)
+
+        # Should not raise or crash even with errors
+        with patch("builtins.input", side_effect=[
+            "4", "10", "0",   # Divide by 0 - error but should continue
+            "quit"
+        ]):
+            repl.run()  # Should not raise

@@ -1,18 +1,51 @@
 @startuml sequence_diagram
 
 participant "__main__" as Main
+participant "OperationHistory" as History
+participant "ErrorLogger" as ErrLog
 participant "REPLInterface" as REPL
+participant "OperationRegistry" as OperReg
 participant "CLIHandler" as CLI
 participant "Calculator" as Calc
+participant "CalculationEngine" as Engine
 actor "User" as User
+
+note over Calc, Engine
+  Calculator (src/calculator.py) delegates arithmetic
+  (add/subtract/multiply/divide) to its internal
+  CalculationEngine (src/core/engine.py).
+  Scientific operations are handled directly by Calculator.
+end note
 
 Main -> Calc : Calculator()
 activate Calc
 
+Main -> History : OperationHistory()
+activate History
+Main -> History : clear_history()
+note over History
+  Truncates or creates history.txt
+  at session start for isolation.
+end note
+
+Main -> ErrLog : ErrorLogger()
+activate ErrLog
+Main -> ErrLog : clear_errors()
+note over ErrLog
+  Truncates or creates error.log
+  at session start for isolation.
+end note
+
 alt REPL mode (argv empty or ["--repl"])
 
-  Main -> REPL : REPLInterface(calculator)
+  Main -> REPL : REPLInterface(calculator, history, error_logger)
   activate REPL
+  REPL -> OperReg : OperationRegistry(calculator)
+  activate OperReg
+  note over OperReg
+    Builds _lookup from _CATALOG (12 operations).
+    All names and aliases mapped to Operation objects.
+  end note
 
   Main -> REPL : run()
 
@@ -21,7 +54,7 @@ alt REPL mode (argv empty or ["--repl"])
     REPL -> User : display operation menu
 
     loop up to MAX_RETRIES attempts
-      User -> REPL : select operation (e.g. "add")
+      User -> REPL : select operation (e.g. "1", "history", or "quit")
       alt valid selection
         REPL -> REPL : resolve operation key
       else invalid input
@@ -41,6 +74,10 @@ alt REPL mode (argv empty or ["--repl"])
 
     alt user entered "quit"
       REPL -> User : "Calculator closed."
+    else user entered "history"
+      REPL -> History : display_history()
+      History --> REPL : list[str]
+      REPL -> User : print each history entry (or "No history recorded yet.")
     else valid operation selected
 
       REPL -> User : prompt first operand\n(with last_result as default)
@@ -79,75 +116,97 @@ alt REPL mode (argv empty or ["--repl"])
       end
 
       REPL -> REPL : _execute(operation, operands)
+      REPL -> OperReg : dispatch(operation, operands)
 
-      alt operation == "add"
-        REPL -> Calc : add(a, b)
-        Calc --> REPL : a + b
+      alt operation == "logarithm"
+        OperReg -> OperReg : validate base (> 0, != 1) and x (> 0)
+        note over OperReg
+          Handles logarithm as math.log(x, base) directly.
+          Calculator.logarithm is base-10 only;
+          the two-argument variant lives in the registry.
+        end note
+        OperReg --> REPL : log_base(x)
+      else operation == "add"
+        OperReg -> Calc : add(a, b)
+        Calc -> Engine : add(a, b)
+        Engine --> Calc : a + b
+        Calc --> OperReg : result
+        OperReg --> REPL : result
       else operation == "subtract"
-        REPL -> Calc : subtract(a, b)
-        Calc --> REPL : a - b
+        OperReg -> Calc : subtract(a, b)
+        Calc -> Engine : subtract(a, b)
+        Engine --> Calc : a - b
+        Calc --> OperReg : result
+        OperReg --> REPL : result
       else operation == "multiply"
-        REPL -> Calc : multiply(a, b)
-        Calc --> REPL : a * b
+        OperReg -> Calc : multiply(a, b)
+        Calc -> Engine : multiply(a, b)
+        Engine --> Calc : a * b
+        Calc --> OperReg : result
+        OperReg --> REPL : result
       else operation == "divide"
-        REPL -> Calc : divide(a, b)
-        Calc -> Calc : check b != 0
-        Calc --> REPL : a / b
-        note over Calc
+        OperReg -> Calc : divide(a, b)
+        Calc -> Engine : divide(a, b)
+        Engine -> Engine : check b != 0
+        Engine --> Calc : a / b
+        Calc --> OperReg : result
+        OperReg --> REPL : result
+        note over Engine
           divide(a, 0) raises ZeroDivisionError
         end note
       else operation == "factorial"
-        REPL -> Calc : factorial(n)
+        OperReg -> Calc : factorial(n)
         Calc -> Calc : validate n (not negative,\nnot non-integer float)
         Calc -> Calc : iterative multiply 1..n
-        Calc --> REPL : n!
+        Calc --> OperReg : n!
+        OperReg --> REPL : result
         note over Calc
           factorial(-1) raises ValueError.
           factorial(5.5) raises TypeError.
           factorial(5.0) coerces to int → 120.
         end note
       else operation == "square"
-        REPL -> Calc : square(x)
-        Calc --> REPL : x ** 2
+        OperReg -> Calc : square(x)
+        Calc --> OperReg : x ** 2
+        OperReg --> REPL : result
       else operation == "cube"
-        REPL -> Calc : cube(x)
-        Calc --> REPL : x ** 3
+        OperReg -> Calc : cube(x)
+        Calc --> OperReg : x ** 3
+        OperReg --> REPL : result
       else operation == "square_root"
-        REPL -> Calc : square_root(x)
+        OperReg -> Calc : square_root(x)
         Calc -> Calc : check x >= 0
-        Calc --> REPL : sqrt(x)
+        Calc --> OperReg : sqrt(x)
+        OperReg --> REPL : result
         note over Calc
           square_root(-1) raises ValueError.
         end note
       else operation == "cube_root"
-        REPL -> Calc : cube_root(x)
+        OperReg -> Calc : cube_root(x)
         Calc -> Calc : copysign(|x|^(1/3), x)
-        Calc --> REPL : ∛x (sign-preserving)
+        Calc --> OperReg : ∛x (sign-preserving)
+        OperReg --> REPL : result
       else operation == "power"
-        REPL -> Calc : power(base, exponent)
-        Calc --> REPL : base ** exponent
-      else operation == "logarithm"
-        REPL -> REPL : math.log(x, base)
-        note over REPL
-          REPL calls math.log(x, base) directly
-          to support arbitrary bases —
-          Calculator.logarithm is base-10 only.
-        end note
-        REPL --> REPL : log_base(x)
+        OperReg -> Calc : power(base, exponent)
+        Calc --> OperReg : base ** exponent
+        OperReg --> REPL : result
       else operation == "natural_logarithm"
-        REPL -> Calc : natural_logarithm(x)
+        OperReg -> Calc : natural_logarithm(x)
         Calc -> Calc : check x > 0
-        Calc --> REPL : ln(x)
+        Calc --> OperReg : ln(x)
+        OperReg --> REPL : result
         note over Calc
-          natural_logarithm(0) and natural_logarithm(-1) raise ValueError.
+          natural_logarithm(0) or negative raises ValueError.
         end note
       end
 
       alt result returned successfully
         REPL -> REPL : store result as last_result
         REPL -> User : display_result(operation, operands, result)
+        REPL -> History : record_operation("op(args) = result")
       else exception raised
         REPL -> User : print error message
+        REPL -> ErrLog : log_error(CALCULATION_ERROR, user_input, exception)
       end
 
     end
@@ -160,49 +219,75 @@ alt REPL mode (argv empty or ["--repl"])
     or MaxRetriesExceeded is raised after 3 bad inputs.
   end note
 
+  deactivate OperReg
   deactivate REPL
 
 else CLI mode (argv has operation + operands)
 
-  Main -> CLI : CLIHandler(calculator)
+  Main -> CLI : CLIHandler(calculator, history, error_logger)
   activate CLI
+  CLI -> OperReg : OperationRegistry(calculator)
+  activate OperReg
+  note over OperReg
+    Same registry used for token resolution,
+    arity lookup, and dispatch.
+  end note
 
   Main -> CLI : execute(argv)
 
   CLI -> CLI : parse_args(argv)
+  CLI -> OperReg : resolve(raw_op) — get canonical name
+  CLI -> OperReg : arity(raw_op) — validate operand count
+  OperReg --> CLI : method_name, expected arity
 
   alt unknown operation
+    CLI -> ErrLog : log_error(UNSUPPORTED_OPERATION, argv[0], exception)
     CLI --> Main : raises ValueError("Unknown operation: ...")
     Main -> User : print error to stderr; exit(2)
   else wrong operand count or non-numeric
+    CLI -> ErrLog : log_error(INVALID_INPUT, str(argv), exception)
     CLI --> Main : raises ValueError(...)
     Main -> User : print error to stderr; exit(3)
   end
 
+  CLI -> OperReg : dispatch(method_name, operands)
+
   alt method_name == "logarithm"
-    CLI -> CLI : math.log(x, base)
-    note over CLI
-      Validates base > 0 and base != 1,
-      and x > 0, then calls math.log(x, base).
+    OperReg -> OperReg : validate base (> 0, != 1) and x (> 0)
+    note over OperReg
+      Two-argument logarithm handled in registry:
+      math.log(x, base) with domain validation.
     end note
-    CLI --> Main : result
-  else any other operation
-    CLI -> Calc : <method_name>(*operands)
-    Calc --> CLI : result
+    OperReg --> CLI : result
+  else arithmetic operation (add/subtract/multiply/divide)
+    OperReg -> Calc : <method_name>(*operands)
+    Calc -> Engine : <method_name>(*operands)
+    Engine --> Calc : result
+    Calc --> OperReg : result
+    OperReg --> CLI : result
+  else scientific operation (factorial/square/etc.)
+    OperReg -> Calc : <method_name>(*operands)
+    Calc --> OperReg : result
+    OperReg --> CLI : result
   end
 
   alt operation succeeded
+    CLI -> History : record_operation("op(args) = result")
     CLI --> Main : result
     Main -> User : print result to stdout; exit(0)
   else ZeroDivisionError / domain error
+    CLI -> ErrLog : log_error(CALCULATION_ERROR, str(argv), exception)
     CLI --> Main : raises exception
     Main -> User : print error to stderr; exit(4)
   end
 
+  deactivate OperReg
   deactivate CLI
 
 end
 
+deactivate ErrLog
+deactivate History
 deactivate Calc
 
 @enduml

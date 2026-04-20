@@ -3,6 +3,7 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
+    -_engine : CalculationEngine
     +add(a, b) : float
     +subtract(a, b) : float
     +multiply(a, b) : float
@@ -17,9 +18,16 @@ class Calculator {
     +natural_logarithm(x: float) : float
 }
 
+note right of Calculator
+  Facade (src/calculator.py).
+  Arithmetic methods (add/subtract/multiply/divide)
+  delegate to internal CalculationEngine.
+  Scientific methods are implemented directly.
+end note
+
 note right of Calculator::divide
-  Raises ZeroDivisionError
-  when b == 0
+  Delegates to CalculationEngine.divide().
+  Raises ZeroDivisionError when b == 0.
 end note
 
 note right of Calculator::factorial
@@ -44,6 +52,20 @@ note right of Calculator::natural_logarithm
   Raises ValueError if x <= 0.
 end note
 
+class CalculationEngine {
+    +add(a: float, b: float) : float
+    +subtract(a: float, b: float) : float
+    +multiply(a: float, b: float) : float
+    +divide(a: float, b: float) : float
+}
+
+note right of CalculationEngine
+  Core arithmetic engine (src/core/engine.py).
+  Handles the four basic arithmetic operations.
+  divide() raises ZeroDivisionError if b == 0.
+  Calculator owns exactly one instance via _engine.
+end note
+
 class MaxRetriesExceeded {
 }
 
@@ -51,16 +73,139 @@ note right of MaxRetriesExceeded
   Raised when the user exceeds
   MAX_RETRIES (3) consecutive
   invalid inputs in the REPL.
-  Defined in src/exceptions.py.
+  Defined in src/support/exceptions.py;
+  re-exported by src/exceptions.py shim.
 end note
 
 MaxRetriesExceeded --|> Exception
 
+class ErrorLogger {
+    +INVALID_INPUT : str
+    +UNSUPPORTED_OPERATION : str
+    +CALCULATION_ERROR : str
+    +error_file : str
+    +__init__(error_file: str = "error.log")
+    +clear_errors() : None
+    +log_error(error_type: str, user_input: str, exception: Exception) : None
+    +get_errors() : list[str]
+}
+
+note right of ErrorLogger::clear_errors
+  Truncates or creates the error log file.
+  Called once at session start for
+  session isolation.
+end note
+
+note right of ErrorLogger::log_error
+  Appends an ISO8601-timestamped entry
+  to the error file. Entry includes
+  error_type, user_input, and exception message.
+  File I/O errors are logged to stderr.
+end note
+
+note right of ErrorLogger::get_errors
+  Returns list of recorded error entries,
+  trailing newlines stripped.
+  Returns [] on FileNotFoundError or OSError.
+end note
+
+class OperationHistory {
+    +history_file : str
+    +__init__(history_file: str = "history.txt")
+    +clear_history() : None
+    +record_operation(entry: str) : None
+    +display_history() : list[str]
+}
+
+note right of OperationHistory::clear_history
+  Truncates or creates the history file.
+  Called once at session start for
+  session isolation.
+end note
+
+note right of OperationHistory::record_operation
+  Appends entry + newline to history file.
+  File I/O errors are logged to stderr
+  and silently swallowed.
+end note
+
+note right of OperationHistory::display_history
+  Returns list of recorded entries,
+  trailing newlines stripped.
+  Returns [] on FileNotFoundError or OSError.
+end note
+
+class Operation <<dataclass>> {
+    +name : str
+    +arity : int
+    +display_name : str
+    +aliases : tuple[str, ...]
+}
+
+note right of Operation
+  Frozen dataclass (src/core/operations.py).
+  Metadata for a single calculator operation.
+  Example: name="add", arity=2,
+  display_name="Addition", aliases=("+",).
+  12 operations defined in the module-level
+  _CATALOG list.
+end note
+
+class OperationRegistry {
+    -calculator : Any
+    -_operations : list[Operation]
+    -_lookup : dict[str, Operation]
+    +__init__(calculator: Any)
+    +get_operations() : list[Operation]
+    +get_operation(token: str) : Operation | None
+    +resolve(token: str) : str
+    +arity(token: str) : int
+    +get_operation_mapping() : dict[str, str]
+    +dispatch(operation: str, operands: list[float]) : float
+}
+
+note right of OperationRegistry::__init__
+  Builds _lookup from the module-level
+  _CATALOG (12 operations): every name
+  and alias maps to its Operation.
+end note
+
+note right of OperationRegistry::resolve
+  Returns the canonical operation name
+  for a given token (name or alias).
+  Raises ValueError if token unknown.
+end note
+
+note right of OperationRegistry::get_operation_mapping
+  Returns a flat dict: every accepted
+  token (name + aliases) → canonical name.
+  Useful for components that need a
+  simple token → method_name mapping.
+end note
+
+note right of OperationRegistry::dispatch
+  Executes the operation with operands.
+  "logarithm" is treated as a two-argument
+  log(x, base) via math.log(x, base) with
+  full domain validation — this special case
+  is isolated here so CLI and REPL do not
+  need to handle it independently.
+  All other operations are forwarded to the
+  injected Calculator via getattr.
+  Raises ValueError, ZeroDivisionError,
+  TypeError, or OverflowError.
+end note
+
 class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
+    -history : OperationHistory | None
+    -error_logger : ErrorLogger | None
     -last_result : float | None
-    +__init__(calculator: Calculator)
+    -_registry : OperationRegistry
+    -_operations : list[Operation]
+    -_operation_keys : list[str]
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +run() : void
     +get_operation_selection() : str
     +get_operand(prompt: str) : float
@@ -72,9 +217,10 @@ class REPLInterface {
 }
 
 note right of REPLInterface::OPERATIONS
-  Module-level dict mapping operation
-  name → {arity, label} metadata
+  Module-level dict (backwards-compat shim)
+  mapping operation name → {arity, label}
   for all 12 supported operations.
+  Built from OperationRegistry._CATALOG.
 end note
 
 note right of REPLInterface::last_result
@@ -84,15 +230,17 @@ note right of REPLInterface::last_result
 end note
 
 note right of REPLInterface::_execute
-  Dispatches to Calculator methods.
-  Uses math.log(x, base) directly
-  for the 2-argument logarithm case.
+  Delegates entirely to
+  OperationRegistry.dispatch(operation, operands).
+  The two-argument logarithm special case
+  is handled inside the registry.
 end note
 
 note right of REPLInterface::get_operation_selection
   Re-prompts on invalid input.
   Raises MaxRetriesExceeded after
   MAX_RETRIES (3) failed attempts.
+  Returns "history" for history display.
 end note
 
 note right of REPLInterface::get_operand
@@ -109,37 +257,42 @@ end note
 
 note right of REPLInterface::_is_valid_operation_input
   Returns True if raw_input is
-  "quit" or a valid menu index
-  in [1, len(OPERATIONS)].
+  "quit", "history", or a valid
+  menu index in [1, len(OPERATIONS)].
 end note
 
 class CLIHandler {
     -calculator : Calculator
-    +__init__(calculator: Calculator)
+    -history : OperationHistory | None
+    -error_logger : ErrorLogger | None
+    -_registry : OperationRegistry
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
     +get_operation_mapping() : dict
     +parse_args(args: list[str]) : tuple[str, list[float]]
     +execute(args: list[str]) : float
 }
 
 note right of CLIHandler::get_operation_mapping
-  Maps names and symbols to
+  Delegates to OperationRegistry.
+  Maps names and symbols to canonical
   Calculator method names.
   Supports aliases: +, -, *, /,
   ^, sqrt, cbrt, log, ln.
 end note
 
 note right of CLIHandler::parse_args
-  Validates operation, expected
-  operand count (1 for unary,
-  2 for binary), and converts
-  operand strings to float.
-  Raises ValueError on error.
+  Uses OperationRegistry to resolve
+  the operation token and validate arity.
+  Converts operand strings to float.
+  Raises ValueError on any error.
 end note
 
 note right of CLIHandler::execute
-  Dispatches to Calculator methods.
-  "logarithm" uses math.log(x, base)
-  directly to support arbitrary bases.
+  Delegates dispatch to
+  OperationRegistry.dispatch(method_name, operands).
+  Logs UNSUPPORTED_OPERATION, INVALID_INPUT,
+  or CALCULATION_ERROR via error_logger if set.
+  Records result to history if set.
   Raises ValueError, ZeroDivisionError,
   or TypeError on error.
 end note
@@ -149,6 +302,8 @@ class "__main__" as Main {
 }
 
 note right of Main::main
+  Instantiates OperationHistory, ErrorLogger,
+  and Calculator, then clears their state.
   REPL mode: argv is empty or ["--repl"].
   CLI mode: argv has operation + operands.
   Exit codes: 0=ok, 1=usage, 2=unknown op,
@@ -156,10 +311,21 @@ note right of Main::main
 end note
 
 Main ..> Calculator : instantiates
+Main ..> OperationHistory : instantiates
+Main ..> ErrorLogger : instantiates
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
+Calculator *-- CalculationEngine : owns >
 REPLInterface o-- Calculator : uses >
+REPLInterface o-- OperationHistory : uses (optional) >
+REPLInterface o-- ErrorLogger : uses (optional) >
+REPLInterface o-- OperationRegistry : uses >
 CLIHandler o-- Calculator : uses >
+CLIHandler o-- OperationHistory : uses (optional) >
+CLIHandler o-- ErrorLogger : uses (optional) >
+CLIHandler o-- OperationRegistry : uses >
+OperationRegistry o-- Calculator : dispatches to >
+OperationRegistry ..> Operation : manages >
 REPLInterface ..> MaxRetriesExceeded : raises
 
 @enduml

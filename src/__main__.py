@@ -1,8 +1,10 @@
 import sys
 
 from .calculator import Calculator
-from .cli import CLIHandler
-from .repl import REPLInterface
+from .interface.cli import CLIHandler
+from .interface.repl import REPLInterface
+from .support.error_logger import ErrorLogger
+from .support.history import OperationHistory
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -27,11 +29,17 @@ def main(argv: list[str] | None = None) -> None:
     if argv is None:
         argv = sys.argv[1:]
 
+    history = OperationHistory()
+    history.clear_history()
+
+    error_logger = ErrorLogger()
+    error_logger.clear_errors()
+
     calc = Calculator()
 
     if len(argv) == 0 or (len(argv) == 1 and argv[0] == "--repl"):
         # REPL mode — existing behaviour unchanged.
-        repl = REPLInterface(calc)
+        repl = REPLInterface(calc, history=history, error_logger=error_logger)
         try:
             repl.run()
         except (EOFError, KeyboardInterrupt):
@@ -46,7 +54,7 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     # CLI mode: len(argv) >= 2, first arg is the operation.
-    handler = CLIHandler(calc)
+    handler = CLIHandler(calc, history=history, error_logger=error_logger)
     try:
         result = handler.execute(argv)
         print(result)

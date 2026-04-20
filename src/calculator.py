@@ -1,20 +1,37 @@
+"""Calculator class providing all arithmetic and scientific operations.
+
+Delegates basic arithmetic to :class:`~src.core.engine.CalculationEngine` and
+implements scientific and root operations directly.
+"""
+
 import math
+
+from src.core.engine import CalculationEngine
 
 
 class Calculator:
-    def add(self, a, b):
-        return a + b
+    """Provide arithmetic and scientific calculator operations.
 
-    def subtract(self, a, b):
-        return a - b
+    Basic arithmetic (add, subtract, multiply, divide) are delegated to
+    :class:`~src.core.engine.CalculationEngine`.  Scientific and root operations
+    (factorial, square, cube, square_root, cube_root, power, logarithm,
+    natural_logarithm) are implemented directly on this class.
+    """
 
-    def multiply(self, a, b):
-        return a * b
+    def __init__(self) -> None:
+        self._engine = CalculationEngine()
 
-    def divide(self, a, b):
-        if b == 0:
-            raise ZeroDivisionError("Cannot divide by zero")
-        return a / b
+    def add(self, a: float, b: float) -> float:
+        return self._engine.add(a, b)
+
+    def subtract(self, a: float, b: float) -> float:
+        return self._engine.subtract(a, b)
+
+    def multiply(self, a: float, b: float) -> float:
+        return self._engine.multiply(a, b)
+
+    def divide(self, a: float, b: float) -> float:
+        return self._engine.divide(a, b)
 
     def factorial(self, n) -> int:
         """Calculate the factorial of n.
