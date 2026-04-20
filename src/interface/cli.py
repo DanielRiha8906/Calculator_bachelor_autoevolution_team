@@ -5,10 +5,11 @@ dispatches to the Calculator via :class:`~src.core.operations.OperationRegistry`
 and returns the raw numeric result.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from src.support.error_logger import ErrorLogger
 from src.core.operations import OperationRegistry
+from src.context import CalculatorContext
 
 if TYPE_CHECKING:
     from src.support.history import OperationHistory
@@ -28,6 +29,9 @@ class CLIHandler:
         error_logger: An optional ``ErrorLogger`` instance used to record
             errors encountered during execution.  When ``None``, error
             logging is disabled.
+        context: An optional :class:`~src.context.CalculatorContext` instance
+            used to determine the active operating mode.  When ``None``, a
+            fresh context (default ``"normal"`` mode) is created internally.
     """
 
     def __init__(
@@ -35,11 +39,15 @@ class CLIHandler:
         calculator: Any,
         history: "OperationHistory | None" = None,
         error_logger: ErrorLogger | None = None,
+        context: Optional[CalculatorContext] = None,
     ) -> None:
         self.calculator = calculator
         self.history = history
         self.error_logger = error_logger
+        self._context: CalculatorContext = context if context is not None else CalculatorContext()
         self._registry = OperationRegistry(calculator)
+        # Sync registry mode with the context at construction time.
+        self._registry.set_mode(self._context.get_mode())
 
     def get_operation_mapping(self) -> dict[str, str]:
         """Return a mapping from operation names and symbols to Calculator method names.

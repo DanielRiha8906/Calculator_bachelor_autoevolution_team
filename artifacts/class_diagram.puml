@@ -16,6 +16,9 @@ class Calculator {
     +power(base: float, exponent: float) : float
     +logarithm(x: float) : float
     +natural_logarithm(x: float) : float
+    +sin(x: float) : float
+    +cos(x: float) : float
+    +tan(x: float) : float
 }
 
 note right of Calculator
@@ -50,6 +53,21 @@ end note
 note right of Calculator::natural_logarithm
   Natural log base e (math.log).
   Raises ValueError if x <= 0.
+end note
+
+note right of Calculator::sin
+  Radians input (math.sin).
+  Available in scientific mode only.
+end note
+
+note right of Calculator::cos
+  Radians input (math.cos).
+  Available in scientific mode only.
+end note
+
+note right of Calculator::tan
+  Radians input (math.tan).
+  Available in scientific mode only.
 end note
 
 class CalculationEngine {
@@ -140,22 +158,26 @@ class Operation <<dataclass>> {
     +arity : int
     +display_name : str
     +aliases : tuple[str, ...]
+    +mode : str
 }
 
 note right of Operation
   Frozen dataclass (src/core/operations.py).
   Metadata for a single calculator operation.
-  Example: name="add", arity=2,
-  display_name="Addition", aliases=("+",).
-  12 operations defined in the module-level
-  _CATALOG list.
+  mode field: "both" (visible in all modes),
+  "scientific" (visible only in scientific mode).
+  15 operations in _CATALOG: 12 with mode="both"
+  (arithmetic, roots, log, power), 3 with
+  mode="scientific" (sin, cos, tan).
 end note
 
 class OperationRegistry {
     -calculator : Any
+    -_current_mode : str
     -_operations : list[Operation]
     -_lookup : dict[str, Operation]
     +__init__(calculator: Any)
+    +set_mode(mode: str) : None
     +get_operations() : list[Operation]
     +get_operation(token: str) : Operation | None
     +resolve(token: str) : str
@@ -166,19 +188,30 @@ class OperationRegistry {
 
 note right of OperationRegistry::__init__
   Builds _lookup from the module-level
-  _CATALOG (12 operations): every name
+  _CATALOG (15 operations): every name
   and alias maps to its Operation.
+  _current_mode defaults to "normal".
+end note
+
+note right of OperationRegistry::set_mode
+  Sets _current_mode ("normal" or "scientific").
+  Filters visible operations in get_operations(),
+  resolve(), arity(), and get_operation_mapping().
+  Raises ValueError for unrecognised mode strings.
 end note
 
 note right of OperationRegistry::resolve
   Returns the canonical operation name
   for a given token (name or alias).
-  Raises ValueError if token unknown.
+  Raises ValueError if token unknown or
+  not available in the current mode.
 end note
 
 note right of OperationRegistry::get_operation_mapping
   Returns a flat dict: every accepted
   token (name + aliases) → canonical name.
+  Only tokens for mode-compatible operations
+  are included.
   Useful for components that need a
   simple token → method_name mapping.
 end note
@@ -196,22 +229,43 @@ note right of OperationRegistry::dispatch
   TypeError, or OverflowError.
 end note
 
+class CalculatorContext {
+    +current_mode : str
+    +__init__()
+    +set_mode(mode: str) : None
+    +get_mode() : str
+    +is_scientific_mode() : bool
+}
+
+note right of CalculatorContext
+  Single source of truth for mode state
+  (src/context.py).
+  Defaults to "normal" on construction.
+  Valid modes: "normal", "scientific".
+  Raises ValueError for unknown mode strings.
+  Both REPL and CLI layers read from it;
+  the REPL also writes when the user
+  issues a mode-switch command.
+end note
+
 class REPLInterface {
     +OPERATIONS : dict
     -calculator : Calculator
     -history : OperationHistory | None
     -error_logger : ErrorLogger | None
     -last_result : float | None
+    -_context : CalculatorContext
     -_registry : OperationRegistry
     -_operations : list[Operation]
     -_operation_keys : list[str]
-    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None, context: CalculatorContext | None)
     +run() : void
     +get_operation_selection() : str
     +get_operand(prompt: str) : float
     +display_result(operation: str, operands: list, result: float) : void
     -_first_operand_prompt(label: str) : str
     -_execute(operation: str, operands: list) : float
+    -_refresh_operations() : void
     -_is_valid_operand(raw_input: str) : bool
     -_is_valid_operation_input(raw_input: str) : bool
 }
@@ -219,7 +273,7 @@ class REPLInterface {
 note right of REPLInterface::OPERATIONS
   Module-level dict (backwards-compat shim)
   mapping operation name → {arity, label}
-  for all 12 supported operations.
+  for all 15 supported operations.
   Built from OperationRegistry._CATALOG.
 end note
 
@@ -237,10 +291,20 @@ note right of REPLInterface::_execute
 end note
 
 note right of REPLInterface::get_operation_selection
+  Displays current mode and operation menu.
+  Handles "mode <name>" to switch modes via
+  CalculatorContext and OperationRegistry,
+  then calls _refresh_operations().
   Re-prompts on invalid input.
   Raises MaxRetriesExceeded after
   MAX_RETRIES (3) failed attempts.
   Returns "history" for history display.
+end note
+
+note right of REPLInterface::_refresh_operations
+  Refreshes _operations and _operation_keys
+  from the registry after a mode change so
+  the menu reflects the updated operation set.
 end note
 
 note right of REPLInterface::get_operand
@@ -256,17 +320,19 @@ note right of REPLInterface::_is_valid_operand
 end note
 
 note right of REPLInterface::_is_valid_operation_input
-  Returns True if raw_input is
-  "quit", "history", or a valid
-  menu index in [1, len(OPERATIONS)].
+  Returns True if raw_input is "quit",
+  "history", a "mode <name>" command,
+  or a valid menu index in
+  [1, len(_operation_keys)].
 end note
 
 class CLIHandler {
     -calculator : Calculator
     -history : OperationHistory | None
     -error_logger : ErrorLogger | None
+    -_context : CalculatorContext
     -_registry : OperationRegistry
-    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None)
+    +__init__(calculator: Calculator, history: OperationHistory | None, error_logger: ErrorLogger | None, context: CalculatorContext | None)
     +get_operation_mapping() : dict
     +parse_args(args: list[str]) : tuple[str, list[float]]
     +execute(args: list[str]) : float
@@ -278,6 +344,7 @@ note right of CLIHandler::get_operation_mapping
   Calculator method names.
   Supports aliases: +, -, *, /,
   ^, sqrt, cbrt, log, ln.
+  Only tokens for the active mode are included.
 end note
 
 note right of CLIHandler::parse_args
@@ -348,7 +415,8 @@ class "__main__" as Main {
 
 note right of Main::main
   Instantiates OperationHistory, ErrorLogger,
-  and Calculator, then clears their state.
+  Calculator, and CalculatorContext, then
+  clears history/error state.
   REPL mode: argv is empty or ["--repl"].
   CLI mode: argv has operation + operands.
   Exit codes: 0=ok, 1=usage, 2=unknown op,
@@ -358,16 +426,19 @@ end note
 Main ..> Calculator : instantiates
 Main ..> OperationHistory : instantiates
 Main ..> ErrorLogger : instantiates
+Main ..> CalculatorContext : instantiates
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
 Calculator *-- CalculationEngine : owns >
 REPLInterface o-- Calculator : uses >
 REPLInterface o-- OperationHistory : uses (optional) >
 REPLInterface o-- ErrorLogger : uses (optional) >
+REPLInterface o-- CalculatorContext : uses >
 REPLInterface o-- OperationRegistry : uses >
 CLIHandler o-- Calculator : uses >
 CLIHandler o-- OperationHistory : uses (optional) >
 CLIHandler o-- ErrorLogger : uses (optional) >
+CLIHandler o-- CalculatorContext : uses (optional) >
 CLIHandler o-- OperationRegistry : uses >
 OperationRegistry o-- Calculator : dispatches to >
 OperationRegistry ..> Operation : manages >

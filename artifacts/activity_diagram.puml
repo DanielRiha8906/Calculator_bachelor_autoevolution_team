@@ -3,11 +3,12 @@
 start
 
 note right
-  Modular package layout (issue-180):
+  Modular package layout:
   src/core/       — CalculationEngine, Operation, OperationRegistry
   src/interface/  — CLIHandler, REPLInterface
   src/operations/ — standalone arithmetic/roots/scientific functions + re-exports
   src/support/    — ErrorLogger, OperationHistory, MaxRetriesExceeded
+  src/context.py  — CalculatorContext (mode state)
   src/*.py shims re-export from canonical sub-package locations.
 end note
 
@@ -16,27 +17,45 @@ note right
   Calculator._engine = CalculationEngine()
   Arithmetic ops delegate to CalculationEngine.
   Scientific ops implemented directly on Calculator.
+  Trig ops (sin/cos/tan) added in issue-186.
 end note
 :Instantiate OperationHistory(history_file="history.txt");
 :history.clear_history();
 :Instantiate ErrorLogger(error_file="error.log");
 :error_logger.clear_errors();
+:Instantiate CalculatorContext();
+note right
+  Defaults to mode="normal".
+  Acts as single source of truth for mode state.
+  Passed to both REPLInterface and CLIHandler.
+end note
 
 if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
-  :Instantiate REPLInterface(calculator, history, error_logger);
+  :Instantiate REPLInterface(calculator, history, error_logger, context);
   note right
     REPLInterface creates an OperationRegistry
-    internally and uses it for all dispatch.
+    internally and syncs its mode from context.
+    _operations filtered to mode-compatible ops.
   end note
   :repl.run();
 
   repeat
+    :Display current mode;
     :Display operation menu\n(get_operation_selection());
 
     repeat
-      :User selects operation, "history", or "quit";
-      if (input valid (number, "history", or "quit")?) then (yes)
+      :User selects operation, "mode <name>",\n"history", or "quit";
+      if (input is "mode <name>"?) then (yes)
+        :context.set_mode(mode_name);
+        :registry.set_mode(mode_name);
+        :_refresh_operations();
+        note right
+          Refreshes _operations and _operation_keys
+          to reflect new mode's available operations.
+        end note
+        :Re-display mode and menu;
+      elseif (input valid (number, "history", or "quit")?) then (yes)
         break
       else (no)
         :attempts++;
@@ -187,6 +206,18 @@ if (argv empty or ["--repl"]?) then (yes — REPL mode)
           else (no)
             :return math.log(x);
           endif
+        fork again
+          :sin(x);
+          note right: scientific mode only
+          :return math.sin(x);
+        fork again
+          :cos(x);
+          note right: scientific mode only
+          :return math.cos(x);
+        fork again
+          :tan(x);
+          note right: scientific mode only
+          :return math.tan(x);
         end fork
       endif
 
@@ -218,16 +249,16 @@ else (no — CLI mode)
     stop
   endif
 
-  :Instantiate CLIHandler(calculator, history, error_logger);
+  :Instantiate CLIHandler(calculator, history, error_logger, context);
   note right
     CLIHandler creates an OperationRegistry
-    internally and uses it for all dispatch.
+    internally and syncs its mode from context.
   end note
   :handler.execute(argv);
 
   :parse_args(argv) via OperationRegistry\n→ (method_name, operands);
 
-  if (operation unknown?) then (yes)
+  if (operation unknown or not in current mode?) then (yes)
     if (error_logger is not None?) then (yes)
       :error_logger.log_error(\n  UNSUPPORTED_OPERATION,\n  argv[0],\n  exception\n);
     endif

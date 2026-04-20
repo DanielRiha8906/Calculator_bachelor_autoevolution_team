@@ -1,4 +1,42 @@
 
+## Run: update-diagrams (2026-04-20)
+
+- **Branch:** task/issue-186-scientific-mode
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CalculatorContext` class with `current_mode`, `set_mode`, `get_mode`, `is_scientific_mode`; added `sin`, `cos`, `tan` methods to `Calculator`; added `mode: str` field to `Operation` dataclass and updated note to reflect 15-op catalog; added `_current_mode` attribute and `set_mode()` method to `OperationRegistry`; updated `__init__` note to reference 15 operations; added `_context: CalculatorContext` to `REPLInterface` and `CLIHandler`; added `_refresh_operations()` to `REPLInterface`; updated `get_operation_selection` note to describe mode switching; updated `Main` note and relationships to include `CalculatorContext`
+  - `artifacts/activity_diagram.puml` — updated module layout note to include `src/context.py`; added `CalculatorContext` instantiation step; updated REPL section to show mode command handling, `_refresh_operations()` call, and mode display; added sin/cos/tan operation branches; updated REPL and CLI instantiation calls to include context
+  - `artifacts/sequence_diagram.puml` — added `CalculatorContext` participant; updated REPL and CLI instantiation to pass context; added `set_mode()` sync call on `OperationRegistry`; added mode switching sequence in REPL loop including `_refresh_operations()`; added sin/cos/tan dispatch branches; updated OperationRegistry note to describe 15-op catalog and mode filtering
+- **Purpose:** Sync PlantUML diagrams with issue-186 changes — `CalculatorContext`, sin/cos/tan on `Calculator`, mode field on `Operation`, mode-aware `OperationRegistry`, and mode switching in REPL/CLI
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 293.1s | Cost: $0.731225 USD | Turns: 18
+
+## Run: issue-186-scientific-mode (2026-04-20)
+
+- **Branch:** task/issue-186-scientific-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/context.py` — new `CalculatorContext` class holding mode state (normal/scientific)
+  - `src/calculator.py` — added `sin()`, `cos()`, `tan()` methods using `math` module
+  - `src/core/operations.py` — added `mode` field to `Operation` dataclass; sin/cos/tan marked `mode="scientific"`; `OperationRegistry` gains `set_mode()` and mode-aware filtering in `get_operations()`, `resolve()`, `arity()`
+  - `src/__main__.py` — creates `CalculatorContext` and passes it to REPL and CLI
+  - `src/interface/repl.py` — accepts `CalculatorContext`; handles `mode <name>` commands; displays current mode in menu
+  - `src/interface/cli.py` — accepts `CalculatorContext`; syncs registry mode at startup
+  - `tests/test_context.py` — 38 new tests for `CalculatorContext`
+  - `tests/test_trigonometric.py` — 57 new tests for trig methods
+  - `tests/core/test_operations_mode_filtering.py` — 48 new tests for mode-aware registry
+  - `tests/test_repl_mode_switching.py` — 26 new tests for REPL mode switching
+  - `tests/test_cli_mode.py` — 33 new tests for CLI mode awareness
+  - `tests/core/test_operations_registry.py` — updated count assertions for 15-op catalog
+  - `tests/test_operations.py` — updated count assertions for 15-op catalog
+  - `tests/test_repl.py` — updated boundary index assertions for 12 normal-mode ops
+- **Purpose:** Add scientific mode with sin/cos/tan and interactive mode switching via REPL command
+- **Risks:** Mode state synchronization between CalculatorContext and OperationRegistry must be kept in sync; existing tests updated to reflect new catalog size
+- **Tests passed:** All 1307 tests pass
+
+Duration: 787.7s | Cost: $2.249960 USD | Turns: 20
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-183-documentation

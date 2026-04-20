@@ -154,3 +154,36 @@ class Calculator:
         if x <= 0:
             raise ValueError("natural_logarithm() not defined for non-positive values")
         return math.log(x)
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (input in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            The sine of x.
+        """
+        return math.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (input in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            The cosine of x.
+        """
+        return math.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (input in radians).
+
+        Args:
+            x: Angle in radians.
+
+        Returns:
+            The tangent of x.
+        """
+        return math.tan(x)

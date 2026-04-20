@@ -106,9 +106,9 @@ class TestCatalog:
         """Test that _CATALOG is a list."""
         assert isinstance(_CATALOG, list)
 
-    def test_catalog_has_12_operations(self):
-        """Test that _CATALOG contains exactly 12 operations."""
-        assert len(_CATALOG) == 12
+    def test_catalog_has_15_operations(self):
+        """Test that _CATALOG contains exactly 15 operations."""
+        assert len(_CATALOG) == 15
 
     def test_catalog_contains_operation_objects(self):
         """Test that all items in _CATALOG are Operation instances."""
@@ -126,7 +126,8 @@ class TestCatalog:
         required = {
             "add", "subtract", "multiply", "divide", "power",
             "logarithm", "factorial", "square", "cube",
-            "square_root", "cube_root", "natural_logarithm"
+            "square_root", "cube_root", "natural_logarithm",
+            "sin", "cos", "tan"
         }
         assert names == required
 
@@ -136,17 +137,17 @@ class TestCatalog:
         assert len(binary_ops) == 6
 
     def test_catalog_unary_operation_count(self):
-        """Test that _CATALOG has exactly 6 unary operations."""
+        """Test that _CATALOG has exactly 9 unary operations."""
         unary_ops = [op for op in _CATALOG if op.arity == 1]
-        assert len(unary_ops) == 6
+        assert len(unary_ops) == 9
 
     def test_catalog_first_operation_is_add(self):
         """Test that the first operation in _CATALOG is 'add'."""
         assert _CATALOG[0].name == "add"
 
-    def test_catalog_last_operation_is_natural_logarithm(self):
-        """Test that the last operation in _CATALOG is 'natural_logarithm'."""
-        assert _CATALOG[-1].name == "natural_logarithm"
+    def test_catalog_last_operation_is_tan(self):
+        """Test that the last operation in _CATALOG is 'tan'."""
+        assert _CATALOG[-1].name == "tan"
 
 
 # ==============================================================================
@@ -166,7 +167,7 @@ class TestOperationRegistryInitialization:
         registry = OperationRegistry(calculator)
         assert hasattr(registry, "_operations")
         assert isinstance(registry._operations, list)
-        assert len(registry._operations) == 12
+        assert len(registry._operations) == 15
 
     def test_init_creates_lookup_dict(self, calculator):
         """Test __init__ creates an internal lookup dictionary."""
@@ -207,9 +208,10 @@ class TestGetOperations:
         result = registry.get_operations()
         assert isinstance(result, list)
 
-    def test_get_operations_returns_12_operations(self, registry):
-        """Test get_operations returns all 12 operations."""
+    def test_get_operations_returns_12_operations_in_normal_mode(self, registry):
+        """Test get_operations returns 12 operations in normal mode."""
         result = registry.get_operations()
+        # Normal mode only shows operations with mode="both"
         assert len(result) == 12
 
     def test_get_operations_returns_operation_objects(self, registry):
@@ -219,9 +221,11 @@ class TestGetOperations:
             assert isinstance(op, Operation)
 
     def test_get_operations_order_matches_catalog(self, registry):
-        """Test get_operations preserves catalog order."""
+        """Test get_operations preserves catalog order for visible operations."""
         result = registry.get_operations()
-        for i, op in enumerate(_CATALOG):
+        # Only check operations visible in normal mode
+        visible_catalog = [op for op in _CATALOG if op.mode == "both" or op.mode == "normal"]
+        for i, op in enumerate(visible_catalog):
             assert result[i].name == op.name
 
     def test_get_operations_returns_copy(self, registry):
@@ -237,9 +241,10 @@ class TestGetOperations:
         result = registry.get_operations()
         assert result[0].name == "add"
 
-    def test_get_operations_last_is_natural_logarithm(self, registry):
-        """Test get_operations last operation is 'natural_logarithm'."""
+    def test_get_operations_last_is_natural_logarithm_in_normal_mode(self, registry):
+        """Test get_operations last visible operation in normal mode is 'natural_logarithm'."""
         result = registry.get_operations()
+        # In normal mode, the last operation is natural_logarithm (tan is scientific-only)
         assert result[-1].name == "natural_logarithm"
 
 
@@ -367,10 +372,12 @@ class TestResolve:
             registry.resolve("ADD")
 
     def test_resolve_all_canonical_names(self, registry):
-        """Test resolve works for all canonical names."""
+        """Test resolve works for all canonical names in current mode."""
         for op_def in _CATALOG:
-            result = registry.resolve(op_def.name)
-            assert result == op_def.name
+            # Only test names that are visible in the current mode
+            if op_def.mode == "both" or op_def.mode == "normal":
+                result = registry.resolve(op_def.name)
+                assert result == op_def.name
 
     def test_resolve_all_aliases(self, registry):
         """Test resolve works for all aliases."""
@@ -452,10 +459,12 @@ class TestGetOperationMapping:
         assert isinstance(result, dict)
 
     def test_get_operation_mapping_contains_all_names(self, registry):
-        """Test mapping contains all canonical operation names."""
+        """Test mapping contains all canonical operation names visible in current mode."""
         mapping = registry.get_operation_mapping()
         for op_def in _CATALOG:
-            assert op_def.name in mapping
+            # Only check names that are visible in the current mode
+            if op_def.mode == "both" or op_def.mode == "normal":
+                assert op_def.name in mapping
 
     def test_get_operation_mapping_contains_all_aliases(self, registry):
         """Test mapping contains all aliases."""
@@ -479,11 +488,12 @@ class TestGetOperationMapping:
         assert mapping["ln"] == "natural_logarithm"
 
     def test_get_operation_mapping_size(self, registry):
-        """Test mapping has expected number of entries."""
+        """Test mapping has expected number of entries in current mode."""
         mapping = registry.get_operation_mapping()
-        # 12 canonical names + number of aliases
-        alias_count = sum(len(op.aliases) for op in _CATALOG)
-        expected_size = 12 + alias_count
+        # Only count operations visible in normal mode (12 with mode="both")
+        visible_ops = [op for op in _CATALOG if op.mode == "both" or op.mode == "normal"]
+        alias_count = sum(len(op.aliases) for op in visible_ops)
+        expected_size = len(visible_ops) + alias_count
         assert len(mapping) == expected_size
 
     def test_get_operation_mapping_returns_copy(self, registry):
@@ -802,8 +812,11 @@ class TestRegistryConsistency:
     """Test suite for consistency between registry methods."""
 
     def test_resolve_and_arity_consistency(self, registry):
-        """Test that resolve() and arity() use consistent operation lookup."""
+        """Test that resolve() and arity() use consistent operation lookup in current mode."""
         for op_def in _CATALOG:
+            # Only test operations visible in the current mode
+            if op_def.mode != "both" and op_def.mode != "normal":
+                continue
             # For all canonical names and aliases
             tokens = [op_def.name] + list(op_def.aliases)
             for token in tokens:

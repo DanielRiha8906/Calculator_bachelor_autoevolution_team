@@ -57,7 +57,8 @@ class TestOperationRegistryInitialization:
         ops = registry.get_operations()
         # Modifying returned list shouldn't affect registry
         ops.pop()
-        assert len(registry.get_operations()) == len(_CATALOG)
+        # In default normal mode, only 12 operations are visible (the ones with mode="both")
+        assert len(registry.get_operations()) == 12
 
     def test_registry_lookup_initialized(self):
         """Test that registry lookup table is properly initialized."""
@@ -90,11 +91,12 @@ class TestOperationRegistryGetOperations:
         assert isinstance(ops, list)
 
     def test_get_operations_count(self):
-        """Test that get_operations returns all operations."""
+        """Test that get_operations returns all operations visible in current mode."""
         calc = Calculator()
         registry = OperationRegistry(calc)
         ops = registry.get_operations()
-        assert len(ops) == len(_CATALOG)
+        # In default normal mode, only 12 operations are visible (the ones with mode="both")
+        assert len(ops) == 12
 
     def test_get_operations_preserves_order(self):
         """Test that get_operations preserves catalog order."""
@@ -105,11 +107,12 @@ class TestOperationRegistryGetOperations:
             assert op == _CATALOG[i]
 
     def test_get_operations_contains_all_expected(self):
-        """Test that all expected operations are present."""
+        """Test that all expected operations are present in normal mode."""
         calc = Calculator()
         registry = OperationRegistry(calc)
         ops = registry.get_operations()
         names = {op.name for op in ops}
+        # In normal mode, only the "both" mode operations are visible
         expected = {
             "add",
             "subtract",
@@ -274,13 +277,15 @@ class TestOperationRegistryGetOperationMapping:
         assert isinstance(mapping, dict)
 
     def test_get_operation_mapping_all_names_present(self):
-        """Test that all operation names are in mapping."""
+        """Test that all operation names visible in current mode are in mapping."""
         calc = Calculator()
         registry = OperationRegistry(calc)
         mapping = registry.get_operation_mapping()
+        # Only operations visible in normal mode should be in mapping
         for op in _CATALOG:
-            assert op.name in mapping
-            assert mapping[op.name] == op.name
+            if op.mode == "both" or op.mode == "normal":
+                assert op.name in mapping
+                assert mapping[op.name] == op.name
 
     def test_get_operation_mapping_all_aliases_present(self):
         """Test that all aliases are in mapping."""
