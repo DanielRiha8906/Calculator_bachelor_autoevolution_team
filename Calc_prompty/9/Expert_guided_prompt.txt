@@ -2,4 +2,4 @@ Task:
 - Add operation history to the calculator so calculations performed during the current session are tracked and can be shown on request in guided interactive mode.
 - Record history entries in a consistent function-style calculator format, such as add(2, 3) = 5, power(2, 3) = 8, sqrt(9) = 3, or factorial(5) = 120.
 - Write the session history to a local file such as history.txt when the session ends, start each new session with a fresh history, and allow the current session history to be displayed during interactive use.
-- Keep the change scoped to local session history, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Keep the change scoped to local session history, and maintain relevant tests so they accurately reflect the current version of the application.

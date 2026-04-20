@@ -22,4 +22,4 @@ Hover effect: bind <Enter> and <Leave> on every button to swap between its defau
 
 Do not modify: Calculator, OperationDispatcher, History, Mode, BaseMode, OPERATIONS, or any file outside gui.py.
 
-Update relevant tests and development artifacts to reflect the changes.
+Update relevant tests to reflect the changes.
