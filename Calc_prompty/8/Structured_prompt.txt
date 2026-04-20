@@ -2,4 +2,4 @@ Task:
 - Add input validation to the calculator’s guided interactive mode so invalid user input does not immediately break the session.
 - Let the user retry after invalid operation or operand input, and stop the session after a fixed number of failed attempts.
 - In CLI mode, invalid input should return a clear error message and exit instead of retrying.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.

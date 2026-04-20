@@ -1,4 +1,4 @@
 Task:
 - Refactor the calculator so calculation logic is separated from user interaction and interface handling.
 - Keep the application object-oriented and preserve the current calculator behavior while making the code easier to maintain and reason about.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.

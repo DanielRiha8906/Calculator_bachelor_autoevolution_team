@@ -1,4 +1,4 @@
 Task:
 - Add a scientific mode to the calculator and allow the user to switch between normal and scientific functionality in interactive mode.
 - Keep normal mode limited to the standard calculator operations, and make scientific mode provide an expanded set of advanced mathematical functions.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.

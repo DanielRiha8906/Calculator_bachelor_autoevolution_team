@@ -1,4 +1,4 @@
 Task:
 - Add support for evaluating mathematical expressions in the calculator instead of only executing one operation at a time.
 - Make it possible to process numeric expressions with parentheses, multiple operations, and supported calculator functions such as sqrt within a single input.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.

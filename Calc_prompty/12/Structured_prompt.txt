@@ -1,4 +1,4 @@
 Task:
 - Refactor the calculator into multiple modules so the codebase is better organized and easier to maintain.
 - Separate core logic, interface handling, and operation implementations more clearly, and organize the operations structure so future scientific functionality can be added without another major reorganization.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.

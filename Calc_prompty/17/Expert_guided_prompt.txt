@@ -2,4 +2,4 @@ Task:
 - Add support for mathematical expression evaluation to the calculator so users can execute multi-step numeric expressions within a single input instead of being limited to one operation at a time.
 - Support nested and mixed expressions using the calculator’s existing operation set where applicable, including parentheses, operator precedence, and function-style calls such as sqrt(9) within larger expressions.
 - Example behavior: expressions such as (2 + 3) * 4 / sqrt(9) or factorial(5) + log(100) should be parsed, validated, and evaluated correctly.
-- Keep the implementation consistent with the current calculator architecture rather than introducing an unrelated mini-language, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Keep the implementation consistent with the current calculator architecture rather than introducing an unrelated mini-language, and maintain relevant tests so they accurately reflect the current version of the application.
