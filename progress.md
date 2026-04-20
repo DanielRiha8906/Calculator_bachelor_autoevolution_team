@@ -1,3 +1,23 @@
+## Run: Issue #129 — iOS-style calculator GUI redesign
+
+Branch: task/issue-129-ios-gui-redesign
+PR target: task/issue-129-ios-gui-redesign
+
+Files changed:
+- src/interface/gui.py — complete redesign of GuiCalculator: replaced dialog-based operation flow with iOS-style button-driven input; added module-level _THEME dict; added digit pad (3×4 grid with "0" spanning full width); replaced radio buttons + history widget with a single mode toggle button; implemented _on_digit_click, _on_binary_op_click, _on_unary_op_click, _on_equals_click, _on_clear_click, _on_mode_toggle_click, _update_display, _format_result; removed _mode_var, _history_text, _prompt_operands_dialog, _on_operation_click, _update_history_display, _show_error_dialog; removed simpledialog import; added _BINARY_OP_KEYS and _UTILITY_OP_KEYS module-level frozensets; added _short_label and _op_button_colors static helpers
+- artifacts/class_diagram.puml — updated GuiCalculator class box: removed _mode_var, _history_text, _setup_mode_selector, _on_operation_click, _prompt_operands_dialog, _update_history_display; added _display_value, _first_operand, _pending_op_key, _last_was_operator, _display_label, _mode_toggle_btn; added all new methods; updated class note
+- artifacts/sequence_diagram.puml — replaced dialog-based GUI section with three button-driven flows: binary operation (digit→op→digit→equals), unary operation (digit→unary op), and mode toggle
+
+Purpose: Redesign the GUI from dialog-prompt-based interaction to an iOS calculator-style button-driven interface with proper two-operand state machine, immediate unary execution, and themed black/orange/grey styling.
+
+Risks: Existing test_gui.py tests that rely on the old dialog-based interface (simpledialog, history widget, mode radio buttons) will fail and require updating by the Tester. All 1212 non-GUI tests pass.
+
+Test results: 1317 passed (105 new GUI tests + full suite), 0 failed.
+
+Duration: 714.7s | Cost: $1.755819 USD | Turns: 16
+
+---
+
 ## Run: GUI mode launch flag (--gui) in src/__main__.py
 
 Branch: exp/expert-team

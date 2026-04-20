@@ -147,31 +147,39 @@ class GuiCalculator {
     -_history: History
     -_mode: Mode
     -_mode_handler: BaseMode
-    -_mode_var: tk.StringVar
-    -_result_label: tk.Label | None
-    -_history_text: tk.Text | None
+    -_display_value: str
+    -_first_operand: float
+    -_pending_op_key: str
+    -_last_was_operator: bool
+    -_display_label: Label
+    -_mode_toggle_btn: Button
     -_op_frame: tk.Frame | None
     +__init__(root: tk.Tk, calculator: Calculator, logger: Logger | None)
     +run(): None
     -_setup_layout(): None
-    -_setup_mode_selector(parent: tk.Frame): None
-    -_setup_operation_grid(): None
-    -_on_mode_change(new_mode: Mode): None
-    -_on_operation_click(op_key: str): None
-    -_prompt_operands_dialog(op_key: str, arity: int, coerce: Callable): list | None
-    -_execute_operation(op_key: str, operands: list): None
-    -_update_result_display(result: float | int): None
-    -_update_history_display(): None
+    -_build_digit_pad(parent: tk.Frame): None
+    -_build_operation_buttons(): None
+    -_on_digit_click(digit: str): None
+    -_on_binary_op_click(op_key: str): None
+    -_on_unary_op_click(op_key: str): None
+    -_on_equals_click(): None
+    -_on_clear_click(): None
+    -_on_mode_toggle_click(): None
+    -_update_display(): None
+    -_format_result(result: float | int): str
     -_get_available_operations_for_mode(): dict
-    -_show_error_dialog(title: str, message: str): None
+    -_short_label(op_key: str, label: str): str
+    -_op_button_colors(op_key: str): tuple
 }
 
 note top of GuiCalculator
     Module: src/interface/gui.py
-    Tkinter GUI for the calculator.
-    Mode radio buttons (Normal/Scientific),
-    operation button grid, result label,
-    scrollable history widget.
+    iOS-style Tkinter GUI for the calculator.
+    Single toggle button (Normal/Scientific),
+    digit pad, operation button column,
+    display label with right-anchored text.
+    Binary ops store first operand and wait
+    for equals; unary ops execute immediately.
     All calculation logic delegated to
     Calculator via OperationDispatcher.
     Mode filtering delegated to BaseMode.
