@@ -284,4 +284,4 @@ Duration: 453.3s | Cost: $1.005829 USD | Turns: 15
 - worktree/branch: task/issue-185-scientific-mode
 - PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 672.9s | Cost: $1.703083 USD | Turns: 13
