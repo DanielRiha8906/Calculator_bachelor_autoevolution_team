@@ -1,6 +1,36 @@
 
 ## Run: update-diagrams (2026-04-19)
 
+- **Branch:** task/issue-183-documentation
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `src/operations (standalone utilities)` package block with three `<<module>>` classes (`arithmetic`, `roots`, `scientific`) documenting the standalone function modules introduced in issue-180; added delegation arrow from `arithmetic` to `CalculationEngine`; added notes for each module describing their role and relationship to the main dispatch chain
+  - `artifacts/activity_diagram.puml` — updated module layout note at start to include `src/operations/` alongside `src/core/`, `src/interface/`, and `src/support/`
+  - `artifacts/sequence_diagram.puml` — expanded header note over Calculator/CalculationEngine to mention the `src/operations/` utility package and clarify it is not part of the `OperationRegistry` dispatch chain
+- **Purpose:** Sync PlantUML diagrams with current source — `src/operations/` (arithmetic.py, roots.py, scientific.py) added in issue-180 was not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 146.1s | Cost: $0.631627 USD | Turns: 28
+
+## Run: issue-183-documentation (2026-04-19)
+
+- **Branch:** task/issue-183-documentation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `README.md` — replaced one-line stub with full user and developer guide (features, quick start, installation, usage examples, project structure, operations table, links to docs/)
+  - `docs/SETUP.md` — new: prerequisites, venv creation/activation, dependency install, verification, deactivation, troubleshooting
+  - `docs/USAGE.md` — new: REPL and CLI walkthroughs, all 12 operations with examples, special behaviours, edge cases, file output formats
+  - `docs/OPERATIONS_REFERENCE.md` — new: complete catalog of all 12 operations (name, alias, arity, domain, examples, error conditions, summary table)
+  - `docs/ARCHITECTURE.md` — new: module organization, component descriptions for all 7 classes, data flow for REPL and CLI, dispatch mechanism, backward-compat shims
+  - `docs/TROUBLESHOOTING.md` — new: error messages with causes/solutions, error log format, file I/O issues, environment issues, behavioral FAQ
+- **Purpose:** Add written documentation so features, usage, and project structure are easier to understand (Issue #183)
+- **Risks:** None — documentation only, no source code modified
+- **Tests passed:** Yes — 1105/1105 existing tests pass; all CLI examples verified against running application
+
+Duration: 469.7s | Cost: $1.177377 USD | Turns: 19
+
+## Run: update-diagrams (2026-04-19)
+
 - **Branch:** task/issue-180-modularization
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `CalculationEngine` class (src/core/engine.py) with four arithmetic methods; added `_engine: CalculationEngine` attribute to `Calculator`; added `Calculator *-- CalculationEngine` composition relationship; updated `MaxRetriesExceeded` note to reference `src/support/exceptions.py`; updated `Operation` note to reference `src/core/operations.py`; added facade note on `Calculator` describing the delegation pattern
