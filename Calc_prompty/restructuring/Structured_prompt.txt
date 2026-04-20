@@ -6,4 +6,4 @@ Task:
 - Button labels should be short symbols where possible: +, −, ×, ÷, √, x², xʸ, n!, ln, log.
 - The result display should be right-aligned, large font (24pt+), white text on black background.
 - Do not change any calculation logic — only the GUI layer.
-- Update relevant tests and development artifacts to reflect the changes.
+- Update relevant tests to reflect the changes.

@@ -2,4 +2,4 @@ Task:
 - Add support for selecting whether the calculator starts in tkinter-based GUI mode or guided interactive terminal mode through a clear startup argument or flag, while preserving the current behavior of both interfaces.
 - Keep the mode-selection logic separate from the calculator feature logic, and make the startup interface deterministic, testable, and consistent with the existing application structure.
 - Example behavior: the application should support explicit launch choices such as --mode gui and --mode interactive.
-- Keep bash-based CLI calculation usage separate from this interface-switching behavior, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Keep bash-based CLI calculation usage separate from this interface-switching behavior, and maintain relevant tests so they accurately reflect the current version of the application.

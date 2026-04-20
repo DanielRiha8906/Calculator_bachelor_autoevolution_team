@@ -2,4 +2,4 @@ Task:
 - Refactor the calculator so core calculation logic is separated from interface concerns such as guided interactive input, bash-based CLI handling, output formatting, and session control.
 - Preserve the current behavior of existing features while improving object-oriented responsibility boundaries, so calculator operations can be reused independently of how the user interacts with the application.
 - Introduce or refine classes and abstractions only where they clearly improve separation of concerns, but avoid turning this into a full multi-module redesign or speculative architecture rewrite.
-- Maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Maintain relevant tests so they accurately reflect the current version of the application.

@@ -1,4 +1,4 @@
 Task:
 - Add operation history to the calculator so calculations performed during the current session are recorded.
 - Keep the history in a local file such as history.txt, allow it to be displayed on request in interactive mode, and do not keep the history between separate sessions.
-- Update relevant tests and development artifacts as needed so they remain consistent with the current version of the application.
+- Update relevant tests as needed so they remain consistent with the current version of the application.
