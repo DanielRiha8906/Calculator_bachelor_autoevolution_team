@@ -1,6 +1,17 @@
 @startuml class_diagram
 
 package "src" {
+    class ErrorLogger {
+        +log_error(error_type: str, context: dict) : None
+    }
+
+    class CLI <<module>> {
+        +parse_arguments(args: list[str]) : tuple[str, list[str]]
+        +execute_cli(operation_name: str, operand_strs: list[str], registry: dict, calculator: Calculator) : int
+    }
+}
+
+package "src.core" {
     class Calculator {
         +add(a, b) : float
         +subtract(a, b) : float
@@ -15,15 +26,80 @@ package "src" {
         +log(x: int|float) : float
         +ln(x: int|float) : float
     }
+
+    class OperationRegistry {
+        -_calculator : Calculator
+        -_normal_operations : dict[str, tuple]
+        -_scientific_operations : dict[str, tuple]
+        +__init__(calculator: Calculator)
+        -_load_normal_operations() : None
+        -_register_op(name: str, method: object, arity: int) : None
+        +get_all_operations() : dict[str, tuple]
+        +get_normal_operations() : dict[str, tuple]
+    }
+
+    class Operations <<module>> {
+        +get_operation_registry(calculator: Calculator) : dict[str, tuple]
+    }
+}
+
+package "src.interface" {
+    class InputParser <<module>> {
+        +parse_cli_args(args: list[str]) : tuple[str, list[str]]
+        +convert_operand(value: str) : int | float
+    }
+
+    class OutputFormatter <<module>> {
+        +format_result(result: int|float) : str
+    }
+
+    class MenuRenderer <<module>> {
+        +display_menu(registry: dict) : None
+    }
+}
+
+package "src.interactive" {
+    class Session <<module>> {
+        MAX_VALIDATION_ATTEMPTS : int = 5
+        +get_operation_choice(registry: dict) : tuple | None
+        +get_operands(arity: int) : list[float] | None
+        +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
+    }
+}
+
+package "src.support" {
+    class HistoryTracker {
+        -_history : list[str]
+        +record(operation_name: str, operands: list, result: object) : None
+        +get_history() : list[str]
+        +display() : None
+        +save_to_file(filepath: str) : None
+        +clear() : None
+    }
 }
 
 package "__main__" {
     class EntryPoint <<module>> {
-        +main() : void
     }
 }
 
-EntryPoint ..> Calculator : instantiates & uses
+Operations ..> OperationRegistry : instantiates
+OperationRegistry o-- Calculator : delegates to
+
+EntryPoint ..> Calculator : instantiates
+EntryPoint ..> HistoryTracker : instantiates
+EntryPoint ..> Session : calls run_interactive_session()
+
+Session ..> Calculator : invokes methods via registry
+Session ..> HistoryTracker : records results / displays / saves
+Session ..> Operations : calls get_operation_registry()
+Session ..> ErrorLogger : logs errors
+Session ..> MenuRenderer : calls display_menu()
+
+CLI ..> Calculator : invokes methods via registry
+CLI ..> Operations : calls get_operation_registry()
+CLI ..> ErrorLogger : logs errors
+CLI ..> InputParser : calls parse_cli_args() / convert_operand()
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -46,13 +122,74 @@ note right of Calculator::power
 end note
 
 note right of Calculator::log
-  Base-10 logarithm (log₁₀).
+  Base-10 logarithm (log10).
   Raises ValueError if x <= 0.
 end note
 
 note right of Calculator::ln
   Natural logarithm (ln).
   Raises ValueError if x <= 0.
+end note
+
+note right of OperationRegistry
+  Registers binary ops (add, subtract, multiply, divide, power)
+  and unary ops (factorial, square, cube, square_root,
+  cube_root, log, ln) in _normal_operations.
+  _scientific_operations reserved for future extension.
+end note
+
+note right of Operations
+  Delegates to OperationRegistry.get_all_operations().
+  Return format: dict[name -> (method, arity)].
+end note
+
+note right of HistoryTracker::record
+  Stores entry as "operation(args) = result".
+end note
+
+note right of HistoryTracker::save_to_file
+  Defaults to "history.txt".
+  OSError is caught and printed to stderr.
+end note
+
+note right of Session::get_operation_choice
+  Returns None on quit (q/quit/exit).
+  Returns (_HISTORY_TOKEN, None, None) on "h".
+  Returns (None, None, None) when MAX_VALIDATION_ATTEMPTS exceeded.
+  Otherwise returns (name, method, arity) 3-tuple.
+end note
+
+note right of Session::get_operands
+  Returns None when MAX_VALIDATION_ATTEMPTS exceeded.
+end note
+
+note right of Session::run_interactive_session
+  history_tracker defaults to a new HistoryTracker() if None.
+  Calls history_tracker.display() on "h" input.
+  Records each successful operation via history_tracker.record().
+  Saves history to file on session exit.
+  Breaks session if get_operation_choice returns (None, None, None)
+  or get_operands returns None (max attempts exhausted).
+  Catches TypeError, ValueError, ZeroDivisionError per iteration.
+end note
+
+note right of CLI::execute_cli
+  Returns 0 on success, 1 on error.
+  Catches TypeError, ValueError,
+  ZeroDivisionError.
+end note
+
+note right of InputParser::convert_operand
+  Parses string to int or float.
+  Returns int if value is whole (3.0 -> 3).
+end note
+
+note right of ErrorLogger::log_error
+  Writes to error.log in ISO 8601 format.
+  Format: TIMESTAMP | ERROR_TYPE | OPERATION | OPERANDS | MESSAGE
+  Error types: UNSUPPORTED_OPERATION, INVALID_OPERAND,
+  ARGUMENT_COUNT_MISMATCH, DIVISION_BY_ZERO, INVALID_DOMAIN.
+  Module-level singleton logger; silently swallows I/O errors.
 end note
 
 @enduml

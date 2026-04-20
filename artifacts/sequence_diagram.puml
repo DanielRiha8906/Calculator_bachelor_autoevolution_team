@@ -1,92 +1,123 @@
 @startuml sequence_diagram
 
 participant "__main__" as main
+participant "CLI" as cli
+participant "interface.InputParser" as inputparser
+participant "interface.MenuRenderer" as menurenderer
+participant "core.Operations" as ops
+participant "core.OperationRegistry" as oreg
+participant "interactive.Session" as session
 participant "Calculator" as calc
+participant "HistoryTracker" as ht
+participant "ErrorLogger" as el
 
-main -> calc : <<create>>
+alt Interactive Mode (python -m src)
 
-main -> calc : add(10, 5)
-calc --> main : 15
+    main -> calc : <<create>>
+    main -> ht : <<create>>
+    main -> session : run_interactive_session(calculator, history_tracker)
 
-main -> calc : subtract(10, 5)
-calc --> main : 5
+    session -> ops : get_operation_registry(calculator)
+    ops -> oreg : <<create>>(calculator)
+    oreg -> oreg : _load_normal_operations()
+    ops -> oreg : get_all_operations()
+    oreg --> ops : registry dict
+    ops --> session : registry
+    session -> session : print welcome message
 
-main -> calc : multiply(10, 5)
-calc --> main : 50
+    loop interactive session
+        session -> menurenderer : display_menu(registry)
+        session -> session : get_operation_choice(registry)
 
-main -> calc : divide(10, 5)
-alt b != 0
-    calc --> main : 2.0
-else b == 0
-    calc --> main : raises ZeroDivisionError
-end
+        alt user quit (q / quit / exit)
+            session -> ht : save_to_file("history.txt")
+            session -> main : return\n(prints "Goodbye.")
+        else history request ("h")
+            session -> ht : display()
+        else max validation attempts exceeded → (None, None, None)
+            session -> ht : save_to_file("history.txt")
+            session -> main : return
+        else operation selected
+            session -> session : get_operands(arity)
 
-main -> calc : factorial(5)
-alt n is int and n >= 0
-    calc --> main : 120
-else n is not int
-    calc --> main : raises TypeError
-else n < 0
-    calc --> main : raises ValueError
-end
+            alt max validation attempts exceeded → None
+                session -> ht : save_to_file("history.txt")
+                session -> main : return
+            else operands collected
+                opt method is factorial
+                    session -> session : convert whole-valued floats to int
+                end
 
-main -> calc : square(4)
-alt x is numeric
-    calc --> main : 16
-else x is not numeric
-    calc --> main : raises TypeError
-end
+                session -> calc : method(*operands)
 
-main -> calc : cube(3)
-alt x is numeric
-    calc --> main : 27
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : square_root(9)
-alt x is numeric and x >= 0
-    calc --> main : 3.0
-else x < 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : cube_root(27)
-alt x is numeric
-    calc --> main : 3.0
-else x is not numeric
-    calc --> main : raises TypeError
-end
-
-main -> calc : power(2, 10)
-alt base and exponent are numeric
-    alt base >= 0 or exponent is int
-        calc --> main : 1024
-    else base < 0 and exponent is non-integer
-        calc --> main : raises ValueError
+                alt success
+                    calc --> session : result
+                    session -> session : print "Result: {result}"
+                    session -> ht : record(operation_name, operands, result)
+                else TypeError / ValueError / ZeroDivisionError
+                    calc --> session : raises exception
+                    session -> el : log_error(error_type, context)
+                    session -> session : print error message
+                end
+            end
+        end
     end
-else base or exponent not numeric
-    calc --> main : raises TypeError
-end
 
-main -> calc : log(100)
-alt x is numeric and x > 0
-    calc --> main : 2.0
-else x <= 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
-end
+else CLI Mode (execute_cli)
 
-main -> calc : ln(1)
-alt x is numeric and x > 0
-    calc --> main : 0.0
-else x <= 0
-    calc --> main : raises ValueError
-else x is not numeric
-    calc --> main : raises TypeError
+    main -> calc : <<create>>
+    main -> cli : parse_arguments(sys.argv)
+    cli -> inputparser : parse_cli_args(args)
+    inputparser --> cli : (operation_name, operand_strs)
+    cli --> main : (operation_name, operand_strs)
+
+    main -> ops : get_operation_registry(calculator)
+    ops -> oreg : <<create>>(calculator)
+    oreg -> oreg : _load_normal_operations()
+    ops -> oreg : get_all_operations()
+    oreg --> ops : registry dict
+    ops --> main : registry
+
+    main -> cli : execute_cli(operation_name, operand_strs, registry, calculator)
+
+    cli -> cli : lookup operation in registry
+
+    alt invalid operation
+        cli -> el : log_error("UNSUPPORTED_OPERATION", context)
+        cli -> cli : print error to stderr
+        cli --> main : return 1
+    else arity mismatch
+        cli -> el : log_error("ARGUMENT_COUNT_MISMATCH", context)
+        cli -> cli : print error to stderr
+        cli --> main : return 1
+    else valid
+        cli -> inputparser : convert_operand(value) for each operand
+
+        alt operand conversion failed
+            cli -> el : log_error("INVALID_OPERAND", context)
+            cli -> cli : print error to stderr
+            cli --> main : return 1
+        else operands converted
+            cli -> calc : method(*operands)
+
+            alt success
+                calc --> cli : result
+                cli -> cli : print result to stdout
+                cli --> main : return 0
+            else ZeroDivisionError
+                calc --> cli : raises ZeroDivisionError
+                cli -> el : log_error("DIVISION_BY_ZERO", context)
+                cli -> cli : print error to stderr
+                cli --> main : return 1
+            else TypeError / ValueError
+                calc --> cli : raises TypeError / ValueError
+                cli -> el : log_error("INVALID_OPERAND", context)
+                cli -> cli : print error to stderr
+                cli --> main : return 1
+            end
+        end
+    end
+
 end
 
 @enduml

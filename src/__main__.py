@@ -1,12 +1,12 @@
 from .calculator import Calculator
+from .history import HistoryTracker
+from .input_handler import run_interactive_session
 
-def main():
-    calc = Calculator()
-    print("Addition:", calc.add(10, 5))
-    print("Subtraction:", calc.subtract(10, 5))
-    print("Multiplication:", calc.multiply(10, 5))
-    print("Division:", calc.divide(10, 5))
-    print("Factorial:", calc.factorial(5))
+
+def main() -> None:
+    """Entry point for the interactive calculator session."""
+    run_interactive_session(Calculator(), HistoryTracker())
+
 
 if __name__ == "__main__":
     main()
