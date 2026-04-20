@@ -371,3 +371,115 @@ class ArithmeticEngine:
                 f"Natural log is not defined for non-positive numbers; got {x}."
             )
         return math.log(x)
+
+    def sin(self, x: float) -> float:
+        """Compute the sine of *x* (in radians).
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"sin: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"sin: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Compute the cosine of *x* (in radians).
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"cos: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"cos: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Compute the tangent of *x* (in radians).
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"tan: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"tan: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.tan(x)
+
+    def exp(self, x: float) -> float:
+        """Compute e raised to the power of *x*.
+
+        Args:
+            x: The exponent. Must be an int or float (not bool or None).
+
+        Returns:
+            math.e ** x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"exp: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"exp: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.exp(x)

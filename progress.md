@@ -1,3 +1,20 @@
+## Run: scientific-mode implementation (2026-04-20)
+
+- branch: exp2/naive-team
+- files changed:
+  - src/logic/core.py — added sin, cos, tan, exp methods to ArithmeticEngine
+  - src/logic/state.py — added _mode field, get_mode/set_mode/is_scientific_mode methods, and sin/cos/tan/exp wrapper methods to Calculator
+  - src/operations/scientific.py — replaced stub with Sin, Cos, Tan, Exp Operation classes and updated register_scientific_operations to register all four
+  - src/presentation/interactive.py — added SCIENTIFIC_OPERATIONS set, sin/cos/tan/exp entries to OPERATIONS dict, mode switching via 'mode scientific'/'mode normal' commands, [Scientific Mode]/[Normal Mode] prompt indicator, and normal-mode guard for scientific operations
+- purpose: Implement scientific mode — four trig/exp operations plus mode state tracking across engine, state, operations, and interactive layers
+- risks: Three pre-existing tests are now stale due to this architectural change and must be updated by the Tester — see notes below
+- tests passed: 1065 of 1068 pass; 3 stale tests fail (see notes)
+- target: exp2/naive-team
+- stale tests requiring Tester update:
+  - tests/test_operations_basic.py::TestRegisterScientificOperations::test_register_scientific_operations_adds_nothing (asserted stub no-op, now obsolete)
+  - tests/test_operations_basic.py::TestRegisterScientificOperations::test_register_scientific_operations_does_not_remove_others (asserted no new ops added, now obsolete)
+  - tests/test_user_input.py::TestOperationsDict::test_operations_dict_has_all_12_keys (asserted exactly 12 keys, now 16)
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-182-documentation
@@ -256,3 +273,15 @@ Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
 - PR target: exp2/naive-team
 
 Duration: 453.3s | Cost: $1.005829 USD | Turns: 15
+
+## Run: issue-185-scientific-mode (2026-04-20)
+
+- branch: task/issue-185-scientific-mode
+- files changed: src/logic/core.py (added sin, cos, tan, exp to ArithmeticEngine), src/logic/state.py (added mode tracking + scientific wrappers), src/operations/scientific.py (replaced stub with Sin, Cos, Tan, Exp classes), src/presentation/interactive.py (mode command + mode-aware filtering), tests/test_scientific_operations.py (created, 103 tests), tests/test_interactive_mode.py (created, 28 tests), tests/test_calculator.py (45 new tests), tests/test_operations_basic.py (updated stale tests), tests/test_user_input.py (updated stale test)
+- purpose: Add scientific mode (sin, cos, tan, exp) with interactive mode switching via 'mode scientific'/'mode normal' commands
+- risks: Low — additive changes only; existing operations unchanged; normal mode is default
+- tests passed: yes — 1244 tests pass (176 new, 3 stale tests updated)
+- worktree/branch: task/issue-185-scientific-mode
+- PR target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

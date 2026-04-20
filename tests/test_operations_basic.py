@@ -491,18 +491,26 @@ class TestRegisterBasicOperations:
 class TestRegisterScientificOperations:
     """Test the register_scientific_operations function."""
 
-    def test_register_scientific_operations_adds_nothing(self, registry):
-        """Test that register_scientific_operations is a no-op (stub)."""
-        assert registry.list_operations() == []
+    def test_register_scientific_operations_adds_four_operations(self, registry):
+        """Test that register_scientific_operations registers 4 operations (sin, cos, tan, exp)."""
+        assert len(registry.list_operations()) == 0
         register_scientific_operations(registry)
-        assert registry.list_operations() == []
+        operations = registry.list_operations()
+        assert len(operations) == 4
+        assert "sin" in operations
+        assert "cos" in operations
+        assert "tan" in operations
+        assert "exp" in operations
 
-    def test_register_scientific_operations_does_not_remove_others(self, registry):
-        """Test that calling register_scientific_operations doesn't remove existing ops."""
+    def test_register_scientific_operations_does_not_remove_basic_operations(self, registry):
+        """Test that calling register_scientific_operations doesn't remove existing basic ops."""
         register_basic_operations(registry)
         ops_before = set(registry.list_operations())
 
         register_scientific_operations(registry)
         ops_after = set(registry.list_operations())
 
-        assert ops_before == ops_after
+        # All basic operations should still be present
+        assert ops_before.issubset(ops_after)
+        # And the 4 new scientific operations should be added
+        assert len(ops_after) == len(ops_before) + 4

@@ -166,15 +166,16 @@ class TestParseNumber:
 class TestOperationsDict:
     """Test suite for the OPERATIONS dictionary."""
 
-    def test_operations_dict_has_all_12_keys(self):
-        """Test that OPERATIONS dict contains exactly 12 operations."""
+    def test_operations_dict_has_all_16_keys(self):
+        """Test that OPERATIONS dict contains 16 operations (12 basic + 4 scientific)."""
         expected_keys = {
             "add", "subtract", "multiply", "divide",
             "factorial", "square", "cube", "square_root", "cube_root",
-            "power", "log10", "natural_log"
+            "power", "log10", "natural_log",
+            "sin", "cos", "tan", "exp"
         }
         assert set(OPERATIONS.keys()) == expected_keys
-        assert len(OPERATIONS) == 12
+        assert len(OPERATIONS) == 16
 
     def test_operations_dict_binary_operations_have_2_operands(self):
         """Test that binary operations require 2 operands."""

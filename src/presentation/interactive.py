@@ -36,7 +36,14 @@ OPERATIONS: dict[str, tuple[str, int]] = {
     "power": ("power", 2),
     "log10": ("log10", 1),
     "natural_log": ("natural_log", 1),
+    "sin": ("sin", 1),
+    "cos": ("cos", 1),
+    "tan": ("tan", 1),
+    "exp": ("exp", 1),
 }
+
+# Names of operations that are only available in scientific mode.
+SCIENTIFIC_OPERATIONS: frozenset[str] = frozenset({"sin", "cos", "tan", "exp"})
 
 
 def parse_number(input_str: str) -> int | float:
@@ -169,6 +176,11 @@ def run_interactive() -> None:
     selection, collects operands, executes the operation, and prints the
     result. The loop continues until the user enters ``quit`` or ``exit``,
     at which point "Bye!" is printed and the function returns.
+
+    Mode switching is supported via ``mode scientific`` and ``mode normal``
+    commands entered at the operation selection prompt.  Scientific operations
+    (sin, cos, tan, exp) are only executable when the calculator is in
+    scientific mode.
     """
     calc = Calculator()
     operation_list = list(OPERATIONS.keys())
@@ -176,15 +188,25 @@ def run_interactive() -> None:
     print("Calculator — available operations:")
     for idx, name in enumerate(operation_list, start=1):
         print(f"  {idx:2}. {name}")
+    print("  Type 'mode scientific' or 'mode normal' to switch mode.")
     print("  Type 'quit' or 'exit' to leave.\n")
 
     op_attempt = 0
     while True:
-        raw = input("Select operation: ").strip().lower()
+        mode_label = "[Scientific Mode]" if calc.is_scientific_mode() else "[Normal Mode]"
+        raw = input(f"Select operation {mode_label}: ").strip().lower()
 
         if raw in ("quit", "exit"):
             print("Bye!")
             return
+
+        # Handle mode switching commands.
+        if raw in ("mode scientific", "mode normal"):
+            new_mode = raw.split()[1]
+            calc.set_mode(new_mode)
+            print(f"Mode set to {new_mode}.")
+            op_attempt = 0
+            continue
 
         if raw not in OPERATIONS:
             op_attempt += 1
@@ -198,6 +220,14 @@ def run_interactive() -> None:
                     "  Too many invalid operation selections. Exiting."
                 )
                 return
+            continue
+
+        # Guard scientific operations when not in scientific mode.
+        if raw in SCIENTIFIC_OPERATIONS and not calc.is_scientific_mode():
+            print(
+                f"Error: {raw} is not available in normal mode. "
+                "Use 'mode scientific' to enable scientific functions."
+            )
             continue
 
         # Valid operation entered — reset the operation-selection retry counter.

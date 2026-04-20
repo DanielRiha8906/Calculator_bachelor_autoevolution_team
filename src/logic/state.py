@@ -28,6 +28,7 @@ class Calculator:
         self._engine: ArithmeticEngine = ArithmeticEngine()
         self._history: OperationHistory = OperationHistory()
         self._registry: OperationRegistry = OperationRegistry()
+        self._mode: str = "normal"
         register_basic_operations(self._registry)
         register_scientific_operations(self._registry)
 
@@ -46,6 +47,41 @@ class Calculator:
     def clear_history(self) -> None:
         """Remove all entries from the operation history."""
         self._history.clear_history()
+
+    # ------------------------------------------------------------------
+    # Mode management
+    # ------------------------------------------------------------------
+
+    def get_mode(self) -> str:
+        """Return the current calculator mode.
+
+        Returns:
+            The current mode string — either ``"normal"`` or ``"scientific"``.
+        """
+        return self._mode
+
+    def set_mode(self, mode: str) -> None:
+        """Set the calculator mode.
+
+        Args:
+            mode: The desired mode. Must be ``"normal"`` or ``"scientific"``.
+
+        Raises:
+            ValueError: If *mode* is not one of the accepted values.
+        """
+        if mode not in ("normal", "scientific"):
+            raise ValueError(
+                f"Invalid mode '{mode}'. Must be 'normal' or 'scientific'."
+            )
+        self._mode = mode
+
+    def is_scientific_mode(self) -> bool:
+        """Check whether the calculator is in scientific mode.
+
+        Returns:
+            ``True`` if the current mode is ``"scientific"``, ``False`` otherwise.
+        """
+        return self._mode == "scientific"
 
     # ------------------------------------------------------------------
     # Arithmetic operations
@@ -253,4 +289,72 @@ class Calculator:
         """
         result = self._engine.natural_log(x)
         self._history.add_record("natural_log", [x], result, datetime.now())
+        return result
+
+    # ------------------------------------------------------------------
+    # Scientific operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: float) -> float:
+        """Compute the sine of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.sin(x)
+        self._history.add_record("sin", [x], result, datetime.now())
+        return result
+
+    def cos(self, x: float) -> float:
+        """Compute the cosine of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.cos(x)
+        self._history.add_record("cos", [x], result, datetime.now())
+        return result
+
+    def tan(self, x: float) -> float:
+        """Compute the tangent of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.tan(x)
+        self._history.add_record("tan", [x], result, datetime.now())
+        return result
+
+    def exp(self, x: float) -> float:
+        """Compute e raised to the power of *x* and record the operation.
+
+        Args:
+            x: The exponent. Must be an int or float (not bool or None).
+
+        Returns:
+            math.e ** x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.exp(x)
+        self._history.add_record("exp", [x], result, datetime.now())
         return result

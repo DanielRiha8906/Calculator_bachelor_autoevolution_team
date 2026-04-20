@@ -2053,3 +2053,270 @@ class TestCalculatorErrorLogging:
 
         assert any("natural_log" in record.message.lower() for record in caplog.records)
         assert any(record.levelname == "ERROR" for record in caplog.records)
+
+
+# ============================================================================
+# MODE MANAGEMENT TESTS
+# ============================================================================
+
+
+class TestModeManagement:
+    """Test suite for calculator mode management."""
+
+    def test_default_mode_is_normal(self, calculator):
+        """Test that the calculator starts in normal mode."""
+        assert calculator.get_mode() == "normal"
+
+    def test_get_mode_returns_string(self, calculator):
+        """Test that get_mode returns a string."""
+        mode = calculator.get_mode()
+        assert isinstance(mode, str)
+
+    def test_set_mode_to_scientific(self, calculator):
+        """Test setting mode to scientific."""
+        calculator.set_mode("scientific")
+        assert calculator.get_mode() == "scientific"
+
+    def test_set_mode_to_normal(self, calculator):
+        """Test setting mode to normal."""
+        calculator.set_mode("scientific")
+        calculator.set_mode("normal")
+        assert calculator.get_mode() == "normal"
+
+    def test_set_mode_toggle_multiple_times(self, calculator):
+        """Test toggling between modes multiple times."""
+        assert calculator.get_mode() == "normal"
+        calculator.set_mode("scientific")
+        assert calculator.get_mode() == "scientific"
+        calculator.set_mode("normal")
+        assert calculator.get_mode() == "normal"
+        calculator.set_mode("scientific")
+        assert calculator.get_mode() == "scientific"
+
+    def test_set_mode_invalid_string_raises_value_error(self, calculator):
+        """Test that setting invalid mode raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.set_mode("quantum")
+
+    def test_set_mode_invalid_case_sensitive(self, calculator):
+        """Test that mode names are case-sensitive."""
+        with pytest.raises(ValueError):
+            calculator.set_mode("Scientific")
+
+        with pytest.raises(ValueError):
+            calculator.set_mode("SCIENTIFIC")
+
+        with pytest.raises(ValueError):
+            calculator.set_mode("Normal")
+
+    def test_set_mode_empty_string_raises_value_error(self, calculator):
+        """Test that setting empty string mode raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.set_mode("")
+
+    def test_set_mode_none_raises_value_error(self, calculator):
+        """Test that setting None mode raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.set_mode(None)
+
+    def test_set_mode_with_whitespace_raises_value_error(self, calculator):
+        """Test that setting mode with whitespace raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.set_mode("scientific ")
+
+        with pytest.raises(ValueError):
+            calculator.set_mode(" normal")
+
+    def test_is_scientific_mode_returns_bool(self, calculator):
+        """Test that is_scientific_mode returns a boolean."""
+        result = calculator.is_scientific_mode()
+        assert isinstance(result, bool)
+
+    def test_is_scientific_mode_false_in_normal_mode(self, calculator):
+        """Test that is_scientific_mode returns False in normal mode."""
+        calculator.set_mode("normal")
+        assert calculator.is_scientific_mode() is False
+
+    def test_is_scientific_mode_true_in_scientific_mode(self, calculator):
+        """Test that is_scientific_mode returns True in scientific mode."""
+        calculator.set_mode("scientific")
+        assert calculator.is_scientific_mode() is True
+
+    def test_is_scientific_mode_after_toggle(self, calculator):
+        """Test is_scientific_mode after toggling modes."""
+        assert calculator.is_scientific_mode() is False
+        calculator.set_mode("scientific")
+        assert calculator.is_scientific_mode() is True
+        calculator.set_mode("normal")
+        assert calculator.is_scientific_mode() is False
+
+
+# ============================================================================
+# SCIENTIFIC CALCULATOR METHODS TESTS
+# ============================================================================
+
+
+class TestScientificCalculatorMethods:
+    """Test suite for scientific methods on Calculator (sin, cos, tan, exp)."""
+
+    def test_sin_zero(self, calculator):
+        """Test sin(0) = 0."""
+        assert calculator.sin(0) == pytest.approx(0.0)
+
+    def test_sin_pi_over_2(self, calculator):
+        """Test sin(π/2) ≈ 1."""
+        assert calculator.sin(math.pi / 2) == pytest.approx(1.0)
+
+    def test_sin_with_float(self, calculator):
+        """Test sin with float operand."""
+        assert calculator.sin(1.5) == pytest.approx(math.sin(1.5))
+
+    def test_sin_negative(self, calculator):
+        """Test sin with negative operand."""
+        assert calculator.sin(-1.0) == pytest.approx(math.sin(-1.0))
+
+    def test_sin_bool_raises_type_error(self, calculator):
+        """Test sin(True) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.sin(True)
+
+    def test_sin_none_raises_type_error(self, calculator):
+        """Test sin(None) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.sin(None)
+
+    def test_sin_string_raises_type_error(self, calculator):
+        """Test sin(string) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.sin("1.0")
+
+    def test_sin_records_history(self, calculator):
+        """Test that sin operation is recorded in history."""
+        calculator.sin(0)
+        history = calculator.get_history()
+        assert len(history) > 0
+        assert history[-1].operation_name == "sin"
+        assert history[-1].operands == [0]
+
+    def test_cos_zero(self, calculator):
+        """Test cos(0) = 1."""
+        assert calculator.cos(0) == pytest.approx(1.0)
+
+    def test_cos_pi(self, calculator):
+        """Test cos(π) ≈ -1."""
+        assert calculator.cos(math.pi) == pytest.approx(-1.0)
+
+    def test_cos_with_float(self, calculator):
+        """Test cos with float operand."""
+        assert calculator.cos(1.5) == pytest.approx(math.cos(1.5))
+
+    def test_cos_negative(self, calculator):
+        """Test cos with negative operand."""
+        assert calculator.cos(-1.0) == pytest.approx(math.cos(-1.0))
+
+    def test_cos_bool_raises_type_error(self, calculator):
+        """Test cos(True) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cos(True)
+
+    def test_cos_none_raises_type_error(self, calculator):
+        """Test cos(None) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.cos(None)
+
+    def test_cos_records_history(self, calculator):
+        """Test that cos operation is recorded in history."""
+        calculator.cos(0)
+        history = calculator.get_history()
+        assert len(history) > 0
+        assert history[-1].operation_name == "cos"
+
+    def test_tan_zero(self, calculator):
+        """Test tan(0) = 0."""
+        assert calculator.tan(0) == pytest.approx(0.0)
+
+    def test_tan_pi_over_4(self, calculator):
+        """Test tan(π/4) ≈ 1."""
+        assert calculator.tan(math.pi / 4) == pytest.approx(1.0)
+
+    def test_tan_with_float(self, calculator):
+        """Test tan with float operand."""
+        assert calculator.tan(0.5) == pytest.approx(math.tan(0.5))
+
+    def test_tan_negative(self, calculator):
+        """Test tan with negative operand."""
+        assert calculator.tan(-1.0) == pytest.approx(math.tan(-1.0))
+
+    def test_tan_bool_raises_type_error(self, calculator):
+        """Test tan(True) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.tan(True)
+
+    def test_tan_none_raises_type_error(self, calculator):
+        """Test tan(None) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.tan(None)
+
+    def test_tan_records_history(self, calculator):
+        """Test that tan operation is recorded in history."""
+        calculator.tan(0)
+        history = calculator.get_history()
+        assert len(history) > 0
+        assert history[-1].operation_name == "tan"
+
+    def test_exp_zero(self, calculator):
+        """Test exp(0) = 1."""
+        assert calculator.exp(0) == pytest.approx(1.0)
+
+    def test_exp_one(self, calculator):
+        """Test exp(1) ≈ e."""
+        assert calculator.exp(1) == pytest.approx(math.e)
+
+    def test_exp_with_float(self, calculator):
+        """Test exp with float operand."""
+        assert calculator.exp(1.5) == pytest.approx(math.exp(1.5))
+
+    def test_exp_negative(self, calculator):
+        """Test exp with negative operand."""
+        assert calculator.exp(-1.0) == pytest.approx(math.exp(-1.0))
+
+    def test_exp_bool_raises_type_error(self, calculator):
+        """Test exp(True) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.exp(True)
+
+    def test_exp_none_raises_type_error(self, calculator):
+        """Test exp(None) raises TypeError."""
+        with pytest.raises(TypeError):
+            calculator.exp(None)
+
+    def test_exp_records_history(self, calculator):
+        """Test that exp operation is recorded in history."""
+        calculator.exp(0)
+        history = calculator.get_history()
+        assert len(history) > 0
+        assert history[-1].operation_name == "exp"
+
+    def test_multiple_scientific_operations_recorded(self, calculator):
+        """Test that multiple scientific operations are all recorded."""
+        calculator.sin(1.0)
+        calculator.cos(1.0)
+        calculator.tan(1.0)
+        calculator.exp(1.0)
+        history = calculator.get_history()
+        assert len(history) == 4
+        assert [rec.operation_name for rec in history] == ["sin", "cos", "tan", "exp"]
+
+    def test_scientific_operations_with_different_inputs(self, calculator):
+        """Test scientific operations with various inputs."""
+        sin_result = calculator.sin(math.pi / 6)
+        assert sin_result == pytest.approx(0.5)
+
+        cos_result = calculator.cos(math.pi / 3)
+        assert cos_result == pytest.approx(0.5)
+
+        tan_result = calculator.tan(math.pi / 4)
+        assert tan_result == pytest.approx(1.0)
+
+        exp_result = calculator.exp(0)
+        assert exp_result == pytest.approx(1.0)
