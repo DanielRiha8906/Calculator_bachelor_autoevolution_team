@@ -1,5 +1,147 @@
 ## Run: update-diagrams (2026-04-19)
 
+- branch: task/issue-182-documentation
+- files changed: artifacts/class_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect that Calculator.__init__ calls both register_basic_operations() and register_scientific_operations() (stub); diagrams were otherwise accurate for the current src/ state
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 84.1s | Cost: $0.389732 USD | Turns: 19
+
+## Run: issue-182-documentation (2026-04-19)
+
+- branch: task/issue-182-documentation
+- files changed: README.md, docs/README.md, docs/ARCHITECTURE.md, docs/API_REFERENCE.md, docs/USER_GUIDE.md, docs/EXTENDING.md, tests/test_documentation.py
+- purpose: Add comprehensive documentation for the calculator application (issue #182) — user guide, architecture reference, API reference, extension guide, and updated root README
+- risks: None — purely additive changes; no existing source or test files modified
+- tests passed: Yes — 44 new tests pass; full suite (1,068 tests) passes
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/214
+- target: exp2/naive-team
+
+Duration: 531.4s | Cost: $1.370808 USD | Turns: 17
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-179-modularization-naive-team
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect modularization from issue-179 — new operations/ package (Operation ABC, OperationRegistry, 12 concrete operation classes, register_basic_operations, register_scientific_operations stub), new presentation/ package (presentation.cli, presentation.interactive), Calculator._registry field, and backward-compat re-export shims for src/cli.py and src/user_input.py
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 215.8s | Cost: $0.569716 USD | Turns: 15
+
+## Run: issue-179-modularization-naive-team (2026-04-19)
+
+- branch: task/issue-179-modularization-naive-team
+- files changed: src/operations/__init__.py (created), src/operations/base.py (created), src/operations/basic.py (created), src/operations/scientific.py (created), src/presentation/__init__.py (created), src/presentation/cli.py (created), src/presentation/interactive.py (created), src/logic/state.py (modified — registry init), src/cli.py (re-export), src/user_input.py (re-export), src/__init__.py (added OperationRegistry export), src/__main__.py (updated imports), tests/test_operations_base.py (created), tests/test_operations_basic.py (created), tests/test_cli.py (added compat tests), tests/test_user_input.py (added compat tests), tests/test_logic_separation.py (added registry tests)
+- purpose: Modularize calculator into operations, logic, and presentation layers; add OperationRegistry extension point for future scientific mode
+- risks: Backward-compat re-exports add dual import paths; scientific.py is a stub with no implementation — future implementer must populate it
+- tests passed: yes — 1024 tests (129 new + 895 existing)
+- worktree/branch: task/issue-179-modularization-naive-team
+- PR target: exp2/naive-team
+
+Duration: 622.8s | Cost: $1.516451 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-173-logic-separation
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect logic separation — new ArithmeticEngine class (src/logic/core.py) for pure stateless arithmetic, Calculator (src/logic/state.py) now delegates to ArithmeticEngine then records in OperationHistory, src/calculator.py is a backward-compat re-export shim
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 493.2s | Cost: $1.008632 USD | Turns: 19
+
+## Run: issue-173-logic-separation (2026-04-19)
+
+- branch: task/issue-173-logic-separation
+- files changed: src/logic/__init__.py (created), src/logic/core.py (created), src/logic/state.py (created), src/calculator.py (re-export), src/__init__.py (import update), src/cli.py (import update), src/user_input.py (import update), tests/test_logic_separation.py (created), tests/test_calculator.py (import update), tests/test_cli.py (import update), tests/test_logging.py (import update), tests/test_user_input.py (import update)
+- purpose: Separate calculator logic from interface — extract arithmetic operations into src/logic/core.py (ArithmeticEngine) and state management into src/logic/state.py (Calculator); presentation layers now import from src.logic with unidirectional dependency
+- risks: src/calculator.py is now a thin re-export; if removed, callers must update imports. No behavioral changes.
+- tests passed: yes — 895 tests (172 new logic separation tests + 723 existing)
+- worktree/branch: task/issue-173-logic-separation
+- PR target: exp2/naive-team
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/208
+
+Duration: 432.6s | Cost: $1.141002 USD | Turns: 16
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-170-error-logging
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect error logging added in issue-170 — new logging_config module (setup_logging, logger), __main__ calling setup_logging(), and logger.error() calls at all error paths in Calculator, cli, and user_input
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 200.1s | Cost: $0.533709 USD | Turns: 20
+
+## Run: issue-170-error-logging (2026-04-19)
+
+- branch: task/issue-170-error-logging
+- files changed: src/logging_config.py (created), src/calculator.py (modified), src/cli.py (modified), src/user_input.py (modified), src/__main__.py (modified), tests/test_logging.py (created), tests/test_calculator.py (modified), tests/test_cli.py (modified), tests/test_user_input.py (modified)
+- purpose: Add error logging to the calculator — all error paths in calculator, CLI, and user_input now emit ERROR-level log entries via Python's stdlib logging module; logging_config.py provides centralized setup
+- risks: Log file (calculator.log) written to working directory; no sensitive data beyond operands; no behavior change to existing API or exception semantics
+- tests passed: yes — 723 tests (91 new logging tests, 632 existing tests unchanged)
+- worktree/branch: task/issue-170-error-logging
+- PR target: exp2/naive-team
+
+Duration: 446.8s | Cost: $1.352453 USD | Turns: 17
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-167-history
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include OperationRecord and OperationHistory classes added in issue-167, Calculator._history field, get_history()/clear_history() methods, and history recording (add_record calls) after each successful Calculator operation
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 166.6s | Cost: $0.438934 USD | Turns: 17
+
+## Run: issue-167-history (2026-04-19)
+
+- branch: task/issue-167-history
+- files changed: src/history.py (created), src/calculator.py (modified), src/__init__.py (modified), tests/test_history.py (created), tests/test_calculator.py (modified)
+- purpose: Add session-based operation history to calculator — records operation name, operands, result, and timestamp for each successful arithmetic call; exposes get_history() and clear_history()
+- risks: Unbounded memory growth for long-running sessions; thread safety not guaranteed (single-threaded CLI usage assumed)
+- tests passed: 76 new tests (34 unit + 42 integration); all 374 pre-existing tests pass
+- PR: https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/200
+- merge target: exp2/naive-team
+
+Duration: 306.3s | Cost: $0.930125 USD | Turns: 18
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-164-retry-logic
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include input_retry module (RetryLimitExceeded, InputRetryConfig, validate_with_retry, DEFAULT_MAX_RETRIES) and retry-limit logic added to user_input (OperandRetryExceeded, MAX_RETRIES, op/operand retry counters)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 139.5s | Cost: $0.369915 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-19)
+
+- branch: task/issue-161-cli-mode
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to include cli module (run_cli, parse_and_evaluate, _eval_node) and __main__ dispatch logic added in issue-161
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 90.9s | Cost: $0.320149 USD | Turns: 18
+
+## Run: issue-161-cli-mode (2026-04-19)
+
+- branch: task/issue-161-cli-mode
+- pr target: exp2/naive-team
+- files changed: src/cli.py (new), src/__main__.py (modified), tests/test_cli.py (new)
+- purpose: Add CLI mode — parse infix arithmetic expressions from argv and evaluate via Calculator; dispatch to interactive mode when no args are given
+- risks: __main__.py now exits with a non-zero code on CLI errors; existing interactive mode is unchanged
+- tests passed: 88 new CLI tests passed; 482 total tests passed, 0 regressions
+
+Duration: 275.9s | Cost: $0.750325 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-19)
+
 - branch: task/issue-149-user-input
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to include user_input module added in issue-149 (InvalidInputError, OPERATIONS, parse_number, get_operands, execute_operation, format_result, run_interactive)
@@ -102,3 +244,15 @@ Duration: 56.9s | Cost: $0.205081 USD | Turns: 15
 - tests passed: N/A
 
 Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
+
+## Run: issue-164-retry-logic (2026-04-19)
+
+- branch: task/issue-164-retry-logic
+- files changed: src/input_retry.py (created), src/user_input.py (modified), tests/test_input_retry.py (created), tests/test_user_input.py (modified)
+- purpose: Add input validation with retry logic (MAX_RETRIES=3) for interactive calculator mode — operation selection and operand input both enforce retry limits
+- risks: Existing tests that expected infinite retries could break; mitigated by running full suite (170 tests pass)
+- tests passed: yes — 170 tests (49 new unit tests for input_retry module, 25 new integration tests for user_input retry behavior, 96 existing tests unchanged)
+- worktree/branch: task/issue-164-retry-logic
+- PR target: exp2/naive-team
+
+Duration: 453.3s | Cost: $1.005829 USD | Turns: 15

@@ -1,6 +1,26 @@
 @startuml class_diagram
 
+class ArithmeticEngine {
+    +add(a: int|float, b: int|float) : int|float
+    +subtract(a: int|float, b: int|float) : int|float
+    +multiply(a: int|float, b: int|float) : int|float
+    +divide(a: int|float, b: int|float) : float
+    +factorial(n: int) : int
+    +square(x: int|float) : int|float
+    +cube(x: int|float) : int|float
+    +square_root(x: int|float) : float
+    +cube_root(x: int|float) : float
+    +power(base: int|float, exponent: int|float) : float
+    +log10(x: int|float) : float
+    +natural_log(x: int|float) : float
+}
+
 class Calculator {
+    -_engine: ArithmeticEngine
+    -_history: OperationHistory
+    -_registry: OperationRegistry
+    +get_history() : list
+    +clear_history() : None
     +add(a, b) : float
     +subtract(a, b) : float
     +multiply(a, b) : float
@@ -15,10 +35,72 @@ class Calculator {
     +natural_log(x: int|float) : float
 }
 
+class OperationHistory {
+    -_records: list[OperationRecord]
+    +add_record(operation_name: str, operands: list, result: object, timestamp: datetime) : None
+    +get_history() : list[OperationRecord]
+    +clear_history() : None
+    +__len__() : int
+}
+
+class OperationRecord <<dataclass>> {
+    +operation_name: str
+    +operands: list
+    +result: object
+    +timestamp: datetime
+}
+
+abstract class Operation {
+    {abstract} +name() : str
+    {abstract} +execute(*args: int|float) : float
+    {abstract} +operand_count() : int
+}
+
+class OperationRegistry {
+    -_operations: dict[str, Operation]
+    +register(operation_name: str, op: Operation) : None
+    +get(operation_name: str) : Operation|None
+    +list_operations() : list[str]
+    +is_registered(operation_name: str) : bool
+}
+
+package "operations.basic (binary)" <<Rectangle>> {
+    class Add
+    class Subtract
+    class Multiply
+    class Divide
+    class Power
+}
+
+package "operations.basic (unary)" <<Rectangle>> {
+    class Factorial
+    class Square
+    class Cube
+    class SquareRoot
+    class CubeRoot
+    class Log10
+    class NaturalLog
+}
+
 class InvalidInputError {
 }
 
-class "user_input" <<module>> {
+class OperandRetryExceeded {
+}
+
+class RetryLimitExceeded {
+}
+
+class InputRetryConfig <<dataclass>> {
+    +max_attempts: int
+}
+
+class "__main__" <<module>> {
+    +main() : None
+}
+
+class "presentation.interactive" <<module>> {
+    +MAX_RETRIES : int
     +OPERATIONS : dict[str, tuple[str, int]]
     +parse_number(input_str: str) : int|float
     +get_operands(operation: str) : list[int|float]
@@ -27,78 +109,335 @@ class "user_input" <<module>> {
     +run_interactive() : None
 }
 
+class "input_retry" <<module>> {
+    +DEFAULT_MAX_RETRIES : int
+    +validate_with_retry(input_fn: Callable, validator: Callable, error_formatter: Callable, config: InputRetryConfig|None) : T
+}
+
+class "presentation.cli" <<module>> {
+    +_eval_node(node: ast.expr, calc: Calculator) : int|float
+    +parse_and_evaluate(expression: str, calc: Calculator) : int|float
+    +run_cli(args: list[str]) : int
+}
+
+class "logging_config" <<module>> {
+    +logger : logging.Logger
+    +setup_logging(log_file: str) : logging.Logger
+}
+
+class "calculator" <<module>> {
+}
+
+class "cli" <<module>> {
+}
+
+class "user_input" <<module>> {
+}
+
+class "operations.basic" <<module>> {
+    +register_basic_operations(registry: OperationRegistry) : None
+}
+
+class "operations.scientific" <<module>> {
+    +register_scientific_operations(registry: OperationRegistry) : None
+}
+
+Calculator "1" *-- "1" ArithmeticEngine : delegates to
+Calculator "1" *-- "1" OperationHistory : records via
+Calculator "1" *-- "1" OperationRegistry : looks up via
+OperationHistory "1" *-- "*" OperationRecord : stores
+OperationRegistry "1" o-- "*" Operation : manages
+
+Operation <|-- Add
+Operation <|-- Subtract
+Operation <|-- Multiply
+Operation <|-- Divide
+Operation <|-- Power
+Operation <|-- Factorial
+Operation <|-- Square
+Operation <|-- Cube
+Operation <|-- SquareRoot
+Operation <|-- CubeRoot
+Operation <|-- Log10
+Operation <|-- NaturalLog
+
 Exception <|-- InvalidInputError
-"user_input" ..> Calculator : uses
-"user_input" ..> InvalidInputError : raises
+Exception <|-- OperandRetryExceeded
+Exception <|-- RetryLimitExceeded
+
+"__main__" ..> "presentation.cli" : dispatches to (argv present)
+"__main__" ..> "presentation.interactive" : dispatches to (no argv)
+"__main__" ..> "logging_config" : calls setup_logging()
+"presentation.interactive" ..> Calculator : uses
+"presentation.interactive" ..> InvalidInputError : raises
+"presentation.interactive" ..> OperandRetryExceeded : raises
+"presentation.interactive" ..> "input_retry" : imports DEFAULT_MAX_RETRIES
+"presentation.interactive" ..> "logging_config" : uses logger
+"input_retry" ..> RetryLimitExceeded : raises
+"input_retry" ..> InputRetryConfig : uses
+"presentation.cli" ..> Calculator : uses
+"presentation.cli" ..> "logging_config" : uses logger
+ArithmeticEngine ..> "logging_config" : uses logger
+"calculator" ..> Calculator : re-exports
+"cli" ..> "presentation.cli" : re-exports
+"user_input" ..> "presentation.interactive" : re-exports
+"operations.basic" ..> OperationRegistry : registers into
+"operations.scientific" ..> OperationRegistry : registers into (stub)
+
+note right of ArithmeticEngine
+  Stateless pure arithmetic layer
+  (src/logic/core.py). No history recording.
+  Raises documented exceptions; calls
+  logger.error() before each raise.
+  No imports from any presentation layer.
+end note
+
+note right of Calculator::_engine
+  Created in __init__; all arithmetic
+  operations delegate to this engine.
+  ArithmeticEngine is stateless — no
+  history recording occurs here.
+end note
+
+note right of Calculator::_history
+  Created in __init__; shared across
+  all operation calls on this instance.
+end note
+
+note right of Calculator::_registry
+  Created in __init__; populated by
+  register_basic_operations() and
+  register_scientific_operations() (stub).
+  Provides dynamic operation lookup by
+  name string.
+end note
+
+note right of Calculator::get_history
+  Delegates to OperationHistory.get_history().
+  Returns a shallow copy (list) of records.
+end note
 
 note right of Calculator::divide
-  Raises ZeroDivisionError when b == 0
+  Delegates to ArithmeticEngine.divide().
+  ArithmeticEngine raises ZeroDivisionError
+  when b == 0 (logger.error() called before
+  raise inside ArithmeticEngine).
+  History is NOT recorded on error.
 end note
 
 note right of Calculator::factorial
-  Raises TypeError if n is bool or
-  non-integer float. Raises ValueError
-  if n < 0. Accepts float only when it
-  represents an exact integer.
+  Delegates to ArithmeticEngine.factorial().
+  ArithmeticEngine raises TypeError if n is
+  bool or non-integer float; raises ValueError
+  if n < 0. logger.error() called inside
+  ArithmeticEngine before each raise.
+  History recorded only on success.
 end note
 
 note right of Calculator::square
   Returns int for int input, float for
-  float input. Raises TypeError for bool
-  or non-numeric input.
+  float input. ArithmeticEngine raises TypeError
+  for bool or non-numeric input;
+  logger.error() called inside ArithmeticEngine.
 end note
 
 note right of Calculator::cube
   Returns int for int input, float for
-  float input. Raises TypeError for bool
-  or non-numeric input.
+  float input. ArithmeticEngine raises TypeError
+  for bool or non-numeric input;
+  logger.error() called inside ArithmeticEngine.
 end note
 
 note right of Calculator::square_root
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
-  ValueError if x < 0.
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
+  ValueError if x < 0. logger.error() called
+  inside ArithmeticEngine on error.
 end note
 
 note right of Calculator::cube_root
   Always returns float. Supports negative
   values (sign-preserving via copysign).
-  Raises TypeError for bool or non-numeric.
+  ArithmeticEngine raises TypeError for bool
+  or non-numeric; logger.error() on error.
 end note
 
 note right of Calculator::power
-  Always returns float. Raises TypeError
-  if base or exponent is bool or
-  non-numeric.
+  Always returns float. ArithmeticEngine raises
+  TypeError if base or exponent is bool or
+  non-numeric. logger.error() on error.
 end note
 
 note right of Calculator::log10
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
-  ValueError if x <= 0.
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
+  ValueError if x <= 0. logger.error() on error.
 end note
 
 note right of Calculator::natural_log
-  Always returns float. Raises TypeError
-  for bool or non-numeric. Raises
-  ValueError if x <= 0.
+  Always returns float. ArithmeticEngine raises
+  TypeError for bool or non-numeric. Raises
+  ValueError if x <= 0. logger.error() on error.
 end note
 
-note right of "user_input"::OPERATIONS
+note right of OperationRecord
+  Immutable dataclass. Each successful
+  Calculator operation appends one record
+  with its name, operand list, result,
+  and a datetime.now() timestamp.
+end note
+
+note right of OperationHistory::add_record
+  Wraps args into an OperationRecord
+  and appends it to _records.
+end note
+
+note right of OperationHistory::get_history
+  Returns list(self._records) — a
+  defensive shallow copy so callers
+  cannot mutate the internal log.
+end note
+
+note right of Operation
+  Abstract base class (src/operations/base.py).
+  All concrete operations implement name(),
+  execute(*args), and operand_count().
+  Each delegates computation to
+  ArithmeticEngine internally.
+end note
+
+note right of OperationRegistry
+  Maps operation name strings to Operation
+  instances. Calculator creates one and
+  populates it via register_basic_operations().
+  Supports dynamic extension (e.g. scientific).
+end note
+
+note right of "operations.basic"
+  register_basic_operations() registers all
+  12 operations (Add, Subtract, Multiply,
+  Divide, Power, Factorial, Square, Cube,
+  SquareRoot, CubeRoot, Log10, NaturalLog)
+  into the given OperationRegistry.
+end note
+
+note right of "operations.scientific"
+  register_scientific_operations() is a stub
+  placeholder for future sin, cos, tan, log, etc.
+  Currently registers nothing.
+end note
+
+note right of "presentation.interactive"::MAX_RETRIES
+  Initialized from input_retry.DEFAULT_MAX_RETRIES
+  (currently 3). Controls retry limits for
+  both operation selection and operand input.
+end note
+
+note right of "presentation.interactive"::OPERATIONS
   Maps each operation name to
   (Calculator method name, operand count).
   12 operations supported.
 end note
 
-note right of "user_input"::parse_number
+note right of "presentation.interactive"::parse_number
   Tries int first, then float.
-  Raises InvalidInputError on failure.
+  Raises InvalidInputError on failure;
+  logger.error() is called before raising.
 end note
 
-note right of "user_input"::execute_operation
+note right of "presentation.interactive"::get_operands
+  Retries each operand up to MAX_RETRIES
+  times. Raises OperandRetryExceeded when
+  all attempts for an operand are exhausted.
+end note
+
+note right of "presentation.interactive"::execute_operation
   Catches ZeroDivisionError, ValueError,
-  and TypeError; returns error string
-  instead of propagating exception.
+  and TypeError; calls logger.error() then
+  returns error string instead of propagating.
+end note
+
+note right of "input_retry"::validate_with_retry
+  Generic retry loop (type T). Calls input_fn
+  repeatedly until validator returns True or
+  max_attempts reached. error_formatter receives
+  (value, attempt, max). Raises RetryLimitExceeded
+  when exhausted.
+end note
+
+note right of InputRetryConfig
+  max_attempts defaults to
+  DEFAULT_MAX_RETRIES (3).
+end note
+
+note right of "presentation.cli"::_eval_node
+  Recursively walks ast.expr nodes.
+  Supports Constant, UnaryOp (USub/UAdd),
+  and BinOp (+, -, *, /, **).
+  Calls Calculator methods directly;
+  history recording is handled internally
+  by Calculator (via ArithmeticEngine).
+end note
+
+note right of "presentation.cli"::parse_and_evaluate
+  Parses expression with ast.parse
+  (eval mode). Never calls eval().
+  Calls logger.error() on SyntaxError
+  before re-raising as ValueError.
+end note
+
+note right of "presentation.cli"::run_cli
+  Returns exit code 0 on success, 1
+  on any error. Errors printed to stderr.
+  logger.error() called on each caught
+  ZeroDivisionError, ValueError, TypeError.
+end note
+
+note right of "__main__"::main
+  Calls setup_logging() first, then
+  dispatches: len(sys.argv) > 1 →
+  run_cli(sys.argv[1:]); else →
+  run_interactive().
+end note
+
+note right of "logging_config"::setup_logging
+  Configures the "calculator" named logger
+  with a FileHandler (ERROR level, timestamp
+  format). Idempotent — skips setup if
+  handlers already attached. Default log
+  file: calculator.log in working directory.
+end note
+
+note right of "logging_config"::logger
+  Module-level convenience reference:
+  logging.getLogger("calculator").
+  ArithmeticEngine, presentation.cli, and
+  presentation.interactive each obtain the
+  same named logger directly via
+  logging.getLogger("calculator").
+end note
+
+note right of "calculator"
+  src/calculator.py is a backward-compatibility
+  re-export shim. Imports Calculator from
+  src.logic.state and re-exports it so
+  existing callers continue to work.
+end note
+
+note right of "cli"
+  src/cli.py is a backward-compatibility
+  re-export shim. Imports run_cli and
+  parse_and_evaluate from
+  src.presentation.cli and re-exports them.
+end note
+
+note right of "user_input"
+  src/user_input.py is a backward-compatibility
+  re-export shim. Imports run_interactive,
+  parse_number, get_operands, execute_operation,
+  format_result, InvalidInputError, and
+  OperandRetryExceeded from
+  src.presentation.interactive and re-exports them.
 end note
 
 @enduml

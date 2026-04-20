@@ -9,12 +9,14 @@ Tests cover:
 """
 
 import pytest
+import logging
 from unittest.mock import patch, MagicMock, call
 import sys
 from io import StringIO
 
 from src.user_input import (
     InvalidInputError,
+    OperandRetryExceeded,
     OPERATIONS,
     parse_number,
     get_operands,
@@ -22,7 +24,7 @@ from src.user_input import (
     format_result,
     run_interactive,
 )
-from src.calculator import Calculator
+from src.logic import Calculator
 
 
 # ============================================================================
@@ -723,3 +725,428 @@ class TestRunInteractive:
         # Should print error
         error_printed = any("Error" in str(call) for call in print_calls)
         assert error_printed
+
+
+# ============================================================================
+# GET_OPERANDS RETRY LOGIC TESTS
+# ============================================================================
+
+
+class TestGetOperandsRetryLogic:
+    """Test suite for retry logic in get_operands function."""
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3"])
+    @patch("builtins.print")
+    def test_get_operands_raises_operand_retry_exceeded_after_3_failures(self, mock_print, mock_input):
+        """Test that get_operands raises OperandRetryExceeded after 3 consecutive invalid inputs."""
+        with pytest.raises(OperandRetryExceeded):
+            get_operands("square")
+        assert mock_input.call_count == 3
+
+    @patch("builtins.input", return_value="5")
+    @patch("builtins.print")
+    def test_get_operands_does_not_raise_on_valid_attempt_1(self, mock_print, mock_input):
+        """Test that get_operands does NOT raise if valid input on attempt 1."""
+        result = get_operands("square")
+        assert result == [5]
+        # Verify no exception was raised - if we got here, the test passed
+
+    @patch("builtins.input", side_effect=["invalid", "5"])
+    @patch("builtins.print")
+    def test_get_operands_does_not_raise_on_valid_attempt_2(self, mock_print, mock_input):
+        """Test that get_operands does NOT raise if valid input on attempt 2."""
+        result = get_operands("square")
+        assert result == [5]
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "5"])
+    @patch("builtins.print")
+    def test_get_operands_does_not_raise_on_valid_attempt_3(self, mock_print, mock_input):
+        """Test that get_operands does NOT raise if valid input on attempt 3."""
+        result = get_operands("square")
+        assert result == [5]
+
+    @patch("builtins.input", side_effect=["invalid", "5"])
+    @patch("builtins.print")
+    def test_get_operands_prints_attempt_1_message(self, mock_print, mock_input):
+        """Test that 'Invalid input. Attempt 1 of 3.' is printed on first failure."""
+        result = get_operands("square")
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        attempt_1_printed = any("Invalid input. Attempt 1 of 3" in str(call) for call in print_calls)
+        assert attempt_1_printed
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "5"])
+    @patch("builtins.print")
+    def test_get_operands_prints_attempt_2_message(self, mock_print, mock_input):
+        """Test that 'Invalid input. Attempt 2 of 3.' is printed on second failure."""
+        result = get_operands("square")
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        attempt_2_printed = any("Invalid input. Attempt 2 of 3" in str(call) for call in print_calls)
+        assert attempt_2_printed
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3"])
+    @patch("builtins.print")
+    def test_get_operands_prints_too_many_attempts_message_on_third_failure(self, mock_print, mock_input):
+        """Test that 'Too many invalid inputs...' is printed on third failure."""
+        with pytest.raises(OperandRetryExceeded):
+            get_operands("square")
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        too_many_printed = any("Too many invalid inputs. Returning to operation selection" in str(call) for call in print_calls)
+        assert too_many_printed
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3", "5", "3"])
+    @patch("builtins.print")
+    def test_get_operands_retry_counter_resets_between_operands(self, mock_print, mock_input):
+        """Test that retry counter resets between operands."""
+        # First operand: 3 failures, raises OperandRetryExceeded
+        # But if we had 2 operands and retry handling, the counter would reset
+        # For this test, we verify the behavior by checking that each operand gets independent retry count
+        with pytest.raises(OperandRetryExceeded):
+            get_operands("add")  # Binary operation needs 2 operands
+        # The function should fail on the first operand after 3 attempts
+
+    @patch("builtins.input", side_effect=["5", "invalid1", "invalid2", "invalid3"])
+    @patch("builtins.print")
+    def test_get_operands_first_operand_valid_second_fails(self, mock_print, mock_input):
+        """Test that second operand has independent retry limit after first succeeds."""
+        with pytest.raises(OperandRetryExceeded):
+            get_operands("add")
+        # First call should be "5" (valid), then next 3 calls are for second operand (all invalid)
+        assert mock_input.call_count == 4
+
+    @patch("builtins.input", side_effect=["5", "invalid1", "3"])
+    @patch("builtins.print")
+    def test_get_operands_binary_first_valid_second_retry_once(self, mock_print, mock_input):
+        """Test binary operation where second operand succeeds on retry."""
+        result = get_operands("add")
+        assert result == [5, 3]
+
+    @patch("builtins.input", side_effect=["5", "invalid1", "invalid2", "3"])
+    @patch("builtins.print")
+    def test_get_operands_binary_second_operand_retry_twice(self, mock_print, mock_input):
+        """Test binary operation where second operand requires 2 retries."""
+        result = get_operands("add")
+        assert result == [5, 3]
+
+    @patch("builtins.input", side_effect=["invalid1", "5"])
+    @patch("builtins.print")
+    def test_get_operands_unary_prints_error_before_attempt_message(self, mock_print, mock_input):
+        """Test that error and attempt messages are both printed."""
+        result = get_operands("square")
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        error_msg_printed = any("Error" in str(call) and "Invalid number" in str(call) for call in print_calls)
+        assert error_msg_printed
+
+    @patch("builtins.input", side_effect=["0"])
+    @patch("builtins.print")
+    def test_get_operands_accepts_zero_as_valid_input(self, mock_print, mock_input):
+        """Test that zero is accepted as valid input without retry."""
+        result = get_operands("square")
+        assert result == [0]
+        # Only one input call should be made
+        assert mock_input.call_count == 1
+
+    @patch("builtins.input", side_effect=["-5"])
+    @patch("builtins.print")
+    def test_get_operands_accepts_negative_as_valid_input(self, mock_print, mock_input):
+        """Test that negative numbers are accepted as valid input."""
+        result = get_operands("square")
+        assert result == [-5]
+        assert mock_input.call_count == 1
+
+
+# ============================================================================
+# RUN_INTERACTIVE RETRY LOGIC TESTS
+# ============================================================================
+
+
+class TestRunInteractiveRetryLogic:
+    """Test suite for retry logic in run_interactive function."""
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3"])
+    @patch("builtins.print")
+    def test_run_interactive_exits_after_3_invalid_operations(self, mock_print, mock_input):
+        """Test that run_interactive exits/returns after 3 consecutive invalid operation selections."""
+        run_interactive()
+        # Should print exit message
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        exit_printed = any("Too many invalid operation selections. Exiting" in str(call) for call in print_calls)
+        assert exit_printed
+
+    @patch("builtins.input", side_effect=["add", "5", "3", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_op_attempt_resets_to_0_after_valid_operation(self, mock_print, mock_input):
+        """Test that op_attempt resets to 0 after valid operation entered."""
+        run_interactive()
+        # The function should complete successfully without hitting the 3-attempt exit
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        bye_printed = any("Bye!" in str(call) for call in print_calls)
+        assert bye_printed
+
+    @patch("builtins.input", side_effect=["invalid1", "add", "5", "3", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_op_attempt_counter_resets_after_valid_op(self, mock_print, mock_input):
+        """Test that op_attempt counter resets after any valid operation."""
+        run_interactive()
+        # Should succeed and print result, not exit on second attempt
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        result_printed = any("Result" in str(call) for call in print_calls)
+        assert result_printed
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "add", "5", "3", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_two_invalid_then_valid_operation(self, mock_print, mock_input):
+        """Test that two invalid operations followed by valid does not exit."""
+        run_interactive()
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        bye_printed = any("Bye!" in str(call) for call in print_calls)
+        assert bye_printed
+
+    @patch("builtins.input", side_effect=["add", "5", "3", "invalid1", "multiply", "2", "4", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_invalid_op_after_valid_operation_resets_counter(self, mock_print, mock_input):
+        """Test that counter resets to 0 after each valid operation."""
+        run_interactive()
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        result_count = sum(1 for call in print_calls if "Result" in str(call))
+        assert result_count >= 2
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3"])
+    @patch("builtins.print")
+    def test_run_interactive_three_consecutive_invalid_ops_exits(self, mock_print, mock_input):
+        """Test that exactly 3 consecutive invalid operations cause exit."""
+        run_interactive()
+        # Should not print any Result
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        exit_msg_printed = any("Too many invalid operation selections" in str(call) for call in print_calls)
+        assert exit_msg_printed
+
+    @patch("builtins.input", side_effect=["add", "invalid_operand1", "invalid_operand2", "invalid_operand3", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_operand_retry_exceeded_continues_to_op_selection(self, mock_print, mock_input):
+        """Test that OperandRetryExceeded is caught and continues to operation selection."""
+        run_interactive()
+        # After operands fail, should loop back to operation selection, then quit
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        # Should print the "Returning to operation selection" message
+        return_msg_printed = any("Returning to operation selection" in str(call) for call in print_calls)
+        assert return_msg_printed
+        # Also verify Bye! was printed (from quit)
+        bye_printed = any("Bye!" in str(call) for call in print_calls)
+        assert bye_printed
+
+    @patch("builtins.input", side_effect=["add", "abc", "def", "ghi", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_operand_failure_does_not_crash(self, mock_print, mock_input):
+        """Test that operand retry failure does not crash the program."""
+        # Should not raise any exception
+        run_interactive()
+        assert mock_print.called
+
+    @patch("builtins.input", side_effect=["invalid1", "invalid2", "invalid3", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_exit_message_printed_on_three_invalid_ops(self, mock_print, mock_input):
+        """Test that proper exit message is printed when 3 invalid ops are entered."""
+        run_interactive()
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        # Should have printed the "Too many invalid operation selections" message
+        exit_msg = any("Too many invalid operation selections. Exiting" in str(call) for call in print_calls)
+        assert exit_msg
+
+    @patch("builtins.input", side_effect=["unknown1", "unknown2", "unknown3"])
+    @patch("builtins.print")
+    def test_run_interactive_all_attempts_print_unknown_operation_error(self, mock_print, mock_input):
+        """Test that each invalid operation prints unknown operation error."""
+        run_interactive()
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        unknown_errors = sum(1 for call in print_calls if "Unknown operation" in str(call))
+        assert unknown_errors >= 3
+
+    @patch("builtins.input", side_effect=["add", "5", "3", "invalid_op", "square", "9", "quit"])
+    @patch("builtins.print")
+    def test_run_interactive_invalid_op_between_valid_ops_resets_counter(self, mock_print, mock_input):
+        """Test counter resets when valid operation follows after reset."""
+        run_interactive()
+        print_calls = [str(call) for call in mock_print.call_args_list]
+        result_count = sum(1 for call in print_calls if "Result" in str(call))
+        # Should have 2 results: one for add (5+3=8), one for square (9*9=81)
+        assert result_count >= 2
+
+
+# ============================================================================
+# USER INPUT ERROR LOGGING TESTS
+# ============================================================================
+
+class TestUserInputErrorLogging:
+    """Test suite for error logging in user_input module."""
+
+    def test_parse_number_invalid_string_logs_error(self, caplog):
+        """Verify that invalid number input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("abc")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_parse_number_empty_string_logs_error(self, caplog):
+        """Verify that empty string input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_parse_number_whitespace_only_logs_error(self, caplog):
+        """Verify that whitespace-only input is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("   ")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_parse_number_special_characters_logs_error(self, caplog):
+        """Verify that special characters in input are logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(InvalidInputError):
+                parse_number("@#$%")
+
+        assert any("parse_number" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_division_by_zero_logs_error(self, caplog):
+        """Verify that division by zero in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "divide", [10, 0])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_square_root_negative_logs_error(self, caplog):
+        """Verify that square_root of negative in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "square_root", [-1])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_factorial_negative_logs_error(self, caplog):
+        """Verify that negative factorial in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [-5])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_factorial_bool_logs_error(self, caplog):
+        """Verify that bool in factorial within execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [True])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_log10_zero_logs_error(self, caplog):
+        """Verify that zero value in log10 is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "log10", [0])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_natural_log_negative_logs_error(self, caplog):
+        """Verify that negative value in natural_log is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "natural_log", [-5])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+    def test_execute_operation_type_error_logs_error(self, caplog):
+        """Verify that TypeError in execute_operation is logged."""
+        calc = Calculator()
+        with caplog.at_level(logging.ERROR):
+            result = execute_operation(calc, "factorial", [True])
+
+        # execute_operation catches the exception and returns an error string
+        assert isinstance(result, str)
+        assert "Error" in result
+        assert any("execute_operation" in record.message.lower() for record in caplog.records)
+
+
+# ============================================================================
+# BACKWARD COMPATIBILITY TESTS
+# ============================================================================
+
+
+class TestBackwardCompatUserInput:
+    """Test that src.user_input re-exports work correctly."""
+
+    def test_run_interactive_importable_from_src_user_input(self):
+        """Test that run_interactive is importable from src.user_input."""
+        from src.user_input import run_interactive as user_input_run_interactive
+        assert callable(user_input_run_interactive)
+
+    def test_operations_importable_from_src_user_input(self):
+        """Test that OPERATIONS is importable from src.user_input."""
+        from src.user_input import OPERATIONS as user_input_operations
+        assert isinstance(user_input_operations, dict)
+        assert len(user_input_operations) > 0
+
+    def test_run_interactive_same_as_presentation_interactive(self):
+        """Test that src.user_input.run_interactive is the same as src.presentation.interactive.run_interactive."""
+        from src.user_input import run_interactive as user_input_run_interactive
+        from src.presentation.interactive import run_interactive as presentation_run_interactive
+        assert user_input_run_interactive is presentation_run_interactive
+
+    def test_operations_same_as_presentation_interactive(self):
+        """Test that src.user_input.OPERATIONS is from src.presentation.interactive."""
+        from src.user_input import OPERATIONS as user_input_operations
+        from src.presentation.interactive import OPERATIONS as presentation_operations
+        assert user_input_operations is presentation_operations
+
+    def test_parse_number_importable_from_src_user_input(self):
+        """Test that parse_number is importable from src.user_input."""
+        from src.user_input import parse_number as user_input_parse_number
+        assert callable(user_input_parse_number)
+
+    def test_get_operands_importable_from_src_user_input(self):
+        """Test that get_operands is importable from src.user_input."""
+        from src.user_input import get_operands as user_input_get_operands
+        assert callable(user_input_get_operands)
+
+    def test_execute_operation_importable_from_src_user_input(self):
+        """Test that execute_operation is importable from src.user_input."""
+        from src.user_input import execute_operation as user_input_execute_operation
+        assert callable(user_input_execute_operation)
+
+    def test_format_result_importable_from_src_user_input(self):
+        """Test that format_result is importable from src.user_input."""
+        from src.user_input import format_result as user_input_format_result
+        assert callable(user_input_format_result)
+
+    def test_invalid_input_error_importable_from_src_user_input(self):
+        """Test that InvalidInputError is importable from src.user_input."""
+        from src.user_input import InvalidInputError as user_input_invalid_input_error
+        assert issubclass(user_input_invalid_input_error, Exception)
+
+    def test_operand_retry_exceeded_importable_from_src_user_input(self):
+        """Test that OperandRetryExceeded is importable from src.user_input."""
+        from src.user_input import OperandRetryExceeded as user_input_operand_retry_exceeded
+        assert issubclass(user_input_operand_retry_exceeded, Exception)

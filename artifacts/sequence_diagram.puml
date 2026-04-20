@@ -2,81 +2,331 @@
 
 actor User
 participant "__main__" as Main
-participant "user_input" as UI
+participant "logging_config" as LogConf
+participant "presentation.cli" as CLI
+participant "presentation.interactive" as UI
+participant "input_retry" as IR
 participant "Calculator" as Calc
+participant "OperationRegistry" as Registry
+participant "ArithmeticEngine" as Engine
+participant "OperationHistory" as Hist
 participant "math" as Math
 
-Main -> UI : run_interactive()
-UI -> Calc : <<create>>
-UI -> User : display numbered operation list
+User -> Main : python -m src [args...]
+Main -> Main : main()
+Main -> LogConf : setup_logging()
+note right of LogConf
+  Configures "calculator" logger with
+  a FileHandler at ERROR level writing
+  to calculator.log. Idempotent.
+end note
+LogConf --> Main : logger (configured)
 
-loop until quit
-    UI -> User : prompt "Select operation:"
-    User -> UI : operation name (e.g. "add")
+alt sys.argv has arguments (CLI mode)
 
-    alt input is 'quit' or 'exit'
-        UI -> User : "Bye!"
-        UI --> Main : return
-    else unknown operation
-        UI -> User : unknown-operation error message
-    else valid operation
+    Main -> CLI : run_cli(sys.argv[1:])
+    CLI -> CLI : expression = " ".join(args)
+    CLI -> Calc : <<create>>
+    activate Calc
+    Calc -> Engine : <<create>>
+    activate Engine
+    Calc -> Hist : <<create>>
+    activate Hist
+    Calc -> Registry : <<create>>
+    activate Registry
+    Calc -> Registry : register_basic_operations(registry)\n[Add, Subtract, Multiply, Divide, Power,\nFactorial, Square, Cube, SquareRoot,\nCubeRoot, Log10, NaturalLog registered]
+    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
+    CLI -> CLI : parse_and_evaluate(expression, calc)
 
-        loop for each required operand
-            UI -> User : prompt "Enter operand [n]:"
-            User -> UI : raw string
-            UI -> UI : parse_number(raw)
-            alt parse fails
-                UI -> User : InvalidInputError message (retry)
-            else parse succeeds
-                note right of UI : operand appended to list
-            end
-        end
-
-        UI -> UI : execute_operation(calc, operation, operands)
-        UI -> Calc : resolved_method(*operands)
-
-        alt add / subtract / multiply
-            Calc --> UI : numeric result
-        else divide — b == 0
-            Calc --> UI : ZeroDivisionError → error string
-        else divide — b != 0
-            Calc --> UI : a / b
-        else factorial — invalid input (bool / non-integer float / negative)
-            Calc --> UI : TypeError or ValueError → error string
-        else factorial — valid n
-            Calc --> UI : n!
-        else square / cube
-            Calc --> UI : x*x or x*x*x
-        else square_root — x < 0
-            Calc --> UI : ValueError → error string
-        else square_root — x >= 0
-            Calc -> Math : sqrt(x)
-            Math --> Calc : float
-            Calc --> UI : float result
-        else cube_root
-            Calc -> Math : copysign(abs(x)^(1/3), x)
-            Math --> Calc : float
-            Calc --> UI : float result
-        else power — invalid types
-            Calc --> UI : TypeError → error string
-        else power — valid
-            Calc --> UI : float(base ** exponent)
-        else log10 / natural_log — x <= 0
-            Calc --> UI : ValueError → error string
-        else log10 — x > 0
-            Calc -> Math : log10(x)
-            Math --> Calc : float
-            Calc --> UI : float result
-        else natural_log — x > 0
-            Calc -> Math : log(x)
-            Math --> Calc : float
-            Calc --> UI : float result
-        end
-
-        UI -> UI : format_result(result) → str
-        UI -> User : "Result: <value>"
-
+    alt SyntaxError during ast.parse
+        CLI -> LogConf : logger.error("parse_and_evaluate: invalid syntax …")
+        CLI --> User : error message (stderr)
+        CLI --> Main : exit code 1
+    else valid parse
+        CLI -> CLI : ast.parse(expression, mode="eval")
     end
+
+    loop recursive _eval_node traversal
+        alt ast.Constant
+            CLI -> CLI : return constant value
+        else ast.UnaryOp (USub)
+            CLI -> Calc : multiply(operand, -1)
+            Calc -> Engine : multiply(operand, -1)
+            Engine --> Calc : result
+            Calc -> Hist : add_record("multiply", [operand, -1], result, now())
+            Calc --> CLI : negated value
+        else ast.BinOp Add
+            CLI -> Calc : add(left, right)
+            Calc -> Engine : add(left, right)
+            Engine --> Calc : result
+            Calc -> Hist : add_record("add", [left, right], result, now())
+            Calc --> CLI : result
+        else ast.BinOp Sub
+            CLI -> Calc : subtract(left, right)
+            Calc -> Engine : subtract(left, right)
+            Engine --> Calc : result
+            Calc -> Hist : add_record("subtract", [left, right], result, now())
+            Calc --> CLI : result
+        else ast.BinOp Mult
+            CLI -> Calc : multiply(left, right)
+            Calc -> Engine : multiply(left, right)
+            Engine --> Calc : result
+            Calc -> Hist : add_record("multiply", [left, right], result, now())
+            Calc --> CLI : result
+        else ast.BinOp Div
+            CLI -> Calc : divide(left, right)
+            Calc -> Engine : divide(left, right)
+            alt b == 0
+                Engine -> LogConf : logger.error("divide: division by zero …")
+                Engine --> Calc : ZeroDivisionError raised
+                note right of Hist : history NOT recorded on error
+                Calc --> CLI : ZeroDivisionError propagated
+                CLI -> LogConf : logger.error("cli: division by zero in expression …")
+                CLI --> User : "Error: Division by zero is not allowed." (stderr)
+                CLI --> Main : exit code 1
+            else b != 0
+                Engine --> Calc : a / b
+                Calc -> Hist : add_record("divide", [left, right], result, now())
+                Calc --> CLI : a / b
+            end
+        else ast.BinOp Pow
+            CLI -> Calc : power(left, right)
+            Calc -> Engine : power(left, right)
+            Engine --> Calc : float result
+            Calc -> Hist : add_record("power", [left, right], result, now())
+            Calc --> CLI : float result
+        else unsupported node / empty expression
+            CLI -> LogConf : logger.error("cli: ValueError …") [if applicable]
+            CLI --> User : error message (stderr)
+            CLI --> Main : exit code 1
+        end
+    end
+
+    CLI --> User : result (stdout)
+    CLI --> Main : exit code 0
+    deactivate Hist
+    deactivate Registry
+    deactivate Engine
+    deactivate Calc
+
+else no arguments (interactive mode)
+
+    Main -> UI : run_interactive()
+    UI -> Calc : <<create>>
+    activate Calc
+    Calc -> Engine : <<create>>
+    activate Engine
+    Calc -> Hist : <<create>>
+    activate Hist
+    Calc -> Registry : <<create>>
+    activate Registry
+    Calc -> Registry : register_basic_operations(registry)\n[12 operations registered]
+    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
+    note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
+    UI -> User : display numbered operation list
+
+    loop until quit or retry limit reached
+        UI -> User : prompt "Select operation:"
+        User -> UI : operation name or 'quit'/'exit'
+
+        alt input is 'quit' or 'exit'
+            UI -> User : "Bye!"
+            UI --> Main : return
+        else unknown operation (op_attempts < MAX_RETRIES)
+            UI -> User : unknown-operation error message
+        else unknown operation (op_attempts >= MAX_RETRIES)
+            UI -> User : max-retries-exceeded error
+            UI --> Main : return
+        else valid operation
+
+            loop for each required operand (up to MAX_RETRIES per operand)
+                UI -> User : prompt "Enter operand [n]:"
+                User -> UI : raw string
+                UI -> UI : parse_number(raw)
+                alt parse fails and attempts < MAX_RETRIES
+                    UI -> LogConf : logger.error("parse_number: could not parse … InvalidInputError")
+                    UI -> User : InvalidInputError message (retry)
+                else parse fails and attempts >= MAX_RETRIES
+                    UI -> LogConf : logger.error("parse_number: could not parse … InvalidInputError")
+                    UI -> UI : raise OperandRetryExceeded
+                    UI -> User : retry-exceeded error message
+                else parse succeeds
+                    note right of UI : operand appended to list
+                end
+            end
+
+            alt OperandRetryExceeded raised
+                note right of UI : skip execute_operation, continue loop
+            else all operands collected
+
+                UI -> UI : execute_operation(calc, operation, operands)
+                UI -> Calc : resolved_method(*operands)
+
+                alt add / subtract / multiply
+                    Calc -> Engine : method(operands)
+                    Engine --> Calc : result
+                    Calc -> Hist : add_record(op, operands, result, now())
+                    Calc --> UI : numeric result
+                else divide — b == 0
+                    Calc -> Engine : divide(a, 0)
+                    Engine -> LogConf : logger.error("divide: division by zero …")
+                    Engine --> Calc : ZeroDivisionError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : ZeroDivisionError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ZeroDivisionError")
+                    UI --> UI : "Error: Division by zero is not allowed."
+                else divide — b != 0
+                    Calc -> Engine : divide(a, b)
+                    Engine --> Calc : a / b
+                    Calc -> Hist : add_record("divide", operands, result, now())
+                    Calc --> UI : a / b
+                else factorial — invalid input (bool / non-integer float / negative)
+                    Calc -> Engine : factorial(n)
+                    Engine -> LogConf : logger.error("factorial: … TypeError/ValueError")
+                    Engine --> Calc : TypeError or ValueError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError or ValueError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError/ValueError")
+                    UI --> UI : error string
+                else factorial — valid n
+                    Calc -> Engine : factorial(n)
+                    Engine --> Calc : n!
+                    Calc -> Hist : add_record("factorial", [n], n!, now())
+                    Calc --> UI : n!
+                else square / cube — invalid type
+                    Calc -> Engine : square/cube(x)
+                    Engine -> LogConf : logger.error("square/cube: invalid type … TypeError")
+                    Engine --> Calc : TypeError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
+                    UI --> UI : error string
+                else square / cube — valid
+                    Calc -> Engine : square/cube(x)
+                    Engine --> Calc : result
+                    Calc -> Hist : add_record(op, [x], result, now())
+                    Calc --> UI : x*x or x*x*x
+                else square_root — x < 0 or invalid type
+                    Calc -> Engine : square_root(x)
+                    Engine -> LogConf : logger.error("square_root: … ValueError/TypeError")
+                    Engine --> Calc : ValueError or TypeError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : ValueError or TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
+                    UI --> UI : error string
+                else square_root — x >= 0
+                    Calc -> Engine : square_root(x)
+                    Engine -> Math : sqrt(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record("square_root", [x], result, now())
+                    Calc --> UI : float result
+                else cube_root
+                    Calc -> Engine : cube_root(x)
+                    Engine -> Math : copysign(abs(x)^(1/3), x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record("cube_root", [x], result, now())
+                    Calc --> UI : float result
+                else power — invalid types
+                    Calc -> Engine : power(base, exponent)
+                    Engine -> LogConf : logger.error("power: invalid type … TypeError")
+                    Engine --> Calc : TypeError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … TypeError")
+                    UI --> UI : error string
+                else power — valid
+                    Calc -> Engine : power(base, exponent)
+                    Engine --> Calc : float(base ** exponent)
+                    Calc -> Hist : add_record("power", [base, exp], result, now())
+                    Calc --> UI : float(base ** exponent)
+                else log10 / natural_log — x <= 0 or invalid type
+                    Calc -> Engine : log10/natural_log(x)
+                    Engine -> LogConf : logger.error("log10/natural_log: … ValueError/TypeError")
+                    Engine --> Calc : ValueError or TypeError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : ValueError or TypeError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
+                    UI --> UI : error string
+                else log10 — x > 0
+                    Calc -> Engine : log10(x)
+                    Engine -> Math : log10(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record("log10", [x], result, now())
+                    Calc --> UI : float result
+                else natural_log — x > 0
+                    Calc -> Engine : natural_log(x)
+                    Engine -> Math : log(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record("natural_log", [x], result, now())
+                    Calc --> UI : float result
+                end
+
+                UI -> UI : format_result(result) → str
+                UI -> User : "Result: <value>"
+
+            end
+
+        end
+    end
+
+    deactivate Hist
+    deactivate Registry
+    deactivate Engine
+    deactivate Calc
+
 end
+
+note over IR
+  input_retry module provides:
+  - DEFAULT_MAX_RETRIES = 3
+  - RetryLimitExceeded exception
+  - InputRetryConfig dataclass
+  - validate_with_retry() generic helper
+  presentation.interactive imports DEFAULT_MAX_RETRIES
+  and enforces limits directly in its loops.
+end note
+
+note over Registry
+  OperationRegistry (src/operations/base.py)
+  maps operation name strings to Operation
+  instances. Populated once in Calculator.__init__
+  via register_basic_operations() from
+  src/operations/basic.py. Supports future
+  extension via register_scientific_operations()
+  (src/operations/scientific.py — stub).
+end note
+
+note over Hist
+  OperationHistory stores OperationRecord
+  entries (operation_name, operands, result,
+  timestamp). Records are only appended on
+  successful operations — errors are not
+  logged. get_history() returns a copy;
+  clear_history() wipes the log.
+end note
+
+note over Engine
+  ArithmeticEngine (src/logic/core.py) is
+  stateless — it performs pure computation
+  and calls logger.error() before raising
+  on invalid input. It never records history.
+  Calculator (src/logic/state.py) delegates
+  all arithmetic here, then records in
+  OperationHistory on success.
+end note
+
+note over LogConf
+  All modules (ArithmeticEngine, presentation.cli,
+  presentation.interactive) obtain the same
+  "calculator" named logger via
+  logging.getLogger("calculator").
+  All error paths emit logger.error() before
+  raising or returning an error string.
+  Log destination: calculator.log (ERROR+).
+end note
 
 @enduml

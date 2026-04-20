@@ -2,57 +2,172 @@
 
 start
 
-:__main__.py invokes run_interactive();
-:Instantiate Calculator;
-:Build operation list from OPERATIONS keys;
-:Display numbered list of available operations;
+:__main__.main() is invoked;
+:setup_logging() → configures "calculator" logger\n(FileHandler, ERROR level, calculator.log);
 
-repeat
+if (sys.argv has arguments?) then (yes — CLI mode)
 
-    :Prompt "Select operation:";
+    partition "presentation.cli.run_cli(args)" {
+        if (args is empty?) then (yes)
+            :Print usage error to stderr;
+            :Return exit code 1;
+            stop
+        else (no)
+            :Join args with spaces → expression string;
+            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
 
-    if (input is 'quit' or 'exit'?) then (yes)
-        :Print "Bye!";
-        stop
-    elseif (input not in OPERATIONS?) then (yes)
-        :Print unknown-operation error;
-    else (valid operation)
-
-        partition "get_operands(operation)" {
-            :Look up operand_count in OPERATIONS;
-            repeat
-                :Prompt user for next operand;
-                if (parse_number(raw) succeeds?) then (yes)
-                    :Append parsed number to operands list;
-                else (InvalidInputError)
-                    :Print error message, retry same operand;
+            partition "parse_and_evaluate(expression, calc)" {
+                :Strip expression;
+                if (expression is empty?) then (yes)
+                    :Raise ValueError "Expression must not be empty";
+                else (no)
+                    :ast.parse(expression, mode="eval");
+                    if (SyntaxError?) then (yes)
+                        :logger.error("parse_and_evaluate: invalid syntax …");
+                        :Raise ValueError "Invalid expression syntax";
+                    else (no)
+                        partition "_eval_node(tree.body, calc)" {
+                            if (node is ast.Constant?) then (yes)
+                                :Return constant value (int or float);
+                            elseif (node is ast.UnaryOp?) then (yes)
+                                :Recurse on operand;
+                                if (USub?) then (yes)
+                                    :calc.multiply(operand, -1)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
+                                else (UAdd)
+                                    :Return operand as-is;
+                                endif
+                            elseif (node is ast.BinOp?) then (yes)
+                                :Recurse on left and right nodes;
+                                if (Add?) then (yes)
+                                    :calc.add(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
+                                elseif (Sub?) then (yes)
+                                    :calc.subtract(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
+                                elseif (Mult?) then (yes)
+                                    :calc.multiply(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
+                                elseif (Div?) then (yes)
+                                    :calc.divide(left, right)\n→ ArithmeticEngine computes;
+                                    note right
+                                        If b==0: ArithmeticEngine calls logger.error()
+                                        then raises ZeroDivisionError — caught at
+                                        run_cli level. On success, Calculator records
+                                        in OperationHistory.
+                                    end note
+                                else (Pow)
+                                    :calc.power(left, right)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;
+                                endif
+                            else (unsupported node)
+                                :Raise ValueError "Unsupported expression node";
+                            endif
+                        }
+                    endif
                 endif
-            repeat while (all operands collected?) is (no)
-            -> yes;
-        }
+            }
 
-        partition "execute_operation(calc, operation, operands)" {
-            :Resolve Calculator method name via OPERATIONS;
-            :Call method(*operands) on Calculator instance;
-            if (exception raised?) then (ZeroDivisionError)
-                :Return "Error: Division by zero is not allowed.";
-            elseif (ValueError)
-                :Return "Error: <exception message>";
-            elseif (TypeError)
-                :Return "Error: <exception message>";
+            if (ZeroDivisionError?) then (yes)
+                :logger.error("cli: division by zero in expression …");
+                :Print "Error: Division by zero is not allowed." to stderr;
+                :Return exit code 1;
+                stop
+            elseif (ValueError?) then (yes)
+                :logger.error("cli: ValueError in expression …");
+                :Print error message to stderr;
+                :Return exit code 1;
+                stop
+            elseif (TypeError?) then (yes)
+                :logger.error("cli: TypeError in expression …");
+                :Print error message to stderr;
+                :Return exit code 1;
+                stop
             else (success)
-                :Return numeric result;
+                :Print result to stdout;
+                :Return exit code 0;
+                stop
             endif
-        }
+        endif
+    }
 
-        :format_result(result) → str;
-        :Print "Result: <formatted_result>";
+else (no — interactive mode)
 
-    endif
+    partition "presentation.interactive.run_interactive()" {
+        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
+        :Build operation list from OPERATIONS keys;
+        :Display numbered list of available operations;
+        :op_attempts = 0;
 
-repeat while (loop continues?) is (yes)
--> no;
+        repeat
 
-stop
+            :Prompt "Select operation:";
+            :op_attempts += 1;
+
+            if (input is 'quit' or 'exit'?) then (yes)
+                :Print "Bye!";
+                stop
+            elseif (input not in OPERATIONS?) then (yes)
+                if (op_attempts >= MAX_RETRIES?) then (yes)
+                    :Print max-retries-exceeded error;
+                    stop
+                else (no)
+                    :Print unknown-operation error;
+                endif
+            else (valid operation)
+                :op_attempts = 0;
+
+                partition "get_operands(operation)" {
+                    :Look up operand_count in OPERATIONS;
+                    :operand_attempts = 0;
+                    repeat
+                        :Prompt user for next operand;
+                        :operand_attempts += 1;
+                        if (parse_number(raw) succeeds?) then (yes)
+                            :Append parsed number to operands list;
+                            :operand_attempts = 0;
+                        else (InvalidInputError)
+                            :logger.error("parse_number: could not parse … InvalidInputError");
+                            if (operand_attempts >= MAX_RETRIES?) then (yes)
+                                :Raise OperandRetryExceeded;
+                            else (no)
+                                :Print error message, retry same operand;
+                            endif
+                        endif
+                    repeat while (all operands collected?) is (no)
+                    -> yes;
+                }
+
+                if (OperandRetryExceeded?) then (yes)
+                    :Print retry-exceeded error;
+                else (no)
+
+                    partition "execute_operation(calc, operation, operands)" {
+                        :Resolve Calculator method name via OPERATIONS;
+                        :Call Calculator.method(*operands)\n  → Calculator delegates to ArithmeticEngine\n  → ArithmeticEngine computes result;
+                        if (exception raised?) then (ZeroDivisionError)
+                            :logger.error("execute_operation: … ZeroDivisionError");
+                            :Return "Error: Division by zero is not allowed.";
+                        elseif (ValueError)
+                            :logger.error("execute_operation: … ValueError");
+                            :Return "Error: <exception message>";
+                        elseif (TypeError)
+                            :logger.error("execute_operation: … TypeError");
+                            :Return "Error: <exception message>";
+                        else (success)
+                            :Calculator records in OperationHistory;
+                            :Return numeric result;
+                        endif
+                    }
+
+                    :format_result(result) → str;
+                    :Print "Result: <formatted_result>";
+
+                endif
+
+            endif
+
+        repeat while (loop continues?) is (yes)
+        -> no;
+
+        stop
+    }
+
+endif
 
 @enduml

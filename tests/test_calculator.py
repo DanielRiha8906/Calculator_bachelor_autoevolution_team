@@ -1,6 +1,9 @@
 import pytest
 import math
-from src.calculator import Calculator
+import logging
+from datetime import datetime
+from src.logic import Calculator
+from src.history import OperationRecord, OperationHistory
 
 
 @pytest.fixture
@@ -1406,3 +1409,647 @@ class TestCrossOperationEdgeCases:
         left = calculator.multiply(a, calculator.add(b, c))
         right = calculator.add(calculator.multiply(a, b), calculator.multiply(a, c))
         assert left == right
+
+
+# ============================================================================
+# CALCULATOR HISTORY INTEGRATION TESTS
+# ============================================================================
+
+class TestCalculatorHistory:
+    """Test suite for calculator history tracking integration."""
+
+    def test_calculator_initializes_with_empty_history(self, calculator):
+        """Test that a new calculator has empty history."""
+        assert len(calculator.get_history()) == 0
+
+    def test_add_operation_recorded_in_history(self, calculator):
+        """Test that add operation is recorded in history."""
+        calculator.add(5, 3)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "add"
+        assert record.operands == [5, 3]
+        assert record.result == 8
+
+    def test_subtract_operation_recorded_in_history(self, calculator):
+        """Test that subtract operation is recorded in history."""
+        calculator.subtract(10, 3)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "subtract"
+        assert record.operands == [10, 3]
+        assert record.result == 7
+
+    def test_multiply_operation_recorded_in_history(self, calculator):
+        """Test that multiply operation is recorded in history."""
+        calculator.multiply(6, 7)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "multiply"
+        assert record.operands == [6, 7]
+        assert record.result == 42
+
+    def test_divide_operation_recorded_in_history(self, calculator):
+        """Test that divide operation is recorded in history."""
+        calculator.divide(10, 2)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "divide"
+        assert record.operands == [10, 2]
+        assert record.result == 5.0
+
+    def test_factorial_operation_recorded_in_history(self, calculator):
+        """Test that factorial operation is recorded in history."""
+        calculator.factorial(5)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "factorial"
+        assert record.operands == [5]
+        assert record.result == 120
+
+    def test_square_operation_recorded_in_history(self, calculator):
+        """Test that square operation is recorded in history."""
+        calculator.square(7)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "square"
+        assert record.operands == [7]
+        assert record.result == 49
+
+    def test_cube_operation_recorded_in_history(self, calculator):
+        """Test that cube operation is recorded in history."""
+        calculator.cube(3)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "cube"
+        assert record.operands == [3]
+        assert record.result == 27
+
+    def test_square_root_operation_recorded_in_history(self, calculator):
+        """Test that square_root operation is recorded in history."""
+        calculator.square_root(25)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "square_root"
+        assert record.operands == [25]
+        assert record.result == pytest.approx(5.0)
+
+    def test_cube_root_operation_recorded_in_history(self, calculator):
+        """Test that cube_root operation is recorded in history."""
+        calculator.cube_root(8)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "cube_root"
+        assert record.operands == [8]
+        assert record.result == pytest.approx(2.0)
+
+    def test_power_operation_recorded_in_history(self, calculator):
+        """Test that power operation is recorded in history."""
+        calculator.power(2, 5)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "power"
+        assert record.operands == [2, 5]
+        assert record.result == pytest.approx(32.0)
+
+    def test_log10_operation_recorded_in_history(self, calculator):
+        """Test that log10 operation is recorded in history."""
+        calculator.log10(100)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "log10"
+        assert record.operands == [100]
+        assert record.result == pytest.approx(2.0)
+
+    def test_natural_log_operation_recorded_in_history(self, calculator):
+        """Test that natural_log operation is recorded in history."""
+        calculator.natural_log(math.e)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        record = history[0]
+        assert record.operation_name == "natural_log"
+        assert record.operands == [math.e]
+        assert record.result == pytest.approx(1.0)
+
+    def test_history_contains_correct_timestamp(self, calculator):
+        """Test that history records contain a datetime timestamp."""
+        before = datetime.now()
+        calculator.add(5, 3)
+        after = datetime.now()
+
+        history = calculator.get_history()
+        record = history[0]
+
+        assert isinstance(record.timestamp, datetime)
+        assert before <= record.timestamp <= after
+
+    def test_history_persists_across_multiple_operations(self, calculator):
+        """Test that history persists across multiple operations."""
+        calculator.add(5, 3)
+        calculator.multiply(4, 2)
+        calculator.subtract(10, 3)
+
+        history = calculator.get_history()
+        assert len(history) == 3
+        assert history[0].operation_name == "add"
+        assert history[1].operation_name == "multiply"
+        assert history[2].operation_name == "subtract"
+
+    def test_history_operations_recorded_in_order(self, calculator):
+        """Test that operations are recorded in the order they were called."""
+        operations = [
+            ("add", lambda: calculator.add(1, 2)),
+            ("subtract", lambda: calculator.subtract(5, 2)),
+            ("multiply", lambda: calculator.multiply(3, 4)),
+            ("divide", lambda: calculator.divide(10, 2)),
+            ("factorial", lambda: calculator.factorial(4)),
+        ]
+
+        for op_name, op_func in operations:
+            op_func()
+
+        history = calculator.get_history()
+        recorded_names = [r.operation_name for r in history]
+        expected_names = [op[0] for op in operations]
+
+        assert recorded_names == expected_names
+
+    def test_get_history_returns_copy(self, calculator):
+        """Test that get_history returns a copy, not internal reference."""
+        calculator.add(5, 3)
+        hist1 = calculator.get_history()
+        hist1.clear()
+
+        hist2 = calculator.get_history()
+        assert len(hist2) == 1
+
+    def test_clear_history_removes_all_records(self, calculator):
+        """Test that clear_history removes all recorded operations."""
+        calculator.add(5, 3)
+        calculator.multiply(4, 2)
+        assert len(calculator.get_history()) == 2
+
+        calculator.clear_history()
+        assert len(calculator.get_history()) == 0
+
+    def test_divide_by_zero_does_not_record_history(self, calculator):
+        """Test that division by zero error does not record to history."""
+        try:
+            calculator.divide(10, 0)
+        except ZeroDivisionError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_square_root_negative_does_not_record_history(self, calculator):
+        """Test that square_root of negative does not record to history."""
+        try:
+            calculator.square_root(-1)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_factorial_negative_does_not_record_history(self, calculator):
+        """Test that factorial of negative does not record to history."""
+        try:
+            calculator.factorial(-5)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_factorial_invalid_type_does_not_record_history(self, calculator):
+        """Test that factorial with invalid type does not record to history."""
+        try:
+            calculator.factorial("5")
+        except TypeError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_log10_zero_does_not_record_history(self, calculator):
+        """Test that log10(0) does not record to history."""
+        try:
+            calculator.log10(0)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_log10_negative_does_not_record_history(self, calculator):
+        """Test that log10 of negative does not record to history."""
+        try:
+            calculator.log10(-5)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_natural_log_zero_does_not_record_history(self, calculator):
+        """Test that natural_log(0) does not record to history."""
+        try:
+            calculator.natural_log(0)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_natural_log_negative_does_not_record_history(self, calculator):
+        """Test that natural_log of negative does not record to history."""
+        try:
+            calculator.natural_log(-5)
+        except ValueError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_square_invalid_type_does_not_record_history(self, calculator):
+        """Test that square with invalid type does not record to history."""
+        try:
+            calculator.square(True)
+        except TypeError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_cube_invalid_type_does_not_record_history(self, calculator):
+        """Test that cube with invalid type does not record to history."""
+        try:
+            calculator.cube(None)
+        except TypeError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_power_invalid_base_does_not_record_history(self, calculator):
+        """Test that power with invalid base does not record to history."""
+        try:
+            calculator.power(True, 2)
+        except TypeError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_power_invalid_exponent_does_not_record_history(self, calculator):
+        """Test that power with invalid exponent does not record to history."""
+        try:
+            calculator.power(2, None)
+        except TypeError:
+            pass
+
+        history = calculator.get_history()
+        assert len(history) == 0
+
+    def test_history_with_float_operands_and_results(self, calculator):
+        """Test that float operands and results are correctly recorded."""
+        calculator.divide(7.5, 2.5)
+        history = calculator.get_history()
+
+        record = history[0]
+        assert record.operands == [7.5, 2.5]
+        assert record.result == pytest.approx(3.0)
+
+    def test_history_with_negative_operands(self, calculator):
+        """Test that negative operands are correctly recorded."""
+        calculator.add(-5, -3)
+        history = calculator.get_history()
+
+        record = history[0]
+        assert record.operands == [-5, -3]
+        assert record.result == -8
+
+    def test_history_with_zero_operand(self, calculator):
+        """Test that zero operands are correctly recorded."""
+        calculator.multiply(0, 5)
+        history = calculator.get_history()
+
+        record = history[0]
+        assert record.operands == [0, 5]
+        assert record.result == 0
+
+    def test_mixed_operations_with_failures_and_successes(self, calculator):
+        """Test history with a mix of successful and failed operations."""
+        calculator.add(5, 3)
+
+        try:
+            calculator.divide(10, 0)
+        except ZeroDivisionError:
+            pass
+
+        calculator.multiply(4, 2)
+
+        history = calculator.get_history()
+        assert len(history) == 2
+        assert history[0].operation_name == "add"
+        assert history[1].operation_name == "multiply"
+
+    def test_get_history_returns_operation_record_instances(self, calculator):
+        """Test that get_history returns OperationRecord instances."""
+        calculator.add(5, 3)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        assert isinstance(history[0], OperationRecord)
+
+    def test_clear_history_followed_by_new_operations(self, calculator):
+        """Test that history works correctly after clearing."""
+        calculator.add(5, 3)
+        calculator.clear_history()
+
+        calculator.multiply(4, 2)
+        history = calculator.get_history()
+
+        assert len(history) == 1
+        assert history[0].operation_name == "multiply"
+
+    def test_history_with_large_numbers(self, calculator):
+        """Test history with very large numbers."""
+        large_num = 1e100
+        calculator.add(large_num, large_num)
+
+        history = calculator.get_history()
+        record = history[0]
+        assert record.operands[0] == large_num
+        assert record.result == pytest.approx(2 * large_num)
+
+    def test_history_with_very_small_numbers(self, calculator):
+        """Test history with very small numbers."""
+        small_num = 1e-100
+        calculator.add(small_num, small_num)
+
+        history = calculator.get_history()
+        record = history[0]
+        assert record.operands[0] == pytest.approx(small_num)
+        assert record.result == pytest.approx(2 * small_num)
+
+    def test_history_records_unary_operations_with_single_operand(self, calculator):
+        """Test that unary operations are recorded with single operand in list."""
+        calculator.square(5)
+        calculator.factorial(4)
+
+        history = calculator.get_history()
+        assert len(history[0].operands) == 1
+        assert len(history[1].operands) == 1
+
+    def test_history_records_binary_operations_with_two_operands(self, calculator):
+        """Test that binary operations are recorded with two operands in list."""
+        calculator.add(5, 3)
+        calculator.power(2, 8)
+
+        history = calculator.get_history()
+        assert len(history[0].operands) == 2
+        assert len(history[1].operands) == 2
+
+    def test_multiple_calculators_have_independent_history(self):
+        """Test that multiple calculator instances have independent histories."""
+        calc1 = Calculator()
+        calc2 = Calculator()
+
+        calc1.add(5, 3)
+        calc2.multiply(4, 2)
+
+        hist1 = calc1.get_history()
+        hist2 = calc2.get_history()
+
+        assert len(hist1) == 1
+        assert len(hist2) == 1
+        assert hist1[0].operation_name == "add"
+        assert hist2[0].operation_name == "multiply"
+
+    def test_timestamps_increase_for_consecutive_operations(self, calculator):
+        """Test that timestamps generally increase for consecutive operations."""
+        calculator.add(5, 3)
+        calculator.multiply(4, 2)
+        calculator.subtract(10, 3)
+
+        history = calculator.get_history()
+        ts1 = history[0].timestamp
+        ts2 = history[1].timestamp
+        ts3 = history[2].timestamp
+
+        # Timestamps should be in chronological order
+        # Note: very fast execution might result in same microsecond
+        assert ts1 <= ts2 <= ts3
+
+
+# ============================================================================
+# ERROR LOGGING TESTS
+# ============================================================================
+
+class TestCalculatorErrorLogging:
+    """Test suite for error logging in Calculator methods."""
+
+    def test_divide_by_zero_error_is_logged(self, calculator, caplog):
+        """Verify that ZeroDivisionError in divide() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ZeroDivisionError):
+                calculator.divide(10, 0)
+
+        assert any("divide" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.factorial(-5)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial(True)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_non_integer_float_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for non-integer float in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial(5.5)
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_factorial_string_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for string in factorial() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.factorial("5")
+
+        assert any("factorial" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in square() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square(True)
+
+        assert any("square" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_string_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for string in square() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square("5")
+
+        assert any("square" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in cube() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube(False)
+
+        assert any("cube" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_none_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for None in cube() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube(None)
+
+        assert any("cube" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_root_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError in square_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.square_root(-1)
+
+        assert any("square_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_square_root_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in square_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.square_root(True)
+
+        assert any("square_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_cube_root_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in cube_root() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.cube_root(False)
+
+        assert any("cube_root" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_power_bool_base_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool base in power() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.power(True, 2)
+
+        assert any("power" in record.message.lower() for record in caplog.records)
+        assert any("base" in record.message.lower() for record in caplog.records)
+
+    def test_power_bool_exponent_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool exponent in power() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.power(2, False)
+
+        assert any("power" in record.message.lower() for record in caplog.records)
+        assert any("exponent" in record.message.lower() for record in caplog.records)
+
+    def test_log10_zero_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for log10(0) is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.log10(0)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_log10_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for negative in log10() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.log10(-5)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_log10_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in log10() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.log10(True)
+
+        assert any("log10" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_zero_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for natural_log(0) is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.natural_log(0)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_negative_value_error_is_logged(self, calculator, caplog):
+        """Verify that ValueError for negative in natural_log() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(ValueError):
+                calculator.natural_log(-5)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    def test_natural_log_bool_type_error_is_logged(self, calculator, caplog):
+        """Verify that TypeError for bool in natural_log() is logged."""
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(TypeError):
+                calculator.natural_log(True)
+
+        assert any("natural_log" in record.message.lower() for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
