@@ -1,4 +1,29 @@
 
+## Run: issue-186-scientific-mode (2026-04-20)
+
+- **Branch:** task/issue-186-scientific-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/context.py` — new `CalculatorContext` class holding mode state (normal/scientific)
+  - `src/calculator.py` — added `sin()`, `cos()`, `tan()` methods using `math` module
+  - `src/core/operations.py` — added `mode` field to `Operation` dataclass; sin/cos/tan marked `mode="scientific"`; `OperationRegistry` gains `set_mode()` and mode-aware filtering in `get_operations()`, `resolve()`, `arity()`
+  - `src/__main__.py` — creates `CalculatorContext` and passes it to REPL and CLI
+  - `src/interface/repl.py` — accepts `CalculatorContext`; handles `mode <name>` commands; displays current mode in menu
+  - `src/interface/cli.py` — accepts `CalculatorContext`; syncs registry mode at startup
+  - `tests/test_context.py` — 38 new tests for `CalculatorContext`
+  - `tests/test_trigonometric.py` — 57 new tests for trig methods
+  - `tests/core/test_operations_mode_filtering.py` — 48 new tests for mode-aware registry
+  - `tests/test_repl_mode_switching.py` — 26 new tests for REPL mode switching
+  - `tests/test_cli_mode.py` — 33 new tests for CLI mode awareness
+  - `tests/core/test_operations_registry.py` — updated count assertions for 15-op catalog
+  - `tests/test_operations.py` — updated count assertions for 15-op catalog
+  - `tests/test_repl.py` — updated boundary index assertions for 12 normal-mode ops
+- **Purpose:** Add scientific mode with sin/cos/tan and interactive mode switching via REPL command
+- **Risks:** Mode state synchronization between CalculatorContext and OperationRegistry must be kept in sync; existing tests updated to reflect new catalog size
+- **Tests passed:** All 1307 tests pass
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-19)
 
 - **Branch:** task/issue-183-documentation
