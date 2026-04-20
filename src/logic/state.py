@@ -28,8 +28,36 @@ class Calculator:
         self._engine: ArithmeticEngine = ArithmeticEngine()
         self._history: OperationHistory = OperationHistory()
         self._registry: OperationRegistry = OperationRegistry()
+        self._mode: str = "normal"
         register_basic_operations(self._registry)
         register_scientific_operations(self._registry)
+
+    # ------------------------------------------------------------------
+    # Mode management
+    # ------------------------------------------------------------------
+
+    def get_mode(self) -> str:
+        """Return the current calculator mode.
+
+        Returns:
+            ``"normal"`` or ``"scientific"``.
+        """
+        return self._mode
+
+    def set_mode(self, mode: str) -> None:
+        """Set the calculator mode.
+
+        Args:
+            mode: The desired mode. Must be ``"normal"`` or ``"scientific"``.
+
+        Raises:
+            ValueError: If *mode* is not one of the accepted values.
+        """
+        if mode not in ("normal", "scientific"):
+            raise ValueError(
+                f"Invalid mode '{mode}'. Must be 'normal' or 'scientific'."
+            )
+        self._mode = mode
 
     # ------------------------------------------------------------------
     # History management
@@ -253,4 +281,109 @@ class Calculator:
         """
         result = self._engine.natural_log(x)
         self._history.add_record("natural_log", [x], result, datetime.now())
+        return result
+
+    # ------------------------------------------------------------------
+    # Scientific operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: int | float) -> float:
+        """Compute the sine of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.sin(x)
+        self._history.add_record("sin", [x], result, datetime.now())
+        return result
+
+    def cos(self, x: int | float) -> float:
+        """Compute the cosine of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.cos(x)
+        self._history.add_record("cos", [x], result, datetime.now())
+        return result
+
+    def tan(self, x: int | float) -> float:
+        """Compute the tangent of *x* (in radians) and record the operation.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If cos(x) is effectively zero (tangent undefined).
+        """
+        result = self._engine.tan(x)
+        self._history.add_record("tan", [x], result, datetime.now())
+        return result
+
+    def exp(self, x: int | float) -> float:
+        """Compute e raised to the power of *x* and record the operation.
+
+        Args:
+            x: The exponent. Must be an int or float (not bool or None).
+
+        Returns:
+            e ** x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        result = self._engine.exp(x)
+        self._history.add_record("exp", [x], result, datetime.now())
+        return result
+
+    def log(self, x: int | float) -> float:
+        """Compute the natural logarithm (base e) of *x* and record the operation.
+
+        Args:
+            x: The number whose natural logarithm is to be computed. Must be
+                an int or float (not bool or None) and must be strictly positive.
+
+        Returns:
+            The natural logarithm of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If x is less than or equal to zero.
+        """
+        result = self._engine.log(x)
+        self._history.add_record("log", [x], result, datetime.now())
+        return result
+
+    def sqrt(self, x: int | float) -> float:
+        """Compute the square root of *x* and record the operation.
+
+        Args:
+            x: The number whose square root is to be computed. Must be an int
+                or float (not bool or None) and must be non-negative.
+
+        Returns:
+            The square root of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If x is negative.
+        """
+        result = self._engine.sqrt(x)
+        self._history.add_record("sqrt", [x], result, datetime.now())
         return result

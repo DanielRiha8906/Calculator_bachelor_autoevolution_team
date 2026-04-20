@@ -491,18 +491,38 @@ class TestRegisterBasicOperations:
 class TestRegisterScientificOperations:
     """Test the register_scientific_operations function."""
 
-    def test_register_scientific_operations_adds_nothing(self, registry):
-        """Test that register_scientific_operations is a no-op (stub)."""
+    def test_register_scientific_operations_adds_all_eight_operations(self, registry):
+        """Test that register_scientific_operations registers all 8 scientific operations."""
         assert registry.list_operations() == []
         register_scientific_operations(registry)
-        assert registry.list_operations() == []
+        operations = registry.list_operations()
 
-    def test_register_scientific_operations_does_not_remove_others(self, registry):
-        """Test that calling register_scientific_operations doesn't remove existing ops."""
+        # Check that all 8 operations are registered
+        assert len(operations) == 8
+        assert "sin" in operations
+        assert "cos" in operations
+        assert "tan" in operations
+        assert "exp" in operations
+        assert "log" in operations
+        assert "log10" in operations
+        assert "sqrt" in operations
+        assert "factorial" in operations
+
+    def test_register_scientific_operations_coexists_with_basic(self, registry):
+        """Test that scientific operations coexist with basic operations."""
         register_basic_operations(registry)
-        ops_before = set(registry.list_operations())
+        basic_ops = set(registry.list_operations())
 
         register_scientific_operations(registry)
-        ops_after = set(registry.list_operations())
+        all_ops = set(registry.list_operations())
 
-        assert ops_before == ops_after
+        # All basic operations should still be present
+        assert basic_ops.issubset(all_ops)
+
+        # Scientific operations should be added (some overlap: factorial, log10)
+        scientific_ops = {"sin", "cos", "tan", "exp", "log", "log10", "sqrt", "factorial"}
+        assert scientific_ops.issubset(all_ops)
+
+        # Total should be at least 12 (basic) + new scientific ops (sin, cos, tan, exp, log, sqrt)
+        # Note: log10 and factorial exist in both, so they are not "new"
+        assert len(all_ops) >= 16
