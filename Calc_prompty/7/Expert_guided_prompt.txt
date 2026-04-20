@@ -4,4 +4,4 @@ Task:
 - Example usage:
   python main.py add 5 7
   python main.py factorial 5
-- Keep the change scoped to bash-based CLI access, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Keep the change scoped to bash-based CLI access, and maintain relevant tests so they accurately reflect the current version of the application.

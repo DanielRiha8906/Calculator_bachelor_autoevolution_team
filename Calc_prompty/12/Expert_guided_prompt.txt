@@ -2,4 +2,4 @@ Task:
 - Refactor the calculator into multiple modules so core logic, interface handling, session-related behavior, and supporting concerns are organized more cleanly across the codebase.
 - Introduce a clearer operations structure for the currently implemented calculator features, so future separation between normal and scientific functionality has an obvious place in the module layout even if scientific mode is not implemented yet.
 - Preserve the current behavior of existing features, keep the design object-oriented, and introduce abstractions only where they clearly support maintainability and future extensibility.
-- Avoid implementing a full scientific mode in this task unless it is necessary to establish clean structural boundaries, and maintain relevant tests and development artifacts so they accurately reflect the current version of the application.
+- Avoid implementing a full scientific mode in this task unless it is necessary to establish clean structural boundaries, and maintain relevant tests so they accurately reflect the current version of the application.

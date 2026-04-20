@@ -19,7 +19,7 @@ jobs:
         actions: read   
     uses: ./.github/workflows/pr-request-changes-shared.yml
     with:
-      branch: exp/naive-team
+      branch: exp2/naive-team
       experiment_name: naive-team
       pr_number: ${{ github.event.pull_request.number }}
       pr_title: ${{ github.event.pull_request.title }}

@@ -1,2 +1,8 @@
 Task:
-- Add a GUI for the calculator app using tkinter, and make sure the existing calculator functionality can still be used through the application.
+
+-Add a graphical user interface for the calculator application using tkinter.
+-Ensure the GUI provides access to the calculator’s currently supported functionality, including selecting operations, entering required operand values, and displaying calculation results.
+-Support both simple mode and scientific mode in the interface, so the user can work with the functionality available in each mode through the GUI.
+-Allow the user to view the current session history from within the application.
+-Keep the existing application behavior available outside the GUI, so the new interface extends the application rather than replacing its current ways of use.
+-Update relevant tests so they remain consistent with the current version of the application.
