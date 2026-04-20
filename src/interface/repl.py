@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Optional
 from src.support.exceptions import MaxRetriesExceeded
 from src.support.error_logger import ErrorLogger
 from src.core.operations import Operation, OperationRegistry, _CATALOG
+from src.context import CalculatorContext
 
 if TYPE_CHECKING:
     from src.support.history import OperationHistory
@@ -32,6 +33,10 @@ class REPLInterface:
     :class:`~src.core.operations.OperationRegistry`, displays the result, and
     carries the result forward as a default for the next operation.
 
+    In addition to numeric operation selection the user may type
+    ``"mode normal"`` or ``"mode scientific"`` at the operation prompt to
+    switch modes without restarting the session.
+
     Args:
         calculator: A Calculator instance whose methods will be called.
         history: An optional ``OperationHistory`` instance used to record each
@@ -40,6 +45,9 @@ class REPLInterface:
         error_logger: An optional ``ErrorLogger`` instance used to record
             errors encountered during the session.  When ``None``, error
             logging is disabled.
+        context: An optional :class:`~src.context.CalculatorContext` instance
+            used to persist mode state.  When ``None``, a fresh context
+            (default ``"normal"`` mode) is created internally.
     """
 
     def __init__(
@@ -47,12 +55,16 @@ class REPLInterface:
         calculator,
         history: Optional["OperationHistory"] = None,
         error_logger: Optional[ErrorLogger] = None,
+        context: Optional[CalculatorContext] = None,
     ) -> None:
         self.calculator = calculator
         self.history = history
         self.error_logger = error_logger
         self.last_result: Optional[float] = None
+        self._context: CalculatorContext = context if context is not None else CalculatorContext()
         self._registry = OperationRegistry(calculator)
+        # Sync registry mode with context on startup.
+        self._registry.set_mode(self._context.get_mode())
         # Ordered list of Operation objects — drives menu numbering.
         self._operations: list[Operation] = self._registry.get_operations()
         # Ordered list of canonical names — used for index-based selection.
@@ -189,18 +201,23 @@ class REPLInterface:
             return False
 
     def _is_valid_operation_input(self, raw_input: str) -> bool:
-        """Return True if raw_input is a valid operation selection or "quit".
+        """Return True if raw_input is a valid operation selection, mode command, or "quit".
 
-        A valid selection is either the string "quit" (case-insensitive) or an
-        integer in the range [1, len(_operation_keys)].
+        A valid selection is either the string "quit"/"history" (case-insensitive),
+        a ``"mode <name>"`` command, or an integer in the range
+        [1, len(_operation_keys)].
 
         Args:
             raw_input: The raw string supplied by the user.
 
         Returns:
-            True when the input is "quit" or a valid menu index, False otherwise.
+            True when the input is "quit", "history", a mode command, or a
+            valid menu index, False otherwise.
         """
-        if raw_input.lower().strip() in ("quit", "history"):
+        stripped = raw_input.lower().strip()
+        if stripped in ("quit", "history"):
+            return True
+        if stripped.startswith("mode "):
             return True
         try:
             choice = int(raw_input.strip())
@@ -208,10 +225,24 @@ class REPLInterface:
         except ValueError:
             return False
 
+    def _refresh_operations(self) -> None:
+        """Refresh the cached operation list and key index from the registry.
+
+        Called after a mode change so that menu numbering and index-based
+        selection reflect the updated set of available operations.
+        """
+        self._operations = self._registry.get_operations()
+        self._operation_keys = [op.name for op in self._operations]
+
     def get_operation_selection(self) -> str:
         """Display the operation menu and return a validated operation key.
 
-        Re-prompts until the user enters a valid menu number or "quit".  Raises
+        In addition to numbered selections the user may type:
+        - ``"mode normal"`` or ``"mode scientific"`` to switch modes.
+        - ``"history"`` to view operation history.
+        - ``"quit"`` to exit.
+
+        Re-prompts until the user enters a valid input.  Raises
         MaxRetriesExceeded after MAX_RETRIES consecutive invalid inputs.
 
         Returns:
@@ -222,19 +253,48 @@ class REPLInterface:
             MaxRetriesExceeded: If the user provides invalid input MAX_RETRIES
                 times in a row.
         """
-        print("\nAvailable operations:")
+        print(f"\nCurrent mode: {self._context.get_mode()}")
+        print("Available operations:")
         for idx, op in enumerate(self._operations, start=1):
             print(f"  {idx}. {op.display_name}")
         print("  history. Show operation history")
+        print("  mode <normal|scientific>. Switch mode")
         print("  quit. Exit")
 
         attempts = 0
         while True:
             raw = input("Select operation: ").strip()
-            if raw.lower() == "quit":
+            lower_raw = raw.lower()
+
+            if lower_raw == "quit":
                 return "quit"
-            if raw.lower() == "history":
+
+            if lower_raw == "history":
                 return "history"
+
+            if lower_raw.startswith("mode "):
+                mode_name = lower_raw[len("mode "):].strip()
+                try:
+                    self._context.set_mode(mode_name)
+                    self._registry.set_mode(mode_name)
+                    self._refresh_operations()
+                    print(f"Mode switched to: {mode_name}")
+                except ValueError:
+                    print(
+                        f"Invalid mode {mode_name!r}. "
+                        "Valid modes are: normal, scientific."
+                    )
+                # After handling the mode command, re-display the menu and
+                # re-prompt without counting this as a retry.
+                print(f"\nCurrent mode: {self._context.get_mode()}")
+                print("Available operations:")
+                for idx, op in enumerate(self._operations, start=1):
+                    print(f"  {idx}. {op.display_name}")
+                print("  history. Show operation history")
+                print("  mode <normal|scientific>. Switch mode")
+                print("  quit. Exit")
+                continue
+
             try:
                 choice = int(raw)
             except ValueError:
@@ -243,10 +303,12 @@ class REPLInterface:
                     raise MaxRetriesExceeded(
                         "Maximum retry attempts exceeded. Session ended."
                     )
-                print("Invalid selection. Enter a number from the list, 'history', or 'quit'.")
+                print("Invalid selection. Enter a number from the list, 'history', 'mode <name>', or 'quit'.")
                 continue
+
             if 1 <= choice <= len(self._operation_keys):
                 return self._operation_keys[choice - 1]
+
             attempts += 1
             if attempts >= MAX_RETRIES:
                 raise MaxRetriesExceeded(
@@ -254,7 +316,7 @@ class REPLInterface:
                 )
             print(
                 f"Invalid selection. Enter a number between 1 and "
-                f"{len(self._operation_keys)}, 'history', or 'quit'."
+                f"{len(self._operation_keys)}, 'history', 'mode <name>', or 'quit'."
             )
 
     def get_operand(self, prompt: str) -> float:

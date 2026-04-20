@@ -65,7 +65,7 @@ class TestGetOperationSelection:
         assert result == "add"
 
     def test_valid_selection_last_operation(self, repl):
-        """Test valid selection of last operation (natural_logarithm)."""
+        """Test valid selection of last operation in normal mode (natural_logarithm)."""
         with patch("builtins.input", return_value="12"):
             result = repl.get_operation_selection()
         assert result == "natural_logarithm"
@@ -1290,7 +1290,8 @@ class TestEdgeCasesAndAdditionalCoverage:
 
     def test_operations_dict_integrity(self):
         """Test that OPERATIONS dict has correct structure."""
-        assert len(OPERATIONS) == 12
+        # OPERATIONS is built from _CATALOG, which contains all 15 operations
+        assert len(OPERATIONS) == 15
         assert all("arity" in op_meta for op_meta in OPERATIONS.values())
         assert all("name" in op_meta for op_meta in OPERATIONS.values())
 

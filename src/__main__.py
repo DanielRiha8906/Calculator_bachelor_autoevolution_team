@@ -1,6 +1,7 @@
 import sys
 
 from .calculator import Calculator
+from .context import CalculatorContext
 from .interface.cli import CLIHandler
 from .interface.repl import REPLInterface
 from .support.error_logger import ErrorLogger
@@ -36,10 +37,11 @@ def main(argv: list[str] | None = None) -> None:
     error_logger.clear_errors()
 
     calc = Calculator()
+    context = CalculatorContext()
 
     if len(argv) == 0 or (len(argv) == 1 and argv[0] == "--repl"):
         # REPL mode — existing behaviour unchanged.
-        repl = REPLInterface(calc, history=history, error_logger=error_logger)
+        repl = REPLInterface(calc, history=history, error_logger=error_logger, context=context)
         try:
             repl.run()
         except (EOFError, KeyboardInterrupt):
@@ -54,7 +56,7 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     # CLI mode: len(argv) >= 2, first arg is the operation.
-    handler = CLIHandler(calc, history=history, error_logger=error_logger)
+    handler = CLIHandler(calc, history=history, error_logger=error_logger, context=context)
     try:
         result = handler.execute(argv)
         print(result)

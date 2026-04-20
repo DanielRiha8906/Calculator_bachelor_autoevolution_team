@@ -23,28 +23,36 @@ class Operation:
         display_name: Human-readable label shown in menus (e.g. ``"Addition"``).
         aliases: Additional input tokens that resolve to this operation
             (e.g. ``["+"]`` for ``"add"``).
+        mode: Which calculator mode exposes this operation.  One of
+            ``"normal"``, ``"scientific"``, or ``"both"`` (default).  Operations
+            with ``mode="both"`` are visible in every mode; ``"scientific"``
+            operations are only visible when scientific mode is active.
     """
 
     name: str
     arity: int
     display_name: str
     aliases: tuple[str, ...] = field(default_factory=tuple)
+    mode: str = "both"
 
 
 # The canonical ordered list of operations.  Order determines the REPL menu.
 _CATALOG: list[Operation] = [
-    Operation("add",               2, "Addition",              ("+",)),
-    Operation("subtract",          2, "Subtraction",           ("-",)),
-    Operation("multiply",          2, "Multiplication",        ("*",)),
-    Operation("divide",            2, "Division",              ("/",)),
-    Operation("power",             2, "Power",                 ("^",)),
-    Operation("logarithm",         2, "Logarithm (base)",      ("log",)),
-    Operation("factorial",         1, "Factorial",             ()),
-    Operation("square",            1, "Square",                ()),
-    Operation("cube",              1, "Cube",                  ()),
-    Operation("square_root",       1, "Square Root",           ("sqrt",)),
-    Operation("cube_root",         1, "Cube Root",             ("cbrt",)),
-    Operation("natural_logarithm", 1, "Natural Logarithm",     ("ln",)),
+    Operation("add",               2, "Addition",              ("+",),    "both"),
+    Operation("subtract",          2, "Subtraction",           ("-",),    "both"),
+    Operation("multiply",          2, "Multiplication",        ("*",),    "both"),
+    Operation("divide",            2, "Division",              ("/",),    "both"),
+    Operation("power",             2, "Power",                 ("^",),    "both"),
+    Operation("logarithm",         2, "Logarithm (base)",      ("log",),  "both"),
+    Operation("factorial",         1, "Factorial",             (),        "both"),
+    Operation("square",            1, "Square",                (),        "both"),
+    Operation("cube",              1, "Cube",                  (),        "both"),
+    Operation("square_root",       1, "Square Root",           ("sqrt",), "both"),
+    Operation("cube_root",         1, "Cube Root",             ("cbrt",), "both"),
+    Operation("natural_logarithm", 1, "Natural Logarithm",     ("ln",),   "both"),
+    Operation("sin",               1, "Sine",                  (),        "scientific"),
+    Operation("cos",               1, "Cosine",                (),        "scientific"),
+    Operation("tan",               1, "Tangent",               (),        "scientific"),
 ]
 
 
@@ -62,6 +70,11 @@ class OperationRegistry:
     only accepts one argument (base-10).  This special case is isolated here
     so that neither ``CLIHandler`` nor ``REPLInterface`` needs to know about it.
 
+    Mode filtering: the registry keeps an internal ``_current_mode`` (default
+    ``"normal"``).  Methods that return or evaluate operations respect the
+    current mode: an operation is visible/available when its ``mode`` field is
+    ``"both"`` or equal to the current mode.
+
     Args:
         calculator: A Calculator instance whose methods will be called for
             non-special-case operations.
@@ -69,6 +82,8 @@ class OperationRegistry:
 
     def __init__(self, calculator: Any) -> None:
         self.calculator = calculator
+        # Active mode for filtering — kept in sync with CalculatorContext.
+        self._current_mode: str = "normal"
         # Ordered list of canonical Operation objects (preserves menu order).
         self._operations: list[Operation] = list(_CATALOG)
         # Flat lookup: every accepted token (name + aliases) -> Operation.
@@ -78,18 +93,41 @@ class OperationRegistry:
             for alias in op.aliases:
                 self._lookup[alias] = op
 
+    def set_mode(self, mode: str) -> None:
+        """Set the active mode used to filter operations.
+
+        Args:
+            mode: The desired mode.  Must be ``"normal"`` or ``"scientific"``.
+
+        Raises:
+            ValueError: If *mode* is not ``"normal"`` or ``"scientific"``.
+        """
+        _VALID_REGISTRY_MODES: frozenset[str] = frozenset({"normal", "scientific"})
+        if mode not in _VALID_REGISTRY_MODES:
+            raise ValueError(
+                f"Invalid mode {mode!r}. Valid modes are: "
+                + ", ".join(sorted(_VALID_REGISTRY_MODES))
+            )
+        self._current_mode = mode
+
     # ------------------------------------------------------------------
     # Metadata access
     # ------------------------------------------------------------------
 
     def get_operations(self) -> list[Operation]:
-        """Return all operations in catalog order.
+        """Return operations visible in the current mode, in catalog order.
+
+        An operation is included when its ``mode`` field is ``"both"`` or
+        matches the current mode set via :meth:`set_mode`.
 
         Returns:
-            A list of :class:`Operation` instances in the order they were
-            registered (which determines REPL menu numbering).
+            A filtered list of :class:`Operation` instances in catalog order
+            (which determines REPL menu numbering).
         """
-        return list(self._operations)
+        return [
+            op for op in self._operations
+            if op.mode == "both" or op.mode == self._current_mode
+        ]
 
     def get_operation(self, token: str) -> Operation | None:
         """Return the :class:`Operation` for *token*, or ``None`` if unknown.
@@ -114,11 +152,16 @@ class OperationRegistry:
             The canonical ``name`` attribute of the matching operation.
 
         Raises:
-            ValueError: If *token* is not a recognised operation or alias.
+            ValueError: If *token* is not a recognised operation or alias, or
+                if the operation is not compatible with the current mode.
         """
         op = self._lookup.get(token)
         if op is None:
             raise ValueError(f"Unknown operation: {token!r}")
+        if op.mode != "both" and op.mode != self._current_mode:
+            raise ValueError(
+                f"Operation {token!r} is not available in {self._current_mode!r} mode"
+            )
         return op.name
 
     def arity(self, token: str) -> int:
@@ -131,24 +174,37 @@ class OperationRegistry:
             1 for unary operations, 2 for binary operations.
 
         Raises:
-            ValueError: If *token* is not a recognised operation or alias.
+            ValueError: If *token* is not a recognised operation or alias, or
+                if the operation is not compatible with the current mode.
         """
         op = self._lookup.get(token)
         if op is None:
             raise ValueError(f"Unknown operation: {token!r}")
+        if op.mode != "both" and op.mode != self._current_mode:
+            raise ValueError(
+                f"Operation {token!r} is not available in {self._current_mode!r} mode"
+            )
         return op.arity
 
     def get_operation_mapping(self) -> dict[str, str]:
         """Return a flat mapping from every accepted token to its canonical name.
 
+        Only tokens belonging to operations compatible with the current mode are
+        included (``mode="both"`` or ``mode == current_mode``).
+
         Useful for components that still need a simple token -> method_name
         dictionary (e.g. the CLI argument parser).
 
         Returns:
-            A dict where keys are all accepted tokens (names and aliases) and
-            values are the corresponding canonical operation names.
+            A dict where keys are all accepted tokens (names and aliases) for
+            mode-compatible operations and values are the corresponding
+            canonical operation names.
         """
-        return {token: op.name for token, op in self._lookup.items()}
+        return {
+            token: op.name
+            for token, op in self._lookup.items()
+            if op.mode == "both" or op.mode == self._current_mode
+        }
 
     # ------------------------------------------------------------------
     # Dispatch
