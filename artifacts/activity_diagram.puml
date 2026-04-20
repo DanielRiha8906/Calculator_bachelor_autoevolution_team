@@ -14,7 +14,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
             stop
         else (no)
             :Join args with spaces → expression string;
-            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
+            :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations() and\nregister_scientific_operations());
 
             partition "parse_and_evaluate(expression, calc)" {
                 :Strip expression;
@@ -89,31 +89,39 @@ if (sys.argv has arguments?) then (yes — CLI mode)
 else (no — interactive mode)
 
     partition "presentation.interactive.run_interactive()" {
-        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations());
-        :Build operation list from OPERATIONS keys;
-        :Display numbered list of available operations;
-        :op_attempts = 0;
+        :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations() and\nregister_scientific_operations());
+        :mode = "normal";
+        :Display operation list for current mode\n(BASIC_OPERATIONS in normal mode;\nBASIC_OPERATIONS + SCIENTIFIC_OPERATIONS in scientific mode);
+        :op_attempt = 0;
 
         repeat
 
-            :Prompt "Select operation:";
-            :op_attempts += 1;
+            :Prompt "[MODE] > ";
 
             if (input is 'quit' or 'exit'?) then (yes)
                 :Print "Bye!";
                 stop
-            elseif (input not in OPERATIONS?) then (yes)
-                if (op_attempts >= MAX_RETRIES?) then (yes)
+
+            elseif (input is 'mode'?) then (yes)
+                :Toggle mode: "normal" ↔ "scientific";
+                :calc.set_mode(mode);
+                :Print "Switched to <mode> mode.";
+                :Re-display operation list for new mode;
+                :op_attempt = 0;
+
+            elseif (input not in active_ops?) then (yes)
+                :op_attempt += 1;
+                :Print unknown-operation error with attempt count;
+                if (op_attempt >= MAX_RETRIES?) then (yes)
                     :Print max-retries-exceeded error;
                     stop
-                else (no)
-                    :Print unknown-operation error;
                 endif
-            else (valid operation)
-                :op_attempts = 0;
 
-                partition "get_operands(operation)" {
-                    :Look up operand_count in OPERATIONS;
+            else (valid operation)
+                :op_attempt = 0;
+
+                partition "get_operands(operation, active_ops)" {
+                    :Look up operand_count in active_ops;
                     :operand_attempts = 0;
                     repeat
                         :Prompt user for next operand;
@@ -137,8 +145,8 @@ else (no — interactive mode)
                     :Print retry-exceeded error;
                 else (no)
 
-                    partition "execute_operation(calc, operation, operands)" {
-                        :Resolve Calculator method name via OPERATIONS;
+                    partition "execute_operation(calc, operation, operands, active_ops)" {
+                        :Resolve Calculator method name via active_ops;
                         :Call Calculator.method(*operands)\n  → Calculator delegates to ArithmeticEngine\n  → ArithmeticEngine computes result;
                         if (exception raised?) then (ZeroDivisionError)
                             :logger.error("execute_operation: … ZeroDivisionError");

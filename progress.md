@@ -1,3 +1,29 @@
+## Run: update-diagrams (2026-04-20)
+
+- branch: task/issue-185-scientific-mode
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect scientific mode implementation — ArithmeticEngine and Calculator gained sin/cos/tan/exp/log/sqrt methods; operations/scientific.py now registers 8 concrete operation classes; presentation/interactive.py gained BASIC_OPERATIONS/SCIENTIFIC_OPERATIONS and mode-switching ("mode" command); Calculator gained _mode, get_mode(), set_mode()
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 244.2s | Cost: $0.797008 USD | Turns: 25
+
+## Run: scientific-mode-implementation (2026-04-20)
+
+- branch: exp2/naive-team
+- files changed:
+  - src/logic/core.py — added sin, cos, tan, exp, log, sqrt scientific methods to ArithmeticEngine
+  - src/logic/state.py — added _mode attribute, get_mode/set_mode, and scientific wrapper methods (sin, cos, tan, exp, log, sqrt) to Calculator
+  - src/operations/scientific.py — replaced placeholder with 8 concrete Operation classes (Sin, Cos, Tan, Exp, Log, Log10, Sqrt, Factorial) and register_scientific_operations
+  - src/presentation/interactive.py — added BASIC_OPERATIONS and SCIENTIFIC_OPERATIONS constants; run_interactive() now supports mode toggle with "mode" command and mode-aware prompt/operation list
+  - src/user_input.py — re-exports BASIC_OPERATIONS and SCIENTIFIC_OPERATIONS for backward-compatible access
+- purpose: Implement scientific mode — trig, exp, log, sqrt operations across engine, state, registry, and interactive presentation layers
+- risks: Two pre-existing tests (test_register_scientific_operations_adds_nothing, test_register_scientific_operations_does_not_remove_others) now fail because they were written against the old empty-stub behavior; these must be updated by the Tester to match the new implementation. All 1066 other tests pass.
+- tests passed: 1066 passed, 2 pre-existing stub-expectation tests now fail (expected, see risks)
+- target: exp2/naive-team
+
+Duration: 523.5s | Cost: $1.559074 USD | Turns: 12
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-182-documentation

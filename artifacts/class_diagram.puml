@@ -13,12 +13,21 @@ class ArithmeticEngine {
     +power(base: int|float, exponent: int|float) : float
     +log10(x: int|float) : float
     +natural_log(x: int|float) : float
+    +sin(x: int|float) : float
+    +cos(x: int|float) : float
+    +tan(x: int|float) : float
+    +exp(x: int|float) : float
+    +log(x: int|float) : float
+    +sqrt(x: int|float) : float
 }
 
 class Calculator {
     -_engine: ArithmeticEngine
     -_history: OperationHistory
     -_registry: OperationRegistry
+    -_mode: str
+    +get_mode() : str
+    +set_mode(mode: str) : None
     +get_history() : list
     +clear_history() : None
     +add(a, b) : float
@@ -33,6 +42,12 @@ class Calculator {
     +power(base: int|float, exponent: int|float) : float
     +log10(x: int|float) : float
     +natural_log(x: int|float) : float
+    +sin(x: int|float) : float
+    +cos(x: int|float) : float
+    +tan(x: int|float) : float
+    +exp(x: int|float) : float
+    +log(x: int|float) : float
+    +sqrt(x: int|float) : float
 }
 
 class OperationHistory {
@@ -82,6 +97,17 @@ package "operations.basic (unary)" <<Rectangle>> {
     class NaturalLog
 }
 
+package "operations.scientific (unary)" <<Rectangle>> {
+    class Sin
+    class Cos
+    class Tan
+    class Exp
+    class Log
+    class Log10Sci
+    class Sqrt
+    class FactorialSci
+}
+
 class InvalidInputError {
 }
 
@@ -102,9 +128,11 @@ class "__main__" <<module>> {
 class "presentation.interactive" <<module>> {
     +MAX_RETRIES : int
     +OPERATIONS : dict[str, tuple[str, int]]
+    +BASIC_OPERATIONS : dict[str, tuple[str, int]]
+    +SCIENTIFIC_OPERATIONS : dict[str, tuple[str, int]]
     +parse_number(input_str: str) : int|float
-    +get_operands(operation: str) : list[int|float]
-    +execute_operation(calc: Calculator, operation: str, operands: list) : object
+    +get_operands(operation: str, operations_map: dict|None) : list[int|float]
+    +execute_operation(calc: Calculator, operation: str, operands: list, operations_map: dict|None) : object
     +format_result(result: object) : str
     +run_interactive() : None
 }
@@ -161,6 +189,15 @@ Operation <|-- CubeRoot
 Operation <|-- Log10
 Operation <|-- NaturalLog
 
+Operation <|-- Sin
+Operation <|-- Cos
+Operation <|-- Tan
+Operation <|-- Exp
+Operation <|-- Log
+Operation <|-- Log10Sci
+Operation <|-- Sqrt
+Operation <|-- FactorialSci
+
 Exception <|-- InvalidInputError
 Exception <|-- OperandRetryExceeded
 Exception <|-- RetryLimitExceeded
@@ -182,7 +219,7 @@ ArithmeticEngine ..> "logging_config" : uses logger
 "cli" ..> "presentation.cli" : re-exports
 "user_input" ..> "presentation.interactive" : re-exports
 "operations.basic" ..> OperationRegistry : registers into
-"operations.scientific" ..> OperationRegistry : registers into (stub)
+"operations.scientific" ..> OperationRegistry : registers into
 
 note right of ArithmeticEngine
   Stateless pure arithmetic layer
@@ -190,6 +227,8 @@ note right of ArithmeticEngine
   Raises documented exceptions; calls
   logger.error() before each raise.
   No imports from any presentation layer.
+  Scientific methods (sin, cos, tan, exp,
+  log, sqrt) added alongside basic methods.
 end note
 
 note right of Calculator::_engine
@@ -207,9 +246,17 @@ end note
 note right of Calculator::_registry
   Created in __init__; populated by
   register_basic_operations() and
-  register_scientific_operations() (stub).
+  register_scientific_operations().
   Provides dynamic operation lookup by
   name string.
+end note
+
+note right of Calculator::_mode
+  "normal" or "scientific". Defaults to
+  "normal". Changed via set_mode(). The
+  presentation layer reads this to determine
+  which operations to display. set_mode()
+  raises ValueError for unknown modes.
 end note
 
 note right of Calculator::get_history
@@ -280,6 +327,13 @@ note right of Calculator::natural_log
   ValueError if x <= 0. logger.error() on error.
 end note
 
+note right of Calculator::tan
+  Raises ValueError when cos(x) is effectively
+  zero (|cos(x)| < 1e-9), i.e. at odd multiples
+  of pi/2. logger.error() called before raise
+  inside ArithmeticEngine.
+end note
+
 note right of OperationRecord
   Immutable dataclass. Each successful
   Calculator operation appends one record
@@ -302,15 +356,16 @@ note right of Operation
   Abstract base class (src/operations/base.py).
   All concrete operations implement name(),
   execute(*args), and operand_count().
-  Each delegates computation to
-  ArithmeticEngine internally.
+  Basic operations delegate to ArithmeticEngine;
+  scientific operations use math stdlib directly.
 end note
 
 note right of OperationRegistry
   Maps operation name strings to Operation
   instances. Calculator creates one and
-  populates it via register_basic_operations().
-  Supports dynamic extension (e.g. scientific).
+  populates it via register_basic_operations()
+  and register_scientific_operations().
+  Supports dynamic extension at runtime.
 end note
 
 note right of "operations.basic"
@@ -322,9 +377,13 @@ note right of "operations.basic"
 end note
 
 note right of "operations.scientific"
-  register_scientific_operations() is a stub
-  placeholder for future sin, cos, tan, log, etc.
-  Currently registers nothing.
+  register_scientific_operations() registers
+  8 scientific operations: Sin, Cos, Tan, Exp,
+  Log, Log10 (scientific variant), Sqrt,
+  Factorial (scientific variant).
+  Note: "factorial" and "log10" overlap with
+  basic operation names — scientific variants
+  overwrite basic ones in the registry.
 end note
 
 note right of "presentation.interactive"::MAX_RETRIES
@@ -336,7 +395,20 @@ end note
 note right of "presentation.interactive"::OPERATIONS
   Maps each operation name to
   (Calculator method name, operand count).
-  12 operations supported.
+  12 operations. Kept for backward compatibility.
+end note
+
+note right of "presentation.interactive"::BASIC_OPERATIONS
+  12 basic operations displayed in normal mode.
+  Same keys as OPERATIONS. Used by
+  run_interactive() when mode == "normal".
+end note
+
+note right of "presentation.interactive"::SCIENTIFIC_OPERATIONS
+  6 scientific operations added in scientific mode:
+  sin, cos, tan, exp, log, sqrt.
+  Merged with BASIC_OPERATIONS when
+  mode == "scientific".
 end note
 
 note right of "presentation.interactive"::parse_number
@@ -349,12 +421,16 @@ note right of "presentation.interactive"::get_operands
   Retries each operand up to MAX_RETRIES
   times. Raises OperandRetryExceeded when
   all attempts for an operand are exhausted.
+  Accepts operations_map param to support
+  mode-aware operation sets.
 end note
 
 note right of "presentation.interactive"::execute_operation
   Catches ZeroDivisionError, ValueError,
   and TypeError; calls logger.error() then
   returns error string instead of propagating.
+  Accepts operations_map param to support
+  mode-aware operation sets.
 end note
 
 note right of "input_retry"::validate_with_retry
@@ -435,8 +511,9 @@ note right of "user_input"
   src/user_input.py is a backward-compatibility
   re-export shim. Imports run_interactive,
   parse_number, get_operands, execute_operation,
-  format_result, InvalidInputError, and
-  OperandRetryExceeded from
+  format_result, InvalidInputError,
+  OperandRetryExceeded, BASIC_OPERATIONS,
+  and SCIENTIFIC_OPERATIONS from
   src.presentation.interactive and re-exports them.
 end note
 

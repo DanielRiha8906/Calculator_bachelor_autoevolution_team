@@ -371,3 +371,210 @@ class ArithmeticEngine:
                 f"Natural log is not defined for non-positive numbers; got {x}."
             )
         return math.log(x)
+
+    # ------------------------------------------------------------------
+    # Scientific operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: int | float) -> float:
+        """Compute the sine of *x* (in radians).
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"sin: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"sin: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.sin(x)
+
+    def cos(self, x: int | float) -> float:
+        """Compute the cosine of *x* (in radians).
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"cos: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"cos: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.cos(x)
+
+    def tan(self, x: int | float) -> float:
+        """Compute the tangent of *x* (in radians).
+
+        Tangent is undefined where cos(x) = 0, i.e. at odd multiples of pi/2.
+        A tolerance of 1e-9 is used when checking for these values.
+
+        Args:
+            x: Angle in radians. Must be an int or float (not bool or None).
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If cos(x) is effectively zero (tangent undefined).
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"tan: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"tan: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if abs(math.cos(x)) < 1e-9:
+            logger.error(
+                f"tan: value {x} is at an undefined point (cos=0); ValueError"
+            )
+            raise ValueError(
+                f"Tangent is undefined at x={x} (cos(x) is effectively zero)."
+            )
+        return math.tan(x)
+
+    def exp(self, x: int | float) -> float:
+        """Compute e raised to the power of *x*.
+
+        Args:
+            x: The exponent. Must be an int or float (not bool or None).
+
+        Returns:
+            e ** x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"exp: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"exp: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected an int or float, got {type(x).__name__}."
+            )
+        return math.exp(x)
+
+    def log(self, x: int | float) -> float:
+        """Compute the natural logarithm (base e) of a positive number.
+
+        This method is the scientific-interface alias for the natural log.
+        Use ``natural_log`` for the original interface.
+
+        Args:
+            x: The number whose natural logarithm is to be computed. Must be
+                an int or float (not bool or None) and must be strictly positive.
+
+        Returns:
+            The natural logarithm of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If x is less than or equal to zero.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"log: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected a positive int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"log: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected a positive int or float, got {type(x).__name__}."
+            )
+        if x <= 0:
+            logger.error(
+                f"log: non-positive value {x} provided; ValueError"
+            )
+            raise ValueError(
+                f"log is not defined for non-positive numbers; got {x}."
+            )
+        return math.log(x)
+
+    def sqrt(self, x: int | float) -> float:
+        """Compute the square root of a non-negative number.
+
+        This method is the scientific-interface alias. Use ``square_root`` for
+        the original interface.
+
+        Args:
+            x: The number whose square root is to be computed. Must be an int
+                or float (not bool or None) and must be non-negative.
+
+        Returns:
+            The square root of x as a float.
+
+        Raises:
+            TypeError: If x is a bool, None, or any non-numeric type.
+            ValueError: If x is negative.
+        """
+        if isinstance(x, bool):
+            logger.error(
+                f"sqrt: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected a non-negative int or float, got {type(x).__name__}."
+            )
+        if not isinstance(x, (int, float)):
+            logger.error(
+                f"sqrt: invalid type {type(x).__name__} provided; TypeError"
+            )
+            raise TypeError(
+                f"Expected a non-negative int or float, got {type(x).__name__}."
+            )
+        if x < 0:
+            logger.error(
+                f"sqrt: negative value {x} provided; ValueError"
+            )
+            raise ValueError(
+                f"sqrt is not defined for negative numbers; got {x}."
+            )
+        return math.sqrt(x)
