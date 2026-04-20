@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-187-scientific-mode
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-187 scientific mode changes: Calculator class extended with 6 trig methods (sin, cos, tan, cot, asin, acos); OperationRegistry restructured with separate _normal_operations (6 ops) and _scientific_operations (12 ops) dicts, added _load_scientific_operations(), _register_scientific_op(), get_scientific_operations() methods; Session extended with get_mode_selection(), get_operation_choice_with_mode_option(), and _MODE_SWITCH_TOKEN constant; run_interactive_session() updated with mode selection at start and mid-session mode switching; MenuRenderer display_menu() updated with current_mode parameter showing mode label. All three diagrams updated to reflect these changes in class structure, activity flow (mode selection + mode switch loop branch), and sequence interactions (get_mode_selection, mode-specific registry getters, display_menu with mode).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 172.6s | Cost: $0.504748 USD | Turns: 20
+
+---
+
+## Run: issue-187 — Scientific mode (Expert/Team)
+
+- **Branch:** task/issue-187-scientific-mode
+- **Files changed:** src/core/calculator.py (added sin, cos, tan, cot, asin, acos), src/core/operations_manager.py (split normal/scientific registries, added get_scientific_operations), src/interactive/session.py (added mode selection, mode switching, updated session loop), src/interface/menu_renderer.py (added mode indicator and switch option), tests/test_input_handler.py, tests/test_documentation.py, tests/test_logic_separation.py, tests/test_modular_structure.py (updated for new architecture)
+- **Purpose:** Add normal/scientific mode switching in interactive session. Normal mode exposes 6 operations; scientific mode exposes 18 (6 normal + 12 scientific including trig functions). User can switch modes mid-session without restarting.
+- **Risks:** Low — changes are additive; CLI mode continues using get_all_operations() unchanged. Mode state is session-scoped with no persistence.
+- **Tests passed:** 731/731 (all tests pass after updating existing tests to prepend mode selection input)
+- **PR target:** exp2/expert-team
+
+Duration: 700.0s | Cost: $1.674877 USD | Turns: 15
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-184-documentation
 - **Files changed:** artifacts/class_diagram.puml (verified current), artifacts/activity_diagram.puml (verified current), artifacts/sequence_diagram.puml (verified current)
 - **Purpose:** Verify PlantUML diagrams reflect current state of src/ after issue-184 documentation run. No source code changes since last diagram update (issue-181 modularization) — all three diagrams remain accurate and correctly represent the full modular structure: src.core (Calculator with 12 operations, OperationRegistry, Operations module), src.interface (InputParser, OutputFormatter, MenuRenderer), src.interactive (Session with MAX_VALIDATION_ATTEMPTS, get_operation_choice, get_operands, run_interactive_session), src.support (HistoryTracker), and top-level ErrorLogger and CLI modules with all dependency edges.

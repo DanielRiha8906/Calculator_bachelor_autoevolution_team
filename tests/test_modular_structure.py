@@ -166,7 +166,7 @@ class TestOperationRegistry:
         assert isinstance(all_ops, dict)
 
     def test_get_all_operations_contains_expected_ops(self):
-        """Test that get_all_operations contains 12 operations."""
+        """Test that get_all_operations contains 18 operations."""
         from src.core.operations_manager import OperationRegistry
         calc = Calculator()
         registry = OperationRegistry(calc)
@@ -174,10 +174,10 @@ class TestOperationRegistry:
         expected_ops = {
             "add", "subtract", "multiply", "divide", "power",
             "factorial", "square", "cube", "square_root", "cube_root",
-            "log", "ln"
+            "log", "ln", "sin", "cos", "tan", "cot", "asin", "acos"
         }
         assert set(all_ops.keys()) == expected_ops
-        assert len(all_ops) == 12
+        assert len(all_ops) == 18
 
     def test_get_normal_operations_returns_dict(self):
         """Test that get_normal_operations returns a dict."""

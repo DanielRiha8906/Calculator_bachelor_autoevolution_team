@@ -17,14 +17,20 @@ package "src.core" {
         +subtract(a, b) : float
         +multiply(a, b) : float
         +divide(a, b) : float
-        +factorial(n: int) : int
         +square(x: int|float) : int|float
-        +cube(x: int|float) : int|float
         +square_root(x: int|float) : float
+        +cube(x: int|float) : int|float
         +cube_root(x: int|float) : float
         +power(base: int|float, exponent: int|float) : int|float
+        +factorial(n: int) : int
         +log(x: int|float) : float
         +ln(x: int|float) : float
+        +sin(x: float) : float
+        +cos(x: float) : float
+        +tan(x: float) : float
+        +cot(x: float) : float
+        +asin(x: float) : float
+        +acos(x: float) : float
     }
 
     class OperationRegistry {
@@ -33,9 +39,12 @@ package "src.core" {
         -_scientific_operations : dict[str, tuple]
         +__init__(calculator: Calculator)
         -_load_normal_operations() : None
-        -_register_op(name: str, method: object, arity: int) : None
+        -_load_scientific_operations() : None
+        -_register_normal_op(name: str, method: object, arity: int) : None
+        -_register_scientific_op(name: str, method: object, arity: int) : None
         +get_all_operations() : dict[str, tuple]
         +get_normal_operations() : dict[str, tuple]
+        +get_scientific_operations() : dict[str, tuple]
     }
 
     class Operations <<module>> {
@@ -54,14 +63,18 @@ package "src.interface" {
     }
 
     class MenuRenderer <<module>> {
-        +display_menu(registry: dict) : None
+        +display_menu(registry: dict, current_mode: str = "normal") : None
     }
 }
 
 package "src.interactive" {
     class Session <<module>> {
         MAX_VALIDATION_ATTEMPTS : int = 5
+        _HISTORY_TOKEN : str = "h"
+        _MODE_SWITCH_TOKEN : str = "m"
+        +get_mode_selection() : str
         +get_operation_choice(registry: dict) : tuple | None
+        +get_operation_choice_with_mode_option(registry: dict) : tuple | str | None
         +get_operands(arity: int) : list[float] | None
         +run_interactive_session(calculator: Calculator, history_tracker: HistoryTracker) : None
     }
@@ -92,7 +105,7 @@ EntryPoint ..> Session : calls run_interactive_session()
 
 Session ..> Calculator : invokes methods via registry
 Session ..> HistoryTracker : records results / displays / saves
-Session ..> Operations : calls get_operation_registry()
+Session ..> OperationRegistry : get_normal_operations() / get_scientific_operations()
 Session ..> ErrorLogger : logs errors
 Session ..> MenuRenderer : calls display_menu()
 
@@ -131,11 +144,28 @@ note right of Calculator::ln
   Raises ValueError if x <= 0.
 end note
 
+note right of Calculator::cot
+  Defined as 1/tan(x).
+  Raises ValueError if tan(x) == 0.
+end note
+
+note right of Calculator::asin
+  Domain [-1, 1]. Returns radians in [-π/2, π/2].
+  Raises ValueError if x outside domain.
+end note
+
+note right of Calculator::acos
+  Domain [-1, 1]. Returns radians in [0, π].
+  Raises ValueError if x outside domain.
+end note
+
 note right of OperationRegistry
-  Registers binary ops (add, subtract, multiply, divide, power)
-  and unary ops (factorial, square, cube, square_root,
-  cube_root, log, ln) in _normal_operations.
-  _scientific_operations reserved for future extension.
+  Normal mode (6 ops): add, subtract, multiply,
+  divide, square, square_root.
+  Scientific mode (18 ops): normal ops + power,
+  cube, cube_root, factorial, log, ln, sin, cos,
+  tan, cot, asin, acos.
+  get_all_operations() returns all 18 (backward compat).
 end note
 
 note right of Operations
@@ -152,7 +182,13 @@ note right of HistoryTracker::save_to_file
   OSError is caught and printed to stderr.
 end note
 
-note right of Session::get_operation_choice
+note right of Session::get_mode_selection
+  Returns "normal" or "scientific".
+  Defaults to "normal" after MAX_VALIDATION_ATTEMPTS.
+end note
+
+note right of Session::get_operation_choice_with_mode_option
+  Returns (_MODE_SWITCH_TOKEN, None, None) on "m".
   Returns None on quit (q/quit/exit).
   Returns (_HISTORY_TOKEN, None, None) on "h".
   Returns (None, None, None) when MAX_VALIDATION_ATTEMPTS exceeded.
@@ -164,13 +200,19 @@ note right of Session::get_operands
 end note
 
 note right of Session::run_interactive_session
+  Prompts for mode (normal/scientific) at session start.
+  User can switch modes mid-session via "m" input.
   history_tracker defaults to a new HistoryTracker() if None.
   Calls history_tracker.display() on "h" input.
   Records each successful operation via history_tracker.record().
   Saves history to file on session exit.
-  Breaks session if get_operation_choice returns (None, None, None)
-  or get_operands returns None (max attempts exhausted).
   Catches TypeError, ValueError, ZeroDivisionError per iteration.
+end note
+
+note right of MenuRenderer::display_menu
+  Shows current mode label (Normal / Scientific).
+  Lists numbered operations for active registry.
+  Always appends h (history), m (switch mode), q (quit).
 end note
 
 note right of CLI::execute_cli

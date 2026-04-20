@@ -7,17 +7,26 @@ start
 if (Mode?) then (interactive — via __main__)
 
     :Instantiate HistoryTracker;
-    :core.Operations: get_operation_registry(calculator)\n→ OperationRegistry loads normal operations;
+    :Instantiate OperationRegistry(calculator)\n→ loads normal ops (6) + scientific ops (12);
     :Print welcome message;
+    :get_mode_selection() → current_mode ("normal" or "scientific");
 
     while (session active?) is (yes)
 
-        :interface.MenuRenderer: display_menu(registry);
-        :get_operation_choice(registry);
+        if (current_mode == "scientific"?) then (yes)
+            :active_registry = op_registry.get_scientific_operations()\n(18 ops: normal + scientific);
+        else (no — normal)
+            :active_registry = op_registry.get_normal_operations()\n(6 ops);
+        endif
+
+        :interface.MenuRenderer: display_menu(active_registry, current_mode);
+        :get_operation_choice_with_mode_option(active_registry);
 
         if (choice is None?) then (yes — user quit)
             :Print "Goodbye.";
             stop
+        elseif (choice is (_MODE_SWITCH_TOKEN, None, None)?) then (yes — mode switch)
+            :get_mode_selection() → current_mode;
         elseif (choice is (_HISTORY_TOKEN, None, None)?) then (yes — history request)
             :history_tracker.display();
         elseif (choice is (None, None, None)?) then (yes — max attempts exhausted)
@@ -53,7 +62,7 @@ if (Mode?) then (interactive — via __main__)
 else (CLI — via execute_cli)
 
     :interface.InputParser: parse_cli_args(sys.argv);
-    :core.Operations: get_operation_registry(calculator)\n→ OperationRegistry loads normal operations;
+    :core.Operations: get_operation_registry(calculator)\n→ OperationRegistry loads normal + scientific operations;
 
     :Look up operation_name in registry;
     if (operation found?) then (no)

@@ -771,7 +771,7 @@ class TestOperationRegistry:
     """Test the operation registry as documented."""
 
     def test_registry_contains_all_operations(self):
-        """Operation registry contains all 12 documented operations."""
+        """Operation registry contains all 18 documented operations."""
         calc = Calculator()
         registry = get_operation_registry(calc)
 
@@ -779,7 +779,8 @@ class TestOperationRegistry:
             "add", "subtract", "multiply", "divide",
             "factorial", "square", "cube",
             "square_root", "cube_root",
-            "power", "log", "ln"
+            "power", "log", "ln",
+            "sin", "cos", "tan", "cot", "asin", "acos"
         }
         assert set(registry.keys()) == expected_ops
 
@@ -795,7 +796,8 @@ class TestOperationRegistry:
             assert arity == 2, f"{op} should have arity 2, got {arity}"
 
         # Unary operations
-        unary_ops = {"factorial", "square", "cube", "square_root", "cube_root", "log", "ln"}
+        unary_ops = {"factorial", "square", "cube", "square_root", "cube_root", "log", "ln",
+                     "sin", "cos", "tan", "cot", "asin", "acos"}
         for op in unary_ops:
             method, arity = registry[op]
             assert arity == 1, f"{op} should have arity 1, got {arity}"

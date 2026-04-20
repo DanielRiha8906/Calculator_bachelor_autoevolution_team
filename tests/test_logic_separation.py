@@ -27,7 +27,7 @@ class TestCoreOperationsImportPath:
         registry = get_operation_registry(calc)
         assert isinstance(registry, dict)
         assert "add" in registry
-        assert len(registry) == 12
+        assert len(registry) == 18
 
     def test_core_operations_no_cli_imports(self):
         """Verify src.core.operations does not import cli module."""
@@ -72,6 +72,12 @@ class TestCoreOperationsImportPath:
             "cube_root",
             "log",
             "ln",
+            "sin",
+            "cos",
+            "tan",
+            "cot",
+            "asin",
+            "acos",
         }
         assert set(registry.keys()) == expected_ops
 
@@ -196,7 +202,7 @@ class TestBackwardCompatibilityShim:
         calc = Calculator()
         registry = get_operation_registry(calc)
         assert "add" in registry
-        assert len(registry) == 12
+        assert len(registry) == 18
 
     def test_import_display_menu_from_input_handler(self):
         """Verify display_menu is re-exported from input_handler."""
@@ -563,7 +569,7 @@ class TestFunctionalIntegration:
 
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+        with patch("builtins.input", side_effect=["1", "add", "2", "3", "q"]):
             with patch("builtins.print"):
                 # Should not raise, should complete successfully
                 run_interactive_session(calc)
@@ -757,14 +763,14 @@ class TestOperationsFrameworkExtensibility:
         assert set(all_ops.keys()) == set(legacy_ops.keys())
 
     def test_registry_get_normal_operations(self):
-        """Test that get_normal_operations returns normal mode operations."""
+        """Test that get_normal_operations returns only normal mode operations."""
         from src.core.operations_manager import OperationRegistry
         calc = Calculator()
         registry = OperationRegistry(calc)
         normal_ops = registry.get_normal_operations()
         assert isinstance(normal_ops, dict)
         assert "add" in normal_ops
-        assert len(normal_ops) == 12  # All 12 are in normal mode currently
+        assert len(normal_ops) == 6  # Only 6 normal mode operations
 
     def test_normal_operations_are_subset_of_all(self):
         """Test that normal operations are a subset of all operations."""
