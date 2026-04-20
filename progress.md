@@ -7,7 +7,7 @@
 - **Tests passed:** 731/731 (all tests pass after updating existing tests to prepend mode selection input)
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 700.0s | Cost: $1.674877 USD | Turns: 15
 
 ---
 
