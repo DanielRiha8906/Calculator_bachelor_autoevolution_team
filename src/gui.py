@@ -1,15 +1,12 @@
-"""GUI layer — tkinter-based calculator interface.
+"""GUI layer — iOS-inspired dark calculator interface.
 
-Provides a graphical front-end for the calculator application.  All arithmetic
-is delegated to the existing :class:`~src.calculator.Calculator` engine via
-:func:`~src.input_loop.dispatch`.  Mode management uses
-:func:`~src.mode.get_operations_for_mode` and operation metadata comes from
-:data:`~src.input_loop.OPERATIONS`.
+Provides a graphical front-end for the calculator application styled after
+the iOS dark calculator.  All arithmetic is delegated to the existing
+:class:`~src.calculator.Calculator` engine via
+:func:`~src.input_loop.dispatch`.
 
-The module exposes two public symbols:
+The module exposes one public symbol:
 
-* :class:`OperandInputWidget` — a labelled entry field that parses its value
-  as a float.
 * :class:`CalculatorGUI` — the main application window.
 """
 
@@ -19,70 +16,17 @@ import tkinter as tk
 from typing import Optional
 
 from .calculator import Calculator
-from .error_logger import (
-    CALCULATION_ERROR,
-    INVALID_INPUT,
-    ErrorLogger,
-)
-from .history import OperationHistory
-from .input_loop import OPERATIONS, dispatch
-from .mode import Mode, get_operations_for_mode
-
+from .input_loop import dispatch
 
 # ---------------------------------------------------------------------------
-# Helper widget
+# Colour palette
 # ---------------------------------------------------------------------------
 
-
-class OperandInputWidget:
-    """A labelled entry field for a single numeric operand.
-
-    Wraps a :class:`tk.Label` and a :class:`tk.Entry` into a single logical
-    unit.  The widgets are laid out in the parent frame using ``grid``.
-
-    Args:
-        parent: The parent tkinter widget.
-        label_text: Text to display in the label beside the entry.
-        row: Grid row to place both widgets in.
-    """
-
-    def __init__(self, parent: tk.Widget, label_text: str, row: int) -> None:
-        self._label = tk.Label(parent, text=label_text)
-        self._label.grid(row=row, column=0, padx=6, pady=4, sticky="e")
-
-        self._entry = tk.Entry(parent, width=20)
-        self._entry.grid(row=row, column=1, padx=6, pady=4, sticky="w")
-
-    def get_value(self) -> float:
-        """Parse the entry text as a float.
-
-        Returns:
-            The numeric value entered by the user.
-
-        Raises:
-            ValueError: If the entry text cannot be converted to a float.
-        """
-        raw = self._entry.get().strip()
-        return float(raw)
-
-    def clear(self) -> None:
-        """Clear the entry field."""
-        self._entry.delete(0, tk.END)
-
-    def set_visible(self, visible: bool) -> None:
-        """Show or hide both the label and the entry widget.
-
-        Args:
-            visible: When ``True`` the widgets are shown; when ``False`` they
-                are hidden using ``grid_remove``.
-        """
-        if visible:
-            self._label.grid()
-            self._entry.grid()
-        else:
-            self._label.grid_remove()
-            self._entry.grid_remove()
-
+_BG = "#000000"
+_BTN_DIGIT = "#333333"
+_BTN_OPERATOR = "#FF9500"
+_BTN_UTILITY = "#A5A5A5"
+_FG = "#FFFFFF"
 
 # ---------------------------------------------------------------------------
 # Main application class
@@ -90,324 +34,375 @@ class OperandInputWidget:
 
 
 class CalculatorGUI:
-    """Tkinter-based graphical calculator application.
+    """iOS-inspired dark calculator GUI.
 
-    Integrates with the existing :class:`~src.calculator.Calculator` and
-    :class:`~src.history.OperationHistory` without reimplementing any
-    arithmetic logic.  Operations are executed via
+    Integrates with the existing :class:`~src.calculator.Calculator` without
+    reimplementing any arithmetic logic.  Operations are executed via
     :func:`~src.input_loop.dispatch`.
 
     Attributes:
         _calc: The shared :class:`~src.calculator.Calculator` instance.
-        _history: Session history recorder.
-        _error_logger: Error event recorder.
-        _current_mode: The currently active :class:`~src.mode.Mode`.
-        _selected_operation: The key of the currently selected operation, or
-            ``None`` when no operation has been chosen yet.
-        _root: The root :class:`tk.Tk` window.
+        _current_display: String currently shown in the display.
+        _pending_operator: Operation key awaiting a second operand, or ``None``.
+        _pending_operand: First operand captured when an operator was pressed.
+        _decimal_entered: Whether the user has already typed a decimal point in
+            the current number.
+        _is_scientific_mode: When ``True`` the scientific button rows are shown.
+        _result_just_shown: When ``True`` the next digit press starts a fresh
+            number rather than appending to the current display.
     """
 
     def __init__(self) -> None:
         """Initialise the root window and all frames and widgets."""
         self._calc: Calculator = Calculator()
-        self._history: OperationHistory = OperationHistory()
-        self._error_logger: ErrorLogger = ErrorLogger()
-        self._current_mode: Mode = Mode.NORMAL
-        self._selected_operation: Optional[str] = None
 
+        # State machine attributes
+        self._current_display: str = "0"
+        self._pending_operator: Optional[str] = None
+        self._pending_operand: Optional[float] = None
+        self._decimal_entered: bool = False
+        self._is_scientific_mode: bool = False
+        self._result_just_shown: bool = False
+
+        # Build window
         self._root = tk.Tk()
         self._root.title("Calculator")
+        self._root.configure(bg=_BG)
         self._root.resizable(False, False)
 
-        # Operation buttons are stored so they can be rebuilt on mode change.
-        self._operation_buttons: list[tk.Button] = []
+        # Display label variable
+        self._display_var = tk.StringVar(value=self._current_display)
 
-        # OperandInputWidget instances (up to two).
-        self._operand_widgets: list[OperandInputWidget] = []
-
-        # Result and error label variable.
-        self._result_var = tk.StringVar(value="")
-        self._error_var = tk.StringVar(value="")
-
-        # Build UI sections top to bottom.
-        self._create_mode_selector_frame()
-        self._create_operation_selector_frame()
-        self._create_input_frame()
-        self._create_result_frame()
-        self._create_history_frame()
-
-        # Populate operation buttons for the initial mode.
-        self._update_operation_buttons()
+        self._build_display()
+        self._build_mode_toggle()
+        self._build_button_grid()
 
     # ------------------------------------------------------------------
-    # Frame builders
+    # UI builders
     # ------------------------------------------------------------------
 
-    def _create_mode_selector_frame(self) -> None:
-        """Create the Normal / Scientific mode toggle buttons."""
-        frame = tk.LabelFrame(self._root, text="Mode", padx=8, pady=6)
-        frame.pack(fill="x", padx=10, pady=(10, 4))
+    def _build_display(self) -> None:
+        """Create the large right-aligned result display at the top."""
+        display_frame = tk.Frame(self._root, bg=_BG)
+        display_frame.pack(fill="x", padx=8, pady=(16, 4))
 
-        self._mode_var = tk.StringVar(value=self._current_mode.value)
+        display_label = tk.Label(
+            display_frame,
+            textvariable=self._display_var,
+            font=("Courier", 48, "bold"),
+            bg=_BG,
+            fg=_FG,
+            anchor="e",
+            justify="right",
+            width=10,
+        )
+        display_label.pack(fill="x", padx=8)
 
-        for mode in Mode:
-            btn = tk.Radiobutton(
-                frame,
-                text=mode.value.capitalize(),
-                variable=self._mode_var,
-                value=mode.value,
-                command=self._on_mode_changed_from_radio,
+    def _build_mode_toggle(self) -> None:
+        """Create the Normal / Scientific mode toggle button below the display."""
+        toggle_frame = tk.Frame(self._root, bg=_BG)
+        toggle_frame.pack(fill="x", padx=8, pady=(0, 4))
+
+        self._mode_btn = tk.Button(
+            toggle_frame,
+            text="Scientific",
+            font=("Helvetica", 13),
+            bg=_BTN_UTILITY,
+            fg=_FG,
+            activebackground=_BTN_UTILITY,
+            activeforeground=_FG,
+            relief=tk.FLAT,
+            bd=0,
+            padx=12,
+            pady=8,
+            command=self._on_mode_toggle,
+        )
+        self._mode_btn.pack(side="left", padx=4, pady=2)
+
+    def _build_button_grid(self) -> None:
+        """Create the full button grid (normal + scientific rows)."""
+        self._btn_frame = tk.Frame(self._root, bg=_BG)
+        self._btn_frame.pack(fill="both", padx=8, pady=4)
+
+        # ------------------------------------------------------------------
+        # Helper: create a single button
+        # ------------------------------------------------------------------
+        def make_button(
+            parent: tk.Widget,
+            text: str,
+            color: str,
+            row: int,
+            col: int,
+            colspan: int = 1,
+            command: Optional[object] = None,
+        ) -> tk.Button:
+            btn = tk.Button(
+                parent,
+                text=text,
+                font=("Helvetica", 20, "bold"),
+                bg=color,
+                fg=_FG,
+                activebackground=color,
+                activeforeground=_FG,
+                relief=tk.FLAT,
+                bd=0,
+                width=4 * colspan,
+                height=2,
+                command=command,
             )
-            btn.pack(side="left", padx=8)
+            btn.grid(
+                row=row,
+                column=col,
+                columnspan=colspan,
+                padx=4,
+                pady=4,
+                sticky="nsew",
+            )
+            return btn
 
-    def _create_operation_selector_frame(self) -> None:
-        """Create the scrollable frame that holds operation buttons."""
-        self._ops_outer_frame = tk.LabelFrame(
-            self._root, text="Operation", padx=8, pady=6
-        )
-        self._ops_outer_frame.pack(fill="x", padx=10, pady=4)
+        # Row 0 — utility and divide
+        make_button(self._btn_frame, "C",  _BTN_UTILITY,  0, 0, command=self._on_clear_pressed)
+        make_button(self._btn_frame, "+/-", _BTN_UTILITY, 0, 1, command=self._on_negate_pressed)
+        make_button(self._btn_frame, "%",   _BTN_UTILITY, 0, 2, command=self._on_percent_pressed)
+        make_button(self._btn_frame, "÷",   _BTN_OPERATOR, 0, 3, command=lambda: self._on_operator_pressed("divide"))
 
-        # Inner frame whose children are the actual buttons.
-        self._ops_inner_frame = tk.Frame(self._ops_outer_frame)
-        self._ops_inner_frame.pack()
+        # Row 1 — 7, 8, 9, ×
+        make_button(self._btn_frame, "7", _BTN_DIGIT,    1, 0, command=lambda: self._on_digit_pressed(7))
+        make_button(self._btn_frame, "8", _BTN_DIGIT,    1, 1, command=lambda: self._on_digit_pressed(8))
+        make_button(self._btn_frame, "9", _BTN_DIGIT,    1, 2, command=lambda: self._on_digit_pressed(9))
+        make_button(self._btn_frame, "×", _BTN_OPERATOR, 1, 3, command=lambda: self._on_operator_pressed("multiply"))
 
-    def _create_input_frame(self) -> None:
-        """Create the operand entry fields (up to two)."""
-        frame = tk.LabelFrame(self._root, text="Operands", padx=8, pady=6)
-        frame.pack(fill="x", padx=10, pady=4)
+        # Row 2 — 4, 5, 6, −
+        make_button(self._btn_frame, "4", _BTN_DIGIT,    2, 0, command=lambda: self._on_digit_pressed(4))
+        make_button(self._btn_frame, "5", _BTN_DIGIT,    2, 1, command=lambda: self._on_digit_pressed(5))
+        make_button(self._btn_frame, "6", _BTN_DIGIT,    2, 2, command=lambda: self._on_digit_pressed(6))
+        make_button(self._btn_frame, "−", _BTN_OPERATOR, 2, 3, command=lambda: self._on_operator_pressed("subtract"))
 
-        # Pre-create two operand widgets; visibility is toggled by
-        # _on_operation_selected based on the selected operation's arity.
-        labels = ["Operand 1:", "Operand 2:"]
-        for i, label in enumerate(labels):
-            widget = OperandInputWidget(frame, label, row=i)
-            widget.set_visible(False)
-            self._operand_widgets.append(widget)
+        # Row 3 — 1, 2, 3, +
+        make_button(self._btn_frame, "1", _BTN_DIGIT,    3, 0, command=lambda: self._on_digit_pressed(1))
+        make_button(self._btn_frame, "2", _BTN_DIGIT,    3, 1, command=lambda: self._on_digit_pressed(2))
+        make_button(self._btn_frame, "3", _BTN_DIGIT,    3, 2, command=lambda: self._on_digit_pressed(3))
+        make_button(self._btn_frame, "+", _BTN_OPERATOR, 3, 3, command=lambda: self._on_operator_pressed("add"))
 
-        # Calculate button lives in the input frame.
-        self._calc_button = tk.Button(
-            frame,
-            text="Calculate",
-            command=self._perform_calculation,
-            state="disabled",
-            width=14,
-        )
-        self._calc_button.grid(
-            row=len(labels), column=0, columnspan=2, pady=(8, 2)
-        )
+        # Row 4 — 0 (colspan 2), ., =
+        make_button(self._btn_frame, "0", _BTN_DIGIT,    4, 0, colspan=2, command=lambda: self._on_digit_pressed(0))
+        make_button(self._btn_frame, ".", _BTN_DIGIT,    4, 2, command=self._on_decimal_pressed)
+        make_button(self._btn_frame, "=", _BTN_OPERATOR, 4, 3, command=self._on_equals_pressed)
 
-    def _create_result_frame(self) -> None:
-        """Create the result display label."""
-        frame = tk.LabelFrame(self._root, text="Result", padx=8, pady=6)
-        frame.pack(fill="x", padx=10, pady=4)
+        # Configure grid columns to expand equally
+        for col_idx in range(4):
+            self._btn_frame.columnconfigure(col_idx, weight=1)
 
-        result_label = tk.Label(
-            frame,
-            textvariable=self._result_var,
-            font=("TkFixedFont", 13, "bold"),
-            anchor="center",
-            width=35,
-        )
-        result_label.pack()
+        # Scientific button rows (hidden until mode toggled)
+        self._sci_frame = tk.Frame(self._root, bg=_BG)
+        # Not packed yet — shown on mode toggle
+        self._rebuild_scientific_buttons()
 
-        error_label = tk.Label(
-            frame,
-            textvariable=self._error_var,
-            fg="red",
-            anchor="center",
-            width=35,
-            wraplength=300,
-        )
-        error_label.pack()
+    def _rebuild_scientific_buttons(self) -> None:
+        """(Re)populate the scientific button rows inside _sci_frame."""
+        # Destroy any previously created children
+        for widget in self._sci_frame.winfo_children():
+            widget.destroy()
 
-    def _create_history_frame(self) -> None:
-        """Create the scrollable history listbox."""
-        frame = tk.LabelFrame(self._root, text="History", padx=8, pady=6)
-        frame.pack(fill="both", expand=True, padx=10, pady=(4, 10))
+        def make_sci(
+            text: str,
+            row: int,
+            col: int,
+            key: str,
+        ) -> tk.Button:
+            btn = tk.Button(
+                self._sci_frame,
+                text=text,
+                font=("Helvetica", 18, "bold"),
+                bg=_BTN_DIGIT,
+                fg=_FG,
+                activebackground=_BTN_DIGIT,
+                activeforeground=_FG,
+                relief=tk.FLAT,
+                bd=0,
+                width=4,
+                height=2,
+                command=lambda k=key: self._on_unary_pressed(k),
+            )
+            btn.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+            return btn
 
-        scrollbar = tk.Scrollbar(frame, orient="vertical")
-        scrollbar.pack(side="right", fill="y")
+        # Row 5 (relative row 0 inside sci_frame)
+        make_sci("√",  0, 0, "square_root")
+        make_sci("x²", 0, 1, "square")
+        make_sci("x³", 0, 2, "cube")
+        make_sci("∛",  0, 3, "cube_root")
 
-        self._history_listbox = tk.Listbox(
-            frame,
-            height=8,
-            width=50,
-            yscrollcommand=scrollbar.set,
-            selectmode="browse",
-        )
-        self._history_listbox.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self._history_listbox.yview)
+        # Row 6 (relative row 1 inside sci_frame)
+        make_sci("n!", 1, 0, "factorial")
+        make_sci("ln", 1, 1, "ln")
+        make_sci("log", 1, 2, "log")
+
+        for col_idx in range(4):
+            self._sci_frame.columnconfigure(col_idx, weight=1)
+
+    # ------------------------------------------------------------------
+    # Display helper
+    # ------------------------------------------------------------------
+
+    def _update_display(self) -> None:
+        """Push the current _current_display value to the tk StringVar."""
+        self._display_var.set(self._current_display)
+
+    @staticmethod
+    def _format_result(value: float) -> str:
+        """Return a clean string for *value*, dropping trailing '.0'.
+
+        Args:
+            value: The numeric result to format.
+
+        Returns:
+            ``"8"`` instead of ``"8.0"``; preserves decimals otherwise.
+        """
+        text = str(value)
+        if text.endswith(".0"):
+            return text[:-2]
+        return text
 
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
 
-    def _on_mode_changed_from_radio(self) -> None:
-        """Read the radio-button variable and delegate to _on_mode_changed."""
-        mode_value = self._mode_var.get()
-        new_mode = Mode(mode_value)
-        self._on_mode_changed(new_mode)
-
-    def _on_mode_changed(self, new_mode: Mode) -> None:
-        """Switch to *new_mode* and rebuild the operation buttons.
+    def _on_digit_pressed(self, digit: int) -> None:
+        """Handle a digit button (0–9) press.
 
         Args:
-            new_mode: The :class:`~src.mode.Mode` to switch to.
+            digit: The integer digit that was pressed.
         """
-        self._current_mode = new_mode
-        self._selected_operation = None
-        self._clear_operand_inputs()
-        self._result_var.set("")
-        self._error_var.set("")
-        self._calc_button.config(state="disabled")
-        # Hide all operand widgets until a new operation is selected.
-        for widget in self._operand_widgets:
-            widget.set_visible(False)
-        self._update_operation_buttons()
+        if self._result_just_shown or self._current_display == "0":
+            self._current_display = str(digit)
+            self._decimal_entered = False
+        else:
+            self._current_display += str(digit)
+        self._result_just_shown = False
+        self._update_display()
 
-    def _on_operation_selected(self, operation: str) -> None:
-        """Update UI when the user selects an operation.
+    def _on_decimal_pressed(self) -> None:
+        """Handle the decimal point button press."""
+        if self._result_just_shown:
+            self._current_display = "0."
+            self._decimal_entered = True
+            self._result_just_shown = False
+        elif not self._decimal_entered:
+            self._current_display += "."
+            self._decimal_entered = True
+        self._update_display()
 
-        Shows the correct number of input fields (1 for unary, 2 for binary)
-        and enables the Calculate button.
+    def _on_operator_pressed(self, operator_key: str) -> None:
+        """Handle an arithmetic operator button press.
+
+        Captures the current display as the pending operand and stores the
+        operator.  Does not clear the display — the display resets naturally
+        when the user starts typing the second number.
 
         Args:
-            operation: A key from :data:`~src.input_loop.OPERATIONS`.
+            operator_key: One of ``"add"``, ``"subtract"``, ``"multiply"``,
+                ``"divide"``.
         """
-        self._selected_operation = operation
-        self._clear_operand_inputs()
-        self._result_var.set("")
-        self._error_var.set("")
+        self._pending_operand = float(self._current_display)
+        self._pending_operator = operator_key
+        self._result_just_shown = True
+        self._decimal_entered = False
 
-        _, operand_count = OPERATIONS[operation]
+    def _on_unary_pressed(self, function_key: str) -> None:
+        """Handle a scientific (unary) function button press.
 
-        # Show the appropriate number of operand input fields.
-        if operand_count >= 1:
-            self._operand_widgets[0].set_visible(True)
-        else:
-            self._operand_widgets[0].set_visible(False)
+        Applies the function to the current display value immediately.
 
-        if operand_count >= 2:
-            self._operand_widgets[1].set_visible(True)
-        else:
-            self._operand_widgets[1].set_visible(False)
-
-        self._calc_button.config(state="normal")
-
-    # ------------------------------------------------------------------
-    # Calculation logic
-    # ------------------------------------------------------------------
-
-    def _perform_calculation(self) -> None:
-        """Validate inputs, call dispatch(), display result, record history.
-
-        Reads operand values from the visible entry widgets.  Shows an error
-        message in the GUI (and logs it) on invalid input or a calculation
-        error.  On success the result is displayed and appended to the
-        session history.
+        Args:
+            function_key: A key from :data:`~src.input_loop.OPERATIONS` for a
+                unary function (e.g. ``"square_root"``, ``"factorial"``).
         """
-        if self._selected_operation is None:
-            self._show_error("No operation selected.")
-            return
-
-        operation = self._selected_operation
-        _, operand_count = OPERATIONS[operation]
-
-        # Collect operands from the visible widgets.
-        operands: list[float] = []
-        for i in range(operand_count):
-            try:
-                value = self._operand_widgets[i].get_value()
-                operands.append(value)
-            except ValueError:
-                label = f"Operand {i + 1}" if operand_count > 1 else "Operand"
-                error_msg = f"Invalid input: {label} must be a number."
-                self._error_logger.log_error(
-                    INVALID_INPUT,
-                    error_msg,
-                    {"operation": operation, "operand_index": i},
-                )
-                self._show_error(error_msg)
-                return
-
-        # Dispatch to the Calculator engine.
         try:
-            result = dispatch(operation, operands, self._calc)
-        except ValueError as exc:
-            error_msg = str(exc)
-            self._error_logger.log_error(
-                CALCULATION_ERROR,
-                error_msg,
-                {"operation": operation, "operands": operands, "error": error_msg},
-            )
-            self._show_error(f"Error: {error_msg}")
+            current_float = float(self._current_display)
+            result = dispatch(function_key, [current_float], self._calc)
+            self._current_display = self._format_result(result)
+            self._decimal_entered = "." in self._current_display
+            self._result_just_shown = True
+        except (ValueError, KeyError) as exc:
+            self._current_display = "Error"
+            self._pending_operator = None
+            self._pending_operand = None
+            self._decimal_entered = False
+            self._result_just_shown = False
+            _ = exc  # silenced — error shown in display
+        self._update_display()
+
+    def _on_equals_pressed(self) -> None:
+        """Handle the equals button press.
+
+        Evaluates the pending binary operation using the stored operand and
+        the current display value.  Does nothing when no operator is pending.
+        """
+        if self._pending_operator is None:
             return
-
-        # Success — display result and record history.
-        self._result_var.set(str(result))
-        self._error_var.set("")
-        self._history.record_operation(operation, operands, result)
-        self._refresh_history_display()
-
-    # ------------------------------------------------------------------
-    # UI update helpers
-    # ------------------------------------------------------------------
-
-    def _update_operation_buttons(self) -> None:
-        """Rebuild the operation button grid for the current mode.
-
-        Destroys all existing buttons and creates new ones for the
-        operations permitted by :attr:`_current_mode`.
-        """
-        # Destroy existing buttons.
-        for btn in self._operation_buttons:
-            btn.destroy()
-        self._operation_buttons.clear()
-
-        allowed_keys = get_operations_for_mode(self._current_mode)
-
-        # Preserve OPERATIONS order, filter to allowed keys, skip meta-commands.
-        ordered_ops = [
-            key for key in OPERATIONS
-            if key in allowed_keys and OPERATIONS[key][1] > 0
-        ]
-
-        # Lay out buttons in a grid with up to 3 columns.
-        columns = 3
-        for idx, op_key in enumerate(ordered_ops):
-            label_text, _ = OPERATIONS[op_key]
-            row, col = divmod(idx, columns)
-            btn = tk.Button(
-                self._ops_inner_frame,
-                text=label_text,
-                width=22,
-                command=lambda k=op_key: self._on_operation_selected(k),
+        try:
+            current_float = float(self._current_display)
+            result = dispatch(
+                self._pending_operator,
+                [self._pending_operand, current_float],  # type: ignore[list-item]
+                self._calc,
             )
-            btn.grid(row=row, column=col, padx=4, pady=3, sticky="ew")
-            self._operation_buttons.append(btn)
+            self._current_display = self._format_result(result)
+            self._pending_operator = None
+            self._pending_operand = None
+            self._decimal_entered = "." in self._current_display
+            self._result_just_shown = True
+        except (ValueError, KeyError) as exc:
+            self._current_display = "Error"
+            self._pending_operator = None
+            self._pending_operand = None
+            self._decimal_entered = False
+            self._result_just_shown = False
+            _ = exc  # silenced — error shown in display
+        self._update_display()
 
-    def _refresh_history_display(self) -> None:
-        """Repopulate the history listbox from the current session history."""
-        self._history_listbox.delete(0, tk.END)
-        for entry in self._history.get_history():
-            self._history_listbox.insert(tk.END, entry)
-        # Auto-scroll to the latest entry.
-        if self._history_listbox.size() > 0:
-            self._history_listbox.see(tk.END)
+    def _on_clear_pressed(self) -> None:
+        """Handle the C (clear) button press, resetting all state."""
+        self._current_display = "0"
+        self._pending_operator = None
+        self._pending_operand = None
+        self._decimal_entered = False
+        self._result_just_shown = False
+        self._update_display()
 
-    def _clear_operand_inputs(self) -> None:
-        """Reset all operand entry fields to empty."""
-        for widget in self._operand_widgets:
-            widget.clear()
+    def _on_negate_pressed(self) -> None:
+        """Handle the +/- (negate) button press."""
+        try:
+            current_float = float(self._current_display)
+            self._current_display = self._format_result(-current_float)
+        except ValueError:
+            pass  # display stays as-is (e.g. "Error")
+        self._update_display()
 
-    def _show_error(self, message: str) -> None:
-        """Display *message* in the error label and clear the result label.
+    def _on_percent_pressed(self) -> None:
+        """Handle the % button press, dividing the current value by 100."""
+        try:
+            current_float = float(self._current_display)
+            self._current_display = self._format_result(current_float / 100.0)
+            self._decimal_entered = "." in self._current_display
+        except ValueError:
+            pass  # display stays as-is
+        self._update_display()
 
-        Args:
-            message: Human-readable error description to display in the GUI.
+    def _on_mode_toggle(self) -> None:
+        """Toggle between Normal and Scientific modes.
+
+        Shows or hides the scientific button rows without affecting any
+        pending calculation state.
         """
-        self._result_var.set("")
-        self._error_var.set(message)
+        self._is_scientific_mode = not self._is_scientific_mode
+        if self._is_scientific_mode:
+            self._sci_frame.pack(fill="both", padx=8, pady=(0, 4))
+            self._mode_btn.config(text="Normal")
+        else:
+            self._sci_frame.pack_forget()
+            self._mode_btn.config(text="Scientific")
 
     # ------------------------------------------------------------------
     # Public entry point
