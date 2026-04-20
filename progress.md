@@ -22,6 +22,8 @@ Duration: 244.2s | Cost: $0.797008 USD | Turns: 25
 - tests passed: 1066 passed, 2 pre-existing stub-expectation tests now fail (expected, see risks)
 - target: exp2/naive-team
 
+Duration: 523.5s | Cost: $1.559074 USD | Turns: 12
+
 ## Run: update-diagrams (2026-04-19)
 
 - branch: task/issue-182-documentation
