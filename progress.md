@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-187-scientific-mode
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-187 scientific mode changes: Calculator class extended with 6 trig methods (sin, cos, tan, cot, asin, acos); OperationRegistry restructured with separate _normal_operations (6 ops) and _scientific_operations (12 ops) dicts, added _load_scientific_operations(), _register_scientific_op(), get_scientific_operations() methods; Session extended with get_mode_selection(), get_operation_choice_with_mode_option(), and _MODE_SWITCH_TOKEN constant; run_interactive_session() updated with mode selection at start and mid-session mode switching; MenuRenderer display_menu() updated with current_mode parameter showing mode label. All three diagrams updated to reflect these changes in class structure, activity flow (mode selection + mode switch loop branch), and sequence interactions (get_mode_selection, mode-specific registry getters, display_menu with mode).
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-187 — Scientific mode (Expert/Team)
 
 - **Branch:** task/issue-187-scientific-mode
