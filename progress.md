@@ -1,3 +1,16 @@
+## Run: issue-187 — Scientific mode (Expert/Team)
+
+- **Branch:** task/issue-187-scientific-mode
+- **Files changed:** src/core/calculator.py (added sin, cos, tan, cot, asin, acos), src/core/operations_manager.py (split normal/scientific registries, added get_scientific_operations), src/interactive/session.py (added mode selection, mode switching, updated session loop), src/interface/menu_renderer.py (added mode indicator and switch option), tests/test_input_handler.py, tests/test_documentation.py, tests/test_logic_separation.py, tests/test_modular_structure.py (updated for new architecture)
+- **Purpose:** Add normal/scientific mode switching in interactive session. Normal mode exposes 6 operations; scientific mode exposes 18 (6 normal + 12 scientific including trig functions). User can switch modes mid-session without restarting.
+- **Risks:** Low — changes are additive; CLI mode continues using get_all_operations() unchanged. Mode state is session-scoped with no persistence.
+- **Tests passed:** 731/731 (all tests pass after updating existing tests to prepend mode selection input)
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-184-documentation

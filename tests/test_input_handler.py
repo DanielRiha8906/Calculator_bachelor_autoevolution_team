@@ -23,15 +23,15 @@ from src.interactive.session import (
 # ==================== get_operation_registry Tests ====================
 
 
-def test_registry_contains_all_12_operations():
-    """Verify that the registry contains exactly 12 operations."""
+def test_registry_contains_all_18_operations():
+    """Verify that get_operation_registry returns all 18 operations (for backward compatibility)."""
     calc = Calculator()
     registry = get_operation_registry(calc)
-    assert len(registry) == 12
+    assert len(registry) == 18
     expected_ops = {
         "add", "subtract", "multiply", "divide", "power",
         "factorial", "square", "cube", "square_root", "cube_root",
-        "log", "ln"
+        "log", "ln", "sin", "cos", "tan", "cot", "asin", "acos"
     }
     assert set(registry.keys()) == expected_ops
 
@@ -62,7 +62,8 @@ def test_unary_operations_have_arity_1():
     """Verify unary operations have arity 1."""
     calc = Calculator()
     registry = get_operation_registry(calc)
-    unary_ops = {"factorial", "square", "cube", "square_root", "cube_root", "log", "ln"}
+    unary_ops = {"factorial", "square", "cube", "square_root", "cube_root", "log", "ln",
+                 "sin", "cos", "tan", "cot", "asin", "acos"}
     for op in unary_ops:
         _, arity = registry[op]
         assert arity == 1, f"{op} should have arity 1, got {arity}"
@@ -182,13 +183,13 @@ def test_get_operation_choice_by_number_various():
     """Test selecting various operations by number."""
     calc = Calculator()
     registry = get_operation_registry(calc)
-    # Get the 6th operation (should be factorial)
+    # Get the 6th operation (should be square_root)
     ops_list = list(registry.keys())
     with patch("builtins.input", return_value="6"):
         name, method, arity = get_operation_choice(registry)
-        assert name == "factorial"
+        assert name == "square_root"
         assert arity == 1
-        assert method(5) == 120  # factorial(5)
+        assert method(9) == 3.0  # square_root(9)
 
 
 def test_get_operation_choice_quit_with_q():
@@ -558,7 +559,7 @@ def test_get_operands_exactly_at_limit_second_operand():
 def test_run_interactive_session_quit_immediately():
     """Test that session exits on quit command."""
     calc = Calculator()
-    with patch("builtins.input", return_value="q"):
+    with patch("builtins.input", side_effect=["1", "q"]):
         with patch("builtins.print"):
             run_interactive_session(calc)
             # Should not raise
@@ -567,7 +568,7 @@ def test_run_interactive_session_quit_immediately():
 def test_run_interactive_session_binary_operation():
     """Test full session with binary operation (add 3 + 5)."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["add", "3", "5", "q"]):
+    with patch("builtins.input", side_effect=["1", "add", "3", "5", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -578,7 +579,7 @@ def test_run_interactive_session_binary_operation():
 def test_run_interactive_session_unary_operation():
     """Test full session with unary operation (square of 4)."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["square", "4", "q"]):
+    with patch("builtins.input", side_effect=["1", "square", "4", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -589,8 +590,8 @@ def test_run_interactive_session_unary_operation():
 def test_run_interactive_session_by_number():
     """Test selecting operation by number."""
     calc = Calculator()
-    # 2 is subtract
-    with patch("builtins.input", side_effect=["2", "10", "3", "q"]):
+    # Mode 1 (Normal), operation 2 is subtract
+    with patch("builtins.input", side_effect=["1", "2", "10", "3", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -601,7 +602,7 @@ def test_run_interactive_session_by_number():
 def test_run_interactive_session_division_by_zero_error():
     """Test that division by zero is caught and session continues."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["divide", "5", "0", "add", "2", "3", "q"]):
+    with patch("builtins.input", side_effect=["1", "divide", "5", "0", "add", "2", "3", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -615,7 +616,7 @@ def test_run_interactive_session_division_by_zero_error():
 def test_run_interactive_session_factorial_with_whole_float():
     """Test that factorial accepts whole-valued floats (e.g., '5.0')."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["factorial", "5.0", "q"]):
+    with patch("builtins.input", side_effect=["2", "factorial", "5.0", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -626,7 +627,7 @@ def test_run_interactive_session_factorial_with_whole_float():
 def test_run_interactive_session_factorial_with_non_integer_float():
     """Test that non-integer floats for factorial are caught."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["factorial", "5.5", "q"]):
+    with patch("builtins.input", side_effect=["2", "factorial", "5.5", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -639,6 +640,7 @@ def test_run_interactive_session_multiple_operations():
     """Test session with multiple operations in sequence."""
     calc = Calculator()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "add", "2", "3",
         "multiply", "4", "5",
         "q"
@@ -654,7 +656,7 @@ def test_run_interactive_session_multiple_operations():
 def test_run_interactive_session_ln_operation():
     """Test logarithm operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["ln", "1", "q"]):
+    with patch("builtins.input", side_effect=["2", "ln", "1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -665,7 +667,7 @@ def test_run_interactive_session_ln_operation():
 def test_run_interactive_session_square_root():
     """Test square root operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["square_root", "9", "q"]):
+    with patch("builtins.input", side_effect=["1", "square_root", "9", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -676,7 +678,7 @@ def test_run_interactive_session_square_root():
 def test_run_interactive_session_square_root_negative_error():
     """Test that square root of negative number is caught."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["square_root", "-1", "q"]):
+    with patch("builtins.input", side_effect=["1", "square_root", "-1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -687,7 +689,7 @@ def test_run_interactive_session_square_root_negative_error():
 def test_run_interactive_session_cube_root():
     """Test cube root operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["cube_root", "27", "q"]):
+    with patch("builtins.input", side_effect=["2", "cube_root", "27", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -698,7 +700,7 @@ def test_run_interactive_session_cube_root():
 def test_run_interactive_session_power_operation():
     """Test power operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["power", "2", "3", "q"]):
+    with patch("builtins.input", side_effect=["2", "power", "2", "3", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -709,7 +711,7 @@ def test_run_interactive_session_power_operation():
 def test_run_interactive_session_welcome_message():
     """Test that welcome message is displayed."""
     calc = Calculator()
-    with patch("builtins.input", return_value="q"):
+    with patch("builtins.input", side_effect=["1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -720,7 +722,7 @@ def test_run_interactive_session_welcome_message():
 def test_run_interactive_session_goodbye_message():
     """Test that goodbye message is displayed on quit."""
     calc = Calculator()
-    with patch("builtins.input", return_value="q"):
+    with patch("builtins.input", side_effect=["1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -731,7 +733,7 @@ def test_run_interactive_session_goodbye_message():
 def test_run_interactive_session_invalid_operation_then_valid():
     """Test that invalid operation name prompts for retry."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["xyz", "add", "2", "3", "q"]):
+    with patch("builtins.input", side_effect=["1", "xyz", "add", "2", "3", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -742,7 +744,7 @@ def test_run_interactive_session_invalid_operation_then_valid():
 def test_run_interactive_session_log_operation():
     """Test base-10 logarithm operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["log", "100", "q"]):
+    with patch("builtins.input", side_effect=["2", "log", "100", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -753,7 +755,7 @@ def test_run_interactive_session_log_operation():
 def test_run_interactive_session_cube():
     """Test cube operation."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["cube", "3", "q"]):
+    with patch("builtins.input", side_effect=["2", "cube", "3", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -764,7 +766,7 @@ def test_run_interactive_session_cube():
 def test_run_interactive_session_factorial_zero():
     """Test factorial of zero."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["factorial", "0", "q"]):
+    with patch("builtins.input", side_effect=["2", "factorial", "0", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -775,7 +777,7 @@ def test_run_interactive_session_factorial_zero():
 def test_run_interactive_session_negative_factorial_error():
     """Test that negative factorial is caught."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["factorial", "-1", "q"]):
+    with patch("builtins.input", side_effect=["2", "factorial", "-1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -786,7 +788,7 @@ def test_run_interactive_session_negative_factorial_error():
 def test_run_interactive_session_ln_negative_error():
     """Test that ln of negative number is caught."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["ln", "-5", "q"]):
+    with patch("builtins.input", side_effect=["2", "ln", "-5", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -797,7 +799,7 @@ def test_run_interactive_session_ln_negative_error():
 def test_run_interactive_session_exit_token():
     """Test that 'exit' token works to quit session."""
     calc = Calculator()
-    with patch("builtins.input", return_value="exit"):
+    with patch("builtins.input", side_effect=["1", "exit"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -808,7 +810,7 @@ def test_run_interactive_session_exit_token():
 def test_run_interactive_session_quit_token():
     """Test that 'quit' token works to quit session."""
     calc = Calculator()
-    with patch("builtins.input", return_value="quit"):
+    with patch("builtins.input", side_effect=["1", "quit"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -819,8 +821,8 @@ def test_run_interactive_session_quit_token():
 def test_run_interactive_session_operation_max_attempts():
     """Test session exits after 5 invalid operation selections."""
     calc = Calculator()
-    # 5 invalid operations should trigger max attempts and exit
-    with patch("builtins.input", side_effect=["bad1", "bad2", "bad3", "bad4", "bad5"]):
+    # Mode 1, then 5 invalid operations should trigger max attempts and exit
+    with patch("builtins.input", side_effect=["1", "bad1", "bad2", "bad3", "bad4", "bad5"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -834,8 +836,8 @@ def test_run_interactive_session_operation_max_attempts():
 def test_run_interactive_session_operand_max_attempts():
     """Test session exits after 5 invalid operand entries."""
     calc = Calculator()
-    # 1 valid operation, then 5 invalid operands should exit
-    with patch("builtins.input", side_effect=["add", "bad1", "bad2", "bad3", "bad4", "bad5"]):
+    # Mode 1, 1 valid operation, then 5 invalid operands should exit
+    with patch("builtins.input", side_effect=["1", "add", "bad1", "bad2", "bad3", "bad4", "bad5"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -849,8 +851,8 @@ def test_run_interactive_session_operand_max_attempts():
 def test_run_interactive_session_terminates_without_goodbye_on_max_attempts():
     """Verify the 'Goodbye.' message does NOT appear on max attempts."""
     calc = Calculator()
-    # 5 invalid operations
-    with patch("builtins.input", side_effect=["x1", "x2", "x3", "x4", "x5"]):
+    # Mode 1, then 5 invalid operations
+    with patch("builtins.input", side_effect=["1", "x1", "x2", "x3", "x4", "x5"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -865,7 +867,7 @@ def test_run_interactive_session_terminates_without_goodbye_on_max_attempts():
 def test_run_interactive_session_normal_quit_still_prints_goodbye():
     """Test that explicit quit (q) still prints Goodbye."""
     calc = Calculator()
-    with patch("builtins.input", return_value="q"):
+    with patch("builtins.input", side_effect=["1", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -879,8 +881,8 @@ def test_run_interactive_session_normal_quit_still_prints_goodbye():
 def test_run_interactive_session_successful_operation_continues():
     """Test that successful operations continue normally without breaking."""
     calc = Calculator()
-    # Add, then subtract, then quit
-    with patch("builtins.input", side_effect=["add", "2", "3", "subtract", "10", "4", "q"]):
+    # Mode 1, add, then subtract, then quit
+    with patch("builtins.input", side_effect=["1", "add", "2", "3", "subtract", "10", "4", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -902,7 +904,7 @@ def test_run_interactive_session_successful_operation_continues():
 def test_session_binary_operations(op_name, a, b, expected):
     """Test session with various binary operations."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=[op_name, str(a), str(b), "q"]):
+    with patch("builtins.input", side_effect=["1", op_name, str(a), str(b), "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -910,15 +912,15 @@ def test_session_binary_operations(op_name, a, b, expected):
             assert str(expected) in output
 
 
-@pytest.mark.parametrize("op_name,value,expected", [
-    ("square", 5, 25),
-    ("cube", 2, 8),
-    ("factorial", 4, 24),
+@pytest.mark.parametrize("op_name,value,expected,mode", [
+    ("square", 5, 25, "1"),  # Normal mode
+    ("cube", 2, 8, "2"),     # Scientific mode
+    ("factorial", 4, 24, "2"),  # Scientific mode
 ])
-def test_session_unary_operations(op_name, value, expected):
+def test_session_unary_operations(op_name, value, expected, mode):
     """Test session with various unary operations."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=[op_name, str(value), "q"]):
+    with patch("builtins.input", side_effect=[mode, op_name, str(value), "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc)
             printed = [call.args[0] for call in mock_print.call_args_list]
@@ -963,7 +965,7 @@ def test_get_operands_numeric_inputs(numeric_input):
 def test_run_interactive_session_default_tracker_no_error():
     """Test calling run_interactive_session without history_tracker argument."""
     calc = Calculator()
-    with patch("builtins.input", return_value="q"):
+    with patch("builtins.input", side_effect=["1", "q"]):
         with patch("builtins.print"):
             # Should not raise TypeError
             run_interactive_session(calc)
@@ -974,7 +976,7 @@ def test_run_interactive_session_records_history():
     from src.history import HistoryTracker
     calc = Calculator()
     tracker = HistoryTracker()
-    with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+    with patch("builtins.input", side_effect=["1", "add", "2", "3", "q"]):
         with patch("builtins.print"):
             run_interactive_session(calc, tracker)
     history = tracker.get_history()
@@ -989,6 +991,7 @@ def test_run_interactive_session_records_multiple_operations():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "add", "2", "3",
         "multiply", "4", "5",
         "q"
@@ -1008,6 +1011,7 @@ def test_run_interactive_session_history_display():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "add", "2", "3",
         "h",
         "q"
@@ -1027,7 +1031,7 @@ def test_run_interactive_session_history_empty_display():
     from src.history import HistoryTracker
     calc = Calculator()
     tracker = HistoryTracker()
-    with patch("builtins.input", side_effect=["h", "q"]):
+    with patch("builtins.input", side_effect=["1", "h", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc, tracker)
     printed = [call.args[0] for call in mock_print.call_args_list]
@@ -1041,6 +1045,7 @@ def test_run_interactive_session_history_display_multiple_times():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "add", "2", "3",
         "h",
         "multiply", "4", "5",
@@ -1068,7 +1073,7 @@ def test_run_interactive_session_saves_on_quit(tmp_path):
     original_cwd = os.getcwd()
     try:
         os.chdir(str(tmp_path))
-        with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+        with patch("builtins.input", side_effect=["1", "add", "2", "3", "q"]):
             with patch("builtins.print"):
                 run_interactive_session(calc, tracker)
         # Default filename is "history.txt"
@@ -1083,6 +1088,7 @@ def test_run_interactive_session_does_not_record_error_operations():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "divide", "5", "0",  # Will error
         "add", "2", "3",  # Will succeed
         "q"
@@ -1102,6 +1108,7 @@ def test_run_interactive_session_error_continues_session():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "2",  # Scientific mode
         "factorial", "5.5",  # Error: float not int
         "add", "2", "3",
         "q"
@@ -1120,7 +1127,7 @@ def test_run_interactive_session_h_command_in_menu():
     from src.history import HistoryTracker
     calc = Calculator()
     tracker = HistoryTracker()
-    with patch("builtins.input", side_effect=["add", "1", "2", "h", "q"]):
+    with patch("builtins.input", side_effect=["1", "add", "1", "2", "h", "q"]):
         with patch("builtins.print") as mock_print:
             run_interactive_session(calc, tracker)
     # Verify the menu was displayed and history option shown
@@ -1135,6 +1142,7 @@ def test_run_interactive_session_history_preserves_order():
     calc = Calculator()
     tracker = HistoryTracker()
     with patch("builtins.input", side_effect=[
+        "1",  # Normal mode
         "add", "1", "2",
         "multiply", "3", "4",
         "subtract", "10", "5",
@@ -1154,7 +1162,7 @@ def test_run_interactive_session_factorial_float_conversion_recorded():
     from src.history import HistoryTracker
     calc = Calculator()
     tracker = HistoryTracker()
-    with patch("builtins.input", side_effect=["factorial", "5.0", "q"]):
+    with patch("builtins.input", side_effect=["2", "factorial", "5.0", "q"]):
         with patch("builtins.print"):
             run_interactive_session(calc, tracker)
     history = tracker.get_history()
@@ -1167,7 +1175,7 @@ def test_run_interactive_session_factorial_float_conversion_recorded():
 def test_run_interactive_session_with_none_tracker_creates_default():
     """Test that passing None for history_tracker creates a default."""
     calc = Calculator()
-    with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+    with patch("builtins.input", side_effect=["1", "add", "2", "3", "q"]):
         with patch("builtins.print"):
             # Should not raise
             run_interactive_session(calc, None)
@@ -1184,7 +1192,7 @@ def test_run_interactive_session_history_saved_with_custom_path(tmp_path):
     original_cwd = os.getcwd()
     try:
         os.chdir(str(tmp_path))
-        with patch("builtins.input", side_effect=["add", "5", "3", "q"]):
+        with patch("builtins.input", side_effect=["1", "add", "5", "3", "q"]):
             with patch("builtins.print"):
                 run_interactive_session(calc, tracker)
         # Check that history.txt was created with expected content
@@ -1321,7 +1329,7 @@ class TestInputHandlerErrorLogging:
         """Test that division by zero is logged in interactive session."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["divide", "5", "0", "q"]):
+        with patch("builtins.input", side_effect=["1", "divide", "5", "0", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1339,7 +1347,7 @@ class TestInputHandlerErrorLogging:
         """Test that invalid operand in interactive session is logged."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["add", "abc", "5", "3", "q"]):
+        with patch("builtins.input", side_effect=["1", "add", "abc", "5", "3", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1357,7 +1365,7 @@ class TestInputHandlerErrorLogging:
         """Test that successful operations in interactive session don't log errors."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["add", "2", "3", "q"]):
+        with patch("builtins.input", side_effect=["1", "add", "2", "3", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1369,6 +1377,7 @@ class TestInputHandlerErrorLogging:
         calc = Calculator()
 
         with patch("builtins.input", side_effect=[
+            "1",  # Normal mode
             "divide", "5", "0",  # Error 1: division by zero
             "add", "abc", "5", "3",   # Error 2: invalid operand, then valid ones
             "q"
@@ -1384,6 +1393,7 @@ class TestInputHandlerErrorLogging:
         calc = Calculator()
 
         with patch("builtins.input", side_effect=[
+            "1",  # Normal mode
             "divide", "5", "0",  # Error: division by zero
             "add", "2", "3",     # Success
             "q"
@@ -1429,7 +1439,7 @@ class TestInputHandlerErrorLogging:
         """Test that non-integer factorial is logged as INVALID_OPERAND."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["factorial", "5.5", "q"]):
+        with patch("builtins.input", side_effect=["2", "factorial", "5.5", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1443,7 +1453,7 @@ class TestInputHandlerErrorLogging:
         """Test that sqrt of negative number is logged as INVALID_OPERAND."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["square_root", "-4", "q"]):
+        with patch("builtins.input", side_effect=["1", "square_root", "-4", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1456,7 +1466,7 @@ class TestInputHandlerErrorLogging:
         """Test that logged errors include the operation name."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["divide", "5", "0", "q"]):
+        with patch("builtins.input", side_effect=["1", "divide", "5", "0", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)
@@ -1470,7 +1480,7 @@ class TestInputHandlerErrorLogging:
         """Test that logged errors include the operands."""
         calc = Calculator()
 
-        with patch("builtins.input", side_effect=["divide", "10", "0", "q"]):
+        with patch("builtins.input", side_effect=["1", "divide", "10", "0", "q"]):
             with patch("src.input_handler._error_logger.log_error") as mock_log:
                 with patch("builtins.print"):
                     run_interactive_session(calc)

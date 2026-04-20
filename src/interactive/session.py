@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from ..error_logger import ErrorLogger
 from ..history import HistoryTracker
 from ..core.operations import get_operation_registry
+from ..core.operations_manager import OperationRegistry
 from ..interface.menu_renderer import display_menu
 
 if TYPE_CHECKING:
@@ -27,6 +28,37 @@ _error_logger = ErrorLogger()
 MAX_VALIDATION_ATTEMPTS = 5
 
 _HISTORY_TOKEN = "h"
+_MODE_SWITCH_TOKEN = "m"
+
+
+def get_mode_selection() -> str:
+    """Prompt the user to select a calculator mode.
+
+    Displays a two-option prompt and accepts ``"1"`` for Normal mode or
+    ``"2"`` for Scientific mode.  Reprompts on invalid input up to
+    :data:`MAX_VALIDATION_ATTEMPTS` consecutive times; if that limit is
+    reached ``"normal"`` is returned as a safe default.
+
+    Returns:
+        ``"normal"`` or ``"scientific"`` as a lowercase string.
+    """
+    attempt_count = 0
+    while True:
+        raw = input(
+            "\nSelect calculator mode: 1. Normal  2. Scientific\n"
+            "Enter 1 or 2: "
+        ).strip()
+
+        if raw == "1":
+            return "normal"
+        if raw == "2":
+            return "scientific"
+
+        attempt_count += 1
+        print("  Invalid selection. Please enter 1 for Normal or 2 for Scientific.")
+        if attempt_count >= MAX_VALIDATION_ATTEMPTS:
+            print("Maximum invalid input attempts reached. Defaulting to Normal mode.")
+            return "normal"
 
 
 def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
@@ -60,6 +92,89 @@ def get_operation_choice(registry: dict[str, tuple]) -> tuple | None:
 
         if raw == _HISTORY_TOKEN:
             return (_HISTORY_TOKEN, None, None)
+
+        # Allow numeric selection
+        if raw.isdigit():
+            index = int(raw) - 1
+            if 0 <= index < len(names):
+                name = names[index]
+                method, arity = registry[name]
+                return (name, method, arity)
+            attempt_count += 1
+            _error_logger.log_error(
+                "UNSUPPORTED_OPERATION",
+                {
+                    "operation": raw,
+                    "operands": "N/A",
+                    "message": (
+                        f"numeric selection '{raw}' out of range"
+                        f" (1–{len(names)})"
+                    ),
+                },
+            )
+            print(
+                f"  Invalid number. Choose between 1 and {len(names)}."
+                f" Available operations: {available}."
+            )
+        elif raw in registry:
+            method, arity = registry[raw]
+            return (raw, method, arity)
+        else:
+            attempt_count += 1
+            _error_logger.log_error(
+                "UNSUPPORTED_OPERATION",
+                {
+                    "operation": raw,
+                    "operands": "N/A",
+                    "message": f"unknown operation '{raw}'",
+                },
+            )
+            print(
+                f"  Unknown operation '{raw}'."
+                f" Available operations: {available}."
+            )
+
+        if attempt_count >= MAX_VALIDATION_ATTEMPTS:
+            print("Maximum invalid input attempts reached. Ending session.")
+            return (None, None, None)
+
+
+def get_operation_choice_with_mode_option(
+    registry: dict[str, tuple],
+) -> tuple | str | None:
+    """Prompt the user to select an operation, with an additional mode-switch option.
+
+    Extends :func:`get_operation_choice` with support for the ``"m"`` token,
+    which signals the caller to switch the active calculator mode.
+
+    Args:
+        registry: The operation registry for the currently active mode.
+
+    Returns:
+        ``(_MODE_SWITCH_TOKEN, None, None)`` when the user enters ``"m"``,
+        otherwise the same return values as :func:`get_operation_choice`:
+        a ``(name, method, arity)`` tuple, ``None`` on quit, or
+        ``(None, None, None)`` on max-attempts exhaustion.
+    """
+    names = list(registry.keys())
+    quit_tokens = {"q", "quit", "exit"}
+    available = ", ".join(names)
+    attempt_count = 0
+
+    while True:
+        raw = input(
+            "\nEnter operation name or number"
+            " (h for history, m to switch mode, q to quit): "
+        ).strip().lower()
+
+        if raw in quit_tokens:
+            return None
+
+        if raw == _HISTORY_TOKEN:
+            return (_HISTORY_TOKEN, None, None)
+
+        if raw == _MODE_SWITCH_TOKEN:
+            return (_MODE_SWITCH_TOKEN, None, None)
 
         # Allow numeric selection
         if raw.isdigit():
@@ -153,7 +268,9 @@ def run_interactive_session(
     """Run the main interactive calculator session.
 
     Displays the menu, collects input, executes operations, and prints
-    results until the user quits. Exceptions raised by the calculator
+    results until the user quits.  The user first selects a mode (Normal or
+    Scientific) and may switch modes at any point during the session via the
+    ``m`` menu option.  Exceptions raised by the calculator
     (``TypeError``, ``ValueError``, ``ZeroDivisionError``) are caught and
     displayed without terminating the session.
 
@@ -172,26 +289,38 @@ def run_interactive_session(
     if history_tracker is None:
         history_tracker = HistoryTracker()
 
-    registry = get_operation_registry(calculator)
+    op_registry = OperationRegistry(calculator)
+
     print("Welcome to the interactive calculator.")
-    failed_attempts = 0
+
+    current_mode = get_mode_selection()
 
     while True:
-        display_menu(registry)
-        choice = get_operation_choice(registry)
+        if current_mode == "scientific":
+            active_registry = op_registry.get_scientific_operations()
+        else:
+            active_registry = op_registry.get_normal_operations()
+
+        display_menu(active_registry, current_mode)
+        choice = get_operation_choice_with_mode_option(active_registry)
 
         # Explicit quit by the user
         if choice is None:
             print("Goodbye.")
             break
 
+        # Mode switch request
+        if choice == (_MODE_SWITCH_TOKEN, None, None):
+            current_mode = get_mode_selection()
+            continue
+
         # History display request
         if choice == (_HISTORY_TOKEN, None, None):
             history_tracker.display()
             continue
 
-        # Max-attempts sentinel: get_operation_choice already printed the
-        # termination message, so just exit the loop.
+        # Max-attempts sentinel: get_operation_choice_with_mode_option already
+        # printed the termination message, so just exit the loop.
         if choice == (None, None, None):
             break
 
@@ -220,7 +349,6 @@ def run_interactive_session(
             result = method(*operands)
             print(f"  Result: {result}")
             history_tracker.record(operation_name, operands, result)
-            failed_attempts = 0
         except ZeroDivisionError as exc:
             _error_logger.log_error(
                 "DIVISION_BY_ZERO",

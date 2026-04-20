@@ -264,3 +264,174 @@ class Calculator:
                 f"ln() is not defined for non-positive numbers, got {x}"
             )
         return math.log(x)
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (in radians).
+
+        Args:
+            x: A numeric value (int or float) representing an angle in radians.
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float.
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.sin(0)
+            0.0
+            >>> calc.sin(math.pi / 2)
+            1.0
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"sin() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        return math.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (in radians).
+
+        Args:
+            x: A numeric value (int or float) representing an angle in radians.
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float.
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.cos(0)
+            1.0
+            >>> calc.cos(math.pi)
+            -1.0
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"cos() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        return math.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (in radians).
+
+        Args:
+            x: A numeric value (int or float) representing an angle in radians.
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float.
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.tan(0)
+            0.0
+            >>> calc.tan(math.pi / 4)
+            1.0
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"tan() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        return math.tan(x)
+
+    def cot(self, x: float) -> float:
+        """Return the cotangent of x (in radians), defined as 1/tan(x).
+
+        Args:
+            x: A numeric value (int or float) representing an angle in radians.
+                tan(x) must not be zero (i.e. x must not be a multiple of π).
+
+        Returns:
+            The cotangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float.
+            ValueError: If tan(x) is zero, making cot(x) undefined.
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.cot(math.pi / 4)
+            1.0
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"cot() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        tan_value = math.tan(x)
+        if tan_value == 0:
+            raise ValueError(
+                f"cot() is undefined when tan(x) = 0 (x = {x})"
+            )
+        return 1 / tan_value
+
+    def asin(self, x: float) -> float:
+        """Return the arcsine of x in radians.
+
+        Args:
+            x: A numeric value (int or float) in the domain [-1, 1].
+
+        Returns:
+            The arcsine of x as a float, in radians, in the range [-π/2, π/2].
+
+        Raises:
+            TypeError: If x is not an int or float.
+            ValueError: If x is outside the domain [-1, 1].
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.asin(0)
+            0.0
+            >>> calc.asin(1)
+            1.5707963267948966
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"asin() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        if x < -1 or x > 1:
+            raise ValueError(
+                f"asin() domain is [-1, 1], got {x}"
+            )
+        return math.asin(x)
+
+    def acos(self, x: float) -> float:
+        """Return the arccosine of x in radians.
+
+        Args:
+            x: A numeric value (int or float) in the domain [-1, 1].
+
+        Returns:
+            The arccosine of x as a float, in radians, in the range [0, π].
+
+        Raises:
+            TypeError: If x is not an int or float.
+            ValueError: If x is outside the domain [-1, 1].
+
+        Examples:
+            >>> import math
+            >>> calc = Calculator()
+            >>> calc.acos(1)
+            0.0
+            >>> calc.acos(0)
+            1.5707963267948966
+        """
+        if not isinstance(x, (int, float)):
+            raise TypeError(
+                f"acos() requires a numeric argument, got {type(x).__name__!r}"
+            )
+        if x < -1 or x > 1:
+            raise ValueError(
+                f"acos() domain is [-1, 1], got {x}"
+            )
+        return math.acos(x)
