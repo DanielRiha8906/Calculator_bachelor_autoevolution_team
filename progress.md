@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-20)
+
+- **Branch:** task/issue-186-scientific-mode
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `CalculatorContext` class with `current_mode`, `set_mode`, `get_mode`, `is_scientific_mode`; added `sin`, `cos`, `tan` methods to `Calculator`; added `mode: str` field to `Operation` dataclass and updated note to reflect 15-op catalog; added `_current_mode` attribute and `set_mode()` method to `OperationRegistry`; updated `__init__` note to reference 15 operations; added `_context: CalculatorContext` to `REPLInterface` and `CLIHandler`; added `_refresh_operations()` to `REPLInterface`; updated `get_operation_selection` note to describe mode switching; updated `Main` note and relationships to include `CalculatorContext`
+  - `artifacts/activity_diagram.puml` — updated module layout note to include `src/context.py`; added `CalculatorContext` instantiation step; updated REPL section to show mode command handling, `_refresh_operations()` call, and mode display; added sin/cos/tan operation branches; updated REPL and CLI instantiation calls to include context
+  - `artifacts/sequence_diagram.puml` — added `CalculatorContext` participant; updated REPL and CLI instantiation to pass context; added `set_mode()` sync call on `OperationRegistry`; added mode switching sequence in REPL loop including `_refresh_operations()`; added sin/cos/tan dispatch branches; updated OperationRegistry note to describe 15-op catalog and mode filtering
+- **Purpose:** Sync PlantUML diagrams with issue-186 changes — `CalculatorContext`, sin/cos/tan on `Calculator`, mode field on `Operation`, mode-aware `OperationRegistry`, and mode switching in REPL/CLI
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-186-scientific-mode (2026-04-20)
 
 - **Branch:** task/issue-186-scientific-mode

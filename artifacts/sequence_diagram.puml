@@ -1,6 +1,7 @@
 @startuml sequence_diagram
 
 participant "__main__" as Main
+participant "CalculatorContext" as Ctx
 participant "OperationHistory" as History
 participant "ErrorLogger" as ErrLog
 participant "REPLInterface" as REPL
@@ -14,7 +15,8 @@ note over Calc, Engine
   Calculator (src/calculator.py) delegates arithmetic
   (add/subtract/multiply/divide) to its internal
   CalculationEngine (src/core/engine.py).
-  Scientific operations are handled directly by Calculator.
+  Scientific operations (factorial, square, cube, roots,
+  power, log, ln, sin, cos, tan) are handled directly.
   src/operations/ (arithmetic.py, roots.py, scientific.py)
   provides standalone utility functions for direct import;
   not invoked by the OperationRegistry dispatch chain.
@@ -39,27 +41,56 @@ note over ErrLog
   at session start for isolation.
 end note
 
+Main -> Ctx : CalculatorContext()
+activate Ctx
+note over Ctx
+  Defaults to mode="normal".
+  Single source of truth for mode state.
+  Passed to both REPL and CLI.
+end note
+
 alt REPL mode (argv empty or ["--repl"])
 
-  Main -> REPL : REPLInterface(calculator, history, error_logger)
+  Main -> REPL : REPLInterface(calculator, history, error_logger, context)
   activate REPL
   REPL -> OperReg : OperationRegistry(calculator)
   activate OperReg
+  REPL -> OperReg : set_mode(context.get_mode())
   note over OperReg
-    Builds _lookup from _CATALOG (12 operations).
+    Builds _lookup from _CATALOG (15 operations).
     All names and aliases mapped to Operation objects.
+    _current_mode synced from CalculatorContext.
+    Operations with mode="scientific" (sin/cos/tan)
+    only visible when _current_mode == "scientific".
   end note
 
   Main -> REPL : run()
 
   loop until user exits or MaxRetriesExceeded
 
-    REPL -> User : display operation menu
+    REPL -> Ctx : get_mode()
+    Ctx --> REPL : current_mode
+    REPL -> User : display current mode and operation menu
 
     loop up to MAX_RETRIES attempts
-      User -> REPL : select operation (e.g. "1", "history", or "quit")
-      alt valid selection
+      User -> REPL : select operation, "mode <name>", "history", or "quit"
+
+      alt "mode <name>" command
+        REPL -> Ctx : set_mode(mode_name)
+        REPL -> OperReg : set_mode(mode_name)
+        REPL -> REPL : _refresh_operations()
+        note over REPL
+          _refresh_operations() re-queries
+          OperationRegistry.get_operations() and
+          rebuilds _operation_keys so menu
+          numbering reflects the new mode.
+        end note
+        REPL -> User : print "Mode switched to: <mode_name>"
+        REPL -> User : re-display updated menu
+      else valid numeric selection
         REPL -> REPL : resolve operation key
+      else "history" or "quit"
+        REPL -> REPL : return keyword
       else invalid input
         REPL -> REPL : attempts++
         alt attempts >= MAX_RETRIES
@@ -70,7 +101,7 @@ alt REPL mode (argv empty or ["--repl"])
             prints the message, and returns.
           end note
         else
-          REPL -> User : "Invalid selection. Enter a number from the list or 'quit'."
+          REPL -> User : "Invalid selection. Enter a number from the list, 'history', 'mode <name>', or 'quit'."
         end
       end
     end
@@ -201,6 +232,18 @@ alt REPL mode (argv empty or ["--repl"])
         note over Calc
           natural_logarithm(0) or negative raises ValueError.
         end note
+      else operation == "sin" (scientific mode)
+        OperReg -> Calc : sin(x)
+        Calc --> OperReg : math.sin(x)
+        OperReg --> REPL : result
+      else operation == "cos" (scientific mode)
+        OperReg -> Calc : cos(x)
+        Calc --> OperReg : math.cos(x)
+        OperReg --> REPL : result
+      else operation == "tan" (scientific mode)
+        OperReg -> Calc : tan(x)
+        Calc --> OperReg : math.tan(x)
+        OperReg --> REPL : result
       end
 
       alt result returned successfully
@@ -227,13 +270,16 @@ alt REPL mode (argv empty or ["--repl"])
 
 else CLI mode (argv has operation + operands)
 
-  Main -> CLI : CLIHandler(calculator, history, error_logger)
+  Main -> CLI : CLIHandler(calculator, history, error_logger, context)
   activate CLI
   CLI -> OperReg : OperationRegistry(calculator)
   activate OperReg
+  CLI -> OperReg : set_mode(context.get_mode())
   note over OperReg
     Same registry used for token resolution,
     arity lookup, and dispatch.
+    Mode synced from CalculatorContext at startup.
+    Scientific operations unavailable in normal mode.
   end note
 
   Main -> CLI : execute(argv)
@@ -243,7 +289,7 @@ else CLI mode (argv has operation + operands)
   CLI -> OperReg : arity(raw_op) — validate operand count
   OperReg --> CLI : method_name, expected arity
 
-  alt unknown operation
+  alt unknown operation or not in current mode
     CLI -> ErrLog : log_error(UNSUPPORTED_OPERATION, argv[0], exception)
     CLI --> Main : raises ValueError("Unknown operation: ...")
     Main -> User : print error to stderr; exit(2)
@@ -268,7 +314,7 @@ else CLI mode (argv has operation + operands)
     Engine --> Calc : result
     Calc --> OperReg : result
     OperReg --> CLI : result
-  else scientific operation (factorial/square/etc.)
+  else scientific operation (factorial/square/etc./sin/cos/tan)
     OperReg -> Calc : <method_name>(*operands)
     Calc --> OperReg : result
     OperReg --> CLI : result
@@ -289,6 +335,7 @@ else CLI mode (argv has operation + operands)
 
 end
 
+deactivate Ctx
 deactivate ErrLog
 deactivate History
 deactivate Calc
