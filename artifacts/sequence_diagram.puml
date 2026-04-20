@@ -35,7 +35,7 @@ alt sys.argv has arguments (CLI mode)
     Calc -> Registry : <<create>>
     activate Registry
     Calc -> Registry : register_basic_operations(registry)\n[Add, Subtract, Multiply, Divide, Power,\nFactorial, Square, Cube, SquareRoot,\nCubeRoot, Log10, NaturalLog registered]
-    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
+    Calc -> Registry : register_scientific_operations(registry)\n[Sin, Cos, Tan, Exp, Log, Log10, Sqrt,\nFactorial (scientific) registered;\nlog10 and factorial overwrite basic variants]
     CLI -> CLI : parse_and_evaluate(expression, calc)
 
     alt SyntaxError during ast.parse
@@ -120,23 +120,33 @@ else no arguments (interactive mode)
     activate Hist
     Calc -> Registry : <<create>>
     activate Registry
-    Calc -> Registry : register_basic_operations(registry)\n[12 operations registered]
-    Calc -> Registry : register_scientific_operations(registry)\n[stub — registers nothing currently]
-    note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module
-    UI -> User : display numbered operation list
+    Calc -> Registry : register_basic_operations(registry)\n[12 basic operations registered]
+    Calc -> Registry : register_scientific_operations(registry)\n[8 scientific operations registered]
+    note right of UI : MAX_RETRIES = DEFAULT_MAX_RETRIES (3)\nfrom input_retry module\nmode = "normal" initially
+    UI -> User : display numbered operation list\n(BASIC_OPERATIONS in normal mode)
 
     loop until quit or retry limit reached
-        UI -> User : prompt "Select operation:"
-        User -> UI : operation name or 'quit'/'exit'
+        UI -> User : prompt "[MODE] > "
+        User -> UI : command string
 
         alt input is 'quit' or 'exit'
             UI -> User : "Bye!"
             UI --> Main : return
+
+        else input is 'mode'
+            UI -> UI : toggle mode ("normal" ↔ "scientific")
+            UI -> Calc : set_mode(mode)
+            Calc --> UI : (mode updated)
+            UI -> User : "Switched to <mode> mode."
+            UI -> User : display updated operation list\n(BASIC_OPERATIONS + SCIENTIFIC_OPERATIONS\nin scientific mode)
+
         else unknown operation (op_attempts < MAX_RETRIES)
             UI -> User : unknown-operation error message
+
         else unknown operation (op_attempts >= MAX_RETRIES)
             UI -> User : max-retries-exceeded error
             UI --> Main : return
+
         else valid operation
 
             loop for each required operand (up to MAX_RETRIES per operand)
@@ -159,7 +169,7 @@ else no arguments (interactive mode)
                 note right of UI : skip execute_operation, continue loop
             else all operands collected
 
-                UI -> UI : execute_operation(calc, operation, operands)
+                UI -> UI : execute_operation(calc, operation, operands, active_ops)
                 UI -> Calc : resolved_method(*operands)
 
                 alt add / subtract / multiply
@@ -263,6 +273,43 @@ else no arguments (interactive mode)
                     Engine --> Calc : float
                     Calc -> Hist : add_record("natural_log", [x], result, now())
                     Calc --> UI : float result
+                else sin / cos / exp (scientific mode)
+                    Calc -> Engine : sin/cos/exp(x)
+                    Engine -> Math : sin/cos/exp(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record(op, [x], result, now())
+                    Calc --> UI : float result
+                else tan — undefined (|cos(x)| < 1e-9)
+                    Calc -> Engine : tan(x)
+                    Engine -> LogConf : logger.error("tan: value … undefined …")
+                    Engine --> Calc : ValueError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : ValueError propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError")
+                    UI --> UI : error string
+                else tan — valid
+                    Calc -> Engine : tan(x)
+                    Engine -> Math : tan(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record("tan", [x], result, now())
+                    Calc --> UI : float result
+                else log / sqrt (scientific mode) — invalid input
+                    Calc -> Engine : log/sqrt(x)
+                    Engine -> LogConf : logger.error("log/sqrt: … ValueError/TypeError")
+                    Engine --> Calc : ValueError or TypeError raised
+                    note right of Hist : history NOT recorded on error
+                    Calc --> UI : exception propagated
+                    UI -> LogConf : logger.error("execute_operation: … ValueError/TypeError")
+                    UI --> UI : error string
+                else log / sqrt (scientific mode) — valid
+                    Calc -> Engine : log/sqrt(x)
+                    Engine -> Math : log(x) or sqrt(x)
+                    Math --> Engine : float
+                    Engine --> Calc : float
+                    Calc -> Hist : add_record(op, [x], result, now())
+                    Calc --> UI : float result
                 end
 
                 UI -> UI : format_result(result) → str
@@ -294,10 +341,10 @@ note over Registry
   OperationRegistry (src/operations/base.py)
   maps operation name strings to Operation
   instances. Populated once in Calculator.__init__
-  via register_basic_operations() from
-  src/operations/basic.py. Supports future
-  extension via register_scientific_operations()
-  (src/operations/scientific.py — stub).
+  via register_basic_operations() (12 ops) and
+  register_scientific_operations() (8 ops).
+  "factorial" and "log10" scientific variants
+  overwrite the basic variants in the registry.
 end note
 
 note over Hist
@@ -317,6 +364,8 @@ note over Engine
   Calculator (src/logic/state.py) delegates
   all arithmetic here, then records in
   OperationHistory on success.
+  Scientific methods (sin, cos, tan, exp,
+  log, sqrt) delegate to Python math stdlib.
 end note
 
 note over LogConf

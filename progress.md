@@ -1,3 +1,13 @@
+## Run: update-diagrams (2026-04-20)
+
+- branch: task/issue-185-scientific-mode
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect scientific mode implementation — ArithmeticEngine and Calculator gained sin/cos/tan/exp/log/sqrt methods; operations/scientific.py now registers 8 concrete operation classes; presentation/interactive.py gained BASIC_OPERATIONS/SCIENTIFIC_OPERATIONS and mode-switching ("mode" command); Calculator gained _mode, get_mode(), set_mode()
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: scientific-mode-implementation (2026-04-20)
 
 - branch: exp2/naive-team
