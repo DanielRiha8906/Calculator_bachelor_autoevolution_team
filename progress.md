@@ -22,7 +22,7 @@
 - **Risks:** Mode state synchronization between CalculatorContext and OperationRegistry must be kept in sync; existing tests updated to reflect new catalog size
 - **Tests passed:** All 1307 tests pass
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 787.7s | Cost: $2.249960 USD | Turns: 20
 
 ## Run: update-diagrams (2026-04-19)
 
