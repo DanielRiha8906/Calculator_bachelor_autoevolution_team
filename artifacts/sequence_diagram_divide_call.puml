@@ -1,0 +1,29 @@
+@startuml
+title Calculator.divide() — Call Interaction
+
+participant Caller as caller
+participant Calculator as calc
+
+caller ->> calc : divide(a, b)
+activate calc
+
+calc -> calc : check type of a
+alt a is non-numeric
+    calc -->> caller : raise TypeError
+end
+
+calc -> calc : check type of b
+alt b is non-numeric
+    calc -->> caller : raise TypeError
+end
+
+calc -> calc : check b == 0
+alt b is zero
+    calc -->> caller : raise ZeroDivisionError
+end
+
+calc -> calc : result = a / b
+calc -->> caller : return result
+deactivate calc
+
+@enduml

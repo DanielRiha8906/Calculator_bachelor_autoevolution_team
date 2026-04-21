@@ -1,0 +1,32 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : numeric
+}
+
+note right of Calculator::divide
+  Validates both operands:
+  - Raises TypeError if a or b is non-numeric
+  - Raises ZeroDivisionError if b == 0
+  Accepts: int, float, bool, complex, inf, nan
+  Rejects: str, list, dict, None, objects
+end note
+
+package "src" {
+    class __init__ <<module>> {
+        exports Calculator
+    }
+    class __main__ <<module>> {
+        instantiates Calculator
+        calls: add, subtract, multiply, divide
+    }
+}
+
+__init__ ..> Calculator : exports
+__main__ ..> Calculator : uses
+
+@enduml

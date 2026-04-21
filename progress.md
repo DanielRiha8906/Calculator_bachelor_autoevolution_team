@@ -8,3 +8,13 @@
 - **Tests passed:** 28/28 (pytest exit code 0)
 
 Duration: 133.4s | Cost: $0.383459 USD | Turns: 16
+
+## Run: UML Diagrams — divide() input validation (issue #233)
+
+- **Branch:** task/issue-233-division-invalid-inputs
+- **Files changed:** artifacts/class_diagram_calculator.puml, artifacts/activity_diagram_divide_validation.puml, artifacts/sequence_diagram_divide_call.puml
+- **Purpose:** Created three focused PlantUML diagrams documenting the Calculator class structure, the divide() input validation activity flow, and the divide() call sequence interaction.
+- **Risks:** None — documentation artifacts only, no source or test files modified.
+- **Tests passed:** N/A (documentation-only run)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

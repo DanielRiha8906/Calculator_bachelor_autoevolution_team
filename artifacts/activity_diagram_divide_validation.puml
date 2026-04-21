@@ -1,0 +1,28 @@
+@startuml
+title Calculator.divide(a, b) — Input Validation Flow
+
+start
+
+if (is a numeric?\n(int, float, complex, bool)) then (no)
+  :raise TypeError;
+  stop
+else (yes)
+endif
+
+if (is b numeric?\n(int, float, complex, bool)) then (no)
+  :raise TypeError;
+  stop
+else (yes)
+endif
+
+if (b == 0?) then (yes)
+  :raise ZeroDivisionError;
+  stop
+else (no)
+endif
+
+:result = a / b;
+:return result;
+
+stop
+@enduml
