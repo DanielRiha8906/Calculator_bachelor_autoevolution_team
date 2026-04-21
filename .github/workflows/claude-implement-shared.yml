@@ -62,6 +62,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
           claude_args: "--max-turns 24"
+          mcp_config: |
+            {
+              "mcpServers": {
+                "github": {
+                  "command": "docker",
+                  "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+                  "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+                  }
+                }
+              }
+            }
           prompt: |
             You are the orchestrator of an autonomous multi-agent implementation pipeline. There is no human in the loop.
             Active branch: ${{ inputs.branch }}
@@ -206,6 +218,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
           claude_args: "--max-turns 35"
+          mcp_config: |
+            {
+              "mcpServers": {
+                "github": {
+                  "command": "docker",
+                  "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+                  "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+                  }
+                }
+              }
+            }
           prompt: |
             You are the orchestrator of an autonomous multi-agent diagram-update pipeline. There is no human in the loop.
             Active branch: ${{ needs.claude-implement.outputs.task_branch }}
