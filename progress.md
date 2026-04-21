@@ -307,3 +307,15 @@ Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
 - PR target: exp2/naive-team
 
 Duration: 453.3s | Cost: $1.005829 USD | Turns: 15
+
+## Run: issue-225-redesign-gui-ios-style (2026-04-21)
+
+- branch: task/issue-225-redesign-gui-ios-style
+- files changed: src/presentation/gui.py (modified), tests/test_gui.py (modified)
+- purpose: Redesign calculator GUI to iOS-inspired dark theme — black background, orange operator buttons (#FF9500), flat round buttons, 30pt display font
+- risks: Low — pure cosmetic changes; no logic altered. New tests use display which CI lacks (same issue as 125 pre-existing tests); 9 constant tests pass headlessly
+- tests passed: 9 passed (colour constant tests), 168 errors (pre-existing no-display issue; 125 errors existed before this run)
+- worktree/branch: task/issue-225-redesign-gui-ios-style
+- PR target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
