@@ -162,6 +162,41 @@ class "cli" <<module>> {
 class "user_input" <<module>> {
 }
 
+class CalculatorGUI {
+    -_root: tk.Tk
+    -_calc: Calculator
+    -_display_var: tk.StringVar
+    -_first_operand: Optional[float]
+    -_pending_op: Optional[str]
+    -_reset_on_next_digit: bool
+    -_scientific_visible: bool
+    -_BINARY_OPS: dict[str, str]
+    -_SCIENTIFIC_OPS: list[tuple[str, str]]
+    -_build_ui() : None
+    -_build_button_grid() : None
+    -_build_scientific_panel() : None
+    -_bind_keyboard() : None
+    -_update_display(text: str) : None
+    -_current_display() : str
+    -_parse_display() : float
+    -_reset_state() : None
+    -_on_number_click(digit: str) : None
+    -_on_operation_click(op: str) : None
+    -_on_equals_click() : None
+    -_on_clear_click() : None
+    -_on_backspace_click() : None
+    -_on_negate_click() : None
+    -_on_percent_click() : None
+    -_on_scientific_click(method_name: str) : None
+    -_toggle_scientific_mode() : None
+    -_execute_operation() : None
+    -_format_result(result: object) : str
+    +run() : None
+}
+
+class "presentation.gui" <<module>> {
+}
+
 class "operations.basic" <<module>> {
     +register_basic_operations(registry: OperationRegistry) : None
 }
@@ -202,9 +237,13 @@ Exception <|-- InvalidInputError
 Exception <|-- OperandRetryExceeded
 Exception <|-- RetryLimitExceeded
 
+CalculatorGUI "1" *-- "1" Calculator : uses
+
+"__main__" ..> "presentation.gui" : dispatches to (--gui flag)
 "__main__" ..> "presentation.cli" : dispatches to (argv present)
 "__main__" ..> "presentation.interactive" : dispatches to (no argv)
 "__main__" ..> "logging_config" : calls setup_logging()
+"presentation.gui" ..> CalculatorGUI : contains
 "presentation.interactive" ..> Calculator : uses
 "presentation.interactive" ..> InvalidInputError : raises
 "presentation.interactive" ..> OperandRetryExceeded : raises
@@ -471,9 +510,19 @@ end note
 
 note right of "__main__"::main
   Calls setup_logging() first, then
-  dispatches: len(sys.argv) > 1 →
-  run_cli(sys.argv[1:]); else →
-  run_interactive().
+  dispatches: args[0] == "--gui" →
+  CalculatorGUI(root).run(); elif args →
+  run_cli(args); else → run_interactive().
+end note
+
+note right of CalculatorGUI
+  Tkinter GUI (src/presentation/gui.py).
+  Constructor takes tk.Tk root window;
+  creates Calculator internally.
+  _BINARY_OPS maps +/-/*/÷/^ symbols to
+  Calculator method names. _SCIENTIFIC_OPS
+  lists 11 unary scientific buttons.
+  run() starts the tkinter main loop.
 end note
 
 note right of "logging_config"::setup_logging

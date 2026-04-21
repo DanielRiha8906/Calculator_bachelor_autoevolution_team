@@ -5,7 +5,43 @@ start
 :__main__.main() is invoked;
 :setup_logging() → configures "calculator" logger\n(FileHandler, ERROR level, calculator.log);
 
-if (sys.argv has arguments?) then (yes — CLI mode)
+if (args[0] == '--gui'?) then (yes — GUI mode)
+
+    partition "CalculatorGUI(root).run()" {
+        :import tkinter; create tk.Tk() root;
+        :Instantiate CalculatorGUI(root)\n(internally creates Calculator →\nArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations() and\nregister_scientific_operations());
+        :_build_ui() → builds display label,\nnumber pad, operator buttons,\n_toggle_scientific_mode() button;
+        :_bind_keyboard() → attach key handlers;
+        :app.run() → root.mainloop();
+
+        repeat
+            if (keyboard/button event?) then (digit or '.')
+                :_on_number_click(digit)\n→ append to display or start fresh;
+            elseif (binary op button (+,-,*,/,^)?) then (yes)
+                :_on_operation_click(op)\n→ if pending op, execute it first;\n→ store _first_operand, _pending_op;
+            elseif ('=' button or Enter key?) then (yes)
+                :_on_equals_click()\n→ _execute_operation();\n→ Calculator.method(first, current)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;\n→ _update_display(formatted result);
+            elseif ('C' / Escape?) then (yes)
+                :_on_clear_click()\n→ reset display to "0"\n→ clear _first_operand, _pending_op;
+            elseif (Backspace?) then (yes)
+                :_on_backspace_click()\n→ remove last display character;
+            elseif ('+/-' button?) then (yes)
+                :_on_negate_click() → toggle sign;
+            elseif ('%' button?) then (yes)
+                :_on_percent_click() → divide display by 100;
+            elseif (scientific button?) then (yes)
+                :_on_scientific_click(method_name)\n→ Calculator.method(current)\n→ ArithmeticEngine computes\n→ Calculator records in OperationHistory;\n→ _update_display(formatted result);
+            elseif ('SCI'/'BASIC' toggle?) then (yes)
+                :_toggle_scientific_mode()\n→ show/hide scientific panel;
+            else (window close)
+                :root.mainloop() exits;
+                stop
+            endif
+        repeat while (window open?) is (yes)
+        stop
+    }
+
+elseif (sys.argv has other arguments?) then (yes — CLI mode)
 
     partition "presentation.cli.run_cli(args)" {
         if (args is empty?) then (yes)
@@ -86,7 +122,7 @@ if (sys.argv has arguments?) then (yes — CLI mode)
         endif
     }
 
-else (no — interactive mode)
+else (no arguments — interactive mode)
 
     partition "presentation.interactive.run_interactive()" {
         :Instantiate Calculator\n(creates ArithmeticEngine + OperationHistory +\nOperationRegistry populated via\nregister_basic_operations() and\nregister_scientific_operations());
