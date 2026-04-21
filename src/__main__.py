@@ -8,12 +8,24 @@ from src.presentation.interactive import run_interactive
 def main() -> None:
     """Entry point for the calculator.
 
-    Dispatches to CLI mode when arguments are provided on the command line,
-    otherwise falls back to the interactive prompt.
+    Dispatches based on the provided arguments:
+
+    - ``--gui``: Launch the Tkinter graphical interface.
+    - Any other arguments: Evaluate the expression in CLI mode.
+    - No arguments: Start the interactive prompt.
     """
     setup_logging()
-    if len(sys.argv) > 1:
-        exit_code = run_cli(sys.argv[1:])
+    args = sys.argv[1:]
+
+    if args and args[0] == "--gui":
+        import tkinter as tk
+        from src.presentation.gui import CalculatorGUI
+
+        root = tk.Tk()
+        app = CalculatorGUI(root)
+        app.run()
+    elif args:
+        exit_code = run_cli(args)
         sys.exit(exit_code)
     else:
         run_interactive()

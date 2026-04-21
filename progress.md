@@ -1,3 +1,18 @@
+## Run: issue-188-gui-tkinter (2026-04-21)
+
+- branch: task/issue-188-gui-tkinter
+- files changed:
+  - src/presentation/gui.py (created) — CalculatorGUI class with tkinter window, number/operation buttons, scientific mode toggle, keyboard bindings, error display
+  - src/__main__.py (modified) — added --gui flag dispatch to launch GUI mode
+  - tests/test_gui.py (created) — 125 tests across 9 test classes covering initialization, display, number input, arithmetic, clear/backspace, negate/percent, scientific mode, error handling, and integration workflows
+- purpose: Add tkinter GUI for the calculator app (Issue #188); all existing functionality remains accessible via CLI and interactive modes
+- risks: tkinter requires a display server (xvfb-run used in CI); GUI tests use root.withdraw() to avoid visible windows; no behavioral changes to core logic
+- tests passed: yes — 125 new tests pass; 1444 total tests pass (0 regressions)
+- worktree/branch: task/issue-188-gui-tkinter
+- PR target: exp2/naive-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-20)
 
 - branch: task/issue-185-scientific-mode
