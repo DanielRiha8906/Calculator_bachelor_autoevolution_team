@@ -11,8 +11,9 @@ from .support.history import OperationHistory
 def main(argv: list[str] | None = None) -> None:
     """Entry point for the calculator application.
 
-    Operates in two modes depending on the command-line arguments:
+    Operates in three modes depending on the command-line arguments:
 
+    - GUI mode: launched when ``--gui`` is the sole argument.
     - REPL mode: launched when no extra arguments are provided (argv is empty).
     - CLI mode: launched when an operation and at least one operand are provided.
 
@@ -38,6 +39,16 @@ def main(argv: list[str] | None = None) -> None:
 
     calc = Calculator()
     context = CalculatorContext()
+
+    if len(argv) == 1 and argv[0] == "--gui":
+        # GUI mode — launch the tkinter-based calculator window.
+        from .interface.gui import GUICalculator
+        gui = GUICalculator(calc, history=history, error_logger=error_logger, context=context)
+        try:
+            gui.mainloop()
+        except (KeyboardInterrupt, EOFError):
+            print("\nCalculator closed.")
+        return
 
     if len(argv) == 0 or (len(argv) == 1 and argv[0] == "--repl"):
         # REPL mode — existing behaviour unchanged.
