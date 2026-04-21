@@ -1,4 +1,15 @@
 
+## Run: issue-226-ios-calculator-redesign (2026-04-21)
+
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **Files changed:**
+  - `src/interface/gui.py` — complete GUI visual redesign: black window background, large right-aligned result display (28pt white text), minimal mode toggle buttons, 4-column flat button grid with SYMBOL_MAP (Unicode symbols) and OPERATOR_COLORS (orange for arithmetic, dark grey for others, light grey for utilities); removed io/history panels, _parse_float, _show_error, _refresh_history_display; added _build_result_display, _build_mode_toggle, _update_mode_button_highlights, _on_select_mode
+  - `tests/interface/test_gui.py` — updated tests to match new layout: added module constant tests (SYMBOL_MAP, OPERATOR_COLORS, color values), GUI class tests; removed tests for deleted methods; 59 tests skipped (headless tkinter unavailable in CI, documented with reasons)
+- **Purpose:** Implement iOS-inspired dark calculator UI (Issue #226) — visual-only redesign, no calculation logic changes
+- **Risks:** Operand input now uses simpledialog.askfloat() dialogs instead of persistent Entry fields; history panel removed; 59 GUI widget tests are skipped pending a display environment
+- **Tests:** 21 passed, 59 skipped, 0 failed (PYTHONPATH=.)
+- **Intended PR target:** exp2/structured-team
+
 ## Run: update-diagrams (2026-04-21)
 
 - **Branch:** task/issue-189-gui-tkinter
