@@ -1,3 +1,28 @@
+## Run: update-diagrams (2026-04-21)
+
+- branch: task/issue-188-gui-tkinter
+- files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
+- purpose: Update PlantUML diagrams to reflect tkinter GUI implementation — CalculatorGUI class added with full attribute/method listing; __main__ dispatch updated to include --gui branch; activity and sequence diagrams extended with GUI mode flow (button events, binary/unary op dispatch, scientific panel toggle)
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 213.5s | Cost: $0.691718 USD | Turns: 23
+
+## Run: issue-188-gui-tkinter (2026-04-21)
+
+- branch: task/issue-188-gui-tkinter
+- files changed:
+  - src/presentation/gui.py (created) — CalculatorGUI class with tkinter window, number/operation buttons, scientific mode toggle, keyboard bindings, error display
+  - src/__main__.py (modified) — added --gui flag dispatch to launch GUI mode
+  - tests/test_gui.py (created) — 125 tests across 9 test classes covering initialization, display, number input, arithmetic, clear/backspace, negate/percent, scientific mode, error handling, and integration workflows
+- purpose: Add tkinter GUI for the calculator app (Issue #188); all existing functionality remains accessible via CLI and interactive modes
+- risks: tkinter requires a display server (xvfb-run used in CI); GUI tests use root.withdraw() to avoid visible windows; no behavioral changes to core logic
+- tests passed: yes — 125 new tests pass; 1444 total tests pass (0 regressions)
+- worktree/branch: task/issue-188-gui-tkinter
+- PR target: exp2/naive-team
+
+Duration: 554.6s | Cost: $1.282713 USD | Turns: 17
+
 ## Run: update-diagrams (2026-04-20)
 
 - branch: task/issue-185-scientific-mode
