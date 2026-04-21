@@ -116,6 +116,9 @@ package "src.gui" {
         -_calculator : Calculator
         -_mode : CalcMode
         -_history_tracker : HistoryTracker
+        -_display_var : tk.StringVar
+        -_display : tk.Label
+        -_history_listbox : tk.Listbox
         -_current_input : str
         -_first_operand : float | None
         -_pending_op : tuple | None
@@ -123,10 +126,11 @@ package "src.gui" {
         +__init__(root, calculator, mode, history_tracker)
         -_build_ui() : None
         -_build_display(parent) : None
-        -_build_mode_buttons(parent) : None
-        -_build_number_buttons(parent) : None
-        -_build_operation_buttons(parent) : None
+        -_build_mode_toggle(parent) : None
+        -_build_button_grid(parent) : None
+        -_bind_hover(btn, default_bg, hover_bg) : None
         -_build_history_panel(parent) : None
+        -_toggle_mode() : None
         -_on_digit(digit: str) : None
         -_on_decimal() : None
         -_on_clear() : None
@@ -322,7 +326,12 @@ note right of ScientificMode
 end note
 
 note right of CalculatorGUI
-  Tkinter-based GUI; no arithmetic performed here.
+  iOS-style Tkinter GUI; no arithmetic performed here.
+  Display is a tk.Label backed by _display_var (tk.StringVar).
+  Single mode-toggle button: label shows the mode to switch TO.
+  _toggle_mode() calls _switch_to_simple() or _switch_to_scientific().
+  _bind_hover() simulates CSS hover via tkinter Enter/Leave events.
+  _build_button_grid() renders digits + ops in a unified 4-column grid.
   Binary ops queue first_operand + pending_op until "=" is pressed.
   Unary ops execute immediately on current_input.
   Mode switch rebuilds entire widget tree (_build_ui).

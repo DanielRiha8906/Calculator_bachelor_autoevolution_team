@@ -74,17 +74,12 @@ elseif (Mode?) then (GUI — via gui_main)
         elseif (C (clear) button pressed?) then (yes)
             :Reset _current_input, _first_operand,\n_pending_op, _pending_op_name;
             :Set display to "0";
-        elseif (Simple mode button pressed?) then (yes)
-            if (current mode already Simple?) then (yes)
-                :no-op;
-            else (no)
-                :_switch_to_simple()\n→ new SimpleMode, _reset_transient_state, _build_ui;
-            endif
-        elseif (Scientific mode button pressed?) then (yes)
-            if (current mode already Scientific?) then (yes)
-                :no-op;
-            else (no)
+        elseif (Mode toggle button pressed?) then (yes)
+            :_toggle_mode();
+            if (current mode is Simple?) then (yes)
                 :_switch_to_scientific()\n→ new ScientificMode, _reset_transient_state, _build_ui;
+            else (no — current mode is Scientific)
+                :_switch_to_simple()\n→ new SimpleMode, _reset_transient_state, _build_ui;
             endif
         elseif (operation button pressed?) then (yes)
             :_parse_current_input() → value;

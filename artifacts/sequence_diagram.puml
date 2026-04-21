@@ -88,31 +88,15 @@ else GUI Mode (python -m src.gui_main)
     mode -> oreg : get_normal_operations()
     oreg --> mode : ops dict (6 ops)
     mode --> gui : ops dict (6 ops)
-    gui -> gui : build display, mode buttons,\nnumber buttons, op buttons, history panel
+    gui -> gui : build display, mode toggle button,\nbutton grid (unified 4-col), history panel
 
     loop tkinter event loop
 
         alt digit / decimal / clear button pressed
             gui -> gui : update _current_input, refresh display
 
-        else Simple mode button pressed
-            alt current mode already Simple
-                gui -> gui : no-op
-            else switch to Simple
-                gui -> mode : <<create>> SimpleMode(calculator)
-                mode -> oreg : <<create>>(calculator)
-                gui -> gui : _reset_transient_state()
-                gui -> gui : _build_ui()
-                gui -> mode : get_operations()
-                mode -> oreg : get_normal_operations()
-                oreg --> mode : ops dict (6 ops)
-                mode --> gui : ops dict (6 ops)
-            end
-
-        else Scientific mode button pressed
-            alt current mode already Scientific
-                gui -> gui : no-op
-            else switch to Scientific
+        else Mode toggle button pressed (_toggle_mode)
+            alt current mode is Simple → switch to Scientific
                 gui -> mode : <<create>> ScientificMode(calculator)
                 mode -> oreg : <<create>>(calculator)
                 gui -> gui : _reset_transient_state()
@@ -121,6 +105,15 @@ else GUI Mode (python -m src.gui_main)
                 mode -> oreg : get_scientific_operations()
                 oreg --> mode : ops dict (18 ops)
                 mode --> gui : ops dict (18 ops)
+            else current mode is Scientific → switch to Simple
+                gui -> mode : <<create>> SimpleMode(calculator)
+                mode -> oreg : <<create>>(calculator)
+                gui -> gui : _reset_transient_state()
+                gui -> gui : _build_ui()
+                gui -> mode : get_operations()
+                mode -> oreg : get_normal_operations()
+                oreg --> mode : ops dict (6 ops)
+                mode --> gui : ops dict (6 ops)
             end
 
         else unary operation button pressed

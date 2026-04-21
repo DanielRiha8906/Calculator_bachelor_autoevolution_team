@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-227-redesign-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-227 iOS-style GUI redesign: CalculatorGUI class diagram updated with new attributes (_display_var: tk.StringVar, _display: tk.Label, _history_listbox: tk.Listbox) and new/changed methods (_build_mode_toggle, _build_button_grid, _bind_hover, _toggle_mode replacing the old _build_mode_buttons, _build_number_buttons, _build_operation_buttons). Activity diagram updated to replace the two separate Simple/Scientific mode button events with a single Mode toggle button event calling _toggle_mode(). Sequence diagram updated with single toggle alt block and corrected _build_ui() description.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 179.2s | Cost: $0.580866 USD | Turns: 18
+
+---
+
+## Run: issue-227 — iOS-style GUI Redesign (Expert/Team)
+
+- **Branch:** task/issue-227-redesign-expert-team
+- **Files changed:** src/gui/application.py (redesigned), tests/test_gui_integration.py (24 new tests added)
+- **Purpose:** Fully redesign CalculatorGUI with iOS-style layout: black background, full-width Label display (32pt bold monospaced), single mode toggle button, unified 4-column button grid with flat buttons, iOS colour palette (_THEME), Unicode symbol labels (_SYMBOLS), hover effects via _bind_hover. All calculation logic unchanged.
+- **Risks:** Low — only presentation layer changed. All public method signatures preserved. Display changed from Entry to Label (both backed by StringVar). Existing tests updated for new widget type where needed.
+- **Tests passed:** 864 passed, 19 skipped (tkinter-only tests skipped in headless CI)
+- **PR target:** exp2/expert-team
+
+Duration: 472.7s | Cost: $1.277222 USD | Turns: 22
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-190-gui-expert-team
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect issue-190 GUI changes: new src.gui package with CalcMode (ABC), SimpleMode, ScientificMode, and CalculatorGUI; new gui_main entry point. Class diagram adds src.gui package with inheritance (SimpleMode/ScientificMode extend CalcMode), CalculatorGUI composition, and new GUIEntryPoint module with all dependency edges. Activity diagram adds GUI branch covering event-loop interactions: digit/decimal/clear input, Simple/Scientific mode switching (rebuild UI), unary op immediate dispatch, binary op queuing with equals execution, history refresh. Sequence diagram adds GUI mode alt block covering gui_main startup, CalculatorGUI construction, mode switching with OperationRegistry delegation, unary/binary operation dispatch to Calculator, and HistoryTracker recording.
