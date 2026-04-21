@@ -1,5 +1,15 @@
 ## Run: update-diagrams (2026-04-21)
 
+- branch: task/issue-225-redesign-gui-ios-style
+- files changed: artifacts/class_diagram.puml
+- purpose: Update class diagram to reflect iOS-style GUI redesign — module-level colour constants added to presentation.gui, _btn() factory method added to CalculatorGUI, _build_button_grid/_build_scientific_panel signatures updated with parameters, CalculatorGUI note updated to describe iOS dark theme and corrected _SCIENTIFIC_OPS count to 12. Activity and sequence diagrams unchanged (behaviour unaffected by cosmetic redesign).
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-21)
+
 - branch: task/issue-188-gui-tkinter
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to reflect tkinter GUI implementation — CalculatorGUI class added with full attribute/method listing; __main__ dispatch updated to include --gui branch; activity and sequence diagrams extended with GUI mode flow (button events, binary/unary op dispatch, scientific panel toggle)

@@ -173,8 +173,9 @@ class CalculatorGUI {
     -_BINARY_OPS: dict[str, str]
     -_SCIENTIFIC_OPS: list[tuple[str, str]]
     -_build_ui() : None
-    -_build_button_grid() : None
-    -_build_scientific_panel() : None
+    -_btn(parent, text, command, bg, fg, font, width, height) : tk.Button
+    -_build_button_grid(parent: tk.Frame, font: Font) : None
+    -_build_scientific_panel(parent: tk.Frame, font: Font) : None
     -_bind_keyboard() : None
     -_update_display(text: str) : None
     -_current_display() : str
@@ -195,6 +196,15 @@ class CalculatorGUI {
 }
 
 class "presentation.gui" <<module>> {
+    +BACKGROUND_COLOR: str
+    +DISPLAY_BG: str
+    +DISPLAY_TEXT_COLOR: str
+    +NUMBER_BUTTON_BG: str
+    +NUMBER_BUTTON_TEXT: str
+    +FUNCTION_BUTTON_BG: str
+    +FUNCTION_BUTTON_TEXT: str
+    +OPERATOR_BUTTON_BG: str
+    +OPERATOR_BUTTON_TEXT: str
 }
 
 class "operations.basic" <<module>> {
@@ -517,11 +527,16 @@ end note
 
 note right of CalculatorGUI
   Tkinter GUI (src/presentation/gui.py).
+  iOS-inspired dark theme: black background,
+  orange operator buttons (#FF9500), grey
+  number buttons (#505050), flat relief.
   Constructor takes tk.Tk root window;
   creates Calculator internally.
   _BINARY_OPS maps +/-/*/÷/^ symbols to
   Calculator method names. _SCIENTIFIC_OPS
-  lists 11 unary scientific buttons.
+  lists 12 unary scientific buttons (label,
+  method). _btn() factory applies the theme
+  and auto-computes an active-background.
   run() starts the tkinter main loop.
 end note
 
