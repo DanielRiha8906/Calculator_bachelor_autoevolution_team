@@ -1,0 +1,35 @@
+@startuml sequence_test_divide
+
+skinparam sequenceArrowFontSize 11
+skinparam participantFontStyle bold
+
+actor "TestDivisionInvalidInputs" as test
+participant "pytest.raises\n(context manager)" as ctx
+participant "calc\n(Calculator)" as calc
+participant "Calculator.divide" as divide
+participant "Python Runtime" as runtime
+
+test -> calc : fixture provides Calculator()
+activate calc
+
+test -> ctx : enter pytest.raises(ZeroDivisionError)
+activate ctx
+
+test ->> divide : calc.divide(10, 0)
+activate divide
+
+divide ->> runtime : evaluate 10 / 0
+activate runtime
+
+runtime -->> divide : raises ZeroDivisionError
+deactivate runtime
+deactivate divide
+
+divide -->> ctx : ZeroDivisionError propagates
+ctx -> ctx : catches and verifies\nexception type
+
+ctx -->> test : assertion satisfied —\ntest passes
+deactivate ctx
+deactivate calc
+
+@enduml

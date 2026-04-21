@@ -1,0 +1,34 @@
+@startuml class_calculator
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+package "src" {
+
+    class Calculator {
+        + add(a, b) : numeric
+        + subtract(a, b) : numeric
+        + multiply(a, b) : numeric
+        + divide(a, b) : numeric
+    }
+
+    note right of Calculator
+        Stateless — no instance
+        attributes; all methods
+        delegate to Python operators
+    end note
+
+}
+
+package "__main__" {
+    class "main()" as main <<function>>
+}
+
+package "__init__" {
+    class "exports" as init <<module>>
+}
+
+main --> Calculator : instantiates\nand uses
+init ..> Calculator : exports
+
+@enduml

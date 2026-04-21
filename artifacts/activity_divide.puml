@@ -1,0 +1,34 @@
+@startuml activity_divide
+
+skinparam ActivityFontSize 13
+skinparam ArrowFontSize 11
+
+start
+
+:divide(a, b) called;
+
+:Evaluate a / b\n(Python runtime operator);
+
+if (a or b is non-numeric?\n(str / None / list / dict / object)) then (yes)
+    :Python raises **TypeError**;
+    :Exception propagates\nto caller;
+    stop
+else (no)
+    if (b == 0\nand a is numeric?) then (yes)
+        :Python raises **ZeroDivisionError**;
+        :Exception propagates\nto caller;
+        stop
+    else (no — both numeric, b ≠ 0)
+        :Return numeric result\n(a / b);
+        stop
+    endif
+endif
+
+note right
+  No explicit validation
+  inside divide(). All
+  detection is handled
+  by the Python runtime.
+end note
+
+@enduml
