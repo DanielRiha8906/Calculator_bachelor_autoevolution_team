@@ -20,6 +20,60 @@ from src.support.history import HistoryTracker
 from src.gui.modes import CalcMode, SimpleMode, ScientificMode
 
 
+_THEME = {
+    "window_bg": "#000000",
+    "display_bg": "#000000",
+    "display_fg": "#FFFFFF",
+    "display_font": ("Courier", 32, "bold"),
+    "btn_font": ("Arial", 18),
+    "mode_btn_font": ("Arial", 14),
+    # Arithmetic operators (add, subtract, multiply, divide)
+    "op_bg": "#FF9500",
+    "op_fg": "#FFFFFF",
+    "op_hover": "#FFB143",
+    # Scientific / utility ops in scientific mode
+    "sci_bg": "#1C1C1E",
+    "sci_fg": "#FFFFFF",
+    "sci_hover": "#2C2C2E",
+    # Standard ops in normal mode (non-arithmetic)
+    "std_bg": "#333333",
+    "std_fg": "#FFFFFF",
+    "std_hover": "#4D4D4D",
+    # History panel
+    "history_bg": "#1C1C1E",
+    "history_fg": "#AAAAAA",
+    "history_list_fg": "#CCCCCC",
+    "history_select_bg": "#FF9500",
+    "history_select_fg": "#FFFFFF",
+    "frame_bg": "#000000",
+}
+
+_SYMBOLS = {
+    "add": "+",
+    "subtract": "−",
+    "multiply": "×",
+    "divide": "÷",
+    "square": "x²",
+    "square_root": "√",
+    "cube": "x³",
+    "cube_root": "∛",
+    "power": "xʸ",
+    "factorial": "n!",
+    "log": "log",
+    "ln": "ln",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "cot": "cot",
+    "asin": "asin",
+    "acos": "acos",
+    "pi": "π",
+    "e": "e",
+}
+
+_ARITHMETIC_OPS = {"add", "subtract", "multiply", "divide"}
+
+
 class CalculatorGUI:
     """Tkinter-based calculator GUI.
 
@@ -77,94 +131,99 @@ class CalculatorGUI:
         for widget in self._root.winfo_children():
             widget.destroy()
 
-        self._root.configure(bg="#2b2b2b")
+        self._root.configure(bg=_THEME["window_bg"])
         self._root.resizable(True, True)
 
-        # ---- top-level frames ----
-        left_frame = tk.Frame(self._root, bg="#2b2b2b")
-        left_frame.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
+        # Left frame: calculator
+        left_frame = tk.Frame(self._root, bg=_THEME["frame_bg"])
+        left_frame.grid(row=0, column=0, sticky="nsew")
 
-        right_frame = tk.Frame(self._root, bg="#2b2b2b")
-        right_frame.grid(row=0, column=1, padx=8, pady=8, sticky="nsew")
+        # Right frame: history
+        right_frame = tk.Frame(self._root, bg=_THEME["history_bg"])
+        right_frame.grid(row=0, column=1, padx=(4, 0), sticky="nsew")
 
         self._root.columnconfigure(0, weight=3)
         self._root.columnconfigure(1, weight=2)
         self._root.rowconfigure(0, weight=1)
 
+        # Build sections into left_frame
         self._build_display(left_frame)
-        self._build_mode_buttons(left_frame)
-        self._build_number_buttons(left_frame)
-        self._build_operation_buttons(left_frame)
+        self._build_mode_toggle(left_frame)
+        self._build_button_grid(left_frame)
         self._build_history_panel(right_frame)
 
         self._refresh_history()
 
     def _build_display(self, parent: tk.Frame) -> None:
-        """Build the calculator display entry widget.
+        """Build the calculator display label widget.
 
         Args:
             parent: The parent frame to attach the display to.
         """
-        display_font = tkfont.Font(family="Courier", size=20, weight="bold")
         self._display_var = tk.StringVar(value="0")
-        self._display = tk.Entry(
+        self._display = tk.Label(
             parent,
             textvariable=self._display_var,
-            font=display_font,
+            font=_THEME["display_font"],
+            bg=_THEME["display_bg"],
+            fg=_THEME["display_fg"],
+            anchor="e",
+            padx=12,
+            pady=8,
+        )
+        self._display.grid(row=0, column=0, columnspan=4, sticky="ew")
+        for c in range(4):
+            parent.columnconfigure(c, weight=1)
+
+    def _build_mode_toggle(self, parent: tk.Frame) -> None:
+        """Build the single mode-toggle button.
+
+        The button label reflects the mode the calculator will switch TO
+        when pressed (i.e. "Scientific" when in Simple mode and vice versa).
+
+        Args:
+            parent: The parent frame to attach the button to.
+        """
+        label = "Scientific" if self._mode.name == "Simple" else "Normal"
+        btn = tk.Button(
+            parent,
+            text=label,
+            font=_THEME["mode_btn_font"],
+            bg=_THEME["std_bg"],
+            fg=_THEME["std_fg"],
+            activebackground=_THEME["std_hover"],
+            activeforeground=_THEME["std_fg"],
+            relief="flat",
             bd=0,
-            bg="#1e1e1e",
-            fg="#ffffff",
-            insertbackground="#ffffff",
-            justify="right",
-            state="readonly",
-            readonlybackground="#1e1e1e",
+            command=self._toggle_mode,
         )
-        self._display.grid(row=0, column=0, columnspan=4, sticky="ew", padx=4, pady=(4, 8))
-        parent.columnconfigure(0, weight=1)
-        parent.columnconfigure(1, weight=1)
-        parent.columnconfigure(2, weight=1)
-        parent.columnconfigure(3, weight=1)
+        btn.grid(row=1, column=0, columnspan=4, sticky="ew")
+        self._bind_hover(btn, _THEME["std_bg"], _THEME["std_hover"])
 
-    def _build_mode_buttons(self, parent: tk.Frame) -> None:
-        """Build the Simple / Scientific mode-switch buttons.
+    def _toggle_mode(self) -> None:
+        """Toggle between Simple and Scientific modes."""
+        if self._mode.name == "Simple":
+            self._switch_to_scientific()
+        else:
+            self._switch_to_simple()
+
+    def _build_button_grid(self, parent: tk.Frame) -> None:
+        """Build digit buttons and operation buttons in a unified grid.
+
+        Digit buttons occupy rows 2-5 (columns 0-2 plus the bottom row).
+        Operation buttons start at row 6, flowing left-to-right 4 per row,
+        coloured according to whether they are arithmetic, scientific, or
+        standard operations.
 
         Args:
             parent: The parent frame to attach the buttons to.
         """
-        btn_font = tkfont.Font(family="Arial", size=10)
-        simple_btn = tk.Button(
-            parent,
-            text="Simple",
-            font=btn_font,
-            bg="#3c3f41" if self._mode.name == "Scientific" else "#007acc",
-            fg="#ffffff",
-            relief="flat",
-            command=self._switch_to_simple,
-        )
-        simple_btn.grid(row=1, column=0, columnspan=2, sticky="ew", padx=2, pady=2)
+        btn_font = _THEME["btn_font"]
+        is_scientific = self._mode.name == "Scientific"
+        operations = self._mode.get_operations()
 
-        scientific_btn = tk.Button(
-            parent,
-            text="Scientific",
-            font=btn_font,
-            bg="#3c3f41" if self._mode.name == "Simple" else "#007acc",
-            fg="#ffffff",
-            relief="flat",
-            command=self._switch_to_scientific,
-        )
-        scientific_btn.grid(row=1, column=2, columnspan=2, sticky="ew", padx=2, pady=2)
-
-    def _build_number_buttons(self, parent: tk.Frame) -> None:
-        """Build the digit (0-9), decimal, clear, and equals buttons.
-
-        The layout mirrors a standard calculator numpad:
-        rows 7-8-9, 4-5-6, 1-2-3, then clear/0/decimal/equals.
-
-        Args:
-            parent: The parent frame to attach the buttons to.
-        """
-        btn_font = tkfont.Font(family="Arial", size=14)
-
+        # Row 2 onward: 4-column grid
+        # Number layout rows 2-5: 7/8/9, 4/5/6, 1/2/3, C/0/./=
         digit_layout = [
             ("7", 2, 0), ("8", 2, 1), ("9", 2, 2),
             ("4", 3, 0), ("5", 3, 1), ("6", 3, 2),
@@ -176,102 +235,98 @@ class CalculatorGUI:
                 parent,
                 text=label,
                 font=btn_font,
-                bg="#3c3f41",
-                fg="#ffffff",
+                bg=_THEME["std_bg"],
+                fg=_THEME["std_fg"],
+                activebackground=_THEME["std_hover"],
+                activeforeground=_THEME["std_fg"],
                 relief="flat",
-                width=3,
+                bd=0,
                 command=lambda d=label: self._on_digit(d),
             )
-            btn.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+            btn.grid(row=row, column=col, sticky="nsew", padx=1, pady=1)
+            self._bind_hover(btn, _THEME["std_bg"], _THEME["std_hover"])
 
-        # Bottom row: Clear, 0, decimal, equals
+        # Bottom number row (row 5): C, 0, ., =
         clear_btn = tk.Button(
-            parent,
-            text="C",
-            font=btn_font,
-            bg="#cc3333",
-            fg="#ffffff",
-            relief="flat",
-            width=3,
-            command=self._on_clear,
+            parent, text="C", font=btn_font,
+            bg=_THEME["op_bg"], fg=_THEME["op_fg"],
+            activebackground=_THEME["op_hover"], activeforeground=_THEME["op_fg"],
+            relief="flat", bd=0, command=self._on_clear,
         )
-        clear_btn.grid(row=5, column=0, sticky="nsew", padx=2, pady=2)
+        clear_btn.grid(row=5, column=0, sticky="nsew", padx=1, pady=1)
+        self._bind_hover(clear_btn, _THEME["op_bg"], _THEME["op_hover"])
 
         zero_btn = tk.Button(
-            parent,
-            text="0",
-            font=btn_font,
-            bg="#3c3f41",
-            fg="#ffffff",
-            relief="flat",
-            width=3,
-            command=lambda: self._on_digit("0"),
+            parent, text="0", font=btn_font,
+            bg=_THEME["std_bg"], fg=_THEME["std_fg"],
+            activebackground=_THEME["std_hover"], activeforeground=_THEME["std_fg"],
+            relief="flat", bd=0, command=lambda: self._on_digit("0"),
         )
-        zero_btn.grid(row=5, column=1, sticky="nsew", padx=2, pady=2)
+        zero_btn.grid(row=5, column=1, sticky="nsew", padx=1, pady=1)
+        self._bind_hover(zero_btn, _THEME["std_bg"], _THEME["std_hover"])
 
         dot_btn = tk.Button(
-            parent,
-            text=".",
-            font=btn_font,
-            bg="#3c3f41",
-            fg="#ffffff",
-            relief="flat",
-            width=3,
-            command=self._on_decimal,
+            parent, text=".", font=btn_font,
+            bg=_THEME["std_bg"], fg=_THEME["std_fg"],
+            activebackground=_THEME["std_hover"], activeforeground=_THEME["std_fg"],
+            relief="flat", bd=0, command=self._on_decimal,
         )
-        dot_btn.grid(row=5, column=2, sticky="nsew", padx=2, pady=2)
+        dot_btn.grid(row=5, column=2, sticky="nsew", padx=1, pady=1)
+        self._bind_hover(dot_btn, _THEME["std_bg"], _THEME["std_hover"])
 
         equals_btn = tk.Button(
-            parent,
-            text="=",
-            font=btn_font,
-            bg="#007acc",
-            fg="#ffffff",
-            relief="flat",
-            width=3,
-            command=self._on_equals,
+            parent, text="=", font=btn_font,
+            bg=_THEME["op_bg"], fg=_THEME["op_fg"],
+            activebackground=_THEME["op_hover"], activeforeground=_THEME["op_fg"],
+            relief="flat", bd=0, command=self._on_equals,
         )
-        equals_btn.grid(row=5, column=3, sticky="nsew", padx=2, pady=2)
+        equals_btn.grid(row=5, column=3, sticky="nsew", padx=1, pady=1)
+        self._bind_hover(equals_btn, _THEME["op_bg"], _THEME["op_hover"])
 
+        # Configure row weights for number rows
         for r in range(2, 6):
             parent.rowconfigure(r, weight=1)
 
-    def _build_operation_buttons(self, parent: tk.Frame) -> None:
-        """Build one button per operation provided by the current mode.
-
-        Binary operations (arity 2) queue themselves as the pending
-        operation and await a second operand and = press.
-        Unary operations (arity 1) execute immediately on the current input.
-
-        Args:
-            parent: The parent frame to attach the buttons to.
-        """
-        btn_font = tkfont.Font(family="Arial", size=11)
-        operations = self._mode.get_operations()
-
-        # Place operation buttons in a sub-frame below the numpad, spanning
-        # all 4 columns, flowing left-to-right, 4 per row.
-        ops_frame = tk.Frame(parent, bg="#2b2b2b")
-        ops_frame.grid(row=6, column=0, columnspan=4, sticky="ew", padx=0, pady=(6, 2))
-
-        for col_idx in range(4):
-            ops_frame.columnconfigure(col_idx, weight=1)
-
+        # Operation buttons start at row 6
         for idx, (op_name, (op_callable, arity)) in enumerate(operations.items()):
-            row_idx = idx // 4
+            row_idx = 6 + idx // 4
             col_idx = idx % 4
-            label = op_name.replace("_", " ")
+
+            symbol = _SYMBOLS.get(op_name, op_name.replace("_", " "))
+
+            if op_name in _ARITHMETIC_OPS:
+                bg, fg, hover = _THEME["op_bg"], _THEME["op_fg"], _THEME["op_hover"]
+            elif is_scientific:
+                bg, fg, hover = _THEME["sci_bg"], _THEME["sci_fg"], _THEME["sci_hover"]
+            else:
+                bg, fg, hover = _THEME["std_bg"], _THEME["std_fg"], _THEME["std_hover"]
+
             btn = tk.Button(
-                ops_frame,
-                text=label,
+                parent,
+                text=symbol,
                 font=btn_font,
-                bg="#4a4a6a",
-                fg="#ffffff",
+                bg=bg,
+                fg=fg,
+                activebackground=hover,
+                activeforeground=fg,
                 relief="flat",
+                bd=0,
                 command=lambda name=op_name, fn=op_callable, ar=arity: self._on_operation(name, fn, ar),
             )
-            btn.grid(row=row_idx, column=col_idx, sticky="nsew", padx=2, pady=2)
-            ops_frame.rowconfigure(row_idx, weight=1)
+            btn.grid(row=row_idx, column=col_idx, sticky="nsew", padx=1, pady=1)
+            parent.rowconfigure(row_idx, weight=1)
+            self._bind_hover(btn, bg, hover)
+
+    def _bind_hover(self, btn: tk.Button, default_bg: str, hover_bg: str) -> None:
+        """Bind mouse enter/leave events to simulate hover colour changes.
+
+        Args:
+            btn: The button widget to bind hover events to.
+            default_bg: The background colour when the mouse is not hovering.
+            hover_bg: The background colour when the mouse is hovering.
+        """
+        btn.bind("<Enter>", lambda e, b=btn, h=hover_bg: b.configure(bg=h))
+        btn.bind("<Leave>", lambda e, b=btn, d=default_bg: b.configure(bg=d))
 
     def _build_history_panel(self, parent: tk.Frame) -> None:
         """Build the history panel showing past calculations.
@@ -284,8 +339,8 @@ class CalculatorGUI:
             parent,
             text="History",
             font=label_font,
-            bg="#2b2b2b",
-            fg="#aaaaaa",
+            bg=_THEME["history_bg"],
+            fg=_THEME["history_fg"],
             anchor="w",
         )
         history_label.pack(fill="x", padx=4, pady=(4, 2))
@@ -294,10 +349,10 @@ class CalculatorGUI:
         self._history_listbox = tk.Listbox(
             parent,
             font=list_font,
-            bg="#1e1e1e",
-            fg="#cccccc",
-            selectbackground="#007acc",
-            selectforeground="#ffffff",
+            bg=_THEME["history_bg"],
+            fg=_THEME["history_list_fg"],
+            selectbackground=_THEME["history_select_bg"],
+            selectforeground=_THEME["history_select_fg"],
             bd=0,
             highlightthickness=0,
             activestyle="none",

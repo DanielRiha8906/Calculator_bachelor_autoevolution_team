@@ -40,7 +40,7 @@ except ImportError:
 from src.core.calculator import Calculator
 from src.support.history import HistoryTracker
 from src.gui.modes import SimpleMode, ScientificMode
-from src.gui.application import CalculatorGUI
+from src.gui.application import CalculatorGUI, _THEME, _SYMBOLS, _ARITHMETIC_OPS
 
 
 def create_mock_tk_root():
@@ -752,3 +752,300 @@ class TestParseInput:
         result = gui._parse_current_input()
 
         assert result is None
+
+
+def collect_buttons_recursive(widget):
+    """Recursively collect all Button widgets from a tkinter widget tree."""
+    buttons = []
+    if not HAS_TKINTER:
+        return buttons
+    try:
+        for child in widget.winfo_children():
+            if isinstance(child, tk.Button):
+                buttons.append(child)
+            buttons.extend(collect_buttons_recursive(child))
+    except:
+        pass
+    return buttons
+
+
+def find_button_by_text(widget, text):
+    """Find the first Button with matching text in the widget tree."""
+    buttons = collect_buttons_recursive(widget)
+    for btn in buttons:
+        try:
+            if btn.cget("text") == text:
+                return btn
+        except:
+            pass
+    return None
+
+
+class TestIOSRedesign:
+    """Tests for iOS-style calculator redesign."""
+
+    def test_theme_dict_exists(self):
+        """Test that _THEME dict exists and has all required keys."""
+        required_keys = [
+            "window_bg", "display_bg", "display_fg", "display_font",
+            "op_bg", "op_fg", "op_hover",
+            "sci_bg", "sci_fg", "sci_hover",
+            "std_bg", "std_fg", "std_hover"
+        ]
+        for key in required_keys:
+            assert key in _THEME, f"Missing key in _THEME: {key}"
+
+    def test_theme_dict_has_expected_values(self):
+        """Test that _THEME colours are set to expected values."""
+        assert _THEME["window_bg"] == "#000000"
+        assert _THEME["display_bg"] == "#000000"
+        assert _THEME["display_fg"] == "#FFFFFF"
+        assert _THEME["op_bg"] == "#FF9500"
+        assert _THEME["op_fg"] == "#FFFFFF"
+        assert _THEME["op_hover"] == "#FFB143"
+        assert _THEME["sci_bg"] == "#1C1C1E"
+        assert _THEME["sci_fg"] == "#FFFFFF"
+        assert _THEME["sci_hover"] == "#2C2C2E"
+        assert _THEME["std_bg"] == "#333333"
+        assert _THEME["std_fg"] == "#FFFFFF"
+        assert _THEME["std_hover"] == "#4D4D4D"
+
+    def test_symbols_dict_exists(self):
+        """Test that _SYMBOLS dict exists and maps operation names to Unicode symbols."""
+        required_mappings = {
+            "add": "+",
+            "subtract": "−",
+            "multiply": "×",
+            "divide": "÷",
+            "square_root": "√",
+        }
+        for op_name, expected_symbol in required_mappings.items():
+            assert op_name in _SYMBOLS, f"Missing operation in _SYMBOLS: {op_name}"
+            assert _SYMBOLS[op_name] == expected_symbol, f"Symbol mismatch for {op_name}: expected {expected_symbol}, got {_SYMBOLS[op_name]}"
+
+    def test_symbols_dict_has_all_scientific_ops(self):
+        """Test that _SYMBOLS includes scientific operations."""
+        sci_ops = ["square", "cube", "factorial", "log", "ln", "sin", "cos", "tan", "pi", "e"]
+        for op_name in sci_ops:
+            assert op_name in _SYMBOLS, f"Missing operation in _SYMBOLS: {op_name}"
+
+    def test_arithmetic_ops_set(self):
+        """Test that _ARITHMETIC_OPS set equals the expected set."""
+        expected = {"add", "subtract", "multiply", "divide"}
+        assert _ARITHMETIC_OPS == expected, f"_ARITHMETIC_OPS mismatch: expected {expected}, got {_ARITHMETIC_OPS}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_display_is_label(self, tk_root, calculator, history_tracker):
+        """Test that the display widget is a tk.Label, not tk.Entry."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        assert hasattr(gui, "_display"), "GUI missing _display attribute"
+        assert isinstance(gui._display, tk.Label), f"Display should be tk.Label, got {type(gui._display)}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_display_initial_value(self, tk_root, calculator, history_tracker):
+        """Test that display initializes to '0'."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        assert gui._get_display() == "0"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_mode_toggle_shows_scientific_in_simple_mode(self, tk_root, calculator, history_tracker):
+        """Test that mode toggle button shows 'Scientific' when in Simple mode."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        # Find the mode toggle button (should have text "Scientific" in Simple mode)
+        toggle_btn = find_button_by_text(tk_root, "Scientific")
+        assert toggle_btn is not None, "Could not find mode toggle button with text 'Scientific'"
+        assert toggle_btn.cget("text") == "Scientific"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_mode_toggle_shows_normal_in_scientific_mode(self, tk_root, calculator, history_tracker):
+        """Test that mode toggle button shows 'Normal' when in Scientific mode."""
+        mode = ScientificMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        # Find the mode toggle button (should have text "Normal" in Scientific mode)
+        toggle_btn = find_button_by_text(tk_root, "Normal")
+        assert toggle_btn is not None, "Could not find mode toggle button with text 'Normal'"
+        assert toggle_btn.cget("text") == "Normal"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_toggle_mode_switches_to_scientific(self, tk_root, calculator, history_tracker):
+        """Test that _toggle_mode() switches from Simple to Scientific."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        assert gui._mode.name == "Simple"
+        gui._toggle_mode()
+        assert gui._mode.name == "Scientific"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_toggle_mode_switches_to_simple(self, tk_root, calculator, history_tracker):
+        """Test that _toggle_mode() switches from Scientific to Simple."""
+        mode = ScientificMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        assert gui._mode.name == "Scientific"
+        gui._toggle_mode()
+        assert gui._mode.name == "Simple"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_op_button_colors_arithmetic(self, tk_root, calculator, history_tracker):
+        """Test that arithmetic operation buttons have op_bg colour."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        # Find an arithmetic op button (e.g., "+" for add)
+        add_btn = find_button_by_text(tk_root, "+")
+        assert add_btn is not None, "Could not find add button with text '+'"
+        assert add_btn.cget("bg") == _THEME["op_bg"], \
+            f"Add button bg should be {_THEME['op_bg']}, got {add_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_op_button_colors_standard(self, tk_root, calculator, history_tracker):
+        """Test that non-arithmetic operation buttons in Simple mode have std_bg colour."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        # Find a standard operation button (e.g., "x²" for square)
+        square_btn = find_button_by_text(tk_root, "x²")
+        assert square_btn is not None, "Could not find square button with text 'x²'"
+        assert square_btn.cget("bg") == _THEME["std_bg"], \
+            f"Square button bg should be {_THEME['std_bg']}, got {square_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_op_button_colors_scientific(self, tk_root, calculator, history_tracker):
+        """Test that non-arithmetic operation buttons in Scientific mode have sci_bg colour."""
+        mode = ScientificMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        # Find a scientific operation button (e.g., "n!" for factorial)
+        factorial_btn = find_button_by_text(tk_root, "n!")
+        assert factorial_btn is not None, "Could not find factorial button with text 'n!'"
+        assert factorial_btn.cget("bg") == _THEME["sci_bg"], \
+            f"Factorial button bg should be {_THEME['sci_bg']}, got {factorial_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_hover_bind_enter(self, tk_root):
+        """Test that hover binding applies hover colour on <Enter> event."""
+        btn = tk.Button(tk_root, text="Test", bg="#FF9500")
+        gui = CalculatorGUI.__new__(CalculatorGUI)
+
+        gui._bind_hover(btn, "#FF9500", "#FFB143")
+
+        # Simulate <Enter> event
+        btn.event_generate("<Enter>")
+        tk_root.update()
+
+        assert btn.cget("bg") == "#FFB143", f"Button bg should be #FFB143 after hover, got {btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_hover_bind_leave(self, tk_root):
+        """Test that hover binding restores default colour on <Leave> event."""
+        btn = tk.Button(tk_root, text="Test", bg="#FF9500")
+        gui = CalculatorGUI.__new__(CalculatorGUI)
+
+        gui._bind_hover(btn, "#FF9500", "#FFB143")
+
+        # Simulate <Enter> then <Leave>
+        btn.event_generate("<Enter>")
+        tk_root.update()
+        btn.event_generate("<Leave>")
+        tk_root.update()
+
+        assert btn.cget("bg") == "#FF9500", f"Button bg should be #FF9500 after leave, got {btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_symbol_mapping_applied_to_buttons(self, tk_root, calculator, history_tracker):
+        """Test that symbol mappings are applied to operation buttons."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        buttons = collect_buttons_recursive(tk_root)
+        button_texts = [btn.cget("text") for btn in buttons]
+
+        # Check that Unicode symbols appear in button texts
+        expected_symbols = ["÷", "+"]  # divide and add symbols must appear
+        for symbol in expected_symbols:
+            assert symbol in button_texts, f"Symbol {symbol} not found in button texts: {button_texts}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_all_digit_buttons_present(self, tk_root, calculator, history_tracker):
+        """Test that all digit buttons (0-9) are created."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        buttons = collect_buttons_recursive(tk_root)
+        button_texts = [btn.cget("text") for btn in buttons]
+
+        for digit in "0123456789":
+            assert digit in button_texts, f"Digit button {digit} not found in button texts"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_clear_and_equals_buttons_present(self, tk_root, calculator, history_tracker):
+        """Test that clear (C) and equals (=) buttons are present."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        c_btn = find_button_by_text(tk_root, "C")
+        eq_btn = find_button_by_text(tk_root, "=")
+
+        assert c_btn is not None, "Clear button 'C' not found"
+        assert eq_btn is not None, "Equals button '=' not found"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_clear_button_has_op_color(self, tk_root, calculator, history_tracker):
+        """Test that clear button has operation button colour (op_bg)."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        c_btn = find_button_by_text(tk_root, "C")
+        assert c_btn is not None
+        assert c_btn.cget("bg") == _THEME["op_bg"], \
+            f"Clear button bg should be {_THEME['op_bg']}, got {c_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_equals_button_has_op_color(self, tk_root, calculator, history_tracker):
+        """Test that equals button has operation button colour (op_bg)."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        eq_btn = find_button_by_text(tk_root, "=")
+        assert eq_btn is not None
+        assert eq_btn.cget("bg") == _THEME["op_bg"], \
+            f"Equals button bg should be {_THEME['op_bg']}, got {eq_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_decimal_button_present(self, tk_root, calculator, history_tracker):
+        """Test that decimal point button is present."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        dot_btn = find_button_by_text(tk_root, ".")
+        assert dot_btn is not None, "Decimal button '.' not found"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_decimal_button_has_std_color(self, tk_root, calculator, history_tracker):
+        """Test that decimal button has standard button colour (std_bg)."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        dot_btn = find_button_by_text(tk_root, ".")
+        assert dot_btn is not None
+        assert dot_btn.cget("bg") == _THEME["std_bg"], \
+            f"Decimal button bg should be {_THEME['std_bg']}, got {dot_btn.cget('bg')}"
+
+    @pytest.mark.skipif(not HAS_TKINTER, reason="tkinter not available")
+    def test_mode_toggle_button_has_std_color(self, tk_root, calculator, history_tracker):
+        """Test that mode toggle button has standard button colour."""
+        mode = SimpleMode(calculator)
+        gui = CalculatorGUI(tk_root, calculator, mode, history_tracker)
+
+        toggle_btn = find_button_by_text(tk_root, "Scientific")
+        assert toggle_btn is not None
+        assert toggle_btn.cget("bg") == _THEME["std_bg"], \
+            f"Mode toggle button bg should be {_THEME['std_bg']}, got {toggle_btn.cget('bg')}"

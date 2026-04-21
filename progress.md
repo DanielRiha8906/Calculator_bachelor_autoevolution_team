@@ -1,3 +1,16 @@
+## Run: issue-227 — iOS-style GUI Redesign (Expert/Team)
+
+- **Branch:** task/issue-227-redesign-expert-team
+- **Files changed:** src/gui/application.py (redesigned), tests/test_gui_integration.py (24 new tests added)
+- **Purpose:** Fully redesign CalculatorGUI with iOS-style layout: black background, full-width Label display (32pt bold monospaced), single mode toggle button, unified 4-column button grid with flat buttons, iOS colour palette (_THEME), Unicode symbol labels (_SYMBOLS), hover effects via _bind_hover. All calculation logic unchanged.
+- **Risks:** Low — only presentation layer changed. All public method signatures preserved. Display changed from Entry to Label (both backed by StringVar). Existing tests updated for new widget type where needed.
+- **Tests passed:** 864 passed, 19 skipped (tkinter-only tests skipped in headless CI)
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-190-gui-expert-team
