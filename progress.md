@@ -7,7 +7,7 @@
 - **Tests passed:** 864 passed, 19 skipped (tkinter-only tests skipped in headless CI)
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 472.7s | Cost: $1.277222 USD | Turns: 22
 
 ---
 
