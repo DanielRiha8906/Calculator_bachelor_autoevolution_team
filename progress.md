@@ -7,7 +7,7 @@
 - **Tests passed:** 859/859 (731 existing + 128 new GUI tests)
 - **PR target:** exp2/expert-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 593.2s | Cost: $1.413605 USD | Turns: 22
 
 ---
 
