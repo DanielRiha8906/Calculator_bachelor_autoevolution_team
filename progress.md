@@ -6,7 +6,7 @@
 - risks: None — diagram-only update, no source changes
 - tests passed: N/A
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 213.5s | Cost: $0.691718 USD | Turns: 23
 
 ## Run: issue-188-gui-tkinter (2026-04-21)
 
