@@ -11,7 +11,7 @@
 - worktree/branch: task/issue-188-gui-tkinter
 - PR target: exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 554.6s | Cost: $1.282713 USD | Turns: 17
 
 ## Run: update-diagrams (2026-04-20)
 
