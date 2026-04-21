@@ -209,11 +209,11 @@ jobs:
           prompt: |
             You are the orchestrator of an autonomous multi-agent diagram-update pipeline. There is no human in the loop.
             Active branch: ${{ needs.claude-implement.outputs.task_branch }}
+            Repository: ${{ github.repository }}
             All changes must be pushed to ${{ needs.claude-implement.outputs.task_branch }}, never main.
 
             The reduced pipeline for this diagram-update run is:
-            1. github-task-analyst — pass the task branch name. Instruct it to find the open pull request for this branch and produce a brief of what was added, removed, or modified in `src/` based on the PR diff and commit messages.
-            2. system-architect — pass the analyst's brief only. It will read `src/` and produce a structural specification: class inventory, relationships, activity flows, and component interactions needed for the three PlantUML diagrams.
+            1. github-task-analyst — pass the task branch name AND the repository (${{ github.repository }}). Instruct it to find the open pull request for this branch in that repository and produce a brief of what was added, removed, or modified in `src/` based on the PR diff and commit messages.2. system-architect — pass the analyst's brief only. It will read `src/` and produce a structural specification: class inventory, relationships, activity flows, and component interactions needed for the three PlantUML diagrams.
             3. uml-diagram-designer — pass the architect's structural specification only. It will create or update the three diagram files in `artifacts/`, append the PENDING progress line to `progress.md`, commit, and push.
 
             You may ONLY invoke these three agents: github-task-analyst, system-architect, uml-diagram-designer.
