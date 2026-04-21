@@ -20,6 +20,19 @@ from typing import Optional
 
 from src.logic import Calculator
 
+# ---------------------------------------------------------------------------
+# iOS-inspired dark theme colour constants
+# ---------------------------------------------------------------------------
+BACKGROUND_COLOR = "#000000"
+DISPLAY_BG = "#000000"
+DISPLAY_TEXT_COLOR = "#ffffff"
+NUMBER_BUTTON_BG = "#505050"
+NUMBER_BUTTON_TEXT = "#ffffff"
+FUNCTION_BUTTON_BG = "#333333"
+FUNCTION_BUTTON_TEXT = "#ffffff"
+OPERATOR_BUTTON_BG = "#FF9500"
+OPERATOR_BUTTON_TEXT = "#ffffff"
+
 
 class CalculatorGUI:
     """Tkinter GUI window for the calculator.
@@ -69,6 +82,7 @@ class CalculatorGUI:
         self._root = root
         self._root.title("Calculator")
         self._root.resizable(False, False)
+        self._root.configure(bg=BACKGROUND_COLOR)
 
         self._calc: Calculator = Calculator()
 
@@ -88,20 +102,20 @@ class CalculatorGUI:
 
     def _build_ui(self) -> None:
         """Create and arrange all widgets in the root window."""
-        display_font = tkfont.Font(family="Courier", size=24, weight="bold")
+        display_font = tkfont.Font(family="Courier", size=30, weight="bold")
         btn_font = tkfont.Font(family="Helvetica", size=14)
         sci_font = tkfont.Font(family="Helvetica", size=11)
 
         # Display area
-        display_frame = tk.Frame(self._root, bg="#1e1e1e")
+        display_frame = tk.Frame(self._root, bg=DISPLAY_BG)
         display_frame.pack(fill=tk.X, padx=4, pady=(6, 2))
 
         self._display_label = tk.Label(
             display_frame,
             textvariable=self._display_var,
             anchor="e",
-            bg="#1e1e1e",
-            fg="#f0f0f0",
+            bg=DISPLAY_BG,
+            fg=DISPLAY_TEXT_COLOR,
             font=display_font,
             padx=8,
             pady=6,
@@ -109,14 +123,14 @@ class CalculatorGUI:
         self._display_label.pack(fill=tk.X)
 
         # Scientific toggle button
-        toggle_frame = tk.Frame(self._root, bg="#2d2d2d")
+        toggle_frame = tk.Frame(self._root, bg=BACKGROUND_COLOR)
         toggle_frame.pack(fill=tk.X, padx=4, pady=(0, 2))
         self._toggle_btn = tk.Button(
             toggle_frame,
             text="Scientific Mode: OFF",
             command=self._toggle_scientific_mode,
-            bg="#3a3a3a",
-            fg="#cccccc",
+            bg=FUNCTION_BUTTON_BG,
+            fg=FUNCTION_BUTTON_TEXT,
             font=sci_font,
             relief=tk.FLAT,
             bd=0,
@@ -126,12 +140,12 @@ class CalculatorGUI:
         self._toggle_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Scientific panel (initially hidden)
-        self._sci_frame = tk.Frame(self._root, bg="#2d2d2d")
+        self._sci_frame = tk.Frame(self._root, bg=BACKGROUND_COLOR)
         self._build_scientific_panel(self._sci_frame, sci_font)
         # Not packed yet — shown only when scientific mode is toggled on.
 
         # Main button grid
-        self._btn_frame = tk.Frame(self._root, bg="#2d2d2d")
+        self._btn_frame = tk.Frame(self._root, bg=BACKGROUND_COLOR)
         self._btn_frame.pack(padx=4, pady=4)
         self._build_button_grid(self._btn_frame, btn_font)
 
@@ -140,8 +154,8 @@ class CalculatorGUI:
         parent: tk.Frame,
         text: str,
         command,
-        bg: str = "#3a3a3a",
-        fg: str = "#f0f0f0",
+        bg: str = NUMBER_BUTTON_BG,
+        fg: str = NUMBER_BUTTON_TEXT,
         font: Optional[tkfont.Font] = None,
         width: int = 4,
         height: int = 2,
@@ -161,6 +175,16 @@ class CalculatorGUI:
         Returns:
             The constructed ``tk.Button`` instance.
         """
+        # Derive a slightly lighter active background by brightening each
+        # channel of the button's own colour by ~20 (clamped to 255).
+        try:
+            r = min(255, int(bg[1:3], 16) + 20)
+            g = min(255, int(bg[3:5], 16) + 20)
+            b_val = min(255, int(bg[5:7], 16) + 20)
+            active_bg = f"#{r:02x}{g:02x}{b_val:02x}"
+        except (ValueError, IndexError):
+            active_bg = bg
+
         b = tk.Button(
             parent,
             text=text,
@@ -171,8 +195,8 @@ class CalculatorGUI:
             width=width,
             height=height,
             relief=tk.FLAT,
-            bd=1,
-            activebackground="#505050",
+            bd=0,
+            activebackground=active_bg,
             activeforeground="#ffffff",
         )
         return b
@@ -191,40 +215,45 @@ class CalculatorGUI:
             parent: Frame in which the grid will be placed.
             font: Font applied to all buttons in the grid.
         """
-        op_bg = "#e07b39"
-        clear_bg = "#a33"
+        op_bg = OPERATOR_BUTTON_BG
+        op_fg = OPERATOR_BUTTON_TEXT
+        num_bg = NUMBER_BUTTON_BG
+        num_fg = NUMBER_BUTTON_TEXT
+        fn_bg = FUNCTION_BUTTON_BG
+        fn_fg = FUNCTION_BUTTON_TEXT
+        clear_bg = "#aa3333"
         eq_bg = "#5a9e5a"
 
         buttons: list[list[tuple]] = [
             [
-                ("C",   self._on_clear_click,      clear_bg, "#fff"),
-                ("⌫",  self._on_backspace_click,   "#555",   "#fff"),
-                ("%",   lambda: self._on_percent_click(), "#555", "#fff"),
-                ("/",   lambda: self._on_operation_click("/"),   op_bg, "#fff"),
+                ("C",   self._on_clear_click,               clear_bg, "#fff"),
+                ("⌫",  self._on_backspace_click,            fn_bg,    fn_fg),
+                ("%",   lambda: self._on_percent_click(),   fn_bg,    fn_fg),
+                ("÷",   lambda: self._on_operation_click("/"),  op_bg, op_fg),
             ],
             [
-                ("7", lambda: self._on_number_click("7"), "#3a3a3a", "#f0f0f0"),
-                ("8", lambda: self._on_number_click("8"), "#3a3a3a", "#f0f0f0"),
-                ("9", lambda: self._on_number_click("9"), "#3a3a3a", "#f0f0f0"),
-                ("*", lambda: self._on_operation_click("*"), op_bg, "#fff"),
+                ("7", lambda: self._on_number_click("7"), num_bg, num_fg),
+                ("8", lambda: self._on_number_click("8"), num_bg, num_fg),
+                ("9", lambda: self._on_number_click("9"), num_bg, num_fg),
+                ("×", lambda: self._on_operation_click("*"), op_bg, op_fg),
             ],
             [
-                ("4", lambda: self._on_number_click("4"), "#3a3a3a", "#f0f0f0"),
-                ("5", lambda: self._on_number_click("5"), "#3a3a3a", "#f0f0f0"),
-                ("6", lambda: self._on_number_click("6"), "#3a3a3a", "#f0f0f0"),
-                ("-", lambda: self._on_operation_click("-"), op_bg, "#fff"),
+                ("4", lambda: self._on_number_click("4"), num_bg, num_fg),
+                ("5", lambda: self._on_number_click("5"), num_bg, num_fg),
+                ("6", lambda: self._on_number_click("6"), num_bg, num_fg),
+                ("−", lambda: self._on_operation_click("-"), op_bg, op_fg),
             ],
             [
-                ("1", lambda: self._on_number_click("1"), "#3a3a3a", "#f0f0f0"),
-                ("2", lambda: self._on_number_click("2"), "#3a3a3a", "#f0f0f0"),
-                ("3", lambda: self._on_number_click("3"), "#3a3a3a", "#f0f0f0"),
-                ("+", lambda: self._on_operation_click("+"), op_bg, "#fff"),
+                ("1", lambda: self._on_number_click("1"), num_bg, num_fg),
+                ("2", lambda: self._on_number_click("2"), num_bg, num_fg),
+                ("3", lambda: self._on_number_click("3"), num_bg, num_fg),
+                ("+", lambda: self._on_operation_click("+"), op_bg, op_fg),
             ],
             [
-                ("+/-", lambda: self._on_negate_click(), "#3a3a3a", "#f0f0f0"),
-                ("0",   lambda: self._on_number_click("0"), "#3a3a3a", "#f0f0f0"),
-                (".",   lambda: self._on_number_click("."), "#3a3a3a", "#f0f0f0"),
-                ("=",   self._on_equals_click,            eq_bg,    "#fff"),
+                ("+/-", lambda: self._on_negate_click(),       fn_bg,  fn_fg),
+                ("0",   lambda: self._on_number_click("0"),    num_bg, num_fg),
+                (".",   lambda: self._on_number_click("."),    num_bg, num_fg),
+                ("=",   self._on_equals_click,                 eq_bg,  "#fff"),
             ],
         ]
 
@@ -243,6 +272,7 @@ class CalculatorGUI:
             parent: Frame that will contain the scientific buttons.
             font: Font applied to all scientific buttons.
         """
+        parent.configure(bg=BACKGROUND_COLOR)
         for idx, (label, method_name) in enumerate(self._SCIENTIFIC_OPS):
             row, col = divmod(idx, 4)
             b = self._btn(

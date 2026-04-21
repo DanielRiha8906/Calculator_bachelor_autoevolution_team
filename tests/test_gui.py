@@ -5,6 +5,7 @@ number input, arithmetic operations, error handling, and scientific mode.
 """
 
 import tkinter as tk
+from tkinter import font as tkfont
 import pytest
 from unittest.mock import MagicMock, patch, call
 
@@ -1030,3 +1031,429 @@ class TestRunMethod:
 
         # Restore original
         root.mainloop = original_mainloop
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — COLOR CONSTANTS AND STYLING
+# ============================================================================
+
+class TestGUIRedesignColorConstants:
+    """Test suite for the iOS-inspired dark theme colour constants."""
+
+    def test_background_color_constant(self):
+        """Test that BACKGROUND_COLOR is the correct dark theme colour."""
+        from src.presentation.gui import BACKGROUND_COLOR
+        assert BACKGROUND_COLOR == "#000000"
+
+    def test_display_bg_constant(self):
+        """Test that DISPLAY_BG is the correct dark background."""
+        from src.presentation.gui import DISPLAY_BG
+        assert DISPLAY_BG == "#000000"
+
+    def test_display_text_color_constant(self):
+        """Test that DISPLAY_TEXT_COLOR is white."""
+        from src.presentation.gui import DISPLAY_TEXT_COLOR
+        assert DISPLAY_TEXT_COLOR == "#ffffff"
+
+    def test_number_button_bg_constant(self):
+        """Test that NUMBER_BUTTON_BG is the correct dark grey."""
+        from src.presentation.gui import NUMBER_BUTTON_BG
+        assert NUMBER_BUTTON_BG == "#505050"
+
+    def test_number_button_text_constant(self):
+        """Test that NUMBER_BUTTON_TEXT is white."""
+        from src.presentation.gui import NUMBER_BUTTON_TEXT
+        assert NUMBER_BUTTON_TEXT == "#ffffff"
+
+    def test_function_button_bg_constant(self):
+        """Test that FUNCTION_BUTTON_BG is the correct dark grey."""
+        from src.presentation.gui import FUNCTION_BUTTON_BG
+        assert FUNCTION_BUTTON_BG == "#333333"
+
+    def test_function_button_text_constant(self):
+        """Test that FUNCTION_BUTTON_TEXT is white."""
+        from src.presentation.gui import FUNCTION_BUTTON_TEXT
+        assert FUNCTION_BUTTON_TEXT == "#ffffff"
+
+    def test_operator_button_bg_constant(self):
+        """Test that OPERATOR_BUTTON_BG is the correct iOS orange."""
+        from src.presentation.gui import OPERATOR_BUTTON_BG
+        assert OPERATOR_BUTTON_BG == "#FF9500"
+
+    def test_operator_button_text_constant(self):
+        """Test that OPERATOR_BUTTON_TEXT is white."""
+        from src.presentation.gui import OPERATOR_BUTTON_TEXT
+        assert OPERATOR_BUTTON_TEXT == "#ffffff"
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — WIDGET STYLING
+# ============================================================================
+
+class TestGUIRedesignWidgetStyling:
+    """Test suite for widget styling applied in the redesign."""
+
+    def test_root_background_color_is_black(self, root, gui):
+        """Test that the root window background is black."""
+        assert root.cget("bg") == "#000000"
+
+    def test_display_label_background_is_black(self, gui):
+        """Test that the display label background is black."""
+        assert gui._display_label.cget("bg") == "#000000"
+
+    def test_display_label_foreground_is_white(self, gui):
+        """Test that the display label text colour is white."""
+        assert gui._display_label.cget("fg") == "#ffffff"
+
+    def test_display_font_size_is_30pt(self, gui):
+        """Test that the display font size is 30 points."""
+        font = tkfont.Font(font=gui._display_label.cget("font"))
+        assert font.actual("size") == 30
+
+    def test_display_font_is_courier(self, gui):
+        """Test that the display font is a monospace font (Courier or substitute)."""
+        font = tkfont.Font(font=gui._display_label.cget("font"))
+        # Font family name check (may vary slightly by system)
+        # Courier, Liberation Mono, and other monospace fonts are acceptable
+        family_lower = font.actual("family").lower()
+        assert ("courier" in family_lower or
+                "mono" in family_lower or
+                "monospace" in family_lower)
+
+    def test_display_font_is_bold(self, gui):
+        """Test that the display font is bold."""
+        font = tkfont.Font(font=gui._display_label.cget("font"))
+        assert font.actual("weight") == "bold"
+
+    def test_button_frame_background_is_black(self, gui):
+        """Test that the main button frame background is black."""
+        assert gui._btn_frame.cget("bg") == "#000000"
+
+    def test_scientific_frame_background_is_black(self, gui):
+        """Test that the scientific frame background is black."""
+        assert gui._sci_frame.cget("bg") == "#000000"
+
+    def test_button_relief_is_flat(self, gui):
+        """Test that buttons have flat relief (no 3D effect)."""
+        # Get a sample button from the button frame
+        button_children = gui._btn_frame.winfo_children()
+        if button_children:
+            sample_button = button_children[0]
+            assert sample_button.cget("relief") == tk.FLAT
+
+    def test_button_border_width_is_zero(self, gui):
+        """Test that buttons have zero border width for flat appearance."""
+        # Get a sample button from the button frame
+        button_children = gui._btn_frame.winfo_children()
+        if button_children:
+            sample_button = button_children[0]
+            assert sample_button.cget("bd") == 0
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — OPERATOR SYMBOL DISPATCH
+# ============================================================================
+
+class TestOperatorSymbolDispatch:
+    """Test suite for Unicode operator symbol dispatch to ASCII handlers."""
+
+    def test_divide_symbol_dispatches_to_slash_operation(self, gui):
+        """Test that ÷ button dispatches to '/' operation handler."""
+        gui._on_number_click("8")
+        gui._on_operation_click("/")  # This is called by the ÷ button lambda
+        assert gui._pending_op == "/"
+        assert gui._first_operand == 8.0
+
+    def test_multiply_symbol_dispatches_to_asterisk_operation(self, gui):
+        """Test that × button dispatches to '*' operation handler."""
+        gui._on_number_click("4")
+        gui._on_operation_click("*")  # This is called by the × button lambda
+        assert gui._pending_op == "*"
+        assert gui._first_operand == 4.0
+
+    def test_minus_symbol_dispatches_to_hyphen_operation(self, gui):
+        """Test that − button dispatches to '-' operation handler."""
+        gui._on_number_click("5")
+        gui._on_operation_click("-")  # This is called by the − button lambda
+        assert gui._pending_op == "-"
+        assert gui._first_operand == 5.0
+
+    def test_divide_operation_chain(self, gui):
+        """Test that ÷ symbol leads to correct division result."""
+        gui._on_number_click("2")
+        gui._on_number_click("0")
+        gui._on_operation_click("/")
+        gui._on_number_click("4")
+        gui._on_equals_click()
+        assert gui._current_display() == "5"
+
+    def test_multiply_operation_chain(self, gui):
+        """Test that × symbol leads to correct multiplication result."""
+        gui._on_number_click("6")
+        gui._on_operation_click("*")
+        gui._on_number_click("7")
+        gui._on_equals_click()
+        assert gui._current_display() == "42"
+
+    def test_minus_operation_chain(self, gui):
+        """Test that − symbol leads to correct subtraction result."""
+        gui._on_number_click("1")
+        gui._on_number_click("0")
+        gui._on_operation_click("-")
+        gui._on_number_click("3")
+        gui._on_equals_click()
+        assert gui._current_display() == "7"
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — BUTTON STYLING BY TYPE
+# ============================================================================
+
+class TestButtonStylingByType:
+    """Test suite for button styling based on button type."""
+
+    def test_number_button_styling(self, gui):
+        """Test that number buttons have correct styling."""
+        # Find number buttons (e.g., "7" button at grid position)
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "7":
+                assert widget.cget("bg") == "#505050"  # NUMBER_BUTTON_BG
+                assert widget.cget("fg") == "#ffffff"  # NUMBER_BUTTON_TEXT
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+    def test_operator_button_styling(self, gui):
+        """Test that operator buttons (÷, ×, −, +) have correct styling."""
+        # Find operator buttons
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") in ("÷", "×", "−", "+"):
+                assert widget.cget("bg") == "#FF9500"  # OPERATOR_BUTTON_BG
+                assert widget.cget("fg") == "#ffffff"  # OPERATOR_BUTTON_TEXT
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+    def test_function_button_styling(self, gui):
+        """Test that function buttons (⌫, %) have correct styling."""
+        # Find function buttons
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") in ("⌫", "%"):
+                assert widget.cget("bg") == "#333333"  # FUNCTION_BUTTON_BG
+                assert widget.cget("fg") == "#ffffff"  # FUNCTION_BUTTON_TEXT
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+    def test_clear_button_styling(self, gui):
+        """Test that the clear button has distinct styling."""
+        # Find the C (clear) button
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "C":
+                # Clear button has its own colour (#aa3333)
+                assert widget.cget("bg") == "#aa3333"
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+    def test_equals_button_styling(self, gui):
+        """Test that the equals button has distinct styling."""
+        # Find the = (equals) button
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "=":
+                # Equals button has its own colour (#5a9e5a)
+                assert widget.cget("bg") == "#5a9e5a"
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — BUTTON ACTIVE STATE STYLING
+# ============================================================================
+
+class TestButtonActiveStateStyleing:
+    """Test suite for button active/hover state styling."""
+
+    def test_number_button_active_background_is_brightened(self, gui):
+        """Test that number button active background is brightened."""
+        # NUMBER_BUTTON_BG = #505050 (80,80,80), each channel +20 = (100,100,100) = #646464
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "7":
+                active_bg = widget.cget("activebackground")
+                # Check that it's lighter than the base
+                assert active_bg == "#646464"
+
+    def test_operator_button_active_background_is_brightened(self, gui):
+        """Test that operator button active background is brightened."""
+        # OPERATOR_BUTTON_BG = #FF9500 (255,149,0), each channel +20
+        # FF (255) + 20 = clamped to FF (255)
+        # 95 (149) + 20 = A9 (169)
+        # 00 (0) + 20 = 14 (20)
+        # Result: #ffa914
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "÷":
+                active_bg = widget.cget("activebackground")
+                assert active_bg == "#ffa914"
+
+    def test_function_button_active_background_is_brightened(self, gui):
+        """Test that function button active background is brightened."""
+        # FUNCTION_BUTTON_BG = #333333 (51,51,51), each channel +20 = (71,71,71) = #474747
+        for widget in gui._btn_frame.winfo_children():
+            if isinstance(widget, tk.Button) and widget.cget("text") == "%":
+                active_bg = widget.cget("activebackground")
+                assert active_bg == "#474747"
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — TOGGLE BUTTON STYLING
+# ============================================================================
+
+class TestToggleButtonStyling:
+    """Test suite for scientific mode toggle button styling."""
+
+    def test_toggle_button_has_flat_relief(self, gui):
+        """Test that the scientific toggle button has flat relief."""
+        assert gui._toggle_btn.cget("relief") == tk.FLAT
+
+    def test_toggle_button_has_zero_border_width(self, gui):
+        """Test that the toggle button has zero border width."""
+        assert gui._toggle_btn.cget("bd") == 0
+
+    def test_toggle_button_initial_text(self, gui):
+        """Test that the toggle button initially shows 'OFF'."""
+        assert "OFF" in gui._toggle_btn.cget("text")
+
+    def test_toggle_button_uses_function_button_colors(self, gui):
+        """Test that toggle button uses function button styling."""
+        assert gui._toggle_btn.cget("bg") == "#333333"  # FUNCTION_BUTTON_BG
+        assert gui._toggle_btn.cget("fg") == "#ffffff"  # FUNCTION_BUTTON_TEXT
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — SCIENTIFIC MODE BUTTON STYLING
+# ============================================================================
+
+class TestScientificModeButtonStyling:
+    """Test suite for scientific mode button styling in the redesign."""
+
+    def test_scientific_buttons_have_custom_background(self, gui):
+        """Test that scientific buttons use a custom background colour."""
+        # Show scientific mode first
+        gui._toggle_scientific_mode()
+        # Find scientific buttons
+        for widget in gui._sci_frame.winfo_children():
+            if isinstance(widget, tk.Button):
+                # Scientific buttons use #2a4a6a
+                assert widget.cget("bg") == "#2a4a6a"
+                assert widget.cget("relief") == tk.FLAT
+                assert widget.cget("bd") == 0
+
+    def test_scientific_buttons_have_custom_text_color(self, gui):
+        """Test that scientific buttons use a custom text colour."""
+        gui._toggle_scientific_mode()
+        for widget in gui._sci_frame.winfo_children():
+            if isinstance(widget, tk.Button):
+                assert widget.cget("fg") == "#cce4ff"
+
+    def test_scientific_buttons_active_background_is_brightened(self, gui):
+        """Test that scientific button active background is brightened."""
+        gui._toggle_scientific_mode()
+        for widget in gui._sci_frame.winfo_children():
+            if isinstance(widget, tk.Button):
+                active_bg = widget.cget("activebackground")
+                # Scientific BG #2a4a6a (42, 74, 106), each channel +20
+                # 2a (42) + 20 = 62 = 3e
+                # 4a (74) + 20 = 94 = 5e
+                # 6a (106) + 20 = 126 = 7e
+                # Result: #3e5e7e
+                assert active_bg == "#3e5e7e"
+                break
+
+
+# ============================================================================
+# GUI REDESIGN TESTS — NO REGRESSION TESTS
+# ============================================================================
+
+class TestGUIRedesignNoRegressions:
+    """Test suite to ensure no regressions in calculator functionality."""
+
+    def test_basic_addition_still_works(self, gui):
+        """Test that basic addition functionality is unchanged."""
+        gui._on_number_click("5")
+        gui._on_operation_click("+")
+        gui._on_number_click("3")
+        gui._on_equals_click()
+        assert gui._current_display() == "8"
+
+    def test_basic_subtraction_still_works(self, gui):
+        """Test that basic subtraction functionality is unchanged."""
+        gui._on_number_click("10")
+        gui._on_operation_click("-")
+        gui._on_number_click("4")
+        gui._on_equals_click()
+        assert gui._current_display() == "6"
+
+    def test_basic_multiplication_still_works(self, gui):
+        """Test that basic multiplication functionality is unchanged."""
+        gui._on_number_click("3")
+        gui._on_operation_click("*")
+        gui._on_number_click("7")
+        gui._on_equals_click()
+        assert gui._current_display() == "21"
+
+    def test_basic_division_still_works(self, gui):
+        """Test that basic division functionality is unchanged."""
+        gui._on_number_click("20")
+        gui._on_operation_click("/")
+        gui._on_number_click("5")
+        gui._on_equals_click()
+        assert gui._current_display() == "4"
+
+    def test_scientific_operations_still_work(self, gui):
+        """Test that scientific operations functionality is unchanged."""
+        gui._on_number_click("16")
+        gui._on_scientific_click("sqrt")
+        assert gui._current_display() == "4"
+
+    def test_clear_functionality_still_works(self, gui):
+        """Test that clear functionality is unchanged."""
+        gui._on_number_click("999")
+        gui._on_clear_click()
+        assert gui._current_display() == "0"
+
+    def test_backspace_functionality_still_works(self, gui):
+        """Test that backspace functionality is unchanged."""
+        gui._on_number_click("123")
+        gui._on_backspace_click()
+        assert gui._current_display() == "12"
+
+    def test_negate_functionality_still_works(self, gui):
+        """Test that negate functionality is unchanged."""
+        gui._on_number_click("42")
+        gui._on_negate_click()
+        assert gui._current_display() == "-42"
+
+    def test_percent_functionality_still_works(self, gui):
+        """Test that percent functionality is unchanged."""
+        gui._on_number_click("50")
+        gui._on_percent_click()
+        assert gui._current_display() == "0.5"
+
+    def test_decimal_input_still_works(self, gui):
+        """Test that decimal input functionality is unchanged."""
+        gui._on_number_click("3")
+        gui._on_number_click(".")
+        gui._on_number_click("14")
+        assert gui._current_display() == "3.14"
+
+    def test_error_handling_still_works(self, gui):
+        """Test that error handling is unchanged."""
+        gui._on_number_click("5")
+        gui._on_operation_click("/")
+        gui._on_number_click("0")
+        gui._on_equals_click()
+        assert "Error" in gui._current_display()
+
+    def test_scientific_mode_toggle_still_works(self, gui):
+        """Test that scientific mode toggle is unchanged."""
+        assert gui._scientific_visible is False
+        gui._toggle_scientific_mode()
+        assert gui._scientific_visible is True
+        gui._toggle_scientific_mode()
+        assert gui._scientific_visible is False

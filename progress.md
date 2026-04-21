@@ -1,5 +1,15 @@
 ## Run: update-diagrams (2026-04-21)
 
+- branch: task/issue-225-redesign-gui-ios-style
+- files changed: artifacts/class_diagram.puml
+- purpose: Update class diagram to reflect iOS-style GUI redesign — module-level colour constants added to presentation.gui, _btn() factory method added to CalculatorGUI, _build_button_grid/_build_scientific_panel signatures updated with parameters, CalculatorGUI note updated to describe iOS dark theme and corrected _SCIENTIFIC_OPS count to 12. Activity and sequence diagrams unchanged (behaviour unaffected by cosmetic redesign).
+- risks: None — diagram-only update, no source changes
+- tests passed: N/A
+
+Duration: 152.4s | Cost: $0.623238 USD | Turns: 15
+
+## Run: update-diagrams (2026-04-21)
+
 - branch: task/issue-188-gui-tkinter
 - files changed: artifacts/class_diagram.puml, artifacts/activity_diagram.puml, artifacts/sequence_diagram.puml
 - purpose: Update PlantUML diagrams to reflect tkinter GUI implementation — CalculatorGUI class added with full attribute/method listing; __main__ dispatch updated to include --gui branch; activity and sequence diagrams extended with GUI mode flow (button events, binary/unary op dispatch, scientific panel toggle)
@@ -307,3 +317,15 @@ Duration: 151.2s | Cost: $0.414959 USD | Turns: 18
 - PR target: exp2/naive-team
 
 Duration: 453.3s | Cost: $1.005829 USD | Turns: 15
+
+## Run: issue-225-redesign-gui-ios-style (2026-04-21)
+
+- branch: task/issue-225-redesign-gui-ios-style
+- files changed: src/presentation/gui.py (modified), tests/test_gui.py (modified)
+- purpose: Redesign calculator GUI to iOS-inspired dark theme — black background, orange operator buttons (#FF9500), flat round buttons, 30pt display font
+- risks: Low — pure cosmetic changes; no logic altered. New tests use display which CI lacks (same issue as 125 pre-existing tests); 9 constant tests pass headlessly
+- tests passed: 9 passed (colour constant tests), 168 errors (pre-existing no-display issue; 125 errors existed before this run)
+- worktree/branch: task/issue-225-redesign-gui-ios-style
+- PR target: exp2/naive-team
+
+Duration: 540.7s | Cost: $1.127027 USD | Turns: 18
