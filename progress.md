@@ -7,4 +7,4 @@
 - **Risks:** None — purely additive test changes, no production code modified.
 - **Tests passed:** 28/28 (pytest exit code 0)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 133.4s | Cost: $0.383459 USD | Turns: 16
