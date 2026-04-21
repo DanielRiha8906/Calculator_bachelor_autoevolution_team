@@ -1,4 +1,21 @@
 
+## Run: issue-189-gui-tkinter (2026-04-21)
+
+- **Branch:** task/issue-189-gui-tkinter
+- **PR target:** exp2/structured-team
+- **PR:** https://github.com/DanielRiha8906/Calculator_bachelor_autoevolution_team/pull/221
+- **Files changed:**
+  - `src/interface/gui.py` (new) — `GUICalculator(tk.Tk)` class: mode selector, dynamic operation buttons, arity-aware operand inputs, result display, scrollable history panel; delegates all arithmetic to `OperationRegistry.dispatch()`
+  - `src/__main__.py` — added `--gui` branch launching `GUICalculator`; all existing REPL/CLI modes unchanged
+  - `src/__init__.py` — exported `GUICalculator` with guarded import for headless environments
+  - `src/interface/__init__.py` — exported `GUICalculator` with guarded import
+  - `tests/interface/test_gui.py` (new) — 83 tests covering init, mode switching, operation selection, calculation execution, error handling, history, `__main__` integration, and edge cases
+- **Purpose:** Add tkinter GUI as a new interface layer for issue #189; GUI is purely additive — no core logic modified
+- **Risks:** GUI tests skip in headless CI (tkinter unavailable); they cover full widget logic when run with a display
+- **Tests:** 1307 passed, 83 skipped — all existing tests green
+- **Cost:** PENDING
+- **Turns:** PENDING
+
 ## Run: update-diagrams (2026-04-20)
 
 - **Branch:** task/issue-186-scientific-mode
