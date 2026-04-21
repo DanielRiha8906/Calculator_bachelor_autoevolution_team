@@ -52,6 +52,13 @@ end note
 
 alt GUI mode (argv contains "--gui")
 
+  note over Main, GUI
+    ModernGUIInterface (src/interface/gui_modern.py) is an iOS-inspired
+    alternative with a 4×5 dark-theme button grid and collapsible scientific
+    panel. It coexists with GUIInterface but is not yet wired to --gui
+    (pending human review). All interactions described below apply to GUIInterface.
+  end note
+
   Main -> GUI : GUIInterface(calculator, registry, context, history, error_logger)
   activate GUI
   GUI -> OperReg : OperationRegistry(calculator)

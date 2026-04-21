@@ -1,4 +1,29 @@
 
+## Run: PR #232 fix — wire --gui to ModernGUIInterface (2026-04-21)
+
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/__main__.py` — updated `--gui` entry point to import and launch `ModernGUIInterface` instead of the old `GUIInterface`
+- **Purpose:** Address reviewer feedback "Add --gui entry point. The design is ok." — wires the new iOS-inspired GUI to the existing `--gui` CLI flag
+- **Risks:** Low — one-line import swap; old GUI is still importable, just no longer the default for `--gui`
+- **Tests passed:** 1418 passed, 102 skipped (headless tkinter), 0 failed
+
+Duration: ~30s | Cost: minimal | Turns: 1
+
+## Run: update-diagrams (2026-04-21)
+
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `ModernGUIInterface` class (src/interface/gui_modern.py) with all display-state attributes, panel-builder and event-handler methods, and three inline notes describing the iOS design, `_on_equals` dispatch, and `_on_mode_toggle` behaviour; added five `ModernGUIInterface o-- …` association lines mirroring GUIInterface relationships
+  - `artifacts/activity_diagram.puml` — expanded the `--gui` branch note to mention `ModernGUIInterface` as an available but not-yet-wired alternative (pending human review)
+  - `artifacts/sequence_diagram.puml` — added an explanatory note at the top of the GUI alt block describing `ModernGUIInterface` and its coexistence with `GUIInterface`
+- **Purpose:** Sync PlantUML diagrams with issue-226 changes — `ModernGUIInterface` (iOS-inspired tkinter GUI) added in that run was not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 182.7s | Cost: $0.601615 USD | Turns: 18
+
 ## Run: update-diagrams (2026-04-21)
 
 - **Branch:** task/issue-189-gui-tkinter
@@ -389,3 +414,18 @@ Duration: 493.5s | Cost: $1.407888 USD | Turns: 13
 - **Tests passed:** 1105/1105 (716 existing + 389 new tests all pass)
 
 Duration: 739.6s | Cost: $2.044180 USD | Turns: 15
+
+---
+
+## Run: Issue #226 — V2 Task 16 — GUI Redesign (iOS-Inspired Modern Calculator)
+
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - Created: `src/interface/gui_modern.py` (606 lines) — new `ModernGUIInterface(tk.Tk)` class
+  - Created: `tests/interface/test_gui_modern.py` (1344 lines) — 153 tests across 18 test classes
+- **Purpose:** Redesign calculator GUI to modern iOS-inspired flat dark interface. New module alongside existing gui.py (non-destructive). Implements 4×5 standard grid, hidden scientific panel, full color scheme (#000000 bg, #333333 digits, #FF9500 operators, #A5A5A5 utilities), flat buttons, 28pt display. Zero changes to calculation logic.
+- **Risks:** Scientific `log` dispatches directly via `_calculator.logarithm()` to avoid registry two-argument special case — documented inline. Entry point (`__main__.py`) not switched; new GUI coexists with old one pending human review.
+- **Tests passed:** 1418 passed, 102 skipped (headless tkinter), 0 failed
+
+Duration: 577.1s | Cost: $1.461137 USD | Turns: 15

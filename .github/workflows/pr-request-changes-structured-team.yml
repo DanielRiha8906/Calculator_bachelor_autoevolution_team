@@ -10,7 +10,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'request-changes:structured-team' &&
-       github.event.pull_request.base.ref == 'exp/structured-team')
+       github.event.pull_request.base.ref == 'exp2/structured-team')
     permissions:                                                                                                                                                                          
         contents: write                                                                                                                                                                                            
         issues: write                                                                                                                                                                                              

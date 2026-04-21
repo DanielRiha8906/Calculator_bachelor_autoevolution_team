@@ -419,6 +419,66 @@ note right of GUIInterface::_on_operation
   Hides _op2_row for unary operations.
 end note
 
+class ModernGUIInterface {
+    -_calculator : Any
+    -_registry : OperationRegistry
+    -_context : CalculatorContext
+    -_history : OperationHistory
+    -_error_logger : ErrorLogger
+    -display_var : tk.StringVar
+    -current_input : str
+    -operation : str | None
+    -first_operand : float | None
+    -result_shown : bool
+    -scientific_mode : bool
+    +__init__(calculator, operation_registry: OperationRegistry, context: CalculatorContext, history: OperationHistory, error_logger: ErrorLogger)
+    +run() : void
+    -_build_display_panel() : None
+    -_build_standard_buttons() : None
+    -_build_scientific_buttons() : None
+    -_on_button_press(label: str) : None
+    -_on_digit(label: str) : None
+    -_on_operator(label: str) : None
+    -_on_equals() : None
+    -_on_clear() : None
+    -_on_delete() : None
+    -_on_mode_toggle() : None
+    -_on_scientific(label: str) : None
+    -_update_display() : None
+    -_display_error(msg: str) : None
+    -_button_color(label: str) : str
+    -_parse_float(s: str) : float | None
+    -_format_result(value: float) : str
+}
+
+note right of ModernGUIInterface
+  iOS-inspired flat dark calculator GUI (src/interface/gui_modern.py).
+  Extends tk.Tk. Coexists with GUIInterface; not yet wired to --gui
+  entry point (pending human review).
+  Standard 4×5 button grid; collapsible 3×2 scientific panel toggled
+  by the "2nd" button (sets scientific_mode, rebuilds panel).
+  Color scheme: #000000 bg, #333333 digits, #FF9500 operators,
+  #A5A5A5 utilities, #FFFFFF text. 28pt display font.
+  All button presses route through _on_button_press() dispatcher.
+  Scientific log dispatches via _calculator.logarithm() directly
+  (not through OperationRegistry) to avoid the two-argument special case.
+end note
+
+note right of ModernGUIInterface::_on_equals
+  Retrieves first_operand and operation stored on button press.
+  Calls OperationRegistry.dispatch(operation, operands) for binary ops.
+  For "log" in scientific panel, calls _calculator.logarithm() directly.
+  Updates display_var and records to OperationHistory on success.
+  On exception, calls _display_error().
+end note
+
+note right of ModernGUIInterface::_on_mode_toggle
+  Toggles scientific_mode bool and rebuilds the scientific
+  button panel via _build_scientific_buttons().
+  Does NOT change CalculatorContext mode; scientific panel
+  dispatches independently without registry mode filtering.
+end note
+
 package "src/operations (standalone utilities)" {
   class "arithmetic" <<module>> {
     +add(a: float, b: float) : float
@@ -505,5 +565,10 @@ GUIInterface o-- OperationRegistry : uses >
 GUIInterface o-- CalculatorContext : uses >
 GUIInterface o-- OperationHistory : uses >
 GUIInterface o-- ErrorLogger : uses >
+ModernGUIInterface o-- Calculator : uses >
+ModernGUIInterface o-- OperationRegistry : uses >
+ModernGUIInterface o-- CalculatorContext : uses >
+ModernGUIInterface o-- OperationHistory : uses >
+ModernGUIInterface o-- ErrorLogger : uses >
 
 @enduml

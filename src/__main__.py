@@ -46,9 +46,9 @@ def main(argv: list[str] | None = None) -> None:
 
     if "--gui" in argv:
         argv.remove("--gui")
-        from .interface.gui import GUIInterface
+        from .interface.gui_modern import ModernGUIInterface
         registry = OperationRegistry(calc)
-        gui = GUIInterface(calc, registry, context, history, error_logger)
+        gui = ModernGUIInterface(calc, registry, context, history, error_logger)
         gui.run()
         return
 
