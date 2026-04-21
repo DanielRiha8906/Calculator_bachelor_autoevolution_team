@@ -22,4 +22,4 @@ All 56 tests passed (pytest 9.0.3, Python 3.12.3).
 
 ### Tokens / Cost / Turns
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 162.5s | Cost: $0.401912 USD | Turns: 14
