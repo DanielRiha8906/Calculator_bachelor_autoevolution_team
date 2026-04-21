@@ -37,6 +37,10 @@ if (argv contains "--gui"?) then (yes — GUI mode)
     GUIInterface creates OperationRegistry internally
     and syncs its mode from CalculatorContext.
     Tkinter event loop drives all user interaction.
+    ModernGUIInterface (src/interface/gui_modern.py) exists
+    as an iOS-inspired alternative (4×5 grid, dark theme,
+    collapsible scientific panel) but is not yet wired to
+    the --gui entry point (pending human review).
   end note
   :gui.run();
   stop

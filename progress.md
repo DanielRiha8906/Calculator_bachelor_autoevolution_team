@@ -1,6 +1,19 @@
 
 ## Run: update-diagrams (2026-04-21)
 
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `ModernGUIInterface` class (src/interface/gui_modern.py) with all display-state attributes, panel-builder and event-handler methods, and three inline notes describing the iOS design, `_on_equals` dispatch, and `_on_mode_toggle` behaviour; added five `ModernGUIInterface o-- …` association lines mirroring GUIInterface relationships
+  - `artifacts/activity_diagram.puml` — expanded the `--gui` branch note to mention `ModernGUIInterface` as an available but not-yet-wired alternative (pending human review)
+  - `artifacts/sequence_diagram.puml` — added an explanatory note at the top of the GUI alt block describing `ModernGUIInterface` and its coexistence with `GUIInterface`
+- **Purpose:** Sync PlantUML diagrams with issue-226 changes — `ModernGUIInterface` (iOS-inspired tkinter GUI) added in that run was not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+## Run: update-diagrams (2026-04-21)
+
 - **Branch:** task/issue-189-gui-tkinter
 - **Files changed:**
   - `artifacts/class_diagram.puml` — added `GUIInterface` class (src/interface/gui.py) with all attributes and methods; added notes describing mode panel, IO panel, history panel, button rebuilding, mode switching, and operation dispatch; added `Main ..> GUIInterface : instantiates (GUI mode)` dependency; added `GUIInterface o-- Calculator/OperationRegistry/CalculatorContext/OperationHistory/ErrorLogger` associations; updated `Main::main` note to include `--gui` mode
