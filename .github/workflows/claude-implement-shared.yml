@@ -54,6 +54,9 @@ jobs:
           ref: ${{ inputs.branch }}
           fetch-depth: 1
 
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Run Claude Code Action
         id: run-claude
         uses: anthropics/claude-code-action@v1
