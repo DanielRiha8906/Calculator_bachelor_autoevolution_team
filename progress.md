@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-227-redesign-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-227 iOS-style GUI redesign: CalculatorGUI class diagram updated with new attributes (_display_var: tk.StringVar, _display: tk.Label, _history_listbox: tk.Listbox) and new/changed methods (_build_mode_toggle, _build_button_grid, _bind_hover, _toggle_mode replacing the old _build_mode_buttons, _build_number_buttons, _build_operation_buttons). Activity diagram updated to replace the two separate Simple/Scientific mode button events with a single Mode toggle button event calling _toggle_mode(). Sequence diagram updated with single toggle alt block and corrected _build_ui() description.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-227 — iOS-style GUI Redesign (Expert/Team)
 
 - **Branch:** task/issue-227-redesign-expert-team
