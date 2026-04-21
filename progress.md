@@ -1,3 +1,16 @@
+## Run: issue-190 — Tkinter GUI (Expert/Team)
+
+- **Branch:** task/issue-190-gui-expert-team
+- **Files changed:** src/gui/__init__.py (new), src/gui/modes.py (new), src/gui/application.py (new), src/gui_main.py (new), tests/test_gui_modes.py (new), tests/test_gui_integration.py (new), tests/test_gui_launch.py (new)
+- **Purpose:** Add a tkinter-based GUI for the calculator. Implements CalcMode abstraction (ABC) with SimpleMode (6 ops) and ScientificMode (18 ops). CalculatorGUI provides numeric input, binary/unary operation dispatch, mode switching, history panel, and error display. All calculation logic delegated to existing Calculator class. CLI and interactive modes unaffected.
+- **Risks:** Low — purely additive; no existing source files modified. Tkinter may not be available on headless systems but CLI/interactive modes remain functional. GUI state machine complexity is covered by integration tests.
+- **Tests passed:** 859/859 (731 existing + 128 new GUI tests)
+- **PR target:** exp2/expert-team
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: update-diagrams — PlantUML diagram update
 
 - **Branch:** task/issue-187-scientific-mode
