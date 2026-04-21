@@ -1,5 +1,30 @@
 ## Run: update-diagrams — PlantUML diagram update
 
+- **Branch:** task/issue-190-gui-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-190 GUI changes: new src.gui package with CalcMode (ABC), SimpleMode, ScientificMode, and CalculatorGUI; new gui_main entry point. Class diagram adds src.gui package with inheritance (SimpleMode/ScientificMode extend CalcMode), CalculatorGUI composition, and new GUIEntryPoint module with all dependency edges. Activity diagram adds GUI branch covering event-loop interactions: digit/decimal/clear input, Simple/Scientific mode switching (rebuild UI), unary op immediate dispatch, binary op queuing with equals execution, history refresh. Sequence diagram adds GUI mode alt block covering gui_main startup, CalculatorGUI construction, mode switching with OperationRegistry delegation, unary/binary operation dispatch to Calculator, and HistoryTracker recording.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: 215.0s | Cost: $0.607148 USD | Turns: 18
+
+---
+
+## Run: issue-190 — Tkinter GUI (Expert/Team)
+
+- **Branch:** task/issue-190-gui-expert-team
+- **Files changed:** src/gui/__init__.py (new), src/gui/modes.py (new), src/gui/application.py (new), src/gui_main.py (new), tests/test_gui_modes.py (new), tests/test_gui_integration.py (new), tests/test_gui_launch.py (new)
+- **Purpose:** Add a tkinter-based GUI for the calculator. Implements CalcMode abstraction (ABC) with SimpleMode (6 ops) and ScientificMode (18 ops). CalculatorGUI provides numeric input, binary/unary operation dispatch, mode switching, history panel, and error display. All calculation logic delegated to existing Calculator class. CLI and interactive modes unaffected.
+- **Risks:** Low — purely additive; no existing source files modified. Tkinter may not be available on headless systems but CLI/interactive modes remain functional. GUI state machine complexity is covered by integration tests.
+- **Tests passed:** 859/859 (731 existing + 128 new GUI tests)
+- **PR target:** exp2/expert-team
+
+Duration: 593.2s | Cost: $1.413605 USD | Turns: 22
+
+---
+
+## Run: update-diagrams — PlantUML diagram update
+
 - **Branch:** task/issue-187-scientific-mode
 - **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
 - **Purpose:** Update PlantUML diagrams to reflect issue-187 scientific mode changes: Calculator class extended with 6 trig methods (sin, cos, tan, cot, asin, acos); OperationRegistry restructured with separate _normal_operations (6 ops) and _scientific_operations (12 ops) dicts, added _load_scientific_operations(), _register_scientific_op(), get_scientific_operations() methods; Session extended with get_mode_selection(), get_operation_choice_with_mode_option(), and _MODE_SWITCH_TOKEN constant; run_interactive_session() updated with mode selection at start and mid-session mode switching; MenuRenderer display_menu() updated with current_mode parameter showing mode label. All three diagrams updated to reflect these changes in class structure, activity flow (mode selection + mode switch loop branch), and sequence interactions (get_mode_selection, mode-specific registry getters, display_menu with mode).

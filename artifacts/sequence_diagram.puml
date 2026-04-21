@@ -1,12 +1,15 @@
 @startuml sequence_diagram
 
 participant "__main__" as main
+participant "gui_main" as guimain
 participant "CLI" as cli
 participant "interface.InputParser" as inputparser
 participant "interface.MenuRenderer" as menurenderer
 participant "core.Operations" as ops
 participant "core.OperationRegistry" as oreg
 participant "interactive.Session" as session
+participant "gui.CalcMode" as mode
+participant "gui.CalculatorGUI" as gui
 participant "Calculator" as calc
 participant "HistoryTracker" as ht
 participant "ErrorLogger" as el
@@ -68,6 +71,110 @@ alt Interactive Mode (python -m src)
                     session -> session : print error message
                 end
             end
+        end
+    end
+
+else GUI Mode (python -m src.gui_main)
+
+    guimain -> calc : <<create>>
+    guimain -> ht : <<create>>
+    guimain -> mode : <<create>> SimpleMode(calculator)
+    mode -> oreg : <<create>>(calculator)
+    oreg -> oreg : _load_normal_operations()
+    oreg -> oreg : _load_scientific_operations()
+    guimain -> gui : <<create>> CalculatorGUI(root, calculator, mode, history_tracker)
+    gui -> gui : _build_ui()
+    gui -> mode : get_operations()
+    mode -> oreg : get_normal_operations()
+    oreg --> mode : ops dict (6 ops)
+    mode --> gui : ops dict (6 ops)
+    gui -> gui : build display, mode buttons,\nnumber buttons, op buttons, history panel
+
+    loop tkinter event loop
+
+        alt digit / decimal / clear button pressed
+            gui -> gui : update _current_input, refresh display
+
+        else Simple mode button pressed
+            alt current mode already Simple
+                gui -> gui : no-op
+            else switch to Simple
+                gui -> mode : <<create>> SimpleMode(calculator)
+                mode -> oreg : <<create>>(calculator)
+                gui -> gui : _reset_transient_state()
+                gui -> gui : _build_ui()
+                gui -> mode : get_operations()
+                mode -> oreg : get_normal_operations()
+                oreg --> mode : ops dict (6 ops)
+                mode --> gui : ops dict (6 ops)
+            end
+
+        else Scientific mode button pressed
+            alt current mode already Scientific
+                gui -> gui : no-op
+            else switch to Scientific
+                gui -> mode : <<create>> ScientificMode(calculator)
+                mode -> oreg : <<create>>(calculator)
+                gui -> gui : _reset_transient_state()
+                gui -> gui : _build_ui()
+                gui -> mode : get_operations()
+                mode -> oreg : get_scientific_operations()
+                oreg --> mode : ops dict (18 ops)
+                mode --> gui : ops dict (18 ops)
+            end
+
+        else unary operation button pressed
+            gui -> gui : _parse_current_input() → value
+            alt parse failed
+                gui -> gui : display "Error: invalid input"
+            else value parsed
+                opt op is factorial and value is not whole
+                    gui -> gui : display "Error: factorial requires an integer"
+                end
+                gui -> calc : op_callable(value)
+                alt success
+                    calc --> gui : result
+                    gui -> ht : record(op_name, [value], result)
+                    gui -> gui : _refresh_history()
+                    gui -> gui : update display with result
+                else TypeError / ValueError / ZeroDivisionError
+                    calc --> gui : raises exception
+                    gui -> gui : display "Error: {exc}"
+                end
+            end
+
+        else binary operation button pressed
+            gui -> gui : _parse_current_input() → first_operand
+            alt parse failed
+                gui -> gui : display "Error: invalid input"
+            else value parsed
+                gui -> gui : store _first_operand, queue _pending_op
+                gui -> gui : clear _current_input
+            end
+
+        else = (equals) button pressed
+            alt no _pending_op queued
+                gui -> gui : no-op
+            else binary op pending
+                gui -> gui : _parse_current_input() → second_value
+                alt parse failed
+                    gui -> gui : display "Error: invalid input"
+                else second value parsed
+                    gui -> calc : op_callable(_first_operand, second_value)
+                    alt success
+                        calc --> gui : result
+                        gui -> ht : record(op_name,\n[_first_operand, second_value], result)
+                        gui -> gui : _refresh_history()
+                        gui -> gui : update display with result
+                        gui -> gui : reset _pending_op, _first_operand
+                    else TypeError / ValueError / ZeroDivisionError
+                        calc --> gui : raises exception
+                        gui -> gui : display "Error: {exc}"
+                        gui -> gui : reset _pending_op, _first_operand
+                    end
+                end
+            end
+
         end
     end
 
