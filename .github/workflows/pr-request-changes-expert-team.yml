@@ -10,7 +10,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'request-changes:expert-team' &&
-       github.event.pull_request.base.ref == 'exp/expert-team')
+       github.event.pull_request.base.ref == 'exp2/expert-team')
     permissions:                                                                                                                                                                          
         contents: write                                                                                                                                                                                            
         issues: write                                                                                                                                                                                              

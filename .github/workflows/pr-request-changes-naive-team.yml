@@ -10,7 +10,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'request-changes:naive-team' &&
-       github.event.pull_request.base.ref == 'exp/naive-team')
+       github.event.pull_request.base.ref == 'exp2/naive-team')
     permissions:                                                                                                                                                                          
         contents: write                                                                                                                                                                                            
         issues: write                                                                                                                                                                                              
