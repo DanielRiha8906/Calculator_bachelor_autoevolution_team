@@ -1,4 +1,17 @@
 
+## Run: update-diagrams (2026-04-21)
+
+- **Branch:** task/issue-189-gui-tkinter
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `GUIInterface` class (src/interface/gui.py) with all attributes and methods; added notes describing mode panel, IO panel, history panel, button rebuilding, mode switching, and operation dispatch; added `Main ..> GUIInterface : instantiates (GUI mode)` dependency; added `GUIInterface o-- Calculator/OperationRegistry/CalculatorContext/OperationHistory/ErrorLogger` associations; updated `Main::main` note to include `--gui` mode
+  - `artifacts/activity_diagram.puml` — added `--gui` branch at the top-level dispatcher (before REPL/CLI); shows `GUIInterface` instantiation and `gui.run()` call; existing REPL/CLI block wrapped in the `else` of the new GUI check; added closing `endif`
+  - `artifacts/sequence_diagram.puml` — added `GUIInterface` participant; changed top-level `alt` from two-way (REPL/CLI) to three-way (GUI/REPL/CLI); GUI alt block shows mode-switch interaction, operation-button click flow through `_on_operation → OperationRegistry.dispatch → Calculator/Engine`, error logging, history recording, and `_refresh_history_display`
+- **Purpose:** Sync PlantUML diagrams with issue-189 changes — `GUIInterface` (tkinter) and `--gui` entry point added in that run were not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: issue-189-gui-tkinter (2026-04-21)
 
 - **Branch:** task/issue-189-gui-tkinter

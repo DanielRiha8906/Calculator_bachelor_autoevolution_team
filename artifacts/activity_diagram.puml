@@ -30,6 +30,19 @@ note right
   Passed to both REPLInterface and CLIHandler.
 end note
 
+if (argv contains "--gui"?) then (yes — GUI mode)
+
+  :Instantiate GUIInterface(\n  calculator, registry, context, history, error_logger);
+  note right
+    GUIInterface creates OperationRegistry internally
+    and syncs its mode from CalculatorContext.
+    Tkinter event loop drives all user interaction.
+  end note
+  :gui.run();
+  stop
+
+else (no — REPL or CLI mode)
+
 if (argv empty or ["--repl"]?) then (yes — REPL mode)
 
   :Instantiate REPLInterface(calculator, history, error_logger, context);
@@ -308,6 +321,8 @@ else (no — CLI mode)
   :Print result to stdout;
   :sys.exit(0);
   stop
+
+endif
 
 endif
 
