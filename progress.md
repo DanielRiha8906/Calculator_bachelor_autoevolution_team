@@ -1,4 +1,19 @@
 
+## Run: issue-189-gui-tkinter (2026-04-21)
+
+- **Branch:** task/issue-189-gui-tkinter
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/interface/gui.py` — NEW: `GUIInterface(tk.Tk)` with mode panel, IO panel (operand entry, operation buttons, result display), and scrollable history panel; supports normal/scientific mode switching, operation dispatch via `OperationRegistry`, result formatting, session history recording, and error display
+  - `src/__main__.py` — MODIFIED: added `--gui` flag; when present, creates `GUIInterface` and calls `gui.run()`, preserving all existing REPL/CLI behavior
+  - `tests/interface/test_gui.py` — NEW: 60 headless tests covering instantiation, mode switching, binary/unary operation dispatch, invalid operand handling, division-by-zero, history recording, error logging, and main() GUI routing
+- **Purpose:** Add tkinter GUI extending the calculator without modifying existing CLI/REPL paths (Issue #189)
+- **Risks:** tkinter requires a display at runtime; tests run headless using mocks. No new external dependencies added.
+- **Tests:** 1367 passed, 0 failed (full suite including 60 new GUI tests)
+- **Tokens used / Cost / Turns:** see workflow metadata
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-20)
 
 - **Branch:** task/issue-186-scientific-mode
