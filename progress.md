@@ -23,3 +23,29 @@ All 56 tests passed (pytest 9.0.3, Python 3.12.3).
 ### Tokens / Cost / Turns
 
 Duration: 162.5s | Cost: $0.401912 USD | Turns: 14
+
+## Run: Issue #233 — UML Diagram Update (division input validation)
+
+- **Branch:** task/issue-233-division-input-tests
+- **PR target:** exp2/naive-team
+- **Date:** 2026-04-21
+
+### Files changed
+
+- `artifacts/class_diagram_calculator.puml` — created; shows Calculator class with all four methods and ValueError annotation on divide()
+- `artifacts/activity_diagram_division.puml` — created; shows division validation flow with decision node for divisor == 0
+- `artifacts/sequence_diagram_division.puml` — created; shows Caller/Calculator interaction for both error and success branches of divide()
+
+### Purpose
+
+Generate PlantUML diagrams documenting the division input validation added in this PR (issue #233). Captures class structure, activity flow, and component interaction for the new ValueError guard in divide().
+
+### Risks
+
+None — documentation-only change. No source or test files modified.
+
+### Test results
+
+N/A — diagram-only update.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

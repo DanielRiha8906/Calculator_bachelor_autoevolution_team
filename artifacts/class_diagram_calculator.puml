@@ -1,0 +1,17 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a: float, b: float) : float
+    + subtract(a: float, b: float) : float
+    + multiply(a: float, b: float) : float
+    + divide(a: float, b: float) : float\n  <<raises ValueError if b == 0>>
+}
+
+note right of Calculator::divide
+  Raises ValueError("Division by zero is not allowed")
+  when b == 0
+end note
+
+@enduml

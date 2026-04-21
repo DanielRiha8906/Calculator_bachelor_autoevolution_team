@@ -1,0 +1,18 @@
+@startuml
+
+actor Caller
+participant Calculator
+
+Caller ->> Calculator : divide(a, b)
+activate Calculator
+
+alt b == 0
+    Calculator -->> Caller : raise ValueError\n("Division by zero is not allowed")
+else b != 0
+    Calculator ->> Calculator : compute a / b
+    Calculator -->> Caller : return float result
+end
+
+deactivate Calculator
+
+@enduml

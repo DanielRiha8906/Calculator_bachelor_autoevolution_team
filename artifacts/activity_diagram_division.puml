@@ -1,0 +1,16 @@
+@startuml
+
+start
+
+:Caller invokes divide(a, b);
+
+if (divisor == 0?) then (yes)
+  :Raise ValueError\n"Division by zero is not allowed";
+  stop
+else (no)
+  :Compute a / b;
+  :Return float result;
+  stop
+endif
+
+@enduml
