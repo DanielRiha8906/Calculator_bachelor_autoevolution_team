@@ -1,4 +1,16 @@
 
+## Run: PR #232 fix — wire --gui to ModernGUIInterface (2026-04-21)
+
+- **Branch:** task/issue-226-ios-calculator-redesign
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/__main__.py` — updated `--gui` entry point to import and launch `ModernGUIInterface` instead of the old `GUIInterface`
+- **Purpose:** Address reviewer feedback "Add --gui entry point. The design is ok." — wires the new iOS-inspired GUI to the existing `--gui` CLI flag
+- **Risks:** Low — one-line import swap; old GUI is still importable, just no longer the default for `--gui`
+- **Tests passed:** 1418 passed, 102 skipped (headless tkinter), 0 failed
+
+Duration: ~30s | Cost: minimal | Turns: 1
+
 ## Run: update-diagrams (2026-04-21)
 
 - **Branch:** task/issue-226-ios-calculator-redesign
