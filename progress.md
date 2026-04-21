@@ -12,7 +12,7 @@
 - **Tests:** 1367 passed, 0 failed (full suite including 60 new GUI tests)
 - **Tokens used / Cost / Turns:** see workflow metadata
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 561.6s | Cost: $1.293765 USD | Turns: 19
 
 ## Run: update-diagrams (2026-04-20)
 
