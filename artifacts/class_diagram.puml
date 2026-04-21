@@ -364,6 +364,61 @@ note right of CLIHandler::execute
   or TypeError on error.
 end note
 
+class GUIInterface {
+    -_calculator : Any
+    -_registry : OperationRegistry
+    -_context : CalculatorContext
+    -_history : OperationHistory
+    -_error_logger : ErrorLogger
+    -_active_operation : str | None
+    -_operand1_var : tk.StringVar
+    -_operand2_var : tk.StringVar
+    -_result_var : tk.StringVar
+    +__init__(calculator, operation_registry: OperationRegistry, context: CalculatorContext, history: OperationHistory, error_logger: ErrorLogger)
+    +run() : void
+    -_build_mode_panel() : None
+    -_build_io_panel() : None
+    -_build_history_panel() : None
+    -_build_operation_buttons() : None
+    -_on_switch_mode() : None
+    -_on_operation(operation_name: str, arity: int) : None
+    -_mode_display_text() : str
+    -_parse_float(raw: str) : float | None
+    -_show_error(message: str) : None
+    -_refresh_history_display() : None
+}
+
+note right of GUIInterface
+  Tkinter GUI interface (src/interface/gui.py).
+  Extends tk.Tk; launched with --gui flag.
+  Mode panel: displays current mode, "Switch Mode" button.
+  IO panel: operand entry fields, dynamic operation buttons
+  (grid), result display label.
+  History panel: scrollable ScrolledText log.
+  Dispatches via OperationRegistry; records history
+  and logs errors on each operation.
+  Headless tests use mocks (no display required).
+end note
+
+note right of GUIInterface::_build_operation_buttons
+  Dynamically generates one button per mode-compatible
+  operation from OperationRegistry.get_operations().
+  Buttons are rebuilt on mode switch via _on_switch_mode().
+end note
+
+note right of GUIInterface::_on_switch_mode
+  Toggles context mode between "normal" and "scientific".
+  Calls context.set_mode(), registry.set_mode(), then
+  rebuilds operation buttons to reflect the new operation set.
+end note
+
+note right of GUIInterface::_on_operation
+  Parses operand entry fields, calls
+  OperationRegistry.dispatch(operation_name, operands),
+  updates _result_var, records history, and logs errors.
+  Hides _op2_row for unary operations.
+end note
+
 package "src/operations (standalone utilities)" {
   class "arithmetic" <<module>> {
     +add(a: float, b: float) : float
@@ -417,6 +472,7 @@ note right of Main::main
   Instantiates OperationHistory, ErrorLogger,
   Calculator, and CalculatorContext, then
   clears history/error state.
+  GUI mode: argv contains "--gui".
   REPL mode: argv is empty or ["--repl"].
   CLI mode: argv has operation + operands.
   Exit codes: 0=ok, 1=usage, 2=unknown op,
@@ -427,6 +483,7 @@ Main ..> Calculator : instantiates
 Main ..> OperationHistory : instantiates
 Main ..> ErrorLogger : instantiates
 Main ..> CalculatorContext : instantiates
+Main ..> GUIInterface : instantiates (GUI mode)
 Main ..> REPLInterface : instantiates (REPL mode)
 Main ..> CLIHandler : instantiates (CLI mode)
 Calculator *-- CalculationEngine : owns >
@@ -443,5 +500,10 @@ CLIHandler o-- OperationRegistry : uses >
 OperationRegistry o-- Calculator : dispatches to >
 OperationRegistry ..> Operation : manages >
 REPLInterface ..> MaxRetriesExceeded : raises
+GUIInterface o-- Calculator : uses >
+GUIInterface o-- OperationRegistry : uses >
+GUIInterface o-- CalculatorContext : uses >
+GUIInterface o-- OperationHistory : uses >
+GUIInterface o-- ErrorLogger : uses >
 
 @enduml

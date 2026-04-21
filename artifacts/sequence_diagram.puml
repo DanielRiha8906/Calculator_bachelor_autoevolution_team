@@ -4,6 +4,7 @@ participant "__main__" as Main
 participant "CalculatorContext" as Ctx
 participant "OperationHistory" as History
 participant "ErrorLogger" as ErrLog
+participant "GUIInterface" as GUI
 participant "REPLInterface" as REPL
 participant "OperationRegistry" as OperReg
 participant "CLIHandler" as CLI
@@ -49,7 +50,87 @@ note over Ctx
   Passed to both REPL and CLI.
 end note
 
-alt REPL mode (argv empty or ["--repl"])
+alt GUI mode (argv contains "--gui")
+
+  Main -> GUI : GUIInterface(calculator, registry, context, history, error_logger)
+  activate GUI
+  GUI -> OperReg : OperationRegistry(calculator)
+  activate OperReg
+  GUI -> OperReg : set_mode(context.get_mode())
+  note over OperReg
+    Same registry used for token resolution,
+    arity lookup, dispatch, and mode filtering.
+    Operations with mode="scientific" only shown
+    when _current_mode == "scientific".
+  end note
+
+  Main -> GUI : run()
+  note over GUI
+    Enters tkinter event loop.
+    Mode panel shows current mode; "Switch Mode"
+    button toggles normal ↔ scientific and rebuilds
+    operation buttons via _build_operation_buttons().
+  end note
+
+  loop user interacts with GUI
+
+    alt user clicks "Switch Mode"
+      User -> GUI : click "Switch Mode"
+      GUI -> Ctx : set_mode(new_mode)
+      GUI -> OperReg : set_mode(new_mode)
+      GUI -> GUI : _build_operation_buttons()
+      GUI -> User : updated mode label and operation buttons
+    else user clicks an operation button
+      User -> GUI : click operation button
+      GUI -> GUI : _on_operation(operation_name, arity)
+      GUI -> GUI : _parse_float(operand1_var)
+      alt arity == 2
+        GUI -> GUI : _parse_float(operand2_var)
+      end
+      alt operand parsing failed
+        GUI -> GUI : _show_error("Invalid operand value")
+        GUI -> ErrLog : log_error(INVALID_INPUT, raw_input, exception)
+        GUI -> User : display error in result label
+      else operands valid
+        GUI -> OperReg : dispatch(operation_name, operands)
+        alt operation == "logarithm"
+          OperReg -> OperReg : validate base (> 0, != 1) and x (> 0)
+          OperReg --> GUI : log_base(x)
+        else arithmetic operation (add/subtract/multiply/divide)
+          OperReg -> Calc : <method_name>(*operands)
+          Calc -> Engine : <method_name>(*operands)
+          Engine --> Calc : result
+          Calc --> OperReg : result
+          OperReg --> GUI : result
+        else scientific operation (factorial/roots/power/log/trig)
+          OperReg -> Calc : <method_name>(*operands)
+          Calc --> OperReg : result
+          OperReg --> GUI : result
+        end
+        alt dispatch succeeded
+          GUI -> GUI : _result_var.set(str(result))
+          GUI -> History : record_operation("op(args) = result")
+          GUI -> GUI : _refresh_history_display()
+          GUI -> User : display result
+        else exception raised
+          GUI -> ErrLog : log_error(CALCULATION_ERROR, str(operands), exception)
+          GUI -> GUI : _show_error(str(exception))
+          GUI -> User : display error in result label
+        end
+      end
+    end
+
+  end
+
+  note over User, GUI
+    Loop ends when user closes the window
+    (tkinter mainloop exits on window destroy).
+  end note
+
+  deactivate OperReg
+  deactivate GUI
+
+else REPL mode (argv empty or ["--repl"])
 
   Main -> REPL : REPLInterface(calculator, history, error_logger, context)
   activate REPL

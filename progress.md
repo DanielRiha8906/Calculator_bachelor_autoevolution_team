@@ -1,4 +1,32 @@
 
+## Run: update-diagrams (2026-04-21)
+
+- **Branch:** task/issue-189-gui-tkinter
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added `GUIInterface` class (src/interface/gui.py) with all attributes and methods; added notes describing mode panel, IO panel, history panel, button rebuilding, mode switching, and operation dispatch; added `Main ..> GUIInterface : instantiates (GUI mode)` dependency; added `GUIInterface o-- Calculator/OperationRegistry/CalculatorContext/OperationHistory/ErrorLogger` associations; updated `Main::main` note to include `--gui` mode
+  - `artifacts/activity_diagram.puml` — added `--gui` branch at the top-level dispatcher (before REPL/CLI); shows `GUIInterface` instantiation and `gui.run()` call; existing REPL/CLI block wrapped in the `else` of the new GUI check; added closing `endif`
+  - `artifacts/sequence_diagram.puml` — added `GUIInterface` participant; changed top-level `alt` from two-way (REPL/CLI) to three-way (GUI/REPL/CLI); GUI alt block shows mode-switch interaction, operation-button click flow through `_on_operation → OperationRegistry.dispatch → Calculator/Engine`, error logging, history recording, and `_refresh_history_display`
+- **Purpose:** Sync PlantUML diagrams with issue-189 changes — `GUIInterface` (tkinter) and `--gui` entry point added in that run were not yet reflected in any diagram
+- **Risks:** None — diagram-only update, no source changes
+- **Tests passed:** N/A — no code changes
+
+Duration: 225.7s | Cost: $0.742311 USD | Turns: 21
+
+## Run: issue-189-gui-tkinter (2026-04-21)
+
+- **Branch:** task/issue-189-gui-tkinter
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/interface/gui.py` — NEW: `GUIInterface(tk.Tk)` with mode panel, IO panel (operand entry, operation buttons, result display), and scrollable history panel; supports normal/scientific mode switching, operation dispatch via `OperationRegistry`, result formatting, session history recording, and error display
+  - `src/__main__.py` — MODIFIED: added `--gui` flag; when present, creates `GUIInterface` and calls `gui.run()`, preserving all existing REPL/CLI behavior
+  - `tests/interface/test_gui.py` — NEW: 60 headless tests covering instantiation, mode switching, binary/unary operation dispatch, invalid operand handling, division-by-zero, history recording, error logging, and main() GUI routing
+- **Purpose:** Add tkinter GUI extending the calculator without modifying existing CLI/REPL paths (Issue #189)
+- **Risks:** tkinter requires a display at runtime; tests run headless using mocks. No new external dependencies added.
+- **Tests:** 1367 passed, 0 failed (full suite including 60 new GUI tests)
+- **Tokens used / Cost / Turns:** see workflow metadata
+
+Duration: 561.6s | Cost: $1.293765 USD | Turns: 19
+
 ## Run: update-diagrams (2026-04-20)
 
 - **Branch:** task/issue-186-scientific-mode

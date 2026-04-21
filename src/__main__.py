@@ -2,6 +2,7 @@ import sys
 
 from .calculator import Calculator
 from .context import CalculatorContext
+from .core.operations import OperationRegistry
 from .interface.cli import CLIHandler
 from .interface.repl import REPLInterface
 from .support.error_logger import ErrorLogger
@@ -11,8 +12,9 @@ from .support.history import OperationHistory
 def main(argv: list[str] | None = None) -> None:
     """Entry point for the calculator application.
 
-    Operates in two modes depending on the command-line arguments:
+    Operates in three modes depending on the command-line arguments:
 
+    - GUI mode: launched when ``--gui`` is present in argv.
     - REPL mode: launched when no extra arguments are provided (argv is empty).
     - CLI mode: launched when an operation and at least one operand are provided.
 
@@ -30,6 +32,9 @@ def main(argv: list[str] | None = None) -> None:
     if argv is None:
         argv = sys.argv[1:]
 
+    # Mutable copy so we can strip --gui without affecting sys.argv.
+    argv = list(argv)
+
     history = OperationHistory()
     history.clear_history()
 
@@ -38,6 +43,14 @@ def main(argv: list[str] | None = None) -> None:
 
     calc = Calculator()
     context = CalculatorContext()
+
+    if "--gui" in argv:
+        argv.remove("--gui")
+        from .interface.gui import GUIInterface
+        registry = OperationRegistry(calc)
+        gui = GUIInterface(calc, registry, context, history, error_logger)
+        gui.run()
+        return
 
     if len(argv) == 0 or (len(argv) == 1 and argv[0] == "--repl"):
         # REPL mode — existing behaviour unchanged.
