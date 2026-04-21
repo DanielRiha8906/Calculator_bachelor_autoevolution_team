@@ -403,4 +403,4 @@ Duration: 739.6s | Cost: $2.044180 USD | Turns: 15
 - **Risks:** Scientific `log` dispatches directly via `_calculator.logarithm()` to avoid registry two-argument special case — documented inline. Entry point (`__main__.py`) not switched; new GUI coexists with old one pending human review.
 - **Tests passed:** 1418 passed, 102 skipped (headless tkinter), 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 577.1s | Cost: $1.461137 USD | Turns: 15
