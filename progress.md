@@ -1,3 +1,15 @@
+## Run: update-diagrams — PlantUML diagram update
+
+- **Branch:** task/issue-190-gui-expert-team
+- **Files changed:** artifacts/class_diagram.puml (updated), artifacts/activity_diagram.puml (updated), artifacts/sequence_diagram.puml (updated)
+- **Purpose:** Update PlantUML diagrams to reflect issue-190 GUI changes: new src.gui package with CalcMode (ABC), SimpleMode, ScientificMode, and CalculatorGUI; new gui_main entry point. Class diagram adds src.gui package with inheritance (SimpleMode/ScientificMode extend CalcMode), CalculatorGUI composition, and new GUIEntryPoint module with all dependency edges. Activity diagram adds GUI branch covering event-loop interactions: digit/decimal/clear input, Simple/Scientific mode switching (rebuild UI), unary op immediate dispatch, binary op queuing with equals execution, history refresh. Sequence diagram adds GUI mode alt block covering gui_main startup, CalculatorGUI construction, mode switching with OperationRegistry delegation, unary/binary operation dispatch to Calculator, and HistoryTracker recording.
+- **Risks:** None — diagram-only artifacts, no source code modified.
+- **Tests passed:** N/A (no code changes)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: issue-190 — Tkinter GUI (Expert/Team)
 
 - **Branch:** task/issue-190-gui-expert-team

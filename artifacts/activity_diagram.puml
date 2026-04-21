@@ -59,6 +59,79 @@ if (Mode?) then (interactive — via __main__)
     :history_tracker.save_to_file("history.txt");
     :Print "Goodbye.";
 
+elseif (Mode?) then (GUI — via gui_main)
+
+    :Instantiate HistoryTracker;
+    :Instantiate SimpleMode(calculator)\n→ creates OperationRegistry internally;
+    :Instantiate CalculatorGUI(root, calculator, mode, history_tracker);
+    :_build_ui() → build display, mode buttons,\nnumber buttons, operation buttons, history panel;
+
+    while (tkinter event loop active?) is (yes)
+
+        if (digit or decimal button pressed?) then (yes)
+            :Append to _current_input;
+            :Update display;
+        elseif (C (clear) button pressed?) then (yes)
+            :Reset _current_input, _first_operand,\n_pending_op, _pending_op_name;
+            :Set display to "0";
+        elseif (Simple mode button pressed?) then (yes)
+            if (current mode already Simple?) then (yes)
+                :no-op;
+            else (no)
+                :_switch_to_simple()\n→ new SimpleMode, _reset_transient_state, _build_ui;
+            endif
+        elseif (Scientific mode button pressed?) then (yes)
+            if (current mode already Scientific?) then (yes)
+                :no-op;
+            else (no)
+                :_switch_to_scientific()\n→ new ScientificMode, _reset_transient_state, _build_ui;
+            endif
+        elseif (operation button pressed?) then (yes)
+            :_parse_current_input() → value;
+            if (parse failed?) then (yes)
+                :Display "Error: invalid input";
+            elseif (arity == 1?) then (yes — unary)
+                if (op is factorial and value not whole?) then (yes)
+                    :Display "Error: factorial requires an integer";
+                else (no)
+                    :op_callable(value);
+                    if (Exception raised?) then (yes)
+                        :Display "Error: {exc}";
+                    else (no)
+                        :Display result;
+                        :history_tracker.record(op_name, [value], result);
+                        :_refresh_history();
+                    endif
+                endif
+            else (no — binary)
+                :Store value as _first_operand;
+                :Queue (op_callable, arity) as _pending_op;
+                :Clear _current_input;
+            endif
+        elseif (= (equals) button pressed?) then (yes)
+            if (no _pending_op?) then (yes)
+                :no-op;
+            else (no)
+                :_parse_current_input() → second_value;
+                if (parse failed?) then (yes)
+                    :Display "Error: invalid input";
+                else (no)
+                    :op_callable(_first_operand, second_value);
+                    if (Exception raised?) then (yes)
+                        :Display "Error: {exc}";
+                        :Reset _pending_op, _pending_op_name, _first_operand;
+                    else (no)
+                        :Display result;
+                        :history_tracker.record(op_name,\n[_first_operand, second_value], result);
+                        :_refresh_history();
+                        :Reset _pending_op, _pending_op_name, _first_operand;
+                    endif
+                endif
+            endif
+        endif
+
+    endwhile (no — window closed)
+
 else (CLI — via execute_cli)
 
     :interface.InputParser: parse_cli_args(sys.argv);

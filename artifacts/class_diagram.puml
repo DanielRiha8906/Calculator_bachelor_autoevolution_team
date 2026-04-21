@@ -91,8 +91,69 @@ package "src.support" {
     }
 }
 
+package "src.gui" {
+    abstract class CalcMode {
+        {abstract} +name : str
+        {abstract} +get_operations() : dict[str, tuple]
+    }
+
+    class SimpleMode {
+        -_registry : OperationRegistry
+        +__init__(calculator: Calculator)
+        +name : str
+        +get_operations() : dict[str, tuple]
+    }
+
+    class ScientificMode {
+        -_registry : OperationRegistry
+        +__init__(calculator: Calculator)
+        +name : str
+        +get_operations() : dict[str, tuple]
+    }
+
+    class CalculatorGUI {
+        -_root : tk.Tk
+        -_calculator : Calculator
+        -_mode : CalcMode
+        -_history_tracker : HistoryTracker
+        -_current_input : str
+        -_first_operand : float | None
+        -_pending_op : tuple | None
+        -_pending_op_name : str | None
+        +__init__(root, calculator, mode, history_tracker)
+        -_build_ui() : None
+        -_build_display(parent) : None
+        -_build_mode_buttons(parent) : None
+        -_build_number_buttons(parent) : None
+        -_build_operation_buttons(parent) : None
+        -_build_history_panel(parent) : None
+        -_on_digit(digit: str) : None
+        -_on_decimal() : None
+        -_on_clear() : None
+        -_on_operation(op_name, op_callable, arity) : None
+        -_on_equals() : None
+        -_execute_unary(op_name, op_callable, value) : None
+        -_parse_current_input() : float | None
+        -{static} _format_result(result) : str
+        -_refresh_history() : None
+        -_switch_to_simple() : None
+        -_switch_to_scientific() : None
+        -_reset_transient_state() : None
+    }
+
+    SimpleMode --|> CalcMode
+    ScientificMode --|> CalcMode
+    CalculatorGUI o-- CalcMode
+}
+
 package "__main__" {
     class EntryPoint <<module>> {
+    }
+}
+
+package "gui_main" {
+    class GUIEntryPoint <<module>> {
+        +main() : None
     }
 }
 
@@ -113,6 +174,16 @@ CLI ..> Calculator : invokes methods via registry
 CLI ..> Operations : calls get_operation_registry()
 CLI ..> ErrorLogger : logs errors
 CLI ..> InputParser : calls parse_cli_args() / convert_operand()
+
+GUIEntryPoint ..> Calculator : instantiates
+GUIEntryPoint ..> HistoryTracker : instantiates
+GUIEntryPoint ..> SimpleMode : instantiates
+GUIEntryPoint ..> CalculatorGUI : instantiates
+
+SimpleMode ..> OperationRegistry : uses get_normal_operations()
+ScientificMode ..> OperationRegistry : uses get_scientific_operations()
+CalculatorGUI ..> Calculator : invokes methods via mode operations
+CalculatorGUI ..> HistoryTracker : records results / refreshes panel
 
 note right of Calculator::factorial
   Raises TypeError if n is not int.
@@ -232,6 +303,37 @@ note right of ErrorLogger::log_error
   Error types: UNSUPPORTED_OPERATION, INVALID_OPERAND,
   ARGUMENT_COUNT_MISMATCH, DIVISION_BY_ZERO, INVALID_DOMAIN.
   Module-level singleton logger; silently swallows I/O errors.
+end note
+
+note right of CalcMode
+  Abstract base class (ABC).
+  Concrete modes supply name and get_operations().
+end note
+
+note right of SimpleMode
+  Wraps OperationRegistry.get_normal_operations().
+  Exposes: add, subtract, multiply, divide,
+  square, square_root (6 ops).
+end note
+
+note right of ScientificMode
+  Wraps OperationRegistry.get_scientific_operations().
+  Exposes all 18 ops (normal + scientific).
+end note
+
+note right of CalculatorGUI
+  Tkinter-based GUI; no arithmetic performed here.
+  Binary ops queue first_operand + pending_op until "=" is pressed.
+  Unary ops execute immediately on current_input.
+  Mode switch rebuilds entire widget tree (_build_ui).
+  history_tracker is shared across mode switches.
+  factorial auto-converts whole-float operands to int.
+end note
+
+note right of GUIEntryPoint
+  Launches tkinter mainloop.
+  Default mode is SimpleMode.
+  Run via: python -m src.gui_main
 end note
 
 @enduml
