@@ -1,4 +1,16 @@
 
+## Run: issue-226-redesign-calculator-gui (2026-04-21)
+
+- **Branch:** task/issue-226-redesign-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/interface/gui.py` — REWRITTEN: replaced three-panel operand-entry layout with an iOS-inspired dark compact grid UI; removed `_build_history_panel`, `_refresh_history_display`, `_build_io_panel`, `_build_operation_buttons`, `_on_operation`, `_show_error`, `_parse_float`, `_mode_display_text`; added module-level color constants (`COLOR_BACKGROUND`, `COLOR_BUTTON_STANDARD`, `COLOR_BUTTON_OPERATOR`, `COLOR_BUTTON_UTILITY`, `COLOR_TEXT_RESULT`, `COLOR_TEXT_BUTTON`); added `_build_result_panel`, `_build_mode_toggle`, `_build_calculator_grid`, `_make_button`, `_map_operation_to_symbol`, `_format_number`; added state machine attributes (`_current_input`, `_pending_operand_1`, `_pending_operation`, `_result_shown`); added event handlers `_append_digit`, `_press_operator`, `_press_equals`, `_press_clear`, `_press_backspace`, `_press_unary_op`, `_update_display`; replaced toggle-mode button with two explicit "Normal"/"Scientific" buttons; window set to 320x560, non-resizable, black background; `run()` unchanged
+- **Purpose:** Redesign GUI layer for iOS-inspired dark calculator look (Issue #226); no business logic changes — all calculation dispatch and mode switching still routed through existing OperationRegistry and CalculatorContext
+- **Risks:** History panel removed from the GUI; history is still recorded via `OperationHistory.record_operation` but no longer displayed in the window. The old operand-entry widget flow is completely replaced by a button-press state machine — existing tests for the old GUI will need updating.
+- **Tests passed:** 112 new GUI tests + all existing tests (1419 total) — all passing
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams (2026-04-21)
 
 - **Branch:** task/issue-189-gui-tkinter

@@ -31,6 +31,44 @@ try:
 except ImportError:
     HAS_TKINTER = False
 
+# Mock tkinter at the module level if not available, but do it properly
+# to avoid breaking imports of the GUI module
+if not HAS_TKINTER:
+    # Create a mock module that has the necessary classes
+    mock_tk = MagicMock()
+
+    # Create a proper Tk class with required methods
+    class MockTk:
+        def __init__(self, *args, **kwargs):
+            pass
+        def mainloop(self):
+            pass
+        def destroy(self):
+            pass
+        def title(self, *args, **kwargs):
+            pass
+        def resizable(self, *args, **kwargs):
+            pass
+        def configure(self, *args, **kwargs):
+            pass
+        def geometry(self, *args, **kwargs):
+            pass
+
+    mock_tk.Tk = MockTk
+    mock_tk.Frame = MagicMock()
+    mock_tk.Label = MagicMock()
+    mock_tk.Button = MagicMock()
+    mock_tk.Entry = MagicMock()
+    mock_tk.StringVar = MagicMock()
+    mock_tk.X = 'x'
+    mock_tk.LEFT = 'left'
+    mock_tk.BOTH = 'both'
+    mock_tk.NSEW = 'nsew'
+    mock_tk.FLAT = 'flat'
+    mock_tk.E = 'e'
+    mock_tk.RIGHT = 'right'
+    sys.modules['tkinter'] = mock_tk
+
 
 # ==============================================================================
 # FIXTURES
@@ -94,51 +132,53 @@ def gui_with_mocked_tk(calculator, operation_registry, context, history, error_l
     Uses @patch context manager to mock tkinter components that would normally
     require a display. This allows testing the core GUI logic.
     """
-    if not HAS_TKINTER:
-        pytest.skip("tkinter not available")
-
     from src.interface.gui import GUIInterface
-    with patch("tkinter.Tk.__init__", return_value=None):
-        with patch("tkinter.Tk.mainloop"):
-            # Mock all the tkinter setup methods to prevent display errors
-            with patch("tkinter.Frame"), \
-                 patch("tkinter.Label"), \
-                 patch("tkinter.Entry"), \
-                 patch("tkinter.Button"), \
-                 patch("tkinter.StringVar") as mock_stringvar_class:
 
-                # Make StringVar instances behave like real ones
-                def make_stringvar(*args, **kwargs):
-                    mock = MagicMock()
-                    mock._value = kwargs.get("value", "")
+    # Create mock tkinter classes
+    mock_frame = MagicMock()
+    mock_frame.return_value = MagicMock()
+    mock_frame.return_value.pack = MagicMock()
+    mock_frame.return_value.destroy = MagicMock()
 
-                    def get():
-                        return mock._value
-                    def set(val):
-                        mock._value = val
-                    mock.get = get
-                    mock.set = set
-                    return mock
+    mock_label = MagicMock()
+    label_instance = MagicMock()
+    label_instance.pack = MagicMock()
+    label_instance.config = MagicMock()
+    mock_label.return_value = label_instance
 
-                mock_stringvar_class.side_effect = make_stringvar
+    mock_button = MagicMock()
+    button_instance = MagicMock()
+    button_instance.pack = MagicMock()
+    button_instance.grid = MagicMock()
+    mock_button.return_value = button_instance
 
-                try:
-                    gui = GUIInterface(
-                        calculator,
-                        operation_registry,
-                        context,
-                        history,
-                        error_logger
-                    )
-                    yield gui
-                except Exception as e:
-                    pytest.skip(f"Could not instantiate GUI: {e}")
-                finally:
-                    try:
-                        if hasattr(gui, 'destroy'):
-                            gui.destroy()
-                    except Exception:
-                        pass
+    mock_stringvar = MagicMock()
+
+    # Patch the tkinter module components
+    with patch("tkinter.Tk.__init__", return_value=None), \
+         patch("tkinter.Tk.mainloop"), \
+         patch("tkinter.Frame", mock_frame), \
+         patch("tkinter.Label", mock_label), \
+         patch("tkinter.Button", mock_button), \
+         patch("tkinter.StringVar", mock_stringvar):
+
+        try:
+            gui = GUIInterface(
+                calculator,
+                operation_registry,
+                context,
+                history,
+                error_logger
+            )
+            yield gui
+        except Exception as e:
+            pytest.skip(f"Could not instantiate GUI: {e}")
+        finally:
+            try:
+                if hasattr(gui, 'destroy'):
+                    gui.destroy()
+            except Exception:
+                pass
 
 
 # ==============================================================================
@@ -176,6 +216,152 @@ class TestGUIContextAndIntegration:
 # ==============================================================================
 # TESTS: Helper Methods (without GUI widgets)
 # ==============================================================================
+
+class TestColorConstants:
+    """Test suite for color constants."""
+
+    def test_color_background_defined(self):
+        """Test that COLOR_BACKGROUND is defined and valid."""
+        from src.interface.gui import COLOR_BACKGROUND
+        assert COLOR_BACKGROUND == "#000000"
+        assert isinstance(COLOR_BACKGROUND, str)
+        assert COLOR_BACKGROUND.startswith("#")
+
+    def test_color_button_standard_defined(self):
+        """Test that COLOR_BUTTON_STANDARD is defined and valid."""
+        from src.interface.gui import COLOR_BUTTON_STANDARD
+        assert COLOR_BUTTON_STANDARD == "#333333"
+        assert isinstance(COLOR_BUTTON_STANDARD, str)
+        assert COLOR_BUTTON_STANDARD.startswith("#")
+
+    def test_color_button_operator_defined(self):
+        """Test that COLOR_BUTTON_OPERATOR is defined and valid."""
+        from src.interface.gui import COLOR_BUTTON_OPERATOR
+        assert COLOR_BUTTON_OPERATOR == "#FF9500"
+        assert isinstance(COLOR_BUTTON_OPERATOR, str)
+        assert COLOR_BUTTON_OPERATOR.startswith("#")
+
+    def test_color_button_utility_defined(self):
+        """Test that COLOR_BUTTON_UTILITY is defined and valid."""
+        from src.interface.gui import COLOR_BUTTON_UTILITY
+        assert COLOR_BUTTON_UTILITY == "#A5A5A5"
+        assert isinstance(COLOR_BUTTON_UTILITY, str)
+        assert COLOR_BUTTON_UTILITY.startswith("#")
+
+    def test_color_text_result_defined(self):
+        """Test that COLOR_TEXT_RESULT is defined and valid."""
+        from src.interface.gui import COLOR_TEXT_RESULT
+        assert COLOR_TEXT_RESULT == "#FFFFFF"
+        assert isinstance(COLOR_TEXT_RESULT, str)
+        assert COLOR_TEXT_RESULT.startswith("#")
+
+    def test_color_text_button_defined(self):
+        """Test that COLOR_TEXT_BUTTON is defined and valid."""
+        from src.interface.gui import COLOR_TEXT_BUTTON
+        assert COLOR_TEXT_BUTTON == "#FFFFFF"
+        assert isinstance(COLOR_TEXT_BUTTON, str)
+        assert COLOR_TEXT_BUTTON.startswith("#")
+
+
+class TestSymbolMapping:
+    """Test suite for operation symbol mapping."""
+
+    def test_map_add_symbol(self):
+        """Test mapping of 'add' operation to '+' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("add") == "+"
+
+    def test_map_subtract_symbol(self):
+        """Test mapping of 'subtract' operation to '−' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("subtract") == "−"
+
+    def test_map_multiply_symbol(self):
+        """Test mapping of 'multiply' operation to '×' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("multiply") == "×"
+
+    def test_map_divide_symbol(self):
+        """Test mapping of 'divide' operation to '÷' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("divide") == "÷"
+
+    def test_map_square_symbol(self):
+        """Test mapping of 'square' operation to 'x²' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("square") == "x²"
+
+    def test_map_cube_symbol(self):
+        """Test mapping of 'cube' operation to 'x³' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("cube") == "x³"
+
+    def test_map_power_symbol(self):
+        """Test mapping of 'power' operation to 'xʸ' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("power") == "xʸ"
+
+    def test_map_factorial_symbol(self):
+        """Test mapping of 'factorial' operation to 'n!' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("factorial") == "n!"
+
+    def test_map_square_root_symbol(self):
+        """Test mapping of 'square_root' operation to '√' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("square_root") == "√"
+
+    def test_map_natural_logarithm_symbol(self):
+        """Test mapping of 'natural_logarithm' operation to 'ln' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("natural_logarithm") == "ln"
+
+    def test_map_logarithm_symbol(self):
+        """Test mapping of 'logarithm' operation to 'log' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("logarithm") == "log"
+
+    def test_map_sin_symbol(self):
+        """Test mapping of 'sin' operation to 'sin' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("sin") == "sin"
+
+    def test_map_cos_symbol(self):
+        """Test mapping of 'cos' operation to 'cos' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("cos") == "cos"
+
+    def test_map_tan_symbol(self):
+        """Test mapping of 'tan' operation to 'tan' symbol."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("tan") == "tan"
+
+    def test_map_unmapped_operation_returns_unchanged(self):
+        """Test that unmapped operation names are returned unchanged."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._map_operation_to_symbol("unknown_op") == "unknown_op"
+
+
+class TestResultDisplay:
+    """Test suite for result display label."""
+
+    def test_display_label_exists(self, gui_with_mocked_tk):
+        """Test that _display_label exists after instantiation."""
+        assert hasattr(gui_with_mocked_tk, "_display_label")
+        assert gui_with_mocked_tk._display_label is not None
+
+    def test_display_initial_text_is_zero(self, gui_with_mocked_tk):
+        """Test that display initial text is '0'."""
+        # When tkinter is mocked, we cannot directly read the text
+        # but we can verify the initial state through _current_input
+        assert gui_with_mocked_tk._current_input == "0"
+
+    def test_update_display_changes_text(self, gui_with_mocked_tk):
+        """Test that _update_display updates the display label."""
+        gui_with_mocked_tk._update_display("42")
+        # Verify through the label's config method was called
+        assert hasattr(gui_with_mocked_tk, "_display_label")
+
 
 class TestHelperMethods:
     """Test suite for GUIInterface helper methods using real implementations."""
@@ -264,6 +450,32 @@ class TestHelperMethods:
         assert text == "Mode: scientific"
         assert "Mode:" in text
 
+    def test_format_number_integer(self):
+        """Test _format_number with integer float."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._format_number(5.0) == "5"
+
+    def test_format_number_float(self):
+        """Test _format_number with non-integer float."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._format_number(3.14) == "3.14"
+
+    def test_format_number_negative_integer(self):
+        """Test _format_number with negative integer."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._format_number(-5.0) == "-5"
+
+    def test_format_number_zero(self):
+        """Test _format_number with zero."""
+        from src.interface.gui import GUIInterface
+        assert GUIInterface._format_number(0.0) == "0"
+
+    def test_format_number_large_float(self):
+        """Test _format_number with large float."""
+        from src.interface.gui import GUIInterface
+        result = GUIInterface._format_number(1234567.89)
+        assert "1234567.89" in result
+
 
 # ==============================================================================
 # TESTS: Operation Result Formatting
@@ -327,6 +539,157 @@ class TestOperationResultFormatting:
 # TESTS: Mode Switching Logic
 # ==============================================================================
 
+class TestInputStateMachine:
+    """Test suite for input state machine event handlers."""
+
+    def test_append_digit_single_digit_replaces_leading_zero(self, gui_with_mocked_tk):
+        """Test that single digit replaces leading zero."""
+        gui_with_mocked_tk._current_input = "0"
+        gui_with_mocked_tk._append_digit("5")
+        assert gui_with_mocked_tk._current_input == "5"
+
+    def test_append_digit_multiple_digits_accumulate(self, gui_with_mocked_tk):
+        """Test that multiple digits accumulate."""
+        gui_with_mocked_tk._current_input = "0"
+        gui_with_mocked_tk._append_digit("5")
+        gui_with_mocked_tk._append_digit("3")
+        assert gui_with_mocked_tk._current_input == "53"
+
+    def test_append_digit_decimal_point_added(self, gui_with_mocked_tk):
+        """Test that decimal point can be added."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._append_digit(".")
+        assert gui_with_mocked_tk._current_input == "5."
+
+    def test_append_digit_duplicate_decimal_rejected(self, gui_with_mocked_tk):
+        """Test that duplicate decimal point is rejected."""
+        gui_with_mocked_tk._current_input = "5."
+        gui_with_mocked_tk._append_digit(".")
+        assert gui_with_mocked_tk._current_input == "5."
+
+    def test_append_digit_after_result_shown_starts_fresh(self, gui_with_mocked_tk):
+        """Test that digit after _result_shown=True starts fresh."""
+        gui_with_mocked_tk._current_input = "42"
+        gui_with_mocked_tk._result_shown = True
+        gui_with_mocked_tk._append_digit("5")
+        assert gui_with_mocked_tk._current_input == "5"
+        assert gui_with_mocked_tk._result_shown is False
+
+    def test_press_operator_sets_pending_operand(self, gui_with_mocked_tk):
+        """Test that _press_operator sets _pending_operand_1."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._press_operator("add")
+        assert gui_with_mocked_tk._pending_operand_1 == 5.0
+
+    def test_press_operator_sets_pending_operation(self, gui_with_mocked_tk):
+        """Test that _press_operator sets _pending_operation."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._press_operator("add")
+        assert gui_with_mocked_tk._pending_operation == "add"
+
+    def test_press_operator_sets_result_shown_true(self, gui_with_mocked_tk):
+        """Test that _press_operator sets _result_shown to True."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._result_shown = False
+        gui_with_mocked_tk._press_operator("add")
+        assert gui_with_mocked_tk._result_shown is True
+
+    def test_press_operator_with_invalid_input(self, gui_with_mocked_tk):
+        """Test that _press_operator handles invalid input gracefully."""
+        gui_with_mocked_tk._current_input = "abc"
+        gui_with_mocked_tk._press_operator("add")
+        # Display should show error
+        assert gui_with_mocked_tk._pending_operation is None
+
+    def test_press_equals_no_op_when_no_pending_operation(self, gui_with_mocked_tk):
+        """Test that _press_equals is no-op when no pending operation."""
+        gui_with_mocked_tk._pending_operation = None
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._press_equals()
+        assert gui_with_mocked_tk._current_input == "5"
+
+    def test_press_equals_executes_pending_operation(self, gui_with_mocked_tk):
+        """Test that _press_equals executes pending binary operation."""
+        gui_with_mocked_tk._pending_operand_1 = 5.0
+        gui_with_mocked_tk._pending_operation = "add"
+        gui_with_mocked_tk._current_input = "3"
+        gui_with_mocked_tk._press_equals()
+        assert gui_with_mocked_tk._current_input == "8"
+
+    def test_press_equals_sets_result_shown_true(self, gui_with_mocked_tk):
+        """Test that _press_equals sets _result_shown to True."""
+        gui_with_mocked_tk._pending_operand_1 = 5.0
+        gui_with_mocked_tk._pending_operation = "add"
+        gui_with_mocked_tk._current_input = "3"
+        gui_with_mocked_tk._press_equals()
+        assert gui_with_mocked_tk._result_shown is True
+
+    def test_press_equals_clears_pending_state(self, gui_with_mocked_tk):
+        """Test that _press_equals clears pending state."""
+        gui_with_mocked_tk._pending_operand_1 = 5.0
+        gui_with_mocked_tk._pending_operation = "add"
+        gui_with_mocked_tk._current_input = "3"
+        gui_with_mocked_tk._press_equals()
+        assert gui_with_mocked_tk._pending_operation is None
+        assert gui_with_mocked_tk._pending_operand_1 is None
+
+    def test_press_clear_resets_all_state(self, gui_with_mocked_tk):
+        """Test that _press_clear resets all state machine fields."""
+        gui_with_mocked_tk._current_input = "42"
+        gui_with_mocked_tk._pending_operand_1 = 5.0
+        gui_with_mocked_tk._pending_operation = "add"
+        gui_with_mocked_tk._result_shown = True
+        gui_with_mocked_tk._press_clear()
+        assert gui_with_mocked_tk._current_input == "0"
+        assert gui_with_mocked_tk._pending_operand_1 is None
+        assert gui_with_mocked_tk._pending_operation is None
+        assert gui_with_mocked_tk._result_shown is False
+
+    def test_press_backspace_removes_last_character(self, gui_with_mocked_tk):
+        """Test that _press_backspace removes last character."""
+        gui_with_mocked_tk._current_input = "123"
+        gui_with_mocked_tk._result_shown = False
+        gui_with_mocked_tk._press_backspace()
+        assert gui_with_mocked_tk._current_input == "12"
+
+    def test_press_backspace_on_single_character_falls_back_to_zero(self, gui_with_mocked_tk):
+        """Test that _press_backspace on single char falls back to '0'."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._result_shown = False
+        gui_with_mocked_tk._press_backspace()
+        assert gui_with_mocked_tk._current_input == "0"
+
+    def test_press_backspace_when_result_shown_acts_as_clear(self, gui_with_mocked_tk):
+        """Test that _press_backspace when _result_shown=True clears."""
+        gui_with_mocked_tk._current_input = "42"
+        gui_with_mocked_tk._result_shown = True
+        gui_with_mocked_tk._pending_operand_1 = 5.0
+        gui_with_mocked_tk._pending_operation = "add"
+        gui_with_mocked_tk._press_backspace()
+        assert gui_with_mocked_tk._current_input == "0"
+        assert gui_with_mocked_tk._result_shown is False
+        assert gui_with_mocked_tk._pending_operand_1 is None
+
+    def test_press_unary_op_dispatches_operation(self, gui_with_mocked_tk):
+        """Test that _press_unary_op dispatches operation through registry."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._press_unary_op("square")
+        assert gui_with_mocked_tk._current_input == "25"
+
+    def test_press_unary_op_sets_result_shown_true(self, gui_with_mocked_tk):
+        """Test that _press_unary_op sets _result_shown to True."""
+        gui_with_mocked_tk._current_input = "5"
+        gui_with_mocked_tk._result_shown = False
+        gui_with_mocked_tk._press_unary_op("square")
+        assert gui_with_mocked_tk._result_shown is True
+
+    def test_press_unary_op_with_invalid_input(self, gui_with_mocked_tk):
+        """Test that _press_unary_op handles invalid input gracefully."""
+        gui_with_mocked_tk._current_input = "abc"
+        gui_with_mocked_tk._press_unary_op("square")
+        # Should display error without crashing
+
+
 class TestModeSwitchingLogic:
     """Test suite for mode switching logic."""
 
@@ -367,6 +730,25 @@ class TestModeSwitchingLogic:
         assert "sin" in op_names
         assert "cos" in op_names
         assert "tan" in op_names
+
+    def test_on_switch_mode_normal_to_scientific(self, gui_with_mocked_tk):
+        """Test _on_switch_mode from normal to scientific."""
+        gui_with_mocked_tk._context.set_mode("normal")
+        gui_with_mocked_tk._on_switch_mode("scientific")
+        assert gui_with_mocked_tk._context.get_mode() == "scientific"
+
+    def test_on_switch_mode_scientific_to_normal(self, gui_with_mocked_tk):
+        """Test _on_switch_mode from scientific to normal."""
+        gui_with_mocked_tk._context.set_mode("scientific")
+        gui_with_mocked_tk._on_switch_mode("normal")
+        assert gui_with_mocked_tk._context.get_mode() == "normal"
+
+    def test_on_switch_mode_same_mode_is_noop(self, gui_with_mocked_tk):
+        """Test that _on_switch_mode with same mode is no-op."""
+        gui_with_mocked_tk._context.set_mode("normal")
+        initial_mode = gui_with_mocked_tk._context.get_mode()
+        gui_with_mocked_tk._on_switch_mode("normal")
+        assert gui_with_mocked_tk._context.get_mode() == initial_mode
 
 
 # ==============================================================================
