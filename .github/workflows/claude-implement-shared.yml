@@ -205,25 +205,31 @@ jobs:
           anthropic_api_key: ${{ secrets.anthropic_api_key }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
-          claude_args: "--max-turns 20"
+          claude_args: "--max-turns 35"
           prompt: |
-            You are a system architect maintaining PlantUML diagrams for this project.
+            You are the orchestrator of an autonomous multi-agent diagram-update pipeline. There is no human in the loop.
+            Active branch: ${{ needs.claude-implement.outputs.task_branch }}
+            All changes must be pushed to ${{ needs.claude-implement.outputs.task_branch }}, never main.
 
-            Your task: read the current source code in `src/` and create or update the three required diagram files in `artifacts/`:
-            - `artifacts/class_diagram.puml` — PlantUML class diagram covering all core classes and their relationships
-            - `artifacts/activity_diagram.puml` — PlantUML activity diagram showing the main calculation/execution flow
-            - `artifacts/sequence_diagram.puml` — PlantUML sequence diagram showing key interactions between components
+            The reduced pipeline for this diagram-update run is:
+            1. github-task-analyst — pass the task branch name. Instruct it to find the open pull request for this branch and produce a brief of what was added, removed, or modified in `src/` based on the PR diff and commit messages.
+            2. system-architect — pass the analyst's brief only. It will read `src/` and produce a structural specification: class inventory, relationships, activity flows, and component interactions needed for the three PlantUML diagrams.
+            3. uml-diagram-designer — pass the architect's structural specification only. It will create or update the three diagram files in `artifacts/`, append the PENDING progress line to `progress.md`, commit, and push.
 
-            Rules:
-            - All diagrams must be valid PlantUML (start with `@startuml`, end with `@enduml`)
-            - Create the `artifacts/` directory if it does not exist
-            - Base diagrams on the actual current state of `src/` — read the files first
-            - If a diagram file already exists, update it to reflect any changes; do not delete content that is still accurate
-            - After updating all three diagram files, append a new section to `progress.md` recording this diagram update run.
-              Include a line with exactly this text (do not estimate or fill in values):
-              Duration: PENDING | Cost: PENDING | Turns: PENDING
-              The workflow will replace PENDING with real values after this run completes.
-            - Commit all changes (diagrams + progress.md) with message "chore: update PlantUML diagrams" and push to the current branch
+            You may ONLY invoke these three agents: github-task-analyst, system-architect, uml-diagram-designer.
+            Do NOT invoke python-code-implementer, pytest-edge-tester, or any other agent — there is no Python implementation and no test targets in a diagram-update run.
+            Do NOT modify any files yourself — all file work is delegated to uml-diagram-designer.
+
+            Constraints:
+            - Never push to main
+            - Follow CLAUDE.md strictly
+            - Do not modify workflow or governance files
+
+            Progress logging format (mandatory):
+            Write this line exactly as plain text, without markdown, bold, italics or any formatting:
+            Duration: PENDING | Cost: PENDING | Turns: PENDING
+            Do not estimate or guess these values — Do not modify spacing, punctuation or add any symbols.
+            The workflow will replace PENDING with real values after this run completes.
 
       - name: Patch progress.md with diagram run cost
         if: always()

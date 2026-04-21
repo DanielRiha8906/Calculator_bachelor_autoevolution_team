@@ -190,9 +190,13 @@ Before any commit, append a run summary to `progress.md` including:
 
 ## Artifacts
 
-- PlantUML diagrams are stored in `artifacts/`: `class_diagram.puml`, `activity_diagram.puml`, and `sequence_diagram.puml`.
-- **Do NOT create or update diagrams during the main implementation run.** Diagram updates are handled automatically by the `update-diagrams` workflow job that runs after each implementation. Do not touch `artifacts/` unless the task explicitly requires it.
-
+- **Use PlantUML** as the language for development artifacts.
+- **Do not** maintain a single monolithic diagram per UML type. 
+- Create and maintain multiple small PlantUML diagrams focused on the most imporant parts.
+- **Class Diagram** Create separate class diagrams for main architectural areas or major classes/components. 
+- **Activity Diagram** Create diagrams only for the important runtime flows or user-visible mechanics relevant to the current change.
+- **Sequence Diagram** Create diagrams only for the key interaction requests in the current run or architecture.
+- **Optimize Diagrams** for human readability, not exhaustivness
 
 ---
 

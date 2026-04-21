@@ -1,6 +1,12 @@
 Task:
 - Redesign the calculator GUI to look like a modern calculator app inspired by iOS. The goal is a clean, minimal dark interface — not a restyled version of the current layout.
-- Layout: large result display at the top, followed by a grid of operation buttons below. Mode switching (Normal / Scientific) can be a small toggle or tab above the button grid.
+- Layout: Display of values, operations and numbers in standard mode are in 4 columns, 5 rows. 
+ Row 1. C Del Mode /
+ Row 2. 7 8 9 *
+ Row 3. 4 5 6 
+ Row 4. 1 2 3 -
+ Row 5. 0 (two columns length) . = 
+ Scientific should add a grid to the left of the rest implemented but not shown methods
 - Color scheme: black window background (#000000), dark grey buttons (#333333) for standard operations, orange buttons (#FF9500) for primary operators (add, subtract, multiply, divide), light grey buttons (#A5A5A5) for utility actions.
 - Buttons should be flat (no relief border), square or slightly rounded, uniform size, arranged in a compact grid.
 - Button labels should be short symbols where possible: +, −, ×, ÷, √, x², xʸ, n!, ln, log.

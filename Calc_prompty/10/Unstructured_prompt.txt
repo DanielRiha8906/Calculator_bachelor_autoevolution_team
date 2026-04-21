@@ -1,2 +1,2 @@
-Task:
-- Add error logging to the calculator.
+    Task:
+    - Add error logging to the calculator.
