@@ -17,7 +17,7 @@ from typing import Union
 
 from .calculator import Calculator
 from .logger import get_logger
-from .modes.operations import BASIC_OPERATIONS, ADVANCED_OPERATIONS
+from .modes.operations import BASIC_OPERATIONS, ADVANCED_OPERATIONS, SCIENTIFIC_OPERATIONS
 
 logger = get_logger(__name__)
 
@@ -47,14 +47,18 @@ class RetryConfig:
 # Populated from the canonical sets in modes.operations so that any future
 # addition to those sets is automatically reflected here.
 _ONE_OPERAND_OPS: frozenset[str] = frozenset(
-    ADVANCED_OPERATIONS - {"power"}
+    (ADVANCED_OPERATIONS - {"power"}) | SCIENTIFIC_OPERATIONS
 )
 
 _TWO_OPERAND_OPS: frozenset[str] = frozenset(
     BASIC_OPERATIONS | {"power"}
 )
 
-SUPPORTED_OPERATIONS: frozenset[str] = BASIC_OPERATIONS | ADVANCED_OPERATIONS
+SUPPORTED_OPERATIONS: frozenset[str] = (
+    BASIC_OPERATIONS | ADVANCED_OPERATIONS | SCIENTIFIC_OPERATIONS
+)
+
+_VALID_MODES: frozenset[str] = frozenset({"basic", "advanced", "scientific"})
 
 # Numeric type alias used throughout this module.
 Numeric = Union[int, float]
@@ -155,6 +159,7 @@ class ExpressionParser:
         "square 7"
         "power 2 3"
         "factorial 5"
+        "sin 1.5708"
 
     Operation names are case-insensitive.
     """
@@ -235,8 +240,17 @@ class CalculatorREPL:
     loop exits cleanly on ``KeyboardInterrupt`` or when the user types
     ``exit`` / ``quit``.
 
+    Special commands available during the session:
+
+    - ``history`` — display the operation history.
+    - ``mode`` — display the current mode and list available modes.
+    - ``mode <name>`` — switch to the named mode (basic, advanced, scientific).
+    - ``exit`` / ``quit`` — terminate the session.
+
     Args:
         calculator: A ``Calculator`` instance to delegate computation to.
+        retry_config: Optional retry configuration.  Defaults to
+            :class:`RetryConfig` with ``max_retries=3``.
     """
 
     _EXIT_COMMANDS: frozenset[str] = frozenset({"exit", "quit"})
@@ -333,6 +347,41 @@ class CalculatorREPL:
 
         return f"Result: {result}"
 
+    def _handle_mode_command(self, args: str) -> None:
+        """Handle the ``mode`` REPL command.
+
+        With no argument, prints the current mode and the list of valid
+        modes.  With a valid mode name as argument, switches the calculator
+        to that mode and confirms to the user.  With an invalid argument,
+        prints an error and lists the valid modes.
+
+        Args:
+            args: The portion of the user's input after the ``"mode"``
+                keyword, stripped of surrounding whitespace.  An empty
+                string means no argument was provided.
+        """
+        if not args:
+            engine_mode = self._calculator._engine._mode
+            print(f"Current mode: {engine_mode}")
+            print(f"Available modes: {', '.join(sorted(_VALID_MODES))}")
+            return
+
+        requested = args.strip().lower()
+        if requested not in _VALID_MODES:
+            print(
+                f"Unknown mode '{requested}'. "
+                f"Valid modes: {', '.join(sorted(_VALID_MODES))}"
+            )
+            return
+
+        try:
+            self._calculator.set_mode(requested)
+        except ValueError as exc:
+            print(f"Mode error: {exc}")
+            return
+
+        print(f"Mode switched to '{requested}'.")
+
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
@@ -348,6 +397,7 @@ class CalculatorREPL:
         session continues until the user explicitly exits.
         """
         print("Calculator REPL — type an expression (e.g. 'add 5 3') or 'exit' to quit.")
+        print("Type 'mode' to see or change calculator mode.")
         print(f"Supported operations: {', '.join(sorted(SUPPORTED_OPERATIONS))}")
 
         while True:
@@ -383,6 +433,14 @@ class CalculatorREPL:
             if raw.lower() in self._EXIT_COMMANDS:
                 print("Goodbye!")
                 break
+
+            # Handle "mode" and "mode <name>" commands.
+            lowered = raw.lower()
+            if lowered == "mode" or lowered.startswith("mode "):
+                # Strip the leading keyword and any surrounding whitespace.
+                remainder = raw[4:].strip()
+                self._handle_mode_command(remainder)
+                continue
 
             response = self._evaluate(raw)
             if response.startswith("Result:"):

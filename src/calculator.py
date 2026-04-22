@@ -3,6 +3,17 @@
 :class:`Calculator` preserves the original public API so that all existing
 callers and tests continue to work unchanged.  All computation is delegated
 to :class:`~src.logic.CalculatorEngine`.
+
+Supported modes
+---------------
+``"basic"``
+    Only the four arithmetic operations: add, subtract, multiply, divide.
+``"advanced"``
+    All basic operations plus: factorial, square, cube, square_root,
+    cube_root, power, natural_log, log_base_10.
+``"scientific"``
+    All advanced operations plus: sin, cos, tan, asin, acos, atan,
+    sinh, cosh, tanh, degrees, radians, exp, ln.
 """
 
 from .logic import CalculatorEngine
@@ -15,21 +26,25 @@ class Calculator:
     engine was extracted into :mod:`src.logic`, ensuring that no
     existing caller or test needs to change.
 
+    Supported modes are ``"basic"``, ``"advanced"``, and ``"scientific"``.
+    See the module docstring for the operations available in each mode.
+
     Args:
         mode: Operation mode passed through to :class:`~src.logic.CalculatorEngine`.
-            Defaults to ``'basic'``.  Currently both basic and advanced
-            operations are always available; the parameter is accepted for
-            future extensibility.
+            Defaults to ``"advanced"`` so that the full set of arithmetic and
+            advanced operations is available by default.
     """
 
-    def __init__(self, mode: str = "basic") -> None:
+    def __init__(self, mode: str = "advanced") -> None:
         """Initialise the Calculator and its underlying CalculatorEngine.
 
         Args:
-            mode: Operation mode selector.  Defaults to ``'basic'``.
+            mode: Operation mode selector.  One of ``"basic"``,
+                ``"advanced"``, or ``"scientific"``.  Defaults to
+                ``"advanced"``.
         """
-        self._mode = mode
         self._engine = CalculatorEngine(mode=mode)
+        self._mode: str = mode
 
     # ------------------------------------------------------------------
     # Mode management
@@ -38,15 +53,19 @@ class Calculator:
     def set_mode(self, mode: str) -> None:
         """Switch the calculator to a different operation mode at runtime.
 
-        Re-instantiates the underlying :class:`~src.logic.CalculatorEngine`
-        with the new mode.  Existing history is cleared as part of the
-        re-instantiation.
+        Delegates to :meth:`~src.logic.CalculatorEngine.set_mode`.  The
+        existing history is **preserved** — no previously recorded entries
+        are removed.
 
         Args:
-            mode: The new mode string (e.g. ``'basic'``).
+            mode: The new mode string.  One of ``"basic"``, ``"advanced"``,
+                or ``"scientific"``.
+
+        Raises:
+            ValueError: If *mode* is not one of the recognised mode strings.
         """
+        self._engine.set_mode(mode)
         self._mode = mode
-        self._engine = CalculatorEngine(mode=mode)
 
     # ------------------------------------------------------------------
     # History
@@ -185,3 +204,159 @@ class Calculator:
             ValueError: If x is less than or equal to 0.
         """
         return self._engine.log_base_10(x)
+
+    # ------------------------------------------------------------------
+    # Scientific operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: float) -> float:
+        """Return the sine of *x* (given in radians).
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The sine of *x*.
+        """
+        return self._engine.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of *x* (given in radians).
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The cosine of *x*.
+        """
+        return self._engine.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of *x* (given in radians).
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The tangent of *x*.
+        """
+        return self._engine.tan(x)
+
+    def asin(self, x: float) -> float:
+        """Return the arc sine of *x*, in radians.
+
+        Args:
+            x: A value in the interval [-1, 1].
+
+        Returns:
+            The arc sine of *x* in radians.
+
+        Raises:
+            ValueError: If *x* is outside [-1, 1].
+        """
+        return self._engine.asin(x)
+
+    def acos(self, x: float) -> float:
+        """Return the arc cosine of *x*, in radians.
+
+        Args:
+            x: A value in the interval [-1, 1].
+
+        Returns:
+            The arc cosine of *x* in radians.
+
+        Raises:
+            ValueError: If *x* is outside [-1, 1].
+        """
+        return self._engine.acos(x)
+
+    def atan(self, x: float) -> float:
+        """Return the arc tangent of *x*, in radians.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The arc tangent of *x* in radians.
+        """
+        return self._engine.atan(x)
+
+    def sinh(self, x: float) -> float:
+        """Return the hyperbolic sine of *x*.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic sine of *x*.
+        """
+        return self._engine.sinh(x)
+
+    def cosh(self, x: float) -> float:
+        """Return the hyperbolic cosine of *x*.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic cosine of *x*.
+        """
+        return self._engine.cosh(x)
+
+    def tanh(self, x: float) -> float:
+        """Return the hyperbolic tangent of *x*.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic tangent of *x*.
+        """
+        return self._engine.tanh(x)
+
+    def degrees(self, x: float) -> float:
+        """Convert angle *x* from radians to degrees.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The equivalent angle in degrees.
+        """
+        return self._engine.degrees(x)
+
+    def radians(self, x: float) -> float:
+        """Convert angle *x* from degrees to radians.
+
+        Args:
+            x: The angle in degrees.
+
+        Returns:
+            The equivalent angle in radians.
+        """
+        return self._engine.radians(x)
+
+    def exp(self, x: float) -> float:
+        """Return *e* raised to the power *x* (eˣ).
+
+        Args:
+            x: The exponent.
+
+        Returns:
+            e raised to the power *x*.
+        """
+        return self._engine.exp(x)
+
+    def ln(self, x: float) -> float:
+        """Return the natural logarithm of *x* (ln(x)).
+
+        Args:
+            x: A strictly positive real number.
+
+        Returns:
+            The natural logarithm of *x*.
+
+        Raises:
+            ValueError: If *x* is less than or equal to 0.
+        """
+        return self._engine.ln(x)

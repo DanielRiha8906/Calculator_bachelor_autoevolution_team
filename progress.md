@@ -1,4 +1,26 @@
 
+## Run: Issue #272 — V2 Task 14 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/modes/scientific.py` — new ScientificOperations class with 13 methods (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, degrees, radians, exp, ln)
+  - `src/modes/operations.py` — added SCIENTIFIC_OPERATIONS frozenset constant
+  - `src/modes/__init__.py` — exported ScientificOperations
+  - `src/logic.py` — CalculatorEngine: mode-aware initialization, set_mode() preserving history, scientific method delegation
+  - `src/calculator.py` — 13 scientific proxy methods, default mode changed to "advanced"
+  - `src/input_handler.py` — REPL mode command handling, SUPPORTED_OPERATIONS includes scientific ops
+  - `tests/test_scientific_operations.py` — 126 new unit tests for ScientificOperations
+  - `tests/test_mode_switching.py` — 40 new integration tests for mode switching
+  - `tests/test_calculator.py` — updated 5 tests to match new mode behavior
+  - `tests/test_input_handler.py` — updated 7 tests for expanded operation sets
+  - `tests/test_logic.py` — updated 3 tests for new default mode and history preservation
+- **Purpose:** Add scientific mode with trig, hyperbolic, and exponential functions; allow interactive mode switching via REPL "mode" command
+- **Risks:** Default mode changed from "basic" to "advanced" — existing callers relying on mode attribute string may need updating
+- **Tests passed:** 1389 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #269 — V2 Task 13 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-269-add-calculator-documentation

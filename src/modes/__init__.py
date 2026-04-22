@@ -4,11 +4,13 @@ Exports the public API for operation modes:
 
 - :class:`BasicOperations` — the four arithmetic operations.
 - :class:`AdvancedOperations` — advanced mathematical functions.
+- :class:`ScientificOperations` — scientific mathematical functions.
 - :class:`OperationRegistry` — maps operation names to their implementations.
 """
 
 from .basic import BasicOperations
 from .advanced import AdvancedOperations
+from .scientific import ScientificOperations
 from .operations import OperationRegistry
 
-__all__ = ["BasicOperations", "AdvancedOperations", "OperationRegistry"]
+__all__ = ["BasicOperations", "AdvancedOperations", "ScientificOperations", "OperationRegistry"]

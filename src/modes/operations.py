@@ -2,8 +2,9 @@
 
 Provides :class:`BaseOperationSet` as an abstract contract for operation
 classes, :class:`OperationRegistry` as a runtime registry that maps operation
-names to implementations, and the two canonical constant sets
-:data:`BASIC_OPERATIONS` and :data:`ADVANCED_OPERATIONS`.
+names to implementations, and the three canonical constant sets
+:data:`BASIC_OPERATIONS`, :data:`ADVANCED_OPERATIONS`, and
+:data:`SCIENTIFIC_OPERATIONS`.
 """
 
 from __future__ import annotations
@@ -30,6 +31,24 @@ ADVANCED_OPERATIONS: frozenset[str] = frozenset(
         "power",
         "natural_log",
         "log_base_10",
+    }
+)
+
+SCIENTIFIC_OPERATIONS: frozenset[str] = frozenset(
+    {
+        "sin",
+        "cos",
+        "tan",
+        "asin",
+        "acos",
+        "atan",
+        "sinh",
+        "cosh",
+        "tanh",
+        "degrees",
+        "radians",
+        "exp",
+        "ln",
     }
 )
 
