@@ -7,37 +7,21 @@ class Calculator {
     +subtract(a, b) : numeric
     +multiply(a, b) : numeric
     +divide(a, b) : numeric
+    +factorial(n: int) : int
 }
+
+note right of Calculator::factorial
+  NEW — iterative n!
+  raises TypeError (non-int or bool)
+  raises ValueError (n < 0)
+end note
 
 package "src" {
     class "__init__.py" as Init <<module>> {
         re-exports Calculator
     }
-    class "__main__.py" as Main <<module>> {
-        +main()
-    }
-}
-
-package "tests" {
-    class TestDivide <<test>> {
-        +test_divide_*() : void
-    }
-    class TestAdd <<test>> {
-        +test_add_*() : void
-    }
-    class TestSubtract <<test>> {
-        +test_subtract_*() : void
-    }
-    class TestMultiply <<test>> {
-        +test_multiply_*() : void
-    }
 }
 
 Init --> Calculator : imports & exports
-Main --> Calculator : imports and instantiates
-TestDivide --> Calculator : tests
-TestAdd --> Calculator : tests
-TestSubtract --> Calculator : tests
-TestMultiply --> Calculator : tests
 
 @enduml

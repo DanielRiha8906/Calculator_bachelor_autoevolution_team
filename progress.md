@@ -1,3 +1,18 @@
+## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-241-factorial-operation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `factorial(self, n: int) -> int` method with input validation
+  - `tests/test_factorial.py` — new file with 19 tests covering happy path, ValueError, and TypeError cases
+- **Purpose:** Add factorial as a supported calculator operation with validation rejecting negative integers and non-integer types
+- **Risks:** None
+- **Tests passed:** 127 passed, 0 failed
+
+Duration: 178.1s | Cost: $0.467658 USD | Turns: 16
+
+---
+
 ## Run: Issue #238 — V2 Task 2 Expert/team unit test suite
 
 - **Branch:** task/issue-238-unit-test-suite
@@ -64,3 +79,14 @@ N/A — no code changes.
 Duration: 196.6s | Cost: $0.471889 USD | Turns: 16
 
 Duration: 190.0s | Cost: $0.469532 USD | Turns: 9
+
+## Run: update-diagrams — Factorial Operation UML (2026-04-22)
+
+- **Branch:** task/issue-241-factorial-operation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — Class diagram updated with factorial method
+  - `artifacts/activity_factorial.puml` — New activity diagram for factorial validation and computation flow
+  - `artifacts/sequence_calculator_operations.puml` — New sequence diagram for key calculator operation scenarios
+
+Duration: 193.5s | Cost: $0.430946 USD | Turns: 4
