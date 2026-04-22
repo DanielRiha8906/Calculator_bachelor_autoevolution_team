@@ -9,4 +9,4 @@
 - **Tests passed:** 75/75
 - **PR target:** exp2/naive-team
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 185.7s | Cost: $0.474352 USD | Turns: 16
