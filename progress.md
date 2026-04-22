@@ -1,3 +1,14 @@
+## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-247-interactive-input
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — Class diagram for Calculator and CLI module with reflection-based relationships
+  - `artifacts/activity_diagram_interactive_session.puml` — Activity diagram for interactive_session REPL loop including get_operands sub-flow
+  - `artifacts/sequence_diagram_operation_execution.puml` — Sequence diagram for full operation execution with error handling and exit flow
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #247 — V2 Task 5 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-247-interactive-input

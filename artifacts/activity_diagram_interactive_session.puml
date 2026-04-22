@@ -1,0 +1,66 @@
+@startuml activity_diagram_interactive_session
+
+start
+
+:Create Calculator instance;
+
+repeat
+
+    :get_operation_menu(calc);
+    :Display numbered menu + "quit/exit/q to quit" hint;
+    :Prompt "Select operation (number): ";
+    :Read raw_choice (strip + lowercase);
+
+    if (raw_choice in {quit, exit, q}?) then (yes)
+        :Print "Goodbye!";
+        stop
+    else (no)
+    endif
+
+    if (int(raw_choice) succeeds?) then (yes)
+        :choice = int(raw_choice);
+    else (no — ValueError)
+        :Print "Invalid selection...";
+        backward: loop back;
+    endif
+
+    if (1 <= choice <= len(operations)?) then (yes)
+        :op_name = operations[choice - 1];
+    else (no — out of range)
+        :Print "Selection out of range...";
+        backward: loop back;
+    endif
+
+    :get_arity(calc, op_name) -> arity;
+
+    partition "get_operands(arity)" {
+        :operands = [];
+        :i = 1;
+        while (i <= arity?) is (yes)
+            repeat
+                :Prompt "Enter operand {i}: ";
+                :Read raw input;
+                if (parse_float(raw) succeeds?) then (yes)
+                    :Append float to operands;
+                else (no — ValueError)
+                    :Print "Invalid input: ... Please try again.";
+                endif
+            repeat while (valid float obtained?) is (no)
+            -> yes;
+            :i = i + 1;
+        endwhile (no)
+    }
+
+    :result = getattr(calc, op_name)(*operands)\n<<dynamic dispatch via getattr()>>;
+
+    if (Calculator raises exception?) then (yes)
+        :Print "Error: {exc}";
+    else (no)
+        :Print "Result: {result}";
+    endif
+
+repeat while (user continues?) is (yes — loop back to menu)
+
+stop
+
+@enduml
