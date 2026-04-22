@@ -165,3 +165,14 @@ Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
   - `artifacts/sequence_diagram_cli.puml` — end-to-end CLI expression evaluation sequence
 
 Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
+
+- **Branch:** task/issue-254-input-validation-retry
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_input_handler.puml` — class diagram for input_handler module with new RetryConfig dataclass
+  - `artifacts/activity_diagram_repl_run.puml` — activity diagram for CalculatorREPL.run() with retry sub-flow
+  - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

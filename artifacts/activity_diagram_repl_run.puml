@@ -1,0 +1,74 @@
+@startuml activity_diagram_repl_run
+
+start
+
+:Print welcome message;
+
+repeat
+
+    :input("> ");
+
+    if (KeyboardInterrupt?) then (yes)
+        :Print "Interrupted. Goodbye!";
+        stop
+    elseif (EOFError?) then (yes)
+        stop
+    endif
+
+    :Strip whitespace;
+
+    if (Empty input?) then (yes)
+        note right: skip silently
+    elseif (Exit command?) then (yes)
+        :Print "Goodbye!";
+        stop
+    else (no)
+
+        :_evaluate(raw);
+
+        if (Response starts with "Result:"?) then (yes)
+            :Print result;
+
+        else (bad input)
+
+            :Print error response;
+
+            :Enter retry sub-loop\n(attempt 1..max_retries);
+
+            repeat
+
+                :input("Invalid input. Attempt X/N. Please try again: ");
+
+                if (KeyboardInterrupt?) then (yes)
+                    :Print "Interrupted. Goodbye!";
+                    stop
+                elseif (EOFError?) then (yes)
+                    stop
+                elseif (Exit command?) then (yes)
+                    :Print "Goodbye!";
+                    stop
+                else (continue)
+                    :_evaluate(raw);
+
+                    if (Response starts with "Result:"?) then (yes)
+                        :Print result;
+                        break
+                    else (still invalid)
+                        :Print error;
+                    endif
+                endif
+
+            repeat while (More retry attempts?) is (yes)
+            ->no (all retries exhausted);
+
+            :Print "Too many invalid attempts.\nReturning to main prompt.";
+
+        endif
+
+    endif
+
+repeat while (Continue?) is (yes)
+
+stop
+
+@enduml

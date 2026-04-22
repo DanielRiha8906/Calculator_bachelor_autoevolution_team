@@ -1,0 +1,75 @@
+@startuml class_diagram_input_handler
+
+skinparam classAttributeIconSize 0
+
+package "src/input_handler.py" {
+
+    class RetryConfig << (D,orchid) dataclass >> {
+        + max_retries : int = 3
+    }
+
+    class InputValidator {
+        - SUPPORTED_OPERATIONS : frozenset
+        + validate_operation(op: str) : None
+        + validate_operand_count(op: str, operands: list) : None
+        + validate(op: str, operands: list) : None
+    }
+
+    class ExpressionParser {
+        - _coerce_numeric(token: str) : Numeric
+        + parse(raw_input: str) : tuple[str, list[Numeric]]
+    }
+
+    class CalculatorREPL {
+        - _calculator : Calculator
+        - _parser : ExpressionParser
+        - _validator : InputValidator
+        - _retry_config : RetryConfig
+        - _EXIT_COMMANDS : frozenset {class}
+        + __init__(calculator: Calculator, retry_config: RetryConfig = None)
+        + run() : None
+        - _evaluate(raw: str) : str
+        - _dispatch(op: str, operands: list) : Numeric
+    }
+
+}
+
+package "src/cli.py" {
+
+    class CLIHandler {
+        - _expression : str
+        - _calculator : Calculator
+        - _parser : ExpressionParser
+        - _validator : InputValidator
+        + __init__(expression: str)
+        + run() : int
+        - _dispatch(op: str, operands: list) : Numeric
+    }
+
+}
+
+class Calculator << src/calculator.py >> {
+    + add(a, b) : Numeric
+    + subtract(a, b) : Numeric
+    + multiply(a, b) : Numeric
+    + divide(a, b) : Numeric
+    + power(base, exp) : Numeric
+    + factorial(n) : Numeric
+    + square(x) : Numeric
+    + cube(x) : Numeric
+    + square_root(x) : Numeric
+    + cube_root(x) : Numeric
+    + natural_log(x) : Numeric
+    + log_base_10(x) : Numeric
+}
+
+CalculatorREPL *-- RetryConfig       : _retry_config
+CalculatorREPL *-- ExpressionParser  : _parser
+CalculatorREPL *-- InputValidator    : _validator
+CalculatorREPL *-- Calculator        : _calculator
+
+CLIHandler *-- ExpressionParser      : _parser
+CLIHandler *-- InputValidator        : _validator
+CLIHandler *-- Calculator            : _calculator
+
+@enduml
