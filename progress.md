@@ -24,4 +24,4 @@ None. Additive test-only change; no production code modified.
 
 All 12 tests passed. No regressions.
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 155.9s | Cost: $0.367521 USD | Turns: 15
