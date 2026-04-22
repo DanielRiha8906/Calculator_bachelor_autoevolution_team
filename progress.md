@@ -273,4 +273,4 @@ Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
 - **Files changed:**
   - `artifacts/sequence_interactive_session_errors.puml` — expanded from 2 to 4 scenarios: added invalid operand string path and invalid domain error path; clarified that all interactive-mode errors continue the session without exit
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 146.8s | Cost: $0.363565 USD | Turns: 4
