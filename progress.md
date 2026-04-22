@@ -121,4 +121,4 @@ Duration: 213.2s | Cost: $0.454326 USD | Turns: 15
 - **Risks:** None. Additive change; Calculator class untouched; all 99 existing tests still pass
 - **Tests passed:** 215 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
