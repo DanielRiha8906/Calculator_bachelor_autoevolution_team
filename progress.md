@@ -10,7 +10,7 @@
 - **Risks:** None — retry logic is additive; `_evaluate()` and all existing methods unchanged
 - **Tests passed:** 473 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 337.6s | Cost: $0.830250 USD | Turns: 14
 
 ## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
 
