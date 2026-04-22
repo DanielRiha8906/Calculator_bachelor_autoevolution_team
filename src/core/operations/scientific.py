@@ -149,3 +149,117 @@ class ScientificOperations:
         if not isinstance(exponent, (int, float)) or isinstance(exponent, bool):
             raise TypeError("exponent must be an int or float")
         return float(base ** exponent)
+
+    @staticmethod
+    def sin(x: float) -> float:
+        """Return the sine of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        return math.sin(x)
+
+    @staticmethod
+    def cos(x: float) -> float:
+        """Return the cosine of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        return math.cos(x)
+
+    @staticmethod
+    def tan(x: float) -> float:
+        """Return the tangent of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        return math.tan(x)
+
+    @staticmethod
+    def cot(x: float) -> float:
+        """Return the cotangent of x (in radians).
+
+        Cotangent is defined as 1/tan(x), which is undefined when sin(x)==0
+        (i.e., x is a multiple of pi).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The cotangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If sin(x) == 0 (cotangent is undefined).
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        if math.sin(x) == 0:
+            raise ValueError("cotangent is undefined when sin(x) == 0")
+        return 1.0 / math.tan(x)
+
+    @staticmethod
+    def asin(x: float) -> float:
+        """Return the arcsine of x, in radians.
+
+        Args:
+            x: A real number (int or float) in the range [-1, 1].
+
+        Returns:
+            The arcsine of x as a float (in radians).
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If x is not in the range [-1, 1].
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        if x < -1 or x > 1:
+            raise ValueError("x must be in the range [-1, 1] for asin")
+        return math.asin(x)
+
+    @staticmethod
+    def acos(x: float) -> float:
+        """Return the arccosine of x, in radians.
+
+        Args:
+            x: A real number (int or float) in the range [-1, 1].
+
+        Returns:
+            The arccosine of x as a float (in radians).
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If x is not in the range [-1, 1].
+        """
+        if not isinstance(x, (int, float)) or isinstance(x, bool):
+            raise TypeError("x must be an int or float")
+        if x < -1 or x > 1:
+            raise ValueError("x must be in the range [-1, 1] for acos")
+        return math.acos(x)

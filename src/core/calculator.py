@@ -125,3 +125,92 @@ class Calculator:
             TypeError: If base or exponent is not an int or float (bool excluded).
         """
         return ScientificOperations.power(base, exponent)
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The sine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        return ScientificOperations.sin(x)
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The cosine of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        return ScientificOperations.cos(x)
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (in radians).
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+        """
+        return ScientificOperations.tan(x)
+
+    def cot(self, x: float) -> float:
+        """Return the cotangent of x (in radians).
+
+        Cotangent is defined as 1/tan(x), which is undefined when sin(x)==0.
+
+        Args:
+            x: A real number (int or float) representing an angle in radians.
+
+        Returns:
+            The cotangent of x as a float.
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If sin(x) == 0 (cotangent is undefined).
+        """
+        return ScientificOperations.cot(x)
+
+    def asin(self, x: float) -> float:
+        """Return the arcsine of x, in radians.
+
+        Args:
+            x: A real number (int or float) in the range [-1, 1].
+
+        Returns:
+            The arcsine of x as a float (in radians).
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If x is not in the range [-1, 1].
+        """
+        return ScientificOperations.asin(x)
+
+    def acos(self, x: float) -> float:
+        """Return the arccosine of x, in radians.
+
+        Args:
+            x: A real number (int or float) in the range [-1, 1].
+
+        Returns:
+            The arccosine of x as a float (in radians).
+
+        Raises:
+            TypeError: If x is not an int or float (bool excluded).
+            ValueError: If x is not in the range [-1, 1].
+        """
+        return ScientificOperations.acos(x)

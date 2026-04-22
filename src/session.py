@@ -11,6 +11,7 @@ import inspect
 from .core.calculator import Calculator
 from .error_logger import ErrorLogger
 from .history import OperationHistory
+from .mode import CalculatorMode, get_mode_config
 from .validation import (
     OperandValidationSession,
     OperationValidationSession,
@@ -35,6 +36,7 @@ class CalculatorSession:
         self._calculator: Calculator = calculator
         self._history: OperationHistory = OperationHistory()
         self._error_logger: ErrorLogger = ErrorLogger()
+        self._current_mode: str | None = None
         self._operation_list: list[str] = self._get_operation_list()
 
     # ------------------------------------------------------------------
@@ -42,12 +44,31 @@ class CalculatorSession:
     # ------------------------------------------------------------------
 
     def _get_operation_list(self) -> list[str]:
-        """Return the current list of public operation names on the calculator."""
-        return [
+        """Return the current list of public operation names on the calculator.
+
+        When a mode is active, the list is filtered to only include operations
+        defined in that mode's configuration.  If no mode is set, all public
+        callable names are returned (backward-compatible behaviour).
+
+        Returns:
+            A list of operation name strings available under the current mode.
+        """
+        all_ops: list[str] = [
             name
             for name in dir(self._calculator)
             if not name.startswith("_") and callable(getattr(self._calculator, name))
         ]
+
+        if self._current_mode is None:
+            return all_ops
+
+        config = get_mode_config(self._current_mode)
+        if config is None:
+            return all_ops
+
+        # Preserve the original dir() ordering while applying the mode filter.
+        allowed = set(config.operations)
+        return [op for op in all_ops if op in allowed]
 
     def _get_arity(self, op_name: str) -> int:
         """Return the number of operands required by *op_name*."""
@@ -58,6 +79,34 @@ class CalculatorSession:
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
+
+    def set_mode(self, mode_name: str) -> bool:
+        """Set the current calculator mode by name.
+
+        Validates *mode_name* against :class:`~src.mode.CalculatorMode` values.
+        If valid, stores the mode and refreshes the operation list.
+
+        Args:
+            mode_name: A string such as ``"normal"`` or ``"scientific"``.
+
+        Returns:
+            ``True`` if the mode was recognised and set; ``False`` otherwise.
+        """
+        try:
+            CalculatorMode(mode_name.lower())
+        except ValueError:
+            return False
+        self._current_mode = mode_name.lower()
+        self._operation_list = self._get_operation_list()
+        return True
+
+    def get_current_mode(self) -> str | None:
+        """Return the current mode name, or ``None`` if no mode is active.
+
+        Returns:
+            The active mode string (e.g. ``"normal"``), or ``None``.
+        """
+        return self._current_mode
 
     def select_operation(
         self, raw_choice: str, mode: str

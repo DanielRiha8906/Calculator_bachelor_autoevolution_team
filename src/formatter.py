@@ -5,11 +5,15 @@ No I/O is performed and no imports from cli, session, or calculator are made.
 """
 
 
-def format_menu_header(operations: list[str]) -> str:
+def format_menu_header(operations: list[str], mode: str | None = None) -> str:
     """Format the menu header and numbered operation list.
 
     Args:
         operations: The list of available operation name strings.
+        mode: Optional mode name (e.g. ``"normal"`` or ``"scientific"``).
+            When provided, the header line includes the mode name so the user
+            can see which mode is active.  Passing ``None`` (the default)
+            reproduces the original behaviour for backward compatibility.
 
     Returns:
         A multi-line string containing the header and one numbered entry
@@ -21,8 +25,16 @@ def format_menu_header(operations: list[str]) -> str:
         Available operations:
           1. add
           2. subtract
+        >>> print(format_menu_header(["add"], mode="normal"))
+        <BLANKLINE>
+        Available operations (Normal mode):
+          1. add
     """
-    lines = ["\nAvailable operations:"]
+    if mode is not None:
+        header = f"\nAvailable operations ({mode.capitalize()} mode):"
+    else:
+        header = "\nAvailable operations:"
+    lines = [header]
     for idx, op_name in enumerate(operations, start=1):
         lines.append(f"  {idx}. {op_name}")
     return "\n".join(lines)
@@ -106,3 +118,35 @@ def format_error(error_msg: str) -> str:
         '  Error: division by zero'
     """
     return f"  Error: {error_msg}"
+
+
+def format_mode_menu() -> str:
+    """Format the mode selection menu.
+
+    Returns:
+        A multi-line string presenting the available calculator modes as a
+        numbered list.
+
+    Example:
+        >>> print(format_mode_menu())
+        Choose Calculator Mode:
+          1. Normal
+          2. Scientific
+    """
+    return "Choose Calculator Mode:\n  1. Normal\n  2. Scientific"
+
+
+def format_current_mode(mode_name: str) -> str:
+    """Format a one-line description of the currently active mode.
+
+    Args:
+        mode_name: The raw mode string (e.g. ``"normal"`` or ``"scientific"``).
+
+    Returns:
+        A string such as ``"Current mode: Normal"``.
+
+    Example:
+        >>> format_current_mode("scientific")
+        'Current mode: Scientific'
+    """
+    return f"Current mode: {mode_name.capitalize()}"

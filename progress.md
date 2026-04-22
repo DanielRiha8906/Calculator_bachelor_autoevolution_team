@@ -1,3 +1,25 @@
+## Run: Issue #274 — V2 Task 14 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/core/operations/scientific.py` — added sin, cos, tan, cot, asin, acos static methods with input validation and domain error handling
+  - `src/core/calculator.py` — added delegation methods for all 6 new trig operations
+  - `src/mode.py` — new module: CalculatorMode enum, NORMAL/SCIENTIFIC operation lists, ModeConfig dataclass, get_mode_config factory
+  - `src/session.py` — added _current_mode state, set_mode(), get_current_mode(), mode-aware operation list filtering
+  - `src/formatter.py` — added format_mode_menu(), format_current_mode(), extended format_menu_header() with optional mode param
+  - `src/cli.py` — added get_mode_selection() with retry logic, extended interactive_session() for mode selection at start and mid-session switching
+  - `tests/test_scientific_trig.py` — 80 tests for trig operations in ScientificOperations and Calculator
+  - `tests/test_mode.py` — 32 tests for mode.py module (enum, operation lists, factory function)
+  - `tests/test_session_mode.py` — 19 tests for CalculatorSession mode awareness and filtering
+  - `tests/test_formatter_mode.py` — 25 tests for formatter mode display functions
+  - `tests/test_cli_mode_selection.py` — 16 tests for get_mode_selection() with mocked I/O
+- **Purpose:** Add normal/scientific mode switching to guided interactive use; users can select mode at session start and switch mid-session, seeing only mode-appropriate operations
+- **Risks:** Interactive session now requires mode selection before operation selection; existing tests may need mode to be set explicitly
+- **Tests passed:** 162 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #271 — V2 Task 13 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-271-documentation

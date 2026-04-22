@@ -9,9 +9,11 @@ import inspect
 
 from .core.calculator import Calculator
 from .formatter import (
+    format_current_mode,
     format_error,
     format_history_header,
     format_menu_header,
+    format_mode_menu,
     format_quit_instruction,
     format_result,
 )
@@ -124,6 +126,30 @@ def get_operands(arity: int, mode: str | None = None) -> list[float] | None:
     return operands
 
 
+def get_mode_selection() -> str | None:
+    """Prompt the user to select a calculator mode.
+
+    Displays the mode menu and accepts ``"1"`` (Normal) or ``"2"`` (Scientific).
+    Up to 3 invalid attempts are allowed before ``None`` is returned.
+
+    Returns:
+        ``"normal"``, ``"scientific"``, or ``None`` if the retry limit is
+        exhausted or the prompt is not answered within 3 attempts.
+    """
+    _MODE_MAP: dict[str, str] = {"1": "normal", "2": "scientific"}
+    _MAX_MODE_RETRIES = 3
+
+    print(format_mode_menu())
+    for _ in range(_MAX_MODE_RETRIES):
+        raw = input("\nSelect mode (1 or 2): ").strip()
+        mode = _MODE_MAP.get(raw)
+        if mode is not None:
+            return mode
+        print("  Invalid selection. Please enter 1 for Normal or 2 for Scientific.")
+
+    return None
+
+
 def interactive_session(calculator: Calculator) -> None:
     """Run a menu-driven interactive session for the given calculator.
 
@@ -143,6 +169,13 @@ def interactive_session(calculator: Calculator) -> None:
     """
     mode = detect_mode()
     session = CalculatorSession(calculator)
+
+    # Prompt the user to choose a calculator mode before entering the loop.
+    selected_mode = get_mode_selection()
+    if selected_mode is not None:
+        session.set_mode(selected_mode)
+        print(format_current_mode(selected_mode))
+
     operations = session.get_operation_list()
     op_session = OperationValidationSession(mode=mode, available_ops=operations)
 
@@ -151,8 +184,10 @@ def interactive_session(calculator: Calculator) -> None:
         operations = session.get_operation_list()
         op_session._available_ops = operations
 
-        print(format_menu_header(operations))
+        current_mode = session.get_current_mode()
+        print(format_menu_header(operations, mode=current_mode))
         print(format_quit_instruction())
+        print("  (type 'mode' or 'm' to switch calculator mode)")
 
         raw_choice = input("\nSelect operation (name or number): ").strip()
 
@@ -171,6 +206,16 @@ def interactive_session(calculator: Calculator) -> None:
                     print(f"  {entry}")
             else:
                 print("  No history yet.")
+            continue
+
+        # Handle mode-switch command.
+        if raw_choice.lower() in {"mode", "m"}:
+            new_mode = get_mode_selection()
+            if new_mode is not None:
+                session.set_mode(new_mode)
+                print(format_current_mode(new_mode))
+            else:
+                print("  Mode selection failed. Keeping current mode.")
             continue
 
         # Resolve the raw choice to a canonical operation name.
