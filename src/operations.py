@@ -1,5 +1,6 @@
 """Registry mapping operation keys to Calculator methods with metadata."""
 
+from . import error_logger
 from .calculator import Calculator
 
 
@@ -47,7 +48,9 @@ class OperationRegistry:
             KeyError: If ``key`` is not registered.
         """
         if key not in self._registry:
-            raise KeyError(f"Unknown operation: '{key}'")
+            _msg = f"Unknown operation: '{key}'"
+            error_logger.log_operation_error(key, _msg)
+            raise KeyError(_msg)
         return self._registry[key]
 
     def list_operations(self) -> dict:

@@ -412,3 +412,103 @@ class TestGetOperationChoiceHistorySentinel:
         captured = capsys.readouterr()
         # History should be displayed
         assert "1. add(1, 2) = 3" in captured.out or "add" in captured.out
+
+
+class TestInputHandlerValidationErrorLogging:
+    """Test suite for error logging when invalid input is provided via io_handler."""
+
+    @pytest.fixture
+    def handler(self):
+        """Fixture to provide an InputHandler instance."""
+        return InputHandler()
+
+    @patch("builtins.input", side_effect=["not_a_number", "42"])
+    def test_invalid_operand_via_get_operand_logs_validation_error(self, mock_input, handler, tmp_path, monkeypatch):
+        """Test that invalid operand via get_operand() logs VALIDATION_ERROR and eventually succeeds."""
+        from src import error_logger
+
+        # Redirect logger to temp directory for isolation
+        temp_log_file = tmp_path / "error.log"
+        temp_log_file.parent.mkdir(parents=True, exist_ok=True)
+
+        test_logger = __import__("logging").getLogger(f"test.io_handler.{id(self)}")
+        test_logger.setLevel(__import__("logging").ERROR)
+        test_logger.handlers.clear()
+
+        handler_obj = __import__("logging").FileHandler(str(temp_log_file), mode="a", encoding="utf-8")
+        handler_obj.setLevel(__import__("logging").ERROR)
+        handler_obj.setFormatter(
+            __import__("logging").Formatter(fmt="%(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+        )
+        test_logger.addHandler(handler_obj)
+
+        with monkeypatch.context() as mp:
+            mp.setattr(error_logger, "_logger", test_logger)
+            # First call with invalid input, then valid input
+            result = handler.get_operand("Enter value: ")
+
+            # Should have successfully parsed the second input
+            assert result == 42.0
+
+            # Verify VALIDATION_ERROR was logged
+            handler_obj.flush()
+            content = temp_log_file.read_text()
+            assert "VALIDATION_ERROR:" in content
+
+    @patch("builtins.input", side_effect=["", "5.5"])
+    def test_empty_input_operand_logs_validation_error(self, mock_input, handler, tmp_path, monkeypatch):
+        """Test that empty operand input logs VALIDATION_ERROR."""
+        from src import error_logger
+
+        temp_log_file = tmp_path / "error.log"
+        temp_log_file.parent.mkdir(parents=True, exist_ok=True)
+
+        test_logger = __import__("logging").getLogger(f"test.io_empty.{id(self)}")
+        test_logger.setLevel(__import__("logging").ERROR)
+        test_logger.handlers.clear()
+
+        handler_obj = __import__("logging").FileHandler(str(temp_log_file), mode="a", encoding="utf-8")
+        handler_obj.setLevel(__import__("logging").ERROR)
+        handler_obj.setFormatter(
+            __import__("logging").Formatter(fmt="%(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+        )
+        test_logger.addHandler(handler_obj)
+
+        with monkeypatch.context() as mp:
+            mp.setattr(error_logger, "_logger", test_logger)
+            result = handler.get_operand("Enter value: ")
+
+            assert result == 5.5
+
+            handler_obj.flush()
+            content = temp_log_file.read_text()
+            assert "VALIDATION_ERROR:" in content
+
+    @patch("builtins.input", side_effect=["12.34.56", "99"])
+    def test_malformed_operand_logs_validation_error(self, mock_input, handler, tmp_path, monkeypatch):
+        """Test that malformed numeric input logs VALIDATION_ERROR."""
+        from src import error_logger
+
+        temp_log_file = tmp_path / "error.log"
+        temp_log_file.parent.mkdir(parents=True, exist_ok=True)
+
+        test_logger = __import__("logging").getLogger(f"test.io_malformed.{id(self)}")
+        test_logger.setLevel(__import__("logging").ERROR)
+        test_logger.handlers.clear()
+
+        handler_obj = __import__("logging").FileHandler(str(temp_log_file), mode="a", encoding="utf-8")
+        handler_obj.setLevel(__import__("logging").ERROR)
+        handler_obj.setFormatter(
+            __import__("logging").Formatter(fmt="%(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+        )
+        test_logger.addHandler(handler_obj)
+
+        with monkeypatch.context() as mp:
+            mp.setattr(error_logger, "_logger", test_logger)
+            result = handler.get_operand("Enter value: ")
+
+            assert result == 99.0
+
+            handler_obj.flush()
+            content = temp_log_file.read_text()
+            assert "VALIDATION_ERROR:" in content

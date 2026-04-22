@@ -1,5 +1,7 @@
 import math
 
+from . import error_logger
+
 
 class Calculator:
     def add(self, a, b):
@@ -12,7 +14,23 @@ class Calculator:
         return a * b
 
     def divide(self, a, b):
-        return a / b
+        """Divide a by b.
+
+        Args:
+            a: The dividend.
+            b: The divisor.
+
+        Returns:
+            The result of a / b.
+
+        Raises:
+            ZeroDivisionError: If b is zero.
+        """
+        try:
+            return a / b
+        except ZeroDivisionError as exc:
+            error_logger.log_calculation_error("divide", [a, b], str(exc))
+            raise
 
     def factorial(self, n: int) -> int:
         """
@@ -28,9 +46,13 @@ class Calculator:
             ValueError: If n is negative or not an integer.
         """
         if not isinstance(n, int) or isinstance(n, bool):
-            raise ValueError("Factorial is only defined for non-negative integers")
+            _msg = "Factorial is only defined for non-negative integers"
+            error_logger.log_calculation_error("factorial", [n], _msg)
+            raise ValueError(_msg)
         if n < 0:
-            raise ValueError("Factorial is only defined for non-negative integers")
+            _msg = "Factorial is only defined for non-negative integers"
+            error_logger.log_calculation_error("factorial", [n], _msg)
+            raise ValueError(_msg)
         return math.factorial(n)
 
     def square(self, x: float) -> float:
@@ -72,7 +94,9 @@ class Calculator:
                 number is not defined in the real numbers.
         """
         if x < 0:
-            raise ValueError("Square root is not defined for negative numbers")
+            _msg = "Square root is not defined for negative numbers"
+            error_logger.log_calculation_error("square_root", [x], _msg)
+            raise ValueError(_msg)
         return math.sqrt(x)
 
     def cube_root(self, x: float) -> float:
@@ -107,7 +131,9 @@ class Calculator:
                 (division by zero).
         """
         if x == 0 and y < 0:
-            raise ValueError("0 raised to a negative power is undefined")
+            _msg = "0 raised to a negative power is undefined"
+            error_logger.log_calculation_error("power", [x, y], _msg)
+            raise ValueError(_msg)
         return x ** y
 
     def log(self, x: float) -> float:
@@ -125,7 +151,9 @@ class Calculator:
                 only defined for strictly positive numbers.
         """
         if x <= 0:
-            raise ValueError("Logarithm is only defined for positive numbers")
+            _msg = "Logarithm is only defined for positive numbers"
+            error_logger.log_calculation_error("log", [x], _msg)
+            raise ValueError(_msg)
         return math.log10(x)
 
     def ln(self, x: float) -> float:
@@ -143,6 +171,8 @@ class Calculator:
                 logarithm is only defined for strictly positive numbers.
         """
         if x <= 0:
-            raise ValueError("Natural logarithm is only defined for positive numbers")
+            _msg = "Natural logarithm is only defined for positive numbers"
+            error_logger.log_calculation_error("ln", [x], _msg)
+            raise ValueError(_msg)
         return math.log(x)
 

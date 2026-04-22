@@ -1,0 +1,47 @@
+@startuml activity_error_flow
+
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityBorderColor #555555
+skinparam arrowColor #333333
+
+title Error Logging Flow — Invalid Operand and Calculation Domain Errors
+
+start
+
+fork
+
+    :User provides raw operand input;
+    :InputHandler.get_operand();
+    :validate_operand(raw);
+    if (float(raw) succeeds?) then (yes)
+        :return float value;
+    else (no)
+        :log_validation_error(str(exc));
+        note right: writes to logs/error.log\nbefore exception propagates
+        :raise OperandValidationError;
+        if (retries remaining?) then (yes)
+            :display error to user;
+            :retry get_operand();
+        else (no)
+            :raise InputRetryExhaustedError;
+            stop
+        endif
+    endif
+
+fork again
+
+    :Caller invokes Calculator method\n(e.g., divide, sqrt, factorial);
+    if (domain valid?) then (yes)
+        :return result;
+    else (no)
+        :log_calculation_error(\n  operation, operands, str(exc));
+        note right: writes to logs/error.log\nbefore exception propagates
+        :re-raise original exception\n(ZeroDivisionError / ValueError);
+        :caller catches and displays error;
+    endif
+
+end fork
+
+stop
+
+@enduml
