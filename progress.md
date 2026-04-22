@@ -175,4 +175,4 @@ Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
   - `artifacts/activity_diagram_repl_run.puml` — activity diagram for CalculatorREPL.run() with retry sub-flow
   - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
