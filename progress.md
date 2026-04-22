@@ -1,3 +1,30 @@
+## Run: update-diagrams — Add error logging PlantUML diagrams (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_error_logger.puml` — New class diagram: ErrorLogger with 5 typed methods, relationships to main.py, cli.py, and python.logging
+  - `artifacts/activity_error_handling_main.puml` — New activity diagram: 5 error-category branches in main() each routing to corresponding ErrorLogger method
+  - `artifacts/sequence_interactive_session_errors.puml` — New sequence diagram: interactive session with invalid-operation and division-by-zero error flows
+
+Duration: 184.4s | Cost: $0.525104 USD | Turns: 8
+
+## Run: Issue #262 — V2 Task 10 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/error_logger.py` — New ErrorLogger class: log_unsupported_operation(), log_invalid_operand(), log_incorrect_arity(), log_division_by_zero(), log_invalid_domain() using Python logging module with FileHandler in append mode
+  - `main.py` — Integrated ErrorLogger: instantiate in main(), log all 5 error categories at appropriate error exit points
+  - `src/cli.py` — Integrated ErrorLogger: instantiate in interactive_session(), log all 5 error categories in exception handlers
+  - `tests/test_error_logger.py` — 55 unit tests for ErrorLogger class (initialization, all 5 categories, file persistence, silence, edge cases)
+  - `tests/test_error_logging_integration.py` — 16 integration tests for error logging in main.py and cli.py
+- **Purpose:** Add silent error logging to error.log for all invalid usage and calculation failures across both CLI and interactive modes, separate from operation history
+- **Risks:** None
+- **Tests passed:** 71 passed, 0 failed
+
+Duration: 424.9s | Cost: $0.974609 USD | Turns: 15
+
 ## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-259-operation-history
@@ -226,3 +253,24 @@ Duration: 242.4s | Cost: $0.685754 USD | Turns: 5
   - `artifacts/sequence_diagram_operation_execution.puml` — added OperationHistory participant, record_operation after calc result, save_to_file on quit
 
 Duration: 262.4s | Cost: $0.703051 USD | Turns: 16
+
+## Run: Fix PR #341 — Add error logging for invalid usage and calculation failures (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/error_logger.py` — Fixed handler initialization to always replace handlers (prevents stale file path when id(self) is reused after GC); added _flush() method and flush calls after each of the 5 logging methods to ensure synchronous file creation
+- **Purpose:** Fix failing test test_log_file_created_on_first_call and test_log_incorrect_arity_various_counts[2-3] caused by Python's logging.FileHandler lazy file creation and logger name cache collisions
+- **Risks:** None — change is internal to ErrorLogger; public interface, exit codes, and console behavior unchanged
+- **Tests passed:** 644 passed, 0 failed
+
+Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
+
+## Run: update-diagrams — Error Logging Diagrams (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** task/issue-262-error-logging
+- **Files changed:**
+  - `artifacts/sequence_interactive_session_errors.puml` — expanded from 2 to 4 scenarios: added invalid operand string path and invalid domain error path; clarified that all interactive-mode errors continue the session without exit
+
+Duration: 146.8s | Cost: $0.363565 USD | Turns: 4

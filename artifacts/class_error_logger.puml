@@ -1,0 +1,51 @@
+@startuml class_error_logger
+title ErrorLogger Class Diagram
+
+package "src.error_logger" {
+    class ErrorLogger {
+        - _logger: logging.Logger
+        + __init__(log_file: str = "error.log"): None
+        + log_unsupported_operation(operation_name: str): None
+        + log_invalid_operand(operand: str, reason: str): None
+        + log_incorrect_arity(operation_name: str, expected: int, got: int): None
+        + log_division_by_zero(numerator: float): None
+        + log_invalid_domain(operation_name: str, operand: float, reason: str): None
+    }
+}
+
+package "python.logging" {
+    class Logger {
+        + setLevel(level): void
+        + addHandler(handler): void
+        + error(msg, *args): void
+    }
+    class FileHandler
+    class Formatter
+}
+
+package "main" {
+    class main_module {
+        + main(): void
+    }
+}
+
+package "src.cli" {
+    class cli_module {
+        + interactive_session(calculator): void
+    }
+}
+
+ErrorLogger --> Logger: uses
+Logger --> FileHandler: adds
+FileHandler --> Formatter: uses
+
+main_module --> ErrorLogger: instantiates
+cli_module --> ErrorLogger: instantiates
+
+note right of ErrorLogger
+  Unique logger per instance (id-keyed).
+  propagate = False — no console output.
+  FileHandler in append mode, UTF-8.
+end note
+
+@enduml

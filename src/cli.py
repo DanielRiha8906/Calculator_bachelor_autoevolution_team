@@ -8,6 +8,7 @@ internal structure in advance.
 import inspect
 
 from .calculator import Calculator
+from .error_logger import ErrorLogger
 from .history import OperationHistory
 from .validation import (
     OperandValidationSession,
@@ -138,6 +139,7 @@ def interactive_session(calculator: Calculator) -> None:
     operations = get_operation_menu(calculator)
     op_session = OperationValidationSession(mode=mode, available_ops=operations)
     history = OperationHistory()
+    error_logger = ErrorLogger()
 
     while True:
         # Refresh the operation list each iteration in case Calculator grows.
@@ -196,6 +198,7 @@ def interactive_session(calculator: Calculator) -> None:
         matched = ops_lower.get(resolved_choice.lower())
 
         if matched is None:
+            error_logger.log_unsupported_operation(resolved_choice)
             print(
                 f"  Invalid selection '{resolved_choice}'. "
                 + format_operation_error(operations)
@@ -214,10 +217,30 @@ def interactive_session(calculator: Calculator) -> None:
         op_session.reset_counter()
 
         arity = get_arity(calculator, op_name)
-        operands = get_operands(arity, mode=mode)
+
+        # In CLI mode OperandValidationSession raises SystemExit on invalid
+        # operand input.  Intercept it here so we can log the event before
+        # the process terminates; then re-raise to preserve original behaviour.
+        try:
+            operands = get_operands(arity, mode=mode)
+        except SystemExit as exc:
+            # The SystemExit message contains the offending value; log with
+            # a generic reason since the raw string is embedded in the message.
+            error_logger.log_invalid_operand(
+                str(exc).split("'")[1] if "'" in str(exc) else "unknown",
+                str(exc),
+            )
+            raise
 
         if operands is None:
-            # Operand retry limit reached — end the session gracefully.
+            # Operand retry limit reached in interactive mode — end the
+            # session gracefully.  Individual invalid entries were already
+            # reported by the validation session; log the overall session
+            # failure here.
+            error_logger.log_invalid_operand(
+                "interactive-session",
+                "Maximum retry attempts exceeded for operand input.",
+            )
             history.save_to_file("history.txt")
             break
 
@@ -225,5 +248,13 @@ def interactive_session(calculator: Calculator) -> None:
             result = getattr(calculator, op_name)(*operands)
             history.record_operation(op_name, operands, result)
             print(f"  Result: {result}")
+        except ZeroDivisionError as exc:
+            numerator = operands[0] if operands else float("nan")
+            error_logger.log_division_by_zero(numerator)
+            print(f"  Error: {exc}")
+        except ValueError as exc:
+            operand_ctx = operands[0] if operands else float("nan")
+            error_logger.log_invalid_domain(op_name, operand_ctx, str(exc))
+            print(f"  Error: {exc}")
         except Exception as exc:  # noqa: BLE001
             print(f"  Error: {exc}")

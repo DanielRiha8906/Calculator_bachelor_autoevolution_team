@@ -1,0 +1,58 @@
+@startuml activity_error_handling_main
+title Error Handling Flow in main()
+
+start
+:Parse CLI arguments\n(operation_name, operands);
+
+:get_operation_arity(operation_name);
+
+if (operation exists?) then (no)
+    :log_unsupported_operation(operation_name);
+    :print error to stderr;
+    stop
+else (yes)
+endif
+
+if (enough operands?) then (no)
+    :log_incorrect_arity(op, expected, got);
+    :print error to stderr;
+    stop
+else (yes)
+endif
+
+:Convert operand strings to numbers;
+
+if (parse succeeds?) then (no)
+    :log_invalid_operand(operand, reason);
+    :print error to stderr;
+    stop
+else (yes)
+endif
+
+:Execute Calculator method\nwith numeric operands;
+
+if (ZeroDivisionError?) then (yes)
+    :log_division_by_zero(numerator);
+    :print error to stderr;
+    stop
+else (no)
+endif
+
+if (ValueError from calc?) then (yes)
+    :log_invalid_domain(op, operand, reason);
+    :print error to stderr;
+    stop
+else (no)
+endif
+
+if (other exception?) then (yes)
+    :print error to stderr;
+    stop
+else (no)
+endif
+
+:print result to stdout;
+:exit(0);
+stop
+
+@enduml

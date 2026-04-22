@@ -1,0 +1,76 @@
+@startuml sequence_interactive_session_errors
+title Interactive Session — Error Handling Paths
+
+participant "User" as user
+participant "interactive_session()" as session
+participant "ErrorLogger" as logger
+participant "error.log" as logfile
+participant "Calculator" as calc
+
+note over session
+  All 4 scenarios run inside the interactive session loop.
+  Unlike main.py (which exits on error), interactive_session()
+  continues after every error — the loop is never terminated
+  by an error condition alone.
+end note
+
+== Scenario 1: Invalid Operation ==
+
+user -> session: input invalid operation "foo"
+activate session
+session -> session: validate — no match found
+session -> logger: log_unsupported_operation("foo")
+activate logger
+logger -> logfile: append UNSUPPORTED_OPERATION | operation=foo
+deactivate logger
+session -> user: display error message
+note right of session: session continues (no exit)
+deactivate session
+
+== Scenario 2: Invalid Operand String ==
+
+user -> session: select "add"
+activate session
+user -> session: input operand "abc" (not numeric)
+session -> session: parse_float("abc") raises ValueError
+session -> logger: log_invalid_operand("abc", "is not a valid number.")
+activate logger
+logger -> logfile: append INVALID_OPERAND | operand=abc
+deactivate logger
+session -> user: display error message
+note right of session: session continues (no exit)
+deactivate session
+
+== Scenario 3: Division by Zero ==
+
+user -> session: select "divide", operands 10.0, 0.0
+activate session
+session -> calc: divide(10.0, 0.0)
+activate calc
+calc --> session: ZeroDivisionError
+deactivate calc
+session -> logger: log_division_by_zero(10.0)
+activate logger
+logger -> logfile: append DIVISION_BY_ZERO | numerator=10.0
+deactivate logger
+session -> user: display "Error: division by zero"
+note right of session: session continues (no exit)
+deactivate session
+
+== Scenario 4: Invalid Domain Error ==
+
+user -> session: select "square_root", operand -4.0
+activate session
+session -> calc: square_root(-4.0)
+activate calc
+calc --> session: ValueError("x must be non-negative for square root")
+deactivate calc
+session -> logger: log_invalid_domain("square_root", -4.0, "x must be non-negative for square root")
+activate logger
+logger -> logfile: append INVALID_DOMAIN | operation=square_root
+deactivate logger
+session -> user: display "Error: x must be non-negative for square root"
+note right of session: session continues (no exit)
+deactivate session
+
+@enduml
