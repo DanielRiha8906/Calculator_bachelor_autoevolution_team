@@ -90,3 +90,16 @@ Duration: 190.0s | Cost: $0.469532 USD | Turns: 9
   - `artifacts/sequence_calculator_operations.puml` — New sequence diagram for key calculator operation scenarios
 
 Duration: 193.5s | Cost: $0.430946 USD | Turns: 4
+
+## Run: Issue #244 — V2 Task 4 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-244-expert-team-operations
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/calculator.py` — Added square, cube, square_root, cube_root, logarithm, natural_logarithm (unary) and power (binary) methods with type/domain validation
+  - `tests/test_advanced_operations.py` — New test file with 237 tests covering happy paths, edge cases, and invalid inputs for all 7 new methods
+- **Purpose:** Add advanced mathematical operations (square, cube, sqrt, cbrt, power, log, ln) to the Calculator class as required by Issue #244
+- **Risks:** None — all changes are additive; existing tests unaffected
+- **Tests passed:** 237 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
