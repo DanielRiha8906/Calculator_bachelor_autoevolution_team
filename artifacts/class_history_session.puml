@@ -1,0 +1,61 @@
+@startuml class_history_session
+
+skinparam classAttributeIconSize 0
+
+class OperationHistory {
+  - _entries : list[str]
+  + add_entry(operation_name: str, args: list, result: object) : None
+  + get_entries() : list[str]
+  + clear() : None
+  + write_to_file(filepath: str) : None
+  - _format_entry(operation_name: str, args: list, result: object) : str
+}
+
+class Calculator {
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+  + square(x: float) : float
+  + cube(x: float) : float
+  + square_root(x: float) : float
+  + cube_root(x: float) : float
+  + logarithm(x: float) : float
+  + natural_logarithm(x: float) : float
+  + factorial(n: int) : int
+  + power(base: float, exponent: float) : float
+}
+
+class CalculatorSession {
+  - _history : OperationHistory
+  - _history_file : str
+  - _calculator : Calculator
+  - _wrapped : object
+  + __init__(history_file: str) : None
+  + get_calculator() : object
+  + get_history() : list[str]
+  + save_and_close() : None
+  - _wrap_calculator() : object
+}
+
+class _CalculatorWrapper <<inner class>> {
+  + __getattr__(name: str) : object
+}
+
+class CalculatorREPL {
+  - _session : CalculatorSession
+  + __init__(history_file: str) : None
+  + run() : None
+  - _execute_command(command: str) : None
+  - _display_history() : None
+  - _handle_help() : None
+}
+
+CalculatorREPL *-- CalculatorSession : "owns"
+CalculatorSession *-- OperationHistory : "owns"
+CalculatorSession *-- Calculator : "owns"
+CalculatorSession +-- _CalculatorWrapper : "creates"
+_CalculatorWrapper ..> Calculator : "delegates to"
+_CalculatorWrapper ..> OperationHistory : "records via"
+
+@enduml

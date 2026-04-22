@@ -1,0 +1,82 @@
+@startuml sequence_history_recording
+
+actor User
+participant CalculatorREPL
+participant CalculatorSession
+participant _CalculatorWrapper
+participant Calculator
+participant OperationHistory
+
+== Scenario 1: Operation Recording (e.g., "add 2 3") ==
+
+User -> CalculatorREPL : input("> ") -> "add 2 3"
+activate CalculatorREPL
+
+CalculatorREPL -> CalculatorREPL : _execute_command("add 2 3")
+CalculatorREPL -> CalculatorREPL : lookup "add" in _OPERATIONS\n-> (method_name="add", arity=2)
+CalculatorREPL -> CalculatorREPL : parse args -> [2.0, 3.0]
+
+CalculatorREPL -> CalculatorSession : get_calculator()
+activate CalculatorSession
+CalculatorSession --> CalculatorREPL : returns _CalculatorWrapper
+deactivate CalculatorSession
+
+CalculatorREPL -> _CalculatorWrapper : add(2.0, 3.0)
+activate _CalculatorWrapper
+
+_CalculatorWrapper -> Calculator : add(2.0, 3.0)
+activate Calculator
+Calculator --> _CalculatorWrapper : 5.0
+deactivate Calculator
+
+_CalculatorWrapper -> OperationHistory : add_entry("add", [2.0, 3.0], 5.0)
+activate OperationHistory
+OperationHistory -> OperationHistory : _format_entry() -> "add(2, 3) = 5"
+deactivate OperationHistory
+
+_CalculatorWrapper --> CalculatorREPL : 5.0
+deactivate _CalculatorWrapper
+
+CalculatorREPL --> User : print "5"
+deactivate CalculatorREPL
+
+== Scenario 2: Display History (user types "history") ==
+
+User -> CalculatorREPL : input("> ") -> "history"
+activate CalculatorREPL
+
+CalculatorREPL -> CalculatorREPL : _display_history()
+
+CalculatorREPL -> CalculatorSession : get_history()
+activate CalculatorSession
+
+CalculatorSession -> OperationHistory : get_entries()
+activate OperationHistory
+OperationHistory --> CalculatorSession : ["add(2, 3) = 5", ...]
+deactivate OperationHistory
+
+CalculatorSession --> CalculatorREPL : entries list
+deactivate CalculatorSession
+
+CalculatorREPL --> User : print each entry
+deactivate CalculatorREPL
+
+== Scenario 3: Session Exit (user types "exit") ==
+
+User -> CalculatorREPL : input("> ") -> "exit"
+activate CalculatorREPL
+
+CalculatorREPL -> CalculatorSession : save_and_close()
+activate CalculatorSession
+
+CalculatorSession -> OperationHistory : write_to_file("history.txt")
+activate OperationHistory
+OperationHistory -> OperationHistory : open file -> write each entry -> close
+deactivate OperationHistory
+
+deactivate CalculatorSession
+
+CalculatorREPL --> User : print "Goodbye!"
+deactivate CalculatorREPL
+
+@enduml

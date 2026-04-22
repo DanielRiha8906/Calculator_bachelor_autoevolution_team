@@ -208,3 +208,14 @@ Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
 - **Tests passed:** 601 passed, 0 failed
 
 Duration: 428.1s | Cost: $0.935554 USD | Turns: 16
+
+## Run: update-diagrams — Operation History UML Diagrams (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_history_session.puml` — new class diagram for OperationHistory, CalculatorSession, _CalculatorWrapper, and CalculatorREPL subsystem
+  - `artifacts/sequence_history_recording.puml` — new sequence diagram showing operation recording, history display, and session exit flows
+  - `artifacts/activity_repl_session.puml` — new activity diagram for CalculatorREPL.run() loop with all command branches and exit paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

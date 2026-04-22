@@ -1,0 +1,37 @@
+@startuml activity_repl_session
+
+start
+
+:Print welcome message and help hint;
+
+repeat
+  :Prompt: input("> ");
+
+  if (EOFError / KeyboardInterrupt?) then (yes)
+    :save_and_close();
+    stop
+  else (no)
+  endif
+
+  if (line empty?) then (yes)
+  else (no)
+    if (command classification) then (exit / quit)
+      :save_and_close();
+      :print "Goodbye!";
+      stop
+    elseif (history) then
+      :_display_history();
+    elseif (help) then
+      :_handle_help();
+    else (other)
+      :try _execute_command(line);
+      if (exception raised?) then (yes)
+        :print error message;
+      else (no)
+      endif
+    endif
+  endif
+
+repeat while (continue loop)
+
+@enduml
