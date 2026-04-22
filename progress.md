@@ -1,3 +1,19 @@
+## Run: Issue #270 — V2 Task 13 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-270-add-documentation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `GETTING_STARTED.md` — new quick-start guide covering installation, interactive mode, and CLI mode
+  - `OPERATIONS.md` — new complete operation reference for all 12 operations with examples and error conditions
+  - `PROJECT_STRUCTURE.md` — new architecture and module organization documentation
+  - `README.md` — added English overview, features, and cross-references before existing Czech content
+  - `tests/test_documentation_accuracy.py` — 42 new tests verifying registry matches docs, CLI examples work, and constants are correct
+- **Purpose:** Add comprehensive written documentation covering features, usage, project structure, and interaction modes; add tests to keep documentation accurate as the codebase evolves
+- **Risks:** None — documentation only; no production code changed
+- **Tests passed:** 814 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #267 — V2 Task 12 - Structured/team (2026-04-22)
 
 - **Branch:** task/issue-267-modular-refactor
