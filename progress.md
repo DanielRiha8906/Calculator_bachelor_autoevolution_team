@@ -1,3 +1,28 @@
+## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-247-interactive-input
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — Class diagram for Calculator and CLI module with reflection-based relationships
+  - `artifacts/activity_diagram_interactive_session.puml` — Activity diagram for interactive_session REPL loop including get_operands sub-flow
+  - `artifacts/sequence_diagram_operation_execution.puml` — Sequence diagram for full operation execution with error handling and exit flow
+
+Duration: 303.7s | Cost: $0.545734 USD | Turns: 7
+
+## Run: Issue #247 — V2 Task 5 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-247-interactive-input
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/cli.py` — New interactive CLI module with menu-driven session loop, arity detection via inspect, operand collection with re-prompt on invalid input, and graceful error handling
+  - `src/__main__.py` — Updated entry point to instantiate Calculator and call interactive_session
+  - `tests/test_cli.py` — 58 new tests covering get_arity, parse_float, get_operation_menu, get_operands, and interactive_session (full session flow, exit conditions, error handling)
+- **Purpose:** Add interactive user input so the calculator reads operation selection and operands at runtime, supports 1- and 2-operand operations, and allows multiple calculations per session
+- **Risks:** None — Calculator class is untouched; existing 237 tests unaffected; new interactive layer is purely additive
+- **Tests passed:** 295 passed, 0 failed
+
+Duration: 321.7s | Cost: $0.675703 USD | Turns: 18
+
 ## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-241-factorial-operation

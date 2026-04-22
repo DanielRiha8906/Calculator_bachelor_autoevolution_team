@@ -1,0 +1,105 @@
+@startuml class_diagram_cli
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src/calculator.py" {
+    class Calculator {
+        .. Binary operations ..
+        +add(a, b) : numeric
+        +subtract(a, b) : numeric
+        +multiply(a, b) : numeric
+        +divide(a, b) : numeric
+        +power(base: float, exponent: float) : float
+        .. Unary operations ..
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +logarithm(x: float) : float
+        +natural_logarithm(x: float) : float
+    }
+}
+
+package "src/cli.py" {
+    class "get_operation_menu()" as GetMenu <<function>> {
+        +calculator: Calculator
+        --
+        Returns list[str] of public method names
+        Uses dir() + callable() filter
+        Excludes dunder methods
+    }
+
+    class "get_arity()" as GetArity <<function>> {
+        +calculator: Calculator
+        +op_name: str
+        --
+        Returns int (1 or 2)
+        Uses inspect.signature()
+        Counts params excluding self
+    }
+
+    class "parse_float()" as ParseFloat <<function>> {
+        +value: str
+        --
+        Returns float
+        Raises ValueError if not numeric
+    }
+
+    class "get_operands()" as GetOperands <<function>> {
+        +arity: int
+        --
+        Returns list[float]
+        Prompts user arity times
+        Re-prompts on ValueError
+    }
+
+    class "interactive_session()" as Session <<function>> {
+        +calculator: Calculator
+        --
+        REPL loop: menu -> select -> collect -> dispatch
+        Exits on: quit / exit / q
+        Catches all Calculator exceptions
+    }
+}
+
+package "src/__main__.py" {
+    class "main()" as Main <<function>> {
+        --
+        Instantiates Calculator
+        Calls interactive_session
+    }
+}
+
+Main --> Calculator : <<instantiates>>
+Main --> Session : calls
+
+Session --> GetMenu : calls each iteration
+Session --> GetArity : calls after selection
+Session --> GetOperands : calls to collect inputs
+Session --> Calculator : <<dynamic dispatch>>\ngetattr(calc, op_name)(*operands)
+
+GetMenu --> Calculator : introspects via dir()
+GetArity --> Calculator : inspects via inspect.signature()
+GetOperands --> ParseFloat : validates each input string
+
+note right of Session
+  Dynamic dispatch:
+  getattr(calc, op_name)(*operands)
+  No hardcoded operation routing
+end note
+
+note right of GetArity
+  Reflection via inspect:
+  inspect.signature(bound_method)
+  param count excludes "self"
+end note
+
+note right of GetMenu
+  Reflection via dir():
+  [m for m in dir(calc)
+   if callable() and not dunder]
+end note
+
+@enduml
