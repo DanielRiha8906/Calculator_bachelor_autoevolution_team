@@ -1,0 +1,25 @@
+@startuml activity_diagram_divide
+
+start
+
+:Receive arguments a and b;
+
+if (b == 0?) then (yes)
+    :Raise ZeroDivisionError;
+    stop
+else (no)
+endif
+
+if (a and b are numeric?) then (no)
+    :Raise TypeError;
+    stop
+else (yes)
+endif
+
+:Compute a / b;
+
+:Return float result;
+
+stop
+
+@enduml
