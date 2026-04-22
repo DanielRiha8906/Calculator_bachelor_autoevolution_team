@@ -1,0 +1,32 @@
+@startuml activity_diagram_factorial
+
+start
+
+:Receive argument n;
+
+if (n is bool or not isinstance(n, int)?) then (yes)
+    :Raise TypeError;
+    stop
+else (no)
+endif
+
+if (n < 0?) then (yes)
+    :Raise ValueError;
+    stop
+else (no)
+endif
+
+:Initialize result = 1;
+
+:Loop i from 2 to n (inclusive);
+
+while (i <= n?) is (yes)
+    :result = result * i;
+    :i = i + 1;
+endwhile (no)
+
+:Return result;
+
+stop
+
+@enduml

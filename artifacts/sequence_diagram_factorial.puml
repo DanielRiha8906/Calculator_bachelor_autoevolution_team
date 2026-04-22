@@ -1,0 +1,33 @@
+@startuml sequence_diagram_factorial
+
+participant "Caller" as Caller
+participant "Calculator" as Calc
+
+== Scenario 1: Valid input n=5 ==
+
+Caller ->> Calc : factorial(5)
+activate Calc
+note right of Calc : type check passes\n(int, not bool)
+note right of Calc : value check passes\n(n >= 0)
+note right of Calc : compute 1*2*3*4*5
+Calc --> Caller : 120
+deactivate Calc
+
+== Scenario 2: Negative integer n=-3 ==
+
+Caller ->> Calc : factorial(-3)
+activate Calc
+note right of Calc : type check passes\n(int, not bool)
+note right of Calc : value check: n < 0
+Calc --> Caller : raise ValueError
+deactivate Calc
+
+== Scenario 3: Float input n=3.5 ==
+
+Caller ->> Calc : factorial(3.5)
+activate Calc
+note right of Calc : type check: not int
+Calc --> Caller : raise TypeError
+deactivate Calc
+
+@enduml
