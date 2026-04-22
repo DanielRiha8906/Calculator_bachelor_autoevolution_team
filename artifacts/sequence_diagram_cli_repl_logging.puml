@@ -1,0 +1,149 @@
+@startuml sequence_diagram_cli_repl_logging
+
+skinparam SequenceArrowColor #555555
+skinparam SequenceBoxBorderColor #AAAAAA
+skinparam ParticipantBorderColor #555555
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #CCCCCC
+
+title CLI and REPL Error Paths with Logging
+
+actor User
+
+note over Logger
+  Two sinks:
+  • WARNING+ → console (StreamHandler)
+  • DEBUG+   → calculator.log (FileHandler)
+end note
+
+' ══════════════════════════════════════════════════════════════
+group CLI Path
+
+participant CLIHandler
+participant ExpressionParser as Parser
+participant InputValidator   as Validator
+participant Calculator
+participant Logger
+database    "calculator.log"
+
+User -> CLIHandler : expression string
+
+CLIHandler -> Parser : parse()
+activate Parser
+
+  alt invalid token
+    Parser -> Logger : warning("_coerce_numeric() failed: <token>")
+    Logger -> "calculator.log" : write DEBUG entry
+    Parser --> CLIHandler : raise ValueError
+    deactivate Parser
+    CLIHandler -> Logger : error("parse error in run()")
+    CLIHandler --> User  : print error; return 1
+  else token OK
+    Parser --> CLIHandler : parsed operands
+    deactivate Parser
+
+    CLIHandler -> Validator : validate_operation(op)
+    activate Validator
+
+    alt unknown operation
+      Validator -> Logger : warning("validate_operation() failed: <op>")
+      Logger -> "calculator.log" : write DEBUG entry
+      Validator --> CLIHandler : raise ValueError
+      deactivate Validator
+      CLIHandler -> Logger : error("validation error in run()")
+      CLIHandler --> User  : print error; return 1
+    else operation OK
+      Validator --> CLIHandler : valid
+      deactivate Validator
+
+      CLIHandler -> Calculator : method(operands)
+      activate Calculator
+
+      alt ZeroDivisionError (e.g. divide)
+        Calculator -> Logger : error("divide() failed: <operands>")
+        Logger -> "calculator.log" : write DEBUG entry
+        Calculator --> CLIHandler : raise ZeroDivisionError
+        deactivate Calculator
+        CLIHandler -> Logger : error("math error in run()")
+        CLIHandler --> User  : print error; return 1
+      else success
+        Calculator --> CLIHandler : result
+        deactivate Calculator
+        CLIHandler --> User  : print result; return 0
+      end
+    end
+  end
+
+end
+
+' ══════════════════════════════════════════════════════════════
+group REPL Path
+
+participant CalculatorREPL as REPL
+participant "_evaluate()" as evaluate
+participant ExpressionParser as Parser2
+participant InputValidator   as Validator2
+participant Calculator as Calculator2
+participant Logger as Logger2
+database    "calculator.log" as logfile2
+
+User -> REPL : stdin (expression)
+REPL -> evaluate : _evaluate(raw_input)
+activate evaluate
+
+  evaluate -> Parser2 : parse()
+  activate Parser2
+
+  alt invalid token
+    Parser2 -> Logger2 : warning("_coerce_numeric() failed: <token>")
+    Logger2 -> logfile2 : write DEBUG entry
+    Parser2 --> evaluate : raise ValueError
+    deactivate Parser2
+    evaluate --> REPL   : return "Input error"
+  else parse OK
+    Parser2 --> evaluate : parsed operands
+    deactivate Parser2
+
+    evaluate -> Validator2 : validate_operation(op)
+    activate Validator2
+
+    alt unknown operation
+      Validator2 -> Logger2 : warning("validate_operation() failed: <op>")
+      Logger2 -> logfile2   : write DEBUG entry
+      Validator2 --> evaluate : raise ValueError
+      deactivate Validator2
+      evaluate --> REPL : return "Validation error"
+    else operation OK
+      Validator2 --> evaluate : valid
+      deactivate Validator2
+
+      evaluate -> Calculator2 : method(operands)
+      activate Calculator2
+
+      alt math error (divide/factorial/sqrt/ln/log10)
+        Calculator2 -> Logger2 : error("<method>() failed: <operands>")
+        Logger2 -> logfile2    : write DEBUG entry
+        Calculator2 --> evaluate : raise exception
+        deactivate Calculator2
+        evaluate -> Logger2 : error("_evaluate() dispatch error")
+        evaluate --> REPL   : return "Math error: ..."
+      else success
+        Calculator2 --> evaluate : result
+        deactivate Calculator2
+        evaluate --> REPL : return "Result: <value>"
+      end
+    end
+  end
+
+deactivate evaluate
+
+REPL --> User : print response
+
+alt error response (up to 3 retry attempts)
+  User -> REPL : retry expression
+  note over REPL : retry loop (max 3 attempts)
+end
+
+end
+
+@enduml

@@ -1,0 +1,79 @@
+@startuml class_diagram_logging
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #555555
+skinparam ClassBorderColor #555555
+
+package "logger module" {
+    component "get_logger(name)" as getLogger
+    note right of getLogger
+      _configure_root_logger():
+        - StreamHandler (WARNING → console)
+        - FileHandler  (DEBUG   → calculator.log)
+        - shared Formatter
+        - _configured bool guard
+    end note
+}
+
+class Calculator {
+    - _history : list[dict]
+    - logger
+    --
+    + divide(a, b)        <<logger.error>>
+    + factorial(n)        <<logger.error>>
+    + square_root(x)      <<logger.error>>
+    + natural_log(x)      <<logger.error>>
+    + log_base_10(x)      <<logger.error>>
+}
+
+class InputValidator {
+    - logger
+    --
+    + validate_operation(op)              <<logger.warning>>
+    + validate_operand_count(op, operands) <<logger.warning>>
+}
+
+class ExpressionParser {
+    - logger
+    --
+    + parse(raw_input)         <<logger.warning on empty>>
+    - _coerce_numeric(token)   <<logger.warning on non-numeric>>
+}
+
+class CalculatorREPL {
+    - calculator  : Calculator
+    - parser      : ExpressionParser
+    - validator   : InputValidator
+    - logger
+    --
+    + run()
+    - _evaluate(raw_input)  <<logger.error on ZeroDivisionError/ValueError/TypeError>>
+}
+
+class CLIHandler {
+    - calculator  : Calculator
+    - parser      : ExpressionParser
+    - validator   : InputValidator
+    - logger
+    --
+    + run()  <<logger.error on parse/validation/math errors>>
+}
+
+' Dependency on get_logger
+Calculator    ..> getLogger : uses
+InputValidator ..> getLogger : uses
+ExpressionParser ..> getLogger : uses
+CalculatorREPL ..> getLogger : uses
+CLIHandler     ..> getLogger : uses
+
+' Composition
+CalculatorREPL *-- Calculator
+CalculatorREPL *-- ExpressionParser
+CalculatorREPL *-- InputValidator
+
+CLIHandler *-- Calculator
+CLIHandler *-- ExpressionParser
+CLIHandler *-- InputValidator
+
+@enduml

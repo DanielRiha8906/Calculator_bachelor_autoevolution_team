@@ -218,3 +218,14 @@ Duration: 349.5s | Cost: $1.000426 USD | Turns: 16
   - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
 
 Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
+
+## Run: update-diagrams — Add error logging diagrams (2026-04-22)
+
+- **Branch:** task/issue-260-error-logging
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_logging.puml` — new class diagram showing logger module integrated across Calculator, InputValidator, ExpressionParser, CalculatorREPL, and CLIHandler
+  - `artifacts/activity_diagram_error_logging.puml` — new activity diagram for three error detection and logging flows (math error, invalid token, unknown operation)
+  - `artifacts/sequence_diagram_cli_repl_logging.puml` — new sequence diagram showing CLI and REPL error paths with logger.warning() and logger.error() call sites
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
