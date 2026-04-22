@@ -253,4 +253,4 @@ Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
   - `artifacts/sequence_calculator_facade_division.puml` — new sequence diagram showing division delegation and error path through facade layers
   - `artifacts/sequence_calculator_factorial_validation.puml` — new sequence diagram showing factorial type/value validation, logger integration, and three execution paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
