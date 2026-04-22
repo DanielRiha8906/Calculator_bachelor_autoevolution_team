@@ -253,3 +253,15 @@ Duration: 242.4s | Cost: $0.685754 USD | Turns: 5
   - `artifacts/sequence_diagram_operation_execution.puml` — added OperationHistory participant, record_operation after calc result, save_to_file on quit
 
 Duration: 262.4s | Cost: $0.703051 USD | Turns: 16
+
+## Run: Fix PR #341 — Add error logging for invalid usage and calculation failures (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/error_logger.py` — Fixed handler initialization to always replace handlers (prevents stale file path when id(self) is reused after GC); added _flush() method and flush calls after each of the 5 logging methods to ensure synchronous file creation
+- **Purpose:** Fix failing test test_log_file_created_on_first_call and test_log_incorrect_arity_various_counts[2-3] caused by Python's logging.FileHandler lazy file creation and logger name cache collisions
+- **Risks:** None — change is internal to ErrorLogger; public interface, exit codes, and console behavior unchanged
+- **Tests passed:** 644 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

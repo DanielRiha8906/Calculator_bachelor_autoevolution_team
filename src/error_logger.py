@@ -32,18 +32,31 @@ class ErrorLogger:
             f"{__name__}.{id(self)}"
         )
         self._logger.setLevel(logging.ERROR)
-        # Avoid adding duplicate handlers when the module is imported more
-        # than once inside the same process (e.g. in tests).
-        if not self._logger.handlers:
-            handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-            formatter = logging.Formatter(
-                "%(asctime)s [%(levelname)s] %(message)s"
-            )
-            handler.setFormatter(formatter)
-            self._logger.addHandler(handler)
+        # Always replace handlers: id(self) may be reused after GC, which
+        # would leave the cached logger pointing at a stale file path.
+        for h in self._logger.handlers[:]:
+            h.close()
+            self._logger.removeHandler(h)
+        handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s"
+        )
+        handler.setFormatter(formatter)
+        self._logger.addHandler(handler)
         # Prevent the root logger from also emitting these records to
         # the console.
         self._logger.propagate = False
+
+    def _flush(self) -> None:
+        """Flush all handlers attached to the logger.
+
+        Ensures log records are written to disk synchronously after each
+        logging call, so the log file is visible immediately after the
+        first write (rather than only after the handler's internal buffer
+        is filled or the process exits).
+        """
+        for handler in self._logger.handlers:
+            handler.flush()
 
     def log_unsupported_operation(self, operation_name: str) -> None:
         """Log an attempt to invoke an unknown or unsupported operation.
@@ -56,6 +69,7 @@ class ErrorLogger:
             "UNSUPPORTED_OPERATION | operation='%s'",
             operation_name,
         )
+        self._flush()
 
     def log_invalid_operand(self, operand: str, reason: str) -> None:
         """Log a non-numeric operand that failed parsing.
@@ -70,6 +84,7 @@ class ErrorLogger:
             operand,
             reason,
         )
+        self._flush()
 
     def log_incorrect_arity(
         self, operation_name: str, expected: int, got: int
@@ -88,6 +103,7 @@ class ErrorLogger:
             expected,
             got,
         )
+        self._flush()
 
     def log_division_by_zero(self, numerator: float) -> None:
         """Log a division-by-zero attempt.
@@ -99,6 +115,7 @@ class ErrorLogger:
             "DIVISION_BY_ZERO | numerator=%s",
             numerator,
         )
+        self._flush()
 
     def log_invalid_domain(
         self, operation_name: str, operand: float, reason: str
@@ -118,3 +135,4 @@ class ErrorLogger:
             operand,
             reason,
         )
+        self._flush()
