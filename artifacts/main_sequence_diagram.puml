@@ -18,6 +18,9 @@ calc -->> main : 50
 main ->> calc : divide(10, 5)
 calc -->> main : 2.0
 
+main ->> calc : factorial(5)
+calc -->> main : 120
+
 deactivate calc
 
 main -> main : print results
