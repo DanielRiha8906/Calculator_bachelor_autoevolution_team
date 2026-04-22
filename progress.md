@@ -11,7 +11,7 @@
 - **Risks:** None — Calculator core untouched; history is purely additive; backward compatible
 - **Tests passed:** 573 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 379.2s | Cost: $0.895947 USD | Turns: 15
 
 ## Run: Issue #256 — V2 Task 8 - Expert/team (2026-04-22)
 
