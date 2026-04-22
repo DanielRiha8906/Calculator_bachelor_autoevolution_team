@@ -151,4 +151,4 @@ Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
   - `artifacts/activity_diagram_cli.puml` — activity flows for CLI/REPL routing and CLIHandler execution
   - `artifacts/sequence_diagram_cli.puml` — end-to-end CLI expression evaluation sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
