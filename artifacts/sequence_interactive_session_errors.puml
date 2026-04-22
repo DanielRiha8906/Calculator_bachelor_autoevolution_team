@@ -1,0 +1,34 @@
+@startuml sequence_interactive_session_errors
+title Interactive Session: Invalid Operation then Division by Zero
+
+participant "User" as user
+participant "interactive_session()" as session
+participant "ErrorLogger" as logger
+participant "error.log" as logfile
+participant "Calculator" as calc
+
+user -> session: select invalid operation "foo"
+activate session
+session -> session: validate operation name
+session -> logger: log_unsupported_operation("foo")
+activate logger
+logger -> logfile: append UNSUPPORTED_OPERATION entry
+deactivate logger
+session -> user: display error message
+deactivate session
+
+user -> session: select "divide"
+activate session
+user -> session: operands 10.0, 0.0
+session -> calc: divide(10.0, 0.0)
+activate calc
+calc --> session: ZeroDivisionError
+deactivate calc
+session -> logger: log_division_by_zero(10.0)
+activate logger
+logger -> logfile: append DIVISION_BY_ZERO | numerator=10.0
+deactivate logger
+session -> user: display "Error: division by zero"
+deactivate session
+
+@enduml

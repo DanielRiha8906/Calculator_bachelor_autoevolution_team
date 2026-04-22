@@ -1,3 +1,14 @@
+## Run: update-diagrams — Add error logging PlantUML diagrams (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_error_logger.puml` — New class diagram: ErrorLogger with 5 typed methods, relationships to main.py, cli.py, and python.logging
+  - `artifacts/activity_error_handling_main.puml` — New activity diagram: 5 error-category branches in main() each routing to corresponding ErrorLogger method
+  - `artifacts/sequence_interactive_session_errors.puml` — New sequence diagram: interactive session with invalid-operation and division-by-zero error flows
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #262 — V2 Task 10 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-262-error-logging
