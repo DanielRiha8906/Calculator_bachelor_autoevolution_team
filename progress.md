@@ -267,3 +267,15 @@ Duration: 244.1s | Cost: $0.521191 USD | Turns: 7
 - **Tests passed:** 729 passed, 0 failed
 
 Duration: 507.6s | Cost: $1.237620 USD | Turns: 15
+
+## Run: update-diagrams — Refactor Calculator Separation (2026-04-22)
+
+- **Branch:** task/issue-264-refactor-calculator-separation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — added CalculationEngine and CalculatorWorkflow, separated into Core Calculation and Session Orchestration packages
+  - `artifacts/class_diagram_workflow.puml` — new focused class diagram for CalculatorWorkflow and its collaborators
+  - `artifacts/activity_diagram_workflow_loop.puml` — new activity diagram for CalculatorWorkflow.run() session loop
+  - `artifacts/sequence_diagram_workflow_operation_execution.puml` — new sequence diagram for refactored operation execution path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
