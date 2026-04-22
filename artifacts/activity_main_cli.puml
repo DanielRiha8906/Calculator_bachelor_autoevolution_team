@@ -1,0 +1,72 @@
+@startuml activity_main_cli
+
+start
+
+:User invokes: python main.py <operation> [operand ...];
+
+:parse_arguments(sys.argv[1:]);
+
+if (args provided?) then (no)
+  :print(stderr): "Usage: python main.py <operation> [operand ...]";
+  :exit(1);
+  stop
+else (yes)
+endif
+
+:operation_name = args[0];
+:operands_list = args[1:];
+
+:calc = Calculator();
+
+partition "Inspection Phase" {
+  :get_operation_arity(operation_name);
+  :Inspect Calculator.operation_name signature;
+  :arity = parameter count;
+}
+
+if (operation exists?\n(arity != -1)?) then (no)
+  :print(stderr): "Error: unknown operation";
+  :exit(1);
+  stop
+else (yes)
+endif
+
+if (len(operands_list) >= arity?) then (no)
+  :print(stderr): "Error: insufficient operands";
+  :exit(1);
+  stop
+else (yes)
+endif
+
+:Slice operands_list to arity;
+
+partition "Conversion Phase" {
+  while (more operands to convert?) is (yes)
+    :_to_number(operand_string);
+    :Try int(), fallback to float();
+    if (parse succeeds?) then (yes)
+      :Append numeric value;
+    else (no)
+      :print(stderr): "Error: invalid number";
+      :exit(1);
+      stop
+    endif
+  endwhile (all converted)
+}
+
+:execute_operation(calc, operation_name, numeric_operands);
+:getattr(calc, operation_name)(*numeric_operands);
+
+if (Calculator raises exception?) then (yes)
+  :print(stderr): "Error: {exception message}";
+  :exit(1);
+  stop
+else (no)
+endif
+
+:print(result);
+:exit(0);
+
+stop
+
+@enduml

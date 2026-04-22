@@ -1,27 +1,94 @@
 @startuml sequence_main
 
+participant "User" as User
 participant "main()" as Main
+participant "parse_arguments()" as ParseArgs
+participant "get_operation_arity()" as GetArity
+participant "execute_operation()" as Execute
+participant "_to_number()" as ToNumber
 participant "Calculator" as Calc
 
-Main -> Calc : <<create>>
+User -> Main : python main.py add 3 5
+activate Main
+
+Main -> ParseArgs : parse_arguments(["add", "3", "5"])
+activate ParseArgs
+ParseArgs --> Main : ("add", ["3", "5"])
+deactivate ParseArgs
+
+Main -> Calc : Calculator()
 activate Calc
 
-Main ->> Calc : add(a, b)
-Calc -->> Main : result
+Main -> GetArity : get_operation_arity("add")
+activate GetArity
+GetArity -> Calc : inspect.signature(Calculator.add)
+Calc --> GetArity : Signature with 2 params (a, b)
+GetArity --> Main : 2
+deactivate GetArity
 
-Main ->> Calc : subtract(a, b)
-Calc -->> Main : result
+Main -> Main : validate: len(["3", "5"]) == 2 OK
+Main -> Main : slice operands to arity: ["3", "5"][:2]
 
-Main ->> Calc : multiply(a, b)
-Calc -->> Main : result
+Main -> Execute : execute_operation(calc, "add", ["3", "5"])
+activate Execute
 
-Main ->> Calc : divide(a, b)
-alt b != 0
-    Calc -->> Main : result
-else b == 0
-    Calc -->> Main : ZeroDivisionError (propagates)
+Execute -> ToNumber : _to_number("3")
+activate ToNumber
+ToNumber --> Execute : 3 (int)
+deactivate ToNumber
+
+Execute -> ToNumber : _to_number("5")
+activate ToNumber
+ToNumber --> Execute : 5 (int)
+deactivate ToNumber
+
+Execute -> Calc : add(3, 5)
+Calc --> Execute : 8
+deactivate Execute
+
+Main -> User : print(8)
+deactivate Calc
+Main -> User : exit(0)
+deactivate Main
+
+== Error paths ==
+
+alt unknown operation
+    User -> Main : python main.py bad_op 1
+    activate Main
+    Main -> GetArity : get_operation_arity("bad_op")
+    activate GetArity
+    GetArity --> Main : -1
+    deactivate GetArity
+    Main -> User : stderr: "Error: unknown operation 'bad_op'"
+    Main -> User : exit(1)
+    deactivate Main
 end
 
-deactivate Calc
+alt insufficient operands
+    User -> Main : python main.py add 3
+    activate Main
+    Main -> GetArity : get_operation_arity("add")
+    activate GetArity
+    GetArity --> Main : 2
+    deactivate GetArity
+    Main -> Main : validate: len(["3"]) < 2 FAIL
+    Main -> User : stderr: "Error: operation 'add' requires 2 operand(s), got 1"
+    Main -> User : exit(1)
+    deactivate Main
+end
+
+alt Calculator raises exception
+    User -> Main : python main.py square_root -1
+    activate Main
+    Main -> Execute : execute_operation(calc, "square_root", ["-1"])
+    activate Execute
+    Execute -> Calc : square_root(-1)
+    Calc --> Execute : ValueError
+    deactivate Execute
+    Main -> User : stderr: "Error: x must be non-negative for square root"
+    Main -> User : exit(1)
+    deactivate Main
+end
 
 @enduml

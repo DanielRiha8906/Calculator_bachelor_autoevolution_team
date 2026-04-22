@@ -72,6 +72,48 @@ package "src/__main__.py" {
     }
 }
 
+package "main.py" {
+    class "get_operation_arity()" as BashGetArity <<function>> {
+        +operation_name: str
+        --
+        Returns int (arity) or -1 if unknown
+        Uses inspect.signature() on unbound method
+        Reflects Calculator class (not instance)
+    }
+
+    class "parse_arguments()" as ParseArgs <<function>> {
+        +args: list[str]
+        --
+        Returns tuple[str, list[str]]
+        Extracts (operation_name, operands_list)
+        Exits code 1 if no args
+    }
+
+    class "_to_number()" as ToNumber <<function>> {
+        +value: str
+        --
+        Returns int | float
+        Tries int() first, falls back to float()
+        Raises ValueError if neither works
+    }
+
+    class "execute_operation()" as ExecuteOp <<function>> {
+        +calc: Calculator
+        +operation_name: str
+        +operands: list[str]
+        --
+        Converts operand strings to numbers
+        Dispatches via getattr()
+        Returns Calculator result
+    }
+
+    class "main()" as BashMain <<function>> {
+        --
+        Bash CLI orchestrator: parse -> validate -> execute
+        Exits code 0 on success, 1 on any error
+    }
+}
+
 Main --> Calculator : <<instantiates>>
 Main --> Session : calls
 
@@ -84,22 +126,30 @@ GetMenu --> Calculator : introspects via dir()
 GetArity --> Calculator : inspects via inspect.signature()
 GetOperands --> ParseFloat : validates each input string
 
+BashMain --> ParseArgs : parse sys.argv[1:]
+BashMain --> BashGetArity : inspect operation arity
+BashMain --> ExecuteOp : invoke operation
+BashMain --> Calculator : <<instantiates>>
+
+ExecuteOp --> ToNumber : convert each operand
+ExecuteOp --> Calculator : <<dynamic dispatch>>\ngetattr(calc, op_name)(*numeric_operands)
+BashGetArity --> Calculator : inspects unbound method via inspect.signature()
+
+note right of BashMain
+  Bash CLI: non-interactive, single execution
+  parse -> validate arity -> execute -> exit 0/1
+end note
+
+note right of BashGetArity
+  Key difference from src/cli.py::get_arity():
+  Inspects unbound method (Calculator.method)
+  NOT bound instance method (calc.method)
+  Returns -1 if operation not found
+end note
+
 note right of Session
-  Dynamic dispatch:
-  getattr(calc, op_name)(*operands)
-  No hardcoded operation routing
-end note
-
-note right of GetArity
-  Reflection via inspect:
-  inspect.signature(bound_method)
-  param count excludes "self"
-end note
-
-note right of GetMenu
-  Reflection via dir():
-  [m for m in dir(calc)
-   if callable() and not dunder]
+  Interactive REPL: continuous menu loop
+  Uses dynamic dispatch with bound methods
 end note
 
 @enduml
