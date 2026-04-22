@@ -122,3 +122,14 @@ Duration: 213.2s | Cost: $0.454326 USD | Turns: 15
 - **Tests passed:** 215 passed, 0 failed
 
 Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
+
+## Run: update-diagrams — Add interactive input diagrams (2026-04-22)
+
+- **Branch:** task/issue-246-interactive-input
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — new class diagram for Calculator, InputHandler, OperationRegistry
+  - `artifacts/activity_diagram_interactive_loop.puml` — new activity diagram for main() interactive session loop
+  - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

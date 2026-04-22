@@ -1,0 +1,36 @@
+@startuml class_diagram_calculator_io
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    +add(a, b) : numeric
+    +subtract(a, b) : numeric
+    +multiply(a, b) : numeric
+    +divide(a, b) : float
+    +power(x, y) : float
+    +factorial(n: int) : int
+    +square(x) : float
+    +cube(x) : float
+    +square_root(x) : float
+    +cube_root(x) : float
+    +log(x) : float
+    +ln(x) : float
+}
+
+class InputHandler {
+    +get_operation_choice(available_operations: dict) : str
+    +get_operand(prompt: str) : float
+    +display_result(operation: str, operands: list, result: float) : None
+    +display_error(message: str) : None
+}
+
+class OperationRegistry {
+    -_registry: dict
+    +__init__(calculator: Calculator) : None
+    +get_operation(key: str) : tuple
+    +list_operations() : dict
+}
+
+OperationRegistry *--> Calculator : holds reference and bound methods
+
+@enduml

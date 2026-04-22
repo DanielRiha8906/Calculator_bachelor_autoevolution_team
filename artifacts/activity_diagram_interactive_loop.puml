@@ -1,0 +1,45 @@
+@startuml activity_diagram_interactive_loop
+
+start
+
+:Instantiate Calculator;
+:Instantiate InputHandler;
+:Instantiate OperationRegistry(calculator);
+:Print welcome message;
+
+repeat
+    :handler.get_operation_choice(registry.list_operations());
+
+    if (choice == "exit"?) then (yes)
+        :Print "Goodbye!";
+        stop
+    else (no)
+        :registry.get_operation(choice);
+        :Unpack (method, arity, description);
+
+        if (arity == 1?) then (yes)
+            :handler.get_operand(prompt);
+            if (operation == "factorial"?) then (yes)
+                :Cast operand float -> int;
+            else (no)
+            endif
+            :operands = [value];
+        else (no)
+            :handler.get_operand("Enter first operand: ");
+            :handler.get_operand("Enter second operand: ");
+            :operands = [first, second];
+        endif
+
+        :result = method(*operands);
+        :handler.display_result(description, operands, result);
+    endif
+
+backward: (next iteration)
+repeat while (KeyboardInterrupt?) is (no)
+->yes;
+
+:Print "Goodbye!";
+
+stop
+
+@enduml
