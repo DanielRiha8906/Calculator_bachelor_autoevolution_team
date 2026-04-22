@@ -1,3 +1,18 @@
+## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/history.py` — New OperationHistory class: record_operation(), get_history(), clear(), save_to_file(), _format_entry() with whole-number float collapsing
+  - `src/cli.py` — Integrated OperationHistory: instantiate per session, record after each successful operation, display on 'history'/'h' command, save to history.txt on all exit paths
+  - `tests/test_history.py` — 57 unit tests for OperationHistory class (recording, formatting, retrieval, clear, file persistence, edge cases)
+  - `tests/test_cli_history_integration.py` — 21 integration tests for CLI + history (recording, display, persistence, fresh session, no recording on error)
+- **Purpose:** Add session operation history tracking in function-style format (add(2,3)=5), display on request in interactive mode, persist to history.txt on session end
+- **Risks:** None — Calculator core untouched; history is purely additive; backward compatible
+- **Tests passed:** 573 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #256 — V2 Task 8 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-256-input-validation-retry
