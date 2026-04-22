@@ -212,3 +212,6 @@ prompt_additions.txt
 
 # Calculator session history (runtime-generated, not persisted across sessions)
 history.txt
+
+# Runtime-generated error log directory
+logs/

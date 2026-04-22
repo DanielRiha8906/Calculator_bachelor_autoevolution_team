@@ -219,3 +219,22 @@ Duration: 414.2s | Cost: $0.988088 USD | Turns: 21
   - `artifacts/sequence_diagram_history_command.puml` — new diagram: history command invocation sequence
 
 Duration: 242.4s | Cost: $0.645268 USD | Turns: 7
+
+## Run: Issue #261 — V2 Task 10 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-261-error-logging
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/error_logger.py` — new module: dedicated calculator.errors logger writing to logs/error.log with ISO timestamps and graceful fallback to NullHandler
+  - `src/validation.py` — added error_logger calls: log_validation_error on invalid operand, log_operation_error on unsupported operation
+  - `src/calculator.py` — added log_calculation_error calls in divide (ZeroDivisionError), factorial, square_root, power, log, ln (domain errors)
+  - `src/operations.py` — added log_operation_error call before raising KeyError for unknown operation keys
+  - `.gitignore` — added logs/ entry to exclude runtime-generated error log directory
+  - `tests/test_error_logger.py` — new file: 40 tests for error_logger module (initialization, log functions, file creation, format, graceful degradation)
+  - `tests/test_error_logging_integration.py` — new file: 40 integration tests verifying error logging hooks across calculator, validation, and operations
+  - `tests/test_io_handler.py` — added 3 tests verifying validation error logging via InputHandler.get_operand
+- **Purpose:** Add dedicated error logging subsystem that records invalid input, unsupported operations, and calculation errors to logs/error.log, separate from operation history
+- **Risks:** None — logging is transparent (never changes exception propagation), falls back gracefully on I/O failure
+- **Tests passed:** 586 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

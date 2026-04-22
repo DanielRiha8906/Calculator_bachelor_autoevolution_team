@@ -1,5 +1,7 @@
 """Centralised input validation utilities for the calculator."""
 
+from . import error_logger
+
 
 class OperandValidationError(ValueError):
     """Raised when a string cannot be converted to a valid numeric operand."""
@@ -23,10 +25,11 @@ def validate_operand(raw: str) -> float:
     """
     try:
         return float(raw)
-    except ValueError:
+    except ValueError as exc:
+        error_logger.log_validation_error(str(exc))
         raise OperandValidationError(
             f"'{raw}' is not a valid number"
-        )
+        ) from exc
 
 
 def validate_operation(choice: str, available_operations: dict) -> bool:
@@ -39,7 +42,10 @@ def validate_operation(choice: str, available_operations: dict) -> bool:
     Returns:
         True if ``choice`` is a key in ``available_operations``, False otherwise.
     """
-    return choice in available_operations
+    if choice in available_operations:
+        return True
+    error_logger.log_operation_error(choice, f"Operation '{choice}' is not available")
+    return False
 
 
 def get_validation_error_message(error: Exception) -> str:
