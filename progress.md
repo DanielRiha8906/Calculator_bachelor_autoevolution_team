@@ -206,7 +206,7 @@ Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
 - **Risks:** None — logging is purely additive; all existing APIs and exception propagation behavior unchanged
 - **Tests passed:** 641 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 349.5s | Cost: $1.000426 USD | Turns: 16
 
 ## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
 
