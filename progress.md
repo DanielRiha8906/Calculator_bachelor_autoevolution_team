@@ -40,4 +40,4 @@ Low. Diagram-only change, no source or test modifications.
 N/A — diagram-only run.
 
 ### Tokens / Cost / Turns
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 205.3s | Cost: $0.465660 USD | Turns: 13
