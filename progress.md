@@ -12,6 +12,22 @@
 
 Duration: 232.1s | Cost: $0.572323 USD | Turns: 14
 
+## Run: Issue #245 — V2 Task 5 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-245-user-input
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/input_handler.py` — new module with InputValidator, ExpressionParser, and CalculatorREPL classes
+  - `src/main.py` — new entry point that starts the interactive calculator REPL
+  - `src/__init__.py` — export InputValidator, ExpressionParser, CalculatorREPL
+  - `tests/test_input_handler.py` — 124 tests covering all input handling classes and edge cases
+  - `tests/test_main.py` — 12 integration tests for the main entry point
+- **Purpose:** Add user input to the calculator via an interactive REPL that parses space-separated expressions (e.g. "add 5 3"), validates operands, and returns results
+- **Risks:** None — additive changes only; Calculator class and existing tests unchanged
+- **Tests passed:** 146 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #236 — Create tests for the calculator
 
 - **Branch:** task/issue-236-create-calculator-tests
