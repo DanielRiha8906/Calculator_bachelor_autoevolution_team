@@ -8,6 +8,12 @@ internal structure in advance.
 import inspect
 
 from .calculator import Calculator
+from .validation import (
+    OperandValidationSession,
+    OperationValidationSession,
+    detect_mode,
+    format_operation_error,
+)
 
 
 def get_arity(calculator: Calculator, op_name: str) -> int:
@@ -72,27 +78,41 @@ def parse_float(value: str) -> float:
         raise ValueError(f"'{value}' is not a valid number.")
 
 
-def get_operands(arity: int) -> list[float]:
+def get_operands(arity: int, mode: str | None = None) -> list[float] | None:
     """Prompt the user for the required number of numeric operands.
 
-    Loops until *arity* valid floats have been collected.  An invalid entry
-    causes an error message to be printed and the same prompt to repeat.
+    Uses an :class:`~src.validation.OperandValidationSession` to manage retry
+    logic.  In interactive mode each operand allows up to 5 consecutive failed
+    attempts before the entire collection is aborted.  In CLI mode the first
+    invalid entry causes an immediate :class:`SystemExit`.
 
     Args:
         arity: The number of operands to collect (typically 1 or 2).
+        mode: ``'interactive'`` or ``'cli'``.  When ``None`` the function
+            defaults to ``'interactive'`` to preserve backward-compatible
+            reprompt behaviour for callers that do not supply an explicit mode.
+            Pass ``detect_mode()`` explicitly when CLI fast-fail is desired.
 
     Returns:
-        A list of *arity* floats in entry order.
+        A list of *arity* floats in entry order, or ``None`` if the retry
+        limit was exceeded in interactive mode.
     """
+    if mode is None:
+        mode = "interactive"
+
+    session = OperandValidationSession(mode=mode)
     operands: list[float] = []
+
     for i in range(1, arity + 1):
-        while True:
-            raw = input(f"  Enter operand {i}: ")
-            try:
-                operands.append(parse_float(raw))
-                break
-            except ValueError as exc:
-                print(f"  Invalid input: {exc}  Please try again.")
+        value = session.validate_input(
+            prompt_fn=lambda idx=i: input(f"  Enter operand {idx}: "),
+            error_msg="Invalid input:",
+        )
+        if value is None:
+            # Retry limit reached in interactive mode.
+            return None
+        operands.append(value)
+
     return operands
 
 
@@ -100,41 +120,88 @@ def interactive_session(calculator: Calculator) -> None:
     """Run a menu-driven interactive session for the given calculator.
 
     Displays a numbered list of all public operations, prompts the user to
-    select one by number, collects the required operands, executes the
-    operation, and prints the result.  The loop continues until the user
+    select one by name or number, collects the required operands, executes
+    the operation, and prints the result.  The loop continues until the user
     types ``quit``, ``exit``, or ``q`` at the selection prompt.
+
+    Operation selection is managed by an
+    :class:`~src.validation.OperationValidationSession`.  In interactive mode
+    up to 5 consecutive invalid operation entries are allowed before the
+    session terminates.  In CLI mode the first invalid entry causes an
+    immediate :class:`SystemExit`.
 
     Args:
         calculator: The Calculator instance to use for all computations.
     """
+    mode = detect_mode()
+    operations = get_operation_menu(calculator)
+    op_session = OperationValidationSession(mode=mode, available_ops=operations)
+
     while True:
+        # Refresh the operation list each iteration in case Calculator grows.
         operations = get_operation_menu(calculator)
+        op_session._available_ops = operations
 
         print("\nAvailable operations:")
         for idx, op_name in enumerate(operations, start=1):
             print(f"  {idx}. {op_name}")
         print("  (type 'quit', 'exit', or 'q' to exit)")
 
-        raw_choice = input("\nSelect operation (number): ").strip().lower()
+        raw_choice = input("\nSelect operation (name or number): ").strip()
 
-        if raw_choice in {"quit", "exit", "q"}:
+        # Handle quit aliases before passing to the validation session.
+        if raw_choice.lower() in {"quit", "exit", "q"}:
             print("Goodbye!")
             break
 
+        # Resolve a numeric shortcut to an operation name.
+        resolved_choice = raw_choice
         try:
-            choice = int(raw_choice)
+            idx = int(raw_choice)
+            if 1 <= idx <= len(operations):
+                resolved_choice = operations[idx - 1]
+            else:
+                print(
+                    f"  Selection out of range. Choose between 1 and {len(operations)}."
+                )
+                op_session._attempt_count += 1
+                if op_session.attempt_count >= op_session._max_retries:
+                    print(
+                        f"Maximum retry attempts ({op_session._max_retries}) "
+                        "exceeded. Session terminated."
+                    )
+                    break
+                continue
         except ValueError:
-            print(f"  Invalid selection '{raw_choice}'. Please enter a number.")
+            pass  # not a number — treat as an operation name and validate below
+
+        # Validate the (possibly resolved) operation name.
+        ops_lower: dict[str, str] = {op.lower(): op for op in operations}
+        matched = ops_lower.get(resolved_choice.lower())
+
+        if matched is None:
+            print(
+                f"  Invalid selection '{resolved_choice}'. "
+                + format_operation_error(operations)
+            )
+            op_session._attempt_count += 1
+            if op_session.attempt_count >= op_session._max_retries:
+                print(
+                    f"Maximum retry attempts ({op_session._max_retries}) "
+                    "exceeded. Session terminated."
+                )
+                break
             continue
 
-        if choice < 1 or choice > len(operations):
-            print(f"  Selection out of range. Choose between 1 and {len(operations)}.")
-            continue
+        op_name = matched
+        op_session.reset_counter()
 
-        op_name = operations[choice - 1]
         arity = get_arity(calculator, op_name)
+        operands = get_operands(arity, mode=mode)
 
-        operands = get_operands(arity)
+        if operands is None:
+            # Operand retry limit reached — end the session gracefully.
+            break
 
         try:
             result = getattr(calculator, op_name)(*operands)
