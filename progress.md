@@ -12,7 +12,7 @@
 - **Risks:** None — documentation-only changes; no source code modified
 - **Tests passed:** 56 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 237.2s | Cost: $0.559860 USD | Turns: 15
 
 ## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
 
