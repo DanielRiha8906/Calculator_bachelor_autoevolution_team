@@ -248,4 +248,4 @@ Duration: 436.7s | Cost: $1.127227 USD | Turns: 17
   - `artifacts/activity_error_flow.puml` — new activity diagram showing error flow from user input through validation and calculation to log file
   - `artifacts/sequence_divide_by_zero.puml` — new sequence diagram for divide-by-zero error scenario
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 244.1s | Cost: $0.521191 USD | Turns: 7
