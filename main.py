@@ -16,6 +16,7 @@ import inspect
 import sys
 
 from src.calculator import Calculator
+from src.error_logger import ErrorLogger
 
 
 def get_operation_arity(operation_name: str) -> int:
@@ -125,12 +126,15 @@ def main() -> None:
 
     Exits with code 0 on success, 1 on any error.
     """
+    error_logger = ErrorLogger()
+
     operation_name, operands = parse_arguments(sys.argv[1:])
 
     calc = Calculator()
 
     arity = get_operation_arity(operation_name)
     if arity == -1:
+        error_logger.log_unsupported_operation(operation_name)
         print(
             f"Error: unknown operation '{operation_name}'",
             file=sys.stderr,
@@ -138,6 +142,7 @@ def main() -> None:
         sys.exit(1)
 
     if len(operands) < arity:
+        error_logger.log_incorrect_arity(operation_name, arity, len(operands))
         print(
             f"Error: operation '{operation_name}' requires {arity} "
             f"operand(s), got {len(operands)}",
@@ -148,8 +153,32 @@ def main() -> None:
     # Use exactly the number of operands the operation expects
     operands = operands[:arity]
 
+    # Convert operands first so that parse failures can be logged separately
+    # from Calculator-level domain errors, without altering control flow.
+    numeric_operands: list[int | float] = []
+    for op_str in operands:
+        try:
+            numeric_operands.append(_to_number(op_str))
+        except ValueError as exc:
+            error_logger.log_invalid_operand(op_str, str(exc))
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+
     try:
-        result = execute_operation(calc, operation_name, operands)
+        method = getattr(calc, operation_name)
+        result = method(*numeric_operands)
+    except ZeroDivisionError as exc:
+        # numerator is the first operand when divide is called; use the
+        # first numeric operand as context, falling back to "unknown".
+        numerator = numeric_operands[0] if numeric_operands else float("nan")
+        error_logger.log_division_by_zero(numerator)
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as exc:
+        operand_ctx = numeric_operands[0] if numeric_operands else float("nan")
+        error_logger.log_invalid_domain(operation_name, operand_ctx, str(exc))
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
     except Exception as exc:  # noqa: BLE001
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)

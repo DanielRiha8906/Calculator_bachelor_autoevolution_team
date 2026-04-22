@@ -1,3 +1,19 @@
+## Run: Issue #262 — V2 Task 10 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/error_logger.py` — New ErrorLogger class: log_unsupported_operation(), log_invalid_operand(), log_incorrect_arity(), log_division_by_zero(), log_invalid_domain() using Python logging module with FileHandler in append mode
+  - `main.py` — Integrated ErrorLogger: instantiate in main(), log all 5 error categories at appropriate error exit points
+  - `src/cli.py` — Integrated ErrorLogger: instantiate in interactive_session(), log all 5 error categories in exception handlers
+  - `tests/test_error_logger.py` — 55 unit tests for ErrorLogger class (initialization, all 5 categories, file persistence, silence, edge cases)
+  - `tests/test_error_logging_integration.py` — 16 integration tests for error logging in main.py and cli.py
+- **Purpose:** Add silent error logging to error.log for all invalid usage and calculation failures across both CLI and interactive modes, separate from operation history
+- **Risks:** None
+- **Tests passed:** 71 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-259-operation-history
