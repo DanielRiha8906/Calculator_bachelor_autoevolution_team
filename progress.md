@@ -1,4 +1,16 @@
 
+## Run: Issue #236 — Create tests for the calculator
+
+- **Branch:** task/issue-236-create-calculator-tests
+- **PR target:** exp2/naive-team
+- **Files changed:** tests/__init__.py (new), tests/test_calculator.py (expanded)
+- **Purpose:** Created comprehensive pytest test suite for all four Calculator methods (add, subtract, multiply, divide) covering happy paths, zero handling, negative numbers, division by zero, floating-point precision, and type validation. 70 tests total.
+- **Risks:** None — pure test addition, no source code modified.
+- **Tests passed:** 70/70
+- **Date:** 2026-04-22
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #233 — Add test for incorrect inputs in division
 
 - **Branch:** task/issue-233-division-input-tests
