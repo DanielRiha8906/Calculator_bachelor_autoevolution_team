@@ -264,4 +264,4 @@ Duration: 262.4s | Cost: $0.703051 USD | Turns: 16
 - **Risks:** None — change is internal to ErrorLogger; public interface, exit codes, and console behavior unchanged
 - **Tests passed:** 644 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
