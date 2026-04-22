@@ -1,3 +1,18 @@
+## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-241-factorial-operation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `factorial(self, n: int) -> int` method with input validation
+  - `tests/test_factorial.py` — new file with 19 tests covering happy path, ValueError, and TypeError cases
+- **Purpose:** Add factorial as a supported calculator operation with validation rejecting negative integers and non-integer types
+- **Risks:** None
+- **Tests passed:** 127 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #238 — V2 Task 2 Expert/team unit test suite
 
 - **Branch:** task/issue-238-unit-test-suite
