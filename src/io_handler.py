@@ -144,3 +144,50 @@ class InputHandler:
             message: The error description to display.
         """
         print(f"Error: {message}")
+
+
+class UserInterface:
+    """Handles all display and presentation output for the calculator.
+
+    This class is pure output only — it contains no input-prompting logic.
+    All methods write to stdout and return ``None``.
+    """
+
+    def display_result(self, operation: str, operands: list, result: float) -> None:
+        """Format and print the operation result.
+
+        Args:
+            operation: Human-readable name of the operation performed.
+            operands: List of operand values used in the operation.
+            result: The computed result.
+        """
+        operands_str = ", ".join(str(o) for o in operands)
+        print(f"Result of {operation}({operands_str}) = {result}")
+
+    def display_error(self, message: str) -> None:
+        """Print a user-friendly error message.
+
+        Args:
+            message: The error description to display.
+        """
+        print(f"Error: {message}")
+
+    def display_operations(self, available_operations: dict) -> None:
+        """Print the list of available operations.
+
+        Args:
+            available_operations: Mapping of operation key to display string.
+        """
+        print("\nAvailable operations:")
+        for key, description in available_operations.items():
+            print(f"  {key}: {description}")
+        print("  exit / quit: Exit the calculator")
+
+    def display_history(self, history_str: str) -> None:
+        """Print the provided history string.
+
+        Args:
+            history_str: A pre-formatted, human-readable history string as
+                returned by :meth:`~history.OperationHistory.display_history`.
+        """
+        print(history_str)
