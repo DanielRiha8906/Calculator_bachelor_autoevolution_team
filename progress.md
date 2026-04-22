@@ -1,3 +1,15 @@
+## Run: Issue #250 — V2 Task 6 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-250-plantuml-diagrams
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `tests/test_plantuml_artifacts.py` — 29 new tests validating existence, PlantUML structure, and content accuracy of the three existing diagram artifacts
+- **Purpose:** Validate that existing PlantUML artifacts satisfy Issue #250 requirements; diagrams were already present and accurate on the base branch from prior runs
+- **Risks:** None — documentation artifacts only; no source code modified
+- **Tests passed:** 324 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
 
 - **Branch:** task/issue-247-interactive-input
