@@ -320,6 +320,23 @@ class CalculatorREPL:
             if not raw:
                 continue
 
+            if raw.lower() == "history":
+                history = self._calculator.get_history()
+                if not history:
+                    print("No history yet.")
+                else:
+                    for idx, entry in enumerate(history, start=1):
+                        op1 = entry["operand1"]
+                        operator = entry["operator"]
+                        op2 = entry["operand2"]
+                        res = entry["result"]
+                        if op2 is None:
+                            line = f"{idx}. {op1} {operator} = {res}"
+                        else:
+                            line = f"{idx}. {op1} {operator} {op2} = {res}"
+                        print(line)
+                continue
+
             if raw.lower() in self._EXIT_COMMANDS:
                 print("Goodbye!")
                 break

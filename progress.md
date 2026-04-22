@@ -1,4 +1,19 @@
 
+## Run: Issue #257 — V2 Task 9 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-257-history-of-operations
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added `__init__`, `_record_history`, `get_history` and wrapped all 12 arithmetic methods to record history entries
+  - `src/input_handler.py` — added case-insensitive "history" command in `CalculatorREPL.run()` to display formatted operation history
+  - `tests/test_history.py` — 57 tests for Calculator history recording (all operations, edge cases, failed ops, instance isolation)
+  - `tests/test_input_handler_history.py` — 36 tests for REPL history command (display format, case-insensitivity, loop continuation)
+- **Purpose:** Add in-memory history of operations to the calculator, accessible via `get_history()` and via a "history" REPL command
+- **Risks:** Calculator is now stateful; existing code that assumes statelessness is unaffected as all changes are additive
+- **Tests passed:** 566 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #254 — V2 Task 8 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-254-input-validation-retry
