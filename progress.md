@@ -193,4 +193,4 @@ Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
 - **Risks:** None — purely additive change; existing calculation methods unchanged
 - **Tests passed:** 554 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 280.7s | Cost: $0.748369 USD | Turns: 17
