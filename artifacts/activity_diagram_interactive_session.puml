@@ -1,0 +1,74 @@
+@startuml activity_diagram_interactive_session
+
+start
+
+:Instantiate OperationHistory;
+:history.clear();
+:Instantiate Calculator;
+:Instantiate InputHandler(history=history);
+:Instantiate OperationRegistry(calculator);
+:Print welcome message;
+
+repeat
+
+    :handler.get_operation_choice(registry.list_operations());
+
+    if (InputRetryExhaustedError raised?) then (yes)
+        :Print "Session ended.";
+        stop
+    else (no)
+    endif
+
+    if (choice == "history"?) then (yes)
+        :handler.display_history();
+        note right: no retry penalty;\nloop continues
+    else (no)
+
+        if (choice == "exit" or "quit"?) then (yes)
+            :Print "Goodbye!";
+            stop
+        else (no)
+
+            :registry.get_operation(choice);
+            :Unpack (method, arity, description);
+
+            if (arity == 1?) then (yes)
+                :handler.get_operand(prompt);
+                if (InputRetryExhaustedError raised?) then (yes)
+                    :Print "Session ended.";
+                    stop
+                else (no)
+                endif
+                :operands = [value];
+            else (no)
+                :handler.get_operand("Enter first operand: ");
+                if (InputRetryExhaustedError raised?) then (yes)
+                    :Print "Session ended.";
+                    stop
+                else (no)
+                endif
+                :handler.get_operand("Enter second operand: ");
+                if (InputRetryExhaustedError raised?) then (yes)
+                    :Print "Session ended.";
+                    stop
+                else (no)
+                endif
+                :operands = [first, second];
+            endif
+
+            :result = method(*operands);
+            :handler.display_result(description, operands, result);
+            :history.record_operation(choice, operands, result);
+
+        endif
+    endif
+
+backward: (next iteration)
+repeat while (KeyboardInterrupt?) is (no)
+->yes;
+
+:Print "Goodbye!";
+
+stop
+
+@enduml

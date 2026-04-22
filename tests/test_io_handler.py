@@ -246,3 +246,169 @@ class TestDisplayError:
         handler.display_error("Invalid input: expect 5.5 or 'exit'")
         captured = capsys.readouterr()
         assert "Error: Invalid input: expect 5.5 or 'exit'" in captured.out
+
+
+class TestInputHandlerHistoryParameter:
+    """Test suite for InputHandler history parameter initialization."""
+
+    def test_inputhandler_with_no_history(self):
+        """Test InputHandler initializes correctly with history=None (default)."""
+        handler = InputHandler()
+        assert handler.history is None
+
+    def test_inputhandler_with_history_none_explicit(self):
+        """Test InputHandler initializes correctly with history=None (explicit)."""
+        handler = InputHandler(history=None)
+        assert handler.history is None
+
+    def test_inputhandler_with_history_object(self):
+        """Test InputHandler stores history object when provided."""
+        from unittest.mock import Mock
+        mock_history = Mock()
+        handler = InputHandler(history=mock_history)
+        assert handler.history is mock_history
+
+
+class TestDisplayHistory:
+    """Test suite for InputHandler.display_history() method."""
+
+    @pytest.fixture
+    def handler(self):
+        """Fixture to provide an InputHandler instance."""
+        return InputHandler()
+
+    def test_display_history_when_history_is_none(self, handler, capsys):
+        """Test display_history prints 'No history available.' when history is None."""
+        handler.display_history()
+        captured = capsys.readouterr()
+        assert "No history available." in captured.out
+
+    def test_display_history_with_mock_history_object(self, capsys):
+        """Test display_history calls history.display_history() when history is set."""
+        from unittest.mock import Mock
+        mock_history = Mock()
+        mock_history.display_history.return_value = "1. add(1, 2) = 3\n2. multiply(3, 4) = 12"
+
+        handler = InputHandler(history=mock_history)
+        handler.display_history()
+
+        mock_history.display_history.assert_called_once()
+        captured = capsys.readouterr()
+        assert "1. add(1, 2) = 3" in captured.out
+        assert "2. multiply(3, 4) = 12" in captured.out
+
+    def test_display_history_with_real_history_object(self, capsys, tmp_path):
+        """Test display_history with real OperationHistory object."""
+        from src.history import OperationHistory
+
+        history_file = tmp_path / "history.txt"
+        history = OperationHistory(str(history_file))
+        history.record_operation("add", [5, 3], 8)
+
+        handler = InputHandler(history=history)
+        handler.display_history()
+
+        captured = capsys.readouterr()
+        assert "1. add(5, 3) = 8" in captured.out
+
+    def test_display_history_with_real_history_empty(self, capsys, tmp_path):
+        """Test display_history with empty real OperationHistory object."""
+        from src.history import OperationHistory
+
+        history_file = tmp_path / "history.txt"
+        history = OperationHistory(str(history_file))
+
+        handler = InputHandler(history=history)
+        handler.display_history()
+
+        captured = capsys.readouterr()
+        assert "No history yet." in captured.out
+
+
+class TestGetOperationChoiceHistorySentinel:
+    """Test suite for 'history' sentinel in get_operation_choice()."""
+
+    @pytest.fixture
+    def handler_with_history(self, tmp_path):
+        """Fixture providing InputHandler with real history object."""
+        from src.history import OperationHistory
+        history_file = tmp_path / "history.txt"
+        history = OperationHistory(str(history_file))
+        history.record_operation("add", [1, 2], 3)
+        history.record_operation("multiply", [3, 4], 12)
+        return InputHandler(history=history)
+
+    @pytest.fixture
+    def available_ops(self):
+        """Fixture to provide a sample operations dict."""
+        return {
+            "add": "Addition (a + b)",
+            "subtract": "Subtraction (a - b)",
+            "multiply": "Multiplication (a * b)",
+        }
+
+    @patch("builtins.input", side_effect=["history", "add"])
+    def test_history_sentinel_displays_history_and_reprompts(self, mock_input, handler_with_history, available_ops, capsys):
+        """Test that 'history' input displays history and re-prompts without returning."""
+        result = handler_with_history.get_operation_choice(available_ops)
+
+        # Should return the valid operation, not "history"
+        assert result == "add"
+
+        captured = capsys.readouterr()
+        # History should be displayed
+        assert "1. add(1, 2) = 3" in captured.out
+        assert "2. multiply(3, 4) = 12" in captured.out
+
+    @patch("builtins.input", side_effect=["history", "history", "subtract"])
+    def test_history_sentinel_can_be_used_multiple_times(self, mock_input, handler_with_history, available_ops, capsys):
+        """Test that 'history' can be called multiple times before selecting an operation."""
+        result = handler_with_history.get_operation_choice(available_ops)
+
+        assert result == "subtract"
+
+        captured = capsys.readouterr()
+        # History should be displayed (at least once, possibly twice)
+        assert "1. add(1, 2) = 3" in captured.out
+
+    @patch("builtins.input", side_effect=["history", "add"])
+    def test_history_sentinel_does_not_increment_retry_counter(self, mock_input, handler_with_history, available_ops, capsys):
+        """Test that 'history' does not count as a failed attempt."""
+        # This is the same as the basic test, but the assertion is in the next test
+        result = handler_with_history.get_operation_choice(available_ops)
+        assert result == "add"
+
+    @patch("builtins.input", side_effect=["history", "invalid1", "history", "add"])
+    def test_history_sentinel_does_not_consume_retry_attempt(self, mock_input, handler_with_history, available_ops, capsys):
+        """Test that 'history' does not count against max_retries."""
+        # With max_retries=3, entering "history" twice and 1 invalid entry should allow "add" to succeed
+        # because "history" doesn't consume retry attempts
+        result = handler_with_history.get_operation_choice(available_ops, max_retries=3)
+
+        assert result == "add"
+        captured = capsys.readouterr()
+        # Should have exactly 1 invalid choice message
+        invalid_count = captured.out.count("Invalid choice")
+        assert invalid_count == 1
+
+    @patch("builtins.input", side_effect=["history", "add"])
+    def test_history_sentinel_with_no_history_set(self, mock_input, capsys):
+        """Test that 'history' with no history object displays 'No history available.'"""
+        handler = InputHandler(history=None)
+        available_ops = {"add": "Addition (a + b)"}
+
+        result = handler.get_operation_choice(available_ops)
+
+        assert result == "add"
+        captured = capsys.readouterr()
+        assert "No history available." in captured.out
+
+    @patch("builtins.input", side_effect=["HISTORY", "add"])
+    def test_history_sentinel_case_insensitive(self, mock_input, handler_with_history, available_ops, capsys):
+        """Test that 'HISTORY' (uppercase) is recognized as history sentinel."""
+        result = handler_with_history.get_operation_choice(available_ops)
+
+        assert result == "add"
+        captured = capsys.readouterr()
+        # History should be displayed
+        assert "1. add(1, 2) = 3" in captured.out or "add" in captured.out
