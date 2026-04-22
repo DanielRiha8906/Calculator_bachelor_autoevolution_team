@@ -189,4 +189,4 @@ Duration: 579.0s | Cost: $1.309617 USD | Turns: 17
   - `artifacts/activity_diagram_interactive_loop.puml` — added InputRetryExhaustedError catch-and-break paths after get_operation_choice and get_operand calls
   - `artifacts/sequence_diagram_cli_execution.puml` — added validation participant, parse_args now calls validate_operand, error alt branch updated to OperandValidationError
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 225.4s | Cost: $0.584184 USD | Turns: 14
