@@ -151,4 +151,4 @@ Duration: 224.8s | Cost: $0.616434 USD | Turns: 16
 - **Risks:** None — additive change; existing source and tests untouched
 - **Tests passed:** 141 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 391.3s | Cost: $1.035493 USD | Turns: 24
