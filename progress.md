@@ -215,3 +215,14 @@ Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
   - `artifacts/sequence_calculator_session.puml` — new sequence diagram for complete calculator session with history
 
 Duration: 242.4s | Cost: $0.685754 USD | Turns: 5
+
+## Run: update-diagrams — Add session-based operation history diagrams (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — added OperationHistory class and Session composition relationship
+  - `artifacts/activity_diagram_interactive_session.puml` — added history creation, history command check, record_operation after success, save_to_file on all exit paths
+  - `artifacts/sequence_diagram_operation_execution.puml` — added OperationHistory participant, record_operation after calc result, save_to_file on quit
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -8,12 +8,16 @@ participant "get_arity()" as GetArity
 participant "get_operands()" as GetOperands
 participant "parse_float()" as ParseFloat
 participant "Calculator" as Calc
+participant "OperationHistory" as History
 
 Main -> Calc : Calculator()
 activate Calc
 
 Main -> Session : interactive_session(calc)
 activate Session
+
+Session -> History : OperationHistory()
+activate History
 
 loop REPL iteration
 
@@ -70,6 +74,8 @@ loop REPL iteration
 
     Session -> Calc : add(5.0, 3.0)\n<<getattr(calc, "add")(5.0, 3.0)>>
     Calc --> Session : 8.0
+    Session -> History : record_operation("add", [5.0, 3.0], 8.0)
+    History --> Session : (entry appended)
     Session -> User : "Result: 8.0"
 
 end
@@ -83,10 +89,13 @@ alt user types "q" to exit
 
     Session -> User : display menu
     User -> Session : "q"
+    Session -> History : save_to_file("history.txt")
+    History --> Session : (file written)
     Session -> User : "Goodbye!"
 
 end
 
+deactivate History
 deactivate Session
 deactivate Calc
 
