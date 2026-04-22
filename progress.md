@@ -208,3 +208,14 @@ Duration: 225.4s | Cost: $0.584184 USD | Turns: 14
 - **Tests passed:** 97 new tests passed, 503 existing tests unaffected (600 total)
 
 Duration: 414.2s | Cost: $0.988088 USD | Turns: 21
+
+## Run: update-diagrams — Operation History diagrams (2026-04-22)
+
+- **Branch:** task/issue-258-operation-history
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — updated to include OperationHistory class and InputHandler history parameter
+  - `artifacts/activity_diagram_interactive_session.puml` — updated to include history recording step and history sentinel branch
+  - `artifacts/sequence_diagram_history_command.puml` — new diagram: history command invocation sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,0 +1,44 @@
+@startuml sequence_diagram_history_command
+
+participant "User" as user
+participant "get_operation_choice()" as get_choice
+participant "InputHandler" as handler
+participant "OperationHistory" as history
+participant "history.txt" as file
+
+activate get_choice
+
+user ->> get_choice : types "history"
+note over get_choice : sentinel check:\ninput == "history"
+
+get_choice ->> handler : self.display_history()
+activate handler
+
+handler ->> history : self.history.display_history()
+activate history
+
+history ->> history : is_empty()
+
+alt history file is empty
+    history -->> handler : "No history yet."
+else history file has entries
+    history ->> file : read lines
+    activate file
+    file -->> history : raw operation records
+    deactivate file
+    history ->> history : format numbered list
+    history -->> handler : formatted history string
+end
+
+deactivate history
+
+handler ->> user : print(formatted history)
+deactivate handler
+
+note over get_choice : no retry counter\nincrement — loop\ncontinues normally
+
+get_choice ->> user : re-prompt for operation choice
+
+deactivate get_choice
+
+@enduml

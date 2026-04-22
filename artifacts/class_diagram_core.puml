@@ -1,0 +1,86 @@
+@startuml class_diagram_core
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "Core Calculation" {
+    class Calculator {
+        +add(a, b) : numeric
+        +subtract(a, b) : numeric
+        +multiply(a, b) : numeric
+        +divide(a, b) : float
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +power(x: float, y: float) : float
+        +log(x: float) : float
+        +ln(x: float) : float
+    }
+
+    class OperationRegistry {
+        -_registry: dict
+        +__init__(calculator: Calculator)
+        +get_operation(key: str) : tuple
+        +list_operations() : dict
+    }
+
+    OperationRegistry *--> Calculator : holds bound methods
+}
+
+package "I/O and History" {
+    class InputHandler {
+        +history: Any
+        +__init__(history: Any = None)
+        +display_history()
+        +get_operation_choice(available_operations: dict, max_retries: int) : str
+        +get_operand(prompt: str, max_retries: int) : float
+        +display_result(operation, operands, result)
+        +display_error(message: str)
+    }
+
+    class InputRetryExhaustedError {
+    }
+    ValueError <|-- InputRetryExhaustedError
+    InputHandler ..> InputRetryExhaustedError : raises
+
+    class OperationHistory {
+        +filename: str
+        +__init__(filename: str = "history.txt")
+        +record_operation(operation: str, operands: list, result: float)
+        +display_history() : str
+        +clear()
+        +is_empty() : bool
+    }
+
+    InputHandler o--> OperationHistory : optional reference
+}
+
+package "Validation" {
+    class validation <<module>> {
+        +validate_operand(raw: str) : float
+        +get_validation_error_message(error) : str
+    }
+
+    class OperandValidationError {
+    }
+    ValueError <|-- OperandValidationError
+
+    class OperationValidationError {
+    }
+    ValueError <|-- OperationValidationError
+
+    validation ..> OperandValidationError : raises
+    validation ..> OperationValidationError : raises
+}
+
+InputHandler ..> validation : uses
+
+component "__main__" as main_module
+main_module ..> Calculator : creates
+main_module ..> OperationRegistry : creates
+main_module ..> InputHandler : creates
+main_module ..> OperationHistory : creates
+
+@enduml
