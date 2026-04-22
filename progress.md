@@ -317,4 +317,4 @@ Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
   - `artifacts/activity_operation_dispatch.puml` — activity diagram of operation dispatch pipeline (parse → validate → dispatch → execute → record → return)
   - `artifacts/sequence_advanced_operation.puml` — sequence diagram for a complete advanced (unary) operation call through Calculator facade, CalculatorEngine, and AdvancedOperations
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
