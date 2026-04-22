@@ -80,4 +80,4 @@ All 40 tests passed (12 new + 28 existing). No regressions.
 
 Duration: 210.9s | Cost: $0.476329 USD | Turns: 15
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 162.7s | Cost: $0.365086 USD | Turns: 11
