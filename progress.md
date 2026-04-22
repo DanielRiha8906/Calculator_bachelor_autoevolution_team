@@ -9,7 +9,7 @@
 - **Tests passed:** 70/70
 - **Date:** 2026-04-22
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 207.2s | Cost: $0.520549 USD | Turns: 17
 
 ## Run: Issue #233 — Add test for incorrect inputs in division
 
