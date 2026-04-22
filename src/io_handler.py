@@ -1,5 +1,7 @@
 """Encapsulates all user input and output operations for the calculator."""
 
+import sys
+
 
 class InputHandler:
     """Handles user-facing input prompts and output display."""
@@ -56,10 +58,17 @@ class InputHandler:
         operands_str = ", ".join(str(o) for o in operands)
         print(f"Result of {operation}({operands_str}) = {result}")
 
-    def display_error(self, message: str) -> None:
+    def display_error(self, message: str, stream=None) -> None:
         """Print a user-friendly error message.
+
+        By default the message is written to ``sys.stderr``.  Pass an explicit
+        ``stream`` argument to redirect output (e.g. ``sys.stdout`` for
+        interactive mode where stderr is not desired).
 
         Args:
             message: The error description to display.
+            stream: Optional file-like object to write to.  Defaults to
+                ``sys.stderr``.
         """
-        print(f"Error: {message}")
+        target = stream if stream is not None else sys.stderr
+        print(f"Error: {message}", file=target)

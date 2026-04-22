@@ -218,31 +218,38 @@ class TestDisplayError:
         return InputHandler()
 
     def test_display_error_simple_message(self, handler, capsys):
-        """Test error display with a simple message."""
+        """Test error display with a simple message defaults to stderr."""
         handler.display_error("Something went wrong")
         captured = capsys.readouterr()
-        assert "Error: Something went wrong" in captured.out
+        assert "Error: Something went wrong" in captured.err
 
     def test_display_error_division_by_zero(self, handler, capsys):
-        """Test error display for division by zero."""
+        """Test error display for division by zero writes to stderr."""
         handler.display_error("Division by zero is not allowed.")
         captured = capsys.readouterr()
-        assert "Error: Division by zero is not allowed." in captured.out
+        assert "Error: Division by zero is not allowed." in captured.err
 
     def test_display_error_invalid_operation(self, handler, capsys):
-        """Test error display for invalid operation."""
+        """Test error display for invalid operation writes to stderr."""
         handler.display_error("Unknown operation: 'unknown'")
         captured = capsys.readouterr()
-        assert "Error: Unknown operation: 'unknown'" in captured.out
+        assert "Error: Unknown operation: 'unknown'" in captured.err
 
     def test_display_error_empty_message(self, handler, capsys):
-        """Test error display with empty message."""
+        """Test error display with empty message writes to stderr."""
         handler.display_error("")
         captured = capsys.readouterr()
-        assert "Error: " in captured.out
+        assert "Error: " in captured.err
 
     def test_display_error_special_characters(self, handler, capsys):
-        """Test error display with special characters."""
+        """Test error display with special characters writes to stderr."""
         handler.display_error("Invalid input: expect 5.5 or 'exit'")
         captured = capsys.readouterr()
-        assert "Error: Invalid input: expect 5.5 or 'exit'" in captured.out
+        assert "Error: Invalid input: expect 5.5 or 'exit'" in captured.err
+
+    def test_display_error_with_custom_stream(self, handler, capsys):
+        """Test error display with custom stream parameter."""
+        import sys
+        handler.display_error("Custom stream message", stream=sys.stdout)
+        captured = capsys.readouterr()
+        assert "Error: Custom stream message" in captured.out

@@ -1,3 +1,20 @@
+## Run: Issue #252 — V2 Task 7 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-252-cli-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/cli_handler.py` — new module: CLIHandler class for CLI argument parsing, operand validation, and result/error output
+  - `src/__main__.py` — added CLI mode detection and routing; interactive loop preserved unchanged
+  - `src/io_handler.py` — display_error now writes to sys.stderr by default (additive, backward-compatible)
+  - `tests/test_cli_handler.py` — 65 new unit tests for CLIHandler class
+  - `tests/test_cli_integration.py` — 37 new integration tests for end-to-end CLI via subprocess and argv patching
+  - `tests/test_io_handler.py` — updated 5 display_error tests to check stderr instead of stdout; added 1 new test
+- **Purpose:** Add CLI mode allowing calculator to be invoked from bash with operation and operands as arguments
+- **Risks:** display_error default stream changed from stdout to stderr — mitigated by updating existing tests
+- **Tests passed:** 282 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #234 — Division-by-zero unit tests
 
 - **Branch:** task/issue-234-division-by-zero
