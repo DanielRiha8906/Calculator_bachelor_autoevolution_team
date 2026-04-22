@@ -160,4 +160,4 @@ Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
   - `artifacts/activity_diagram_interactive_loop.puml` — restructured to show dual-mode dispatch: CLI path (parse args, validate, execute, exit) before interactive loop branch
   - `artifacts/cli_mode_sequence_diagram.puml` — new sequence diagram for CLI mode execution: User → main → CLIHandler → OperationRegistry → Calculator
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 204.0s | Cost: $0.541519 USD | Turns: 12
