@@ -8,7 +8,13 @@ class Calculator {
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
     + divide(a, b) : float
+    + factorial(n: int) : int
 }
+
+note right of Calculator::factorial
+  Raises TypeError if n is bool or non-integer.
+  Raises ValueError if n is a negative integer.
+end note
 
 class "calculator" <<fixture>> {
     Creates a Calculator instance per test.
@@ -43,36 +49,28 @@ class TestMultiplication {
     + test_multiply_with_strings_and_lists(calculator, a, b, expected) <<parametrized: 2 cases>>
 }
 
+class TestFactorial {
+    + test_factorial_zero(calculator)
+    + test_factorial_positive_integers(calculator, n, expected) <<parametrized>>
+    + test_factorial_bool_raises_typeerror(calculator, value) <<parametrized>>
+    + test_factorial_non_integer_raises_typeerror(calculator, value) <<parametrized>>
+    + test_factorial_negative_raises_valueerror(calculator, n) <<parametrized>>
+}
+
 TestDivision ..> Calculator : depends on
 TestAddition ..> Calculator : depends on
 TestSubtraction ..> Calculator : depends on
 TestMultiplication ..> Calculator : depends on
+TestFactorial ..> Calculator : depends on
 
 TestDivision ..> "calculator" : uses
 TestAddition ..> "calculator" : uses
 TestSubtraction ..> "calculator" : uses
 TestMultiplication ..> "calculator" : uses
+TestFactorial ..> "calculator" : uses
 
-note bottom of TestDivision
-  pytest test classes.
-  All methods receive a Calculator
-  instance via the calculator() fixture.
-end note
-
-note bottom of TestAddition
-  pytest test classes.
-  All methods receive a Calculator
-  instance via the calculator() fixture.
-end note
-
-note bottom of TestSubtraction
-  pytest test classes.
-  All methods receive a Calculator
-  instance via the calculator() fixture.
-end note
-
-note bottom of TestMultiplication
-  pytest test classes.
+note bottom of TestFactorial
+  pytest test class.
   All methods receive a Calculator
   instance via the calculator() fixture.
 end note
