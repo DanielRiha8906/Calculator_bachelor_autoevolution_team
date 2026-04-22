@@ -19,7 +19,7 @@
 - **Risks:** None — documentation only; no src/ changes; all 1048 tests pass (101 new + 947 existing)
 - **Tests passed:** 1048 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 602.2s | Cost: $1.260087 USD | Turns: 15
 
 ## Run: Issue #268 — V2 Task 12 - Expert/team (2026-04-22)
 
