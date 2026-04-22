@@ -243,3 +243,14 @@ Duration: 315.1s | Cost: $0.853848 USD | Turns: 18
   - `artifacts/sequence_diagram_cli_repl_logging.puml` — new sequence diagram showing CLI and REPL error paths with logger.warning() and logger.error() call sites
 
 Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
+
+## Run: update-diagrams — CalculatorEngine facade diagrams (2026-04-22)
+
+- **Branch:** task/issue-263-separate-calculator-logic
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator_facade.puml` — new class diagram showing CalculatorEngine + Calculator facade pattern and delegation
+  - `artifacts/sequence_calculator_facade_division.puml` — new sequence diagram showing division delegation and error path through facade layers
+  - `artifacts/sequence_calculator_factorial_validation.puml` — new sequence diagram showing factorial type/value validation, logger integration, and three execution paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

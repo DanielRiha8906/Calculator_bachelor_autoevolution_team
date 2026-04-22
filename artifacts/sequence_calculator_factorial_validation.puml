@@ -1,0 +1,51 @@
+@startuml sequence_calculator_factorial_validation
+
+participant Actor
+participant Calculator
+participant CalculatorEngine
+participant Logger
+
+alt Success path: factorial(5)
+    Actor ->> Calculator : factorial(5)
+    activate Calculator
+    Calculator ->> CalculatorEngine : factorial(5)
+    activate CalculatorEngine
+    CalculatorEngine ->> CalculatorEngine : isinstance(5, int) and not bool -> True
+    CalculatorEngine ->> CalculatorEngine : 5 >= 0 -> True
+    CalculatorEngine ->> CalculatorEngine : compute 5! = 120
+    CalculatorEngine ->> CalculatorEngine : _record_history(5, "factorial", None, 120)
+    CalculatorEngine -->> Actor : return 120
+    deactivate CalculatorEngine
+    deactivate Calculator
+
+else Type error path: factorial(5.0)
+    Actor ->> Calculator : factorial(5.0)
+    activate Calculator
+    Calculator ->> CalculatorEngine : factorial(5.0)
+    activate CalculatorEngine
+    CalculatorEngine ->> CalculatorEngine : isinstance(5.0, int) -> False
+    CalculatorEngine ->> Logger : error("factorial() failed: TypeError ...")
+    activate Logger
+    deactivate Logger
+    CalculatorEngine -->> Actor : raise TypeError
+    note right : history NOT recorded
+    deactivate CalculatorEngine
+    deactivate Calculator
+
+else Value error path: factorial(-3)
+    Actor ->> Calculator : factorial(-3)
+    activate Calculator
+    Calculator ->> CalculatorEngine : factorial(-3)
+    activate CalculatorEngine
+    CalculatorEngine ->> CalculatorEngine : isinstance(-3, int) -> True
+    CalculatorEngine ->> CalculatorEngine : -3 >= 0 -> False
+    CalculatorEngine ->> Logger : error("factorial() failed: ValueError ...")
+    activate Logger
+    deactivate Logger
+    CalculatorEngine -->> Actor : raise ValueError
+    note right : history NOT recorded
+    deactivate CalculatorEngine
+    deactivate Calculator
+end
+
+@enduml
