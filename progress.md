@@ -22,4 +22,4 @@ Add focused pytest coverage asserting that `Calculator.divide(a, 0)` raises `Zer
 
 ### Tokens / Cost / Turns
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 148.3s | Cost: $0.397108 USD | Turns: 15
