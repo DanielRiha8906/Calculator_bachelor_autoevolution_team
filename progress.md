@@ -362,3 +362,14 @@ Duration: 146.8s | Cost: $0.363565 USD | Turns: 4
   - `artifacts/sequence_diagram_operation_execution.puml` — sequence diagram for add and square operation execution with delegation
 
 Duration: 217.7s | Cost: $0.540420 USD | Turns: 4
+
+## Run: update-diagrams — Document post-refactoring architecture with UML (2026-04-22)
+
+- **Branch:** task/issue-271-documentation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_architecture.puml` — new unified class diagram showing core operations, Calculator facade, CalculatorSession layer, and validation classes
+  - `artifacts/activity_diagram_interactive_session.puml` — updated REPL loop with correct mode parameter threading, retry exit conditions, and swimlane separation
+  - `artifacts/sequence_diagram_operation_execution.puml` — updated sequence diagram with mode param fix, error scenarios (division by zero, invalid domain), and ErrorLogger calls
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

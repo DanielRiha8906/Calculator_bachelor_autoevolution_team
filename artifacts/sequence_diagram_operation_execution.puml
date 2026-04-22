@@ -7,20 +7,25 @@ participant Calculator
 participant NormalOperations
 participant ScientificOperations
 participant OperationHistory
+participant ErrorLogger
 participant Formatter
 
 == Normal operation: add ==
 
 User -> CLI : selects "add"
-CLI -> CalculatorSession : select_operation("add")
+CLI -> CalculatorSession : select_operation("add", mode)
+activate CalculatorSession
+CalculatorSession --> CLI : ("add", 0)
+deactivate CalculatorSession
+
 CLI -> CalculatorSession : get_arity("add")
 activate CalculatorSession
 CalculatorSession --> CLI : 2
 deactivate CalculatorSession
 
-CLI -> CalculatorSession : collect_operands(2)
+CLI -> CalculatorSession : collect_operands(2, mode)
 activate CalculatorSession
-CalculatorSession --> CLI : [5.0, 3.0]
+CalculatorSession --> CLI : ([5.0, 3.0], 0)
 deactivate CalculatorSession
 
 CLI -> CalculatorSession : execute_operation("add", [5.0, 3.0])
@@ -35,17 +40,29 @@ deactivate NormalOperations
 Calculator --> CalculatorSession : 8.0
 deactivate Calculator
 
-CalculatorSession -> OperationHistory : record("add", [5.0, 3.0], 8.0)
-CalculatorSession -> Formatter : format_result(8.0)
-Formatter --> CalculatorSession : "8.0"
-CalculatorSession --> CLI : "8.0"
+CalculatorSession -> OperationHistory : record_operation("add", [5.0, 3.0], 8.0)
+CalculatorSession --> CLI : (8.0, None)
 deactivate CalculatorSession
 
-CLI -> User : display "Result: 8.0"
+CLI -> Formatter : format_result("add", [5.0, 3.0], 8.0)
+activate Formatter
+Formatter --> CLI : "  Result: 8"
+deactivate Formatter
+CLI -> User : display "  Result: 8"
 
 == Scientific operation: square ==
 
 User -> CLI : selects "square"
+CLI -> CalculatorSession : select_operation("square", mode)
+activate CalculatorSession
+CalculatorSession --> CLI : ("square", 0)
+deactivate CalculatorSession
+
+CLI -> CalculatorSession : collect_operands(1, mode)
+activate CalculatorSession
+CalculatorSession --> CLI : ([7.0], 0)
+deactivate CalculatorSession
+
 CLI -> CalculatorSession : execute_operation("square", [7.0])
 activate CalculatorSession
 
@@ -58,12 +75,62 @@ deactivate ScientificOperations
 Calculator --> CalculatorSession : 49.0
 deactivate Calculator
 
-CalculatorSession -> OperationHistory : record("square", [7.0], 49.0)
-CalculatorSession -> Formatter : format_result(49.0)
-Formatter --> CalculatorSession : "49.0"
-CalculatorSession --> CLI : "49.0"
+CalculatorSession -> OperationHistory : record_operation("square", [7.0], 49.0)
+CalculatorSession --> CLI : (49.0, None)
 deactivate CalculatorSession
 
-CLI -> User : display "Result: 49.0"
+CLI -> Formatter : format_result("square", [7.0], 49.0)
+activate Formatter
+Formatter --> CLI : "  Result: 49"
+deactivate Formatter
+CLI -> User : display "  Result: 49"
+
+== Error: division by zero ==
+
+User -> CLI : selects "divide", operands [10.0, 0.0]
+CLI -> CalculatorSession : execute_operation("divide", [10.0, 0.0])
+activate CalculatorSession
+
+CalculatorSession -> Calculator : divide(10.0, 0.0)
+activate Calculator
+Calculator -> NormalOperations : divide(10.0, 0.0)
+activate NormalOperations
+NormalOperations -->x Calculator : ZeroDivisionError
+deactivate NormalOperations
+deactivate Calculator
+
+CalculatorSession -> ErrorLogger : log_division_by_zero(10.0)
+CalculatorSession --> CLI : (None, "division by zero")
+deactivate CalculatorSession
+
+CLI -> Formatter : format_error("division by zero")
+activate Formatter
+Formatter --> CLI : "  Error: division by zero"
+deactivate Formatter
+CLI -> User : display "  Error: division by zero"
+
+== Error: invalid domain (sqrt of negative) ==
+
+User -> CLI : selects "square_root", operand [-4.0]
+CLI -> CalculatorSession : execute_operation("square_root", [-4.0])
+activate CalculatorSession
+
+CalculatorSession -> Calculator : square_root(-4.0)
+activate Calculator
+Calculator -> ScientificOperations : square_root(-4.0)
+activate ScientificOperations
+ScientificOperations -->x Calculator : ValueError
+deactivate ScientificOperations
+deactivate Calculator
+
+CalculatorSession -> ErrorLogger : log_invalid_domain("square_root", -4.0, reason)
+CalculatorSession --> CLI : (None, "x must be non-negative for square root")
+deactivate CalculatorSession
+
+CLI -> Formatter : format_error("x must be non-negative for square root")
+activate Formatter
+Formatter --> CLI : "  Error: x must be non-negative for square root"
+deactivate Formatter
+CLI -> User : display "  Error: x must be non-negative for square root"
 
 @enduml

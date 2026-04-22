@@ -1,111 +1,98 @@
 @startuml activity_diagram_interactive_session
 
+skinparam ActivityBorderColor #555
+skinparam ActivityBackgroundColor #f9f9f9
+skinparam ArrowColor #333
+
 |cli.interactive_session|
 start
 
 :detect_mode() -> mode;
 :CalculatorSession(calculator) -> session;
 :session.get_operation_list() -> operations;
+:OperationValidationSession(mode, operations) -> op_session;
 
 repeat
 
-    :format_menu_header(operations) -> print;
-    :format_quit_instruction() -> print;
-    :input("Select operation...") -> raw_choice;
+  :format_menu_header(operations);
+  :format_quit_instruction();
+  :input("Select operation...") -> raw_choice;
 
-    if (raw_choice in {quit, exit, q}?) then (yes)
-        |CalculatorSession|
-        :save_history("history.txt");
-        |cli.interactive_session|
-        stop
-    else (no)
-    endif
+  if (raw_choice in {quit, exit, q}?) then (yes)
+    :session.save_history("history.txt");
+    stop
+  endif
 
-    if (raw_choice in {history, h}?) then (yes)
-        |CalculatorSession|
-        :get_history() -> entries;
-        |cli.interactive_session|
-        if (entries empty?) then (yes)
-            :print "No history yet.";
-        else (no)
-            :format_history_header() -> print;
-            :print entries;
-        endif
-        :continue;
+  if (raw_choice in {history, h}?) then (yes)
+    :session.get_history() -> entries;
+    if (entries empty?) then (yes)
+      :print "No history yet.";
     else (no)
+      :format_history_header();
+      :print each entry;
     endif
+    note right: continues loop
+  else (no)
 
     |CalculatorSession|
-    :select_operation(raw_choice, mode)\n-> (op_name, exit_code);
+    :select_operation(raw_choice, mode) -> (op_name, exit_code);
 
     |cli.interactive_session|
-    if (exit_code == 2 — out of range?) then (yes)
+    if (exit_code == 2 — index out of range?) then (yes)
+      :print range error;
+      :retry_count += 1;
+      if (retry_count >= max_retries?) then (yes)
+        :session.save_history("history.txt");
+        stop
+      endif
+    elseif (op_name is None — unrecognized?) then (yes)
+      :print invalid selection error;
+      :retry_count += 1;
+      if (retry_count >= max_retries?) then (yes)
+        :session.save_history("history.txt");
+        stop
+      endif
+    else (resolved)
+      :retry_count = 0;
+
+      |CalculatorSession|
+      :get_arity(op_name) -> arity;
+      :collect_operands(arity, mode) -> (operands, exit_code);
+      note right
+        Creates OperandValidationSession internally.
+        interactive: retry up to 5 times per operand.
+        cli: SystemExit on first invalid input.
+      end note
+
+      |cli.interactive_session|
+      if (operands is None — retry limit exceeded?) then (yes)
+        :session.save_history("history.txt");
+        stop
+      endif
+
+      |CalculatorSession|
+      :execute_operation(op_name, operands) -> (result, error_msg);
+      note right
+        Calls Calculator.<op_name>(*operands).
+        Catches ZeroDivisionError -> log_division_by_zero.
+        Catches ValueError -> log_invalid_domain.
+      end note
+
+      |cli.interactive_session|
+      if (error_msg is not None?) then (yes)
+        :format_error(error_msg);
         :print error;
-        :retry_count += 1;
-        if (retry_count >= max_retries?) then (yes)
-            |CalculatorSession|
-            :save_history("history.txt");
-            |cli.interactive_session|
-            stop
-        else (no)
-            :continue;
-        endif
-    else (no)
+      else (no)
+        :session.record_history(op_name, operands, result);
+        :format_result(op_name, operands, result);
+        :print result;
+      endif
+
     endif
 
-    if (op_name is None — unrecognized?) then (yes)
-        :format_error() -> print;
-        :retry_count += 1;
-        if (retry_count >= max_retries?) then (yes)
-            |CalculatorSession|
-            :save_history("history.txt");
-            |cli.interactive_session|
-            stop
-        else (no)
-            :continue;
-        endif
-    else (no)
-    endif
+  endif
 
-    :retry_count = 0;
-
-    |CalculatorSession|
-    :get_arity(op_name) -> arity;
-    :collect_operands(arity, mode)\n-> (operands, exit_code);
-    note right
-      Creates OperandValidationSession
-      internally; loops up to max_retries
-      per operand in interactive mode
-    end note
-
-    |cli.interactive_session|
-    if (operands is None — max retries exceeded?) then (yes)
-        |CalculatorSession|
-        :save_history("history.txt");
-        |cli.interactive_session|
-        stop
-    else (no)
-    endif
-
-    |CalculatorSession|
-    :execute_operation(op_name, operands)\n-> (result, error_msg);
-    note right
-      Calls Calculator.<op_name>(*operands)
-      Catches TypeError, ValueError,
-      ZeroDivisionError -> error_msg
-    end note
-
-    |cli.interactive_session|
-    if (error_msg is not None?) then (yes)
-        :format_error(error_msg) -> print;
-    else (no)
-        |CalculatorSession|
-        :record_history(op_name, operands, result);
-        |cli.interactive_session|
-        :format_result(op_name, operands, result) -> print;
-    endif
-
-repeat while (session continues?) is (yes — loop to menu)
+repeat while (session continues?) is (yes)
 
 stop
 
