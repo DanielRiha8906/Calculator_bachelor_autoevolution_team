@@ -3,15 +3,20 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
+    - _history : list[dict]
+    --
+    + __init__() : None
+    - _record_history(operand1, operator: str, operand2, result) : None
+    + get_history() : list[dict]
     .. Basic Arithmetic ..
     + add(a, b) : object
     + subtract(a, b) : object
     + multiply(a, b) : object
     + divide(a, b) : object
     .. Power / Root ..
+    + power(base: float, exponent: float) : float
     + square(x: float) : float
     + cube(x: float) : float
-    + power(base: float, exponent: float) : float
     + square_root(x: float) : float
     + cube_root(x: float) : float
     .. Logarithmic ..
@@ -20,6 +25,12 @@ class Calculator {
     .. Factorial ..
     + factorial(n: int) : int
 }
+
+note right of Calculator::_history
+  Stores one dict per operation:
+  {operand1, operator, operand2, result}
+  operand2 is None for unary ops.
+end note
 
 note right of Calculator::square_root
   Raises ValueError if x < 0.
@@ -31,21 +42,43 @@ note right of Calculator::natural_log
   Delegates to math.log(x).
 end note
 
-note right of Calculator::log_base_10
-  Raises ValueError if x <= 0.
-  Delegates to math.log10(x).
-end note
-
-note right of Calculator::cube_root
-  Accepts all reals, preserves sign.
-  math.copysign(abs(x)**(1/3), x)
-end note
-
 note right of Calculator::factorial
   Raises TypeError if n is bool or non-int.
   Raises ValueError if n < 0.
-  Iterative implementation.
 end note
+
+class InputValidator {
+    + validate_operation(operation: str) : None
+    + validate_operand_count(operation: str, operands: list) : None
+    + validate(operation: str, operands: list) : None
+}
+
+class ExpressionParser {
+    - _coerce_numeric(token: str) : Numeric
+    + parse(raw_input: str) : tuple
+}
+
+class RetryConfig <<dataclass>> {
+    + max_retries : int = 3
+}
+
+class CalculatorREPL {
+    - _calculator : Calculator
+    - _parser : ExpressionParser
+    - _validator : InputValidator
+    - _retry_config : RetryConfig
+    - _EXIT_COMMANDS : frozenset
+    --
+    + __init__(calculator: Calculator, retry_config: RetryConfig | None) : None
+    - _dispatch(operation: str, operands: list) : Numeric
+    - _evaluate(raw_input: str) : str
+    + run() : None
+}
+
+CalculatorREPL *--> Calculator : _calculator
+CalculatorREPL *--> ExpressionParser : _parser
+CalculatorREPL *--> InputValidator : _validator
+CalculatorREPL o--> RetryConfig : _retry_config
 
 class "math" <<stdlib>> {
     + sqrt(x) : float

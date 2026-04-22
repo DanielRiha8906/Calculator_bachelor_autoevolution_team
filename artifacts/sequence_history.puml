@@ -1,0 +1,72 @@
+@startuml sequence_history
+
+title History Command and Binary Operation — Sequence
+
+actor User
+participant "CalculatorREPL" as REPL
+participant "ExpressionParser" as Parser
+participant "InputValidator" as Validator
+participant "Calculator" as Calc
+
+== Scenario A: "history" command ==
+
+User -> REPL : "history"
+activate REPL
+
+REPL -> Calc : get_history()
+activate Calc
+Calc --> REPL : list[dict]
+deactivate Calc
+
+alt history is empty
+    REPL -> User : print "No history yet."
+else history has entries
+    loop for each entry in history
+        alt entry.operand2 is None (unary)
+            REPL -> User : print "{n}. {op1} {operator} = {result}"
+        else binary
+            REPL -> User : print "{n}. {op1} {operator} {op2} = {result}"
+        end
+    end
+end
+
+deactivate REPL
+
+== Scenario B: binary operation "add 5 3" ==
+
+User -> REPL : "add 5 3"
+activate REPL
+
+REPL -> REPL : _evaluate("add 5 3")
+activate REPL
+
+REPL -> Parser : parse("add 5 3")
+activate Parser
+Parser --> REPL : ("add", [5, 3])
+deactivate Parser
+
+REPL -> Validator : validate("add", [5, 3])
+activate Validator
+Validator --> REPL : (passes)
+deactivate Validator
+
+REPL -> REPL : _dispatch("add", [5, 3])
+activate REPL
+
+REPL -> Calc : add(5, 3)
+activate Calc
+Calc -> Calc : _record_history(5, "add", 3, 8)
+note right: appends {operand1:5, operator:"add", operand2:3, result:8} to _history
+Calc --> REPL : 8
+deactivate Calc
+
+REPL --> REPL : 8
+deactivate REPL
+
+REPL --> REPL : "Result: 8"
+deactivate REPL
+
+REPL -> User : print "Result: 8"
+deactivate REPL
+
+@enduml
