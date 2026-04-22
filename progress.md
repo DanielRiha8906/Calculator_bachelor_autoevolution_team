@@ -218,4 +218,4 @@ Duration: 428.1s | Cost: $0.935554 USD | Turns: 16
   - `artifacts/sequence_history_recording.puml` — new sequence diagram showing operation recording, history display, and session exit flows
   - `artifacts/activity_repl_session.puml` — new activity diagram for CalculatorREPL.run() loop with all command branches and exit paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 255.1s | Cost: $0.660408 USD | Turns: 14
