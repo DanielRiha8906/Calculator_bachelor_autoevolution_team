@@ -8,12 +8,46 @@ class Calculator {
     +multiply(a, b) : numeric
     +divide(a, b) : numeric
     +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +cube_root(x: float) : float
+    +square_root(x: float) : float
+    +logarithm(x: float) : float
+    +natural_logarithm(x: float) : float
+    +power(base: float, exponent: float) : float
 }
 
 note right of Calculator::factorial
   NEW — iterative n!
   raises TypeError (non-int or bool)
   raises ValueError (n < 0)
+end note
+
+note right of Calculator::square
+  NEW (Issue #244) — raises TypeError
+  if not int/float (bool excluded)
+  Applies to: square, cube,
+  cube_root, square_root,
+  logarithm, natural_logarithm
+end note
+
+note right of Calculator::square_root
+  Domain constraints:
+  square_root: x >= 0
+    raises ValueError if x < 0
+  logarithm: x > 0
+    raises ValueError if x <= 0
+  natural_logarithm: x > 0
+    raises ValueError if x <= 0
+  cube_root: all reals accepted
+    (sign preserved via math.copysign)
+end note
+
+note right of Calculator::power
+  NEW (Issue #244) — binary
+  both args validated
+  no domain constraints
+  0**0 = 1.0
 end note
 
 package "src" {
