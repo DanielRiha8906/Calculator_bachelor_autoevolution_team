@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import io
 
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 from src.cli import (
     get_arity,
     get_operation_menu,

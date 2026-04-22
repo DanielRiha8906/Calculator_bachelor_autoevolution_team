@@ -1,0 +1,53 @@
+@startuml class_diagram_core
+
+skinparam classAttributeIconSize 0
+
+package "src.core" {
+
+    class Calculator {
+        + add(a, b)
+        + subtract(a, b)
+        + multiply(a, b)
+        + divide(a, b)
+        + factorial(n: int)
+        + square(x: float)
+        + cube(x: float)
+        + square_root(x: float)
+        + cube_root(x: float)
+        + logarithm(x: float)
+        + natural_logarithm(x: float)
+        + power(base: float, exponent: float)
+    }
+
+    package "src.core.operations" {
+
+        class NormalOperations {
+            {static} + add(a, b)
+            {static} + subtract(a, b)
+            {static} + multiply(a, b)
+            {static} + divide(a, b)
+        }
+
+        class ScientificOperations {
+            {static} + factorial(n: int)
+            {static} + square(x: float)
+            {static} + cube(x: float)
+            {static} + square_root(x: float)
+            {static} + cube_root(x: float)
+            {static} + logarithm(x: float)
+            {static} + natural_logarithm(x: float)
+            {static} + power(base: float, exponent: float)
+        }
+    }
+}
+
+note bottom of "src/calculator.py"
+  Backward-compat shim
+  re-exports Calculator
+  from src.core.calculator
+end note
+
+Calculator --> NormalOperations : delegates arithmetic
+Calculator --> ScientificOperations : delegates scientific
+
+@enduml

@@ -1,3 +1,29 @@
+## Run: Issue #268 — V2 Task 12 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-268-expert-team-refactor
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/core/__init__.py` — new package init exposing Calculator, NormalOperations, ScientificOperations
+  - `src/core/operations/__init__.py` — new operations subpackage init
+  - `src/core/operations/normal.py` — new NormalOperations class with add, subtract, multiply, divide as static methods
+  - `src/core/operations/scientific.py` — new ScientificOperations class with all scientific methods as static methods
+  - `src/core/calculator.py` — new Calculator class delegating to NormalOperations and ScientificOperations
+  - `src/__init__.py` — updated Calculator import to src.core.calculator
+  - `src/__main__.py` — updated Calculator import to src.core.calculator
+  - `src/calculator.py` — converted to compatibility shim re-exporting from src.core.calculator
+  - `src/cli.py` — updated Calculator import to src.core.calculator
+  - `src/session.py` — updated Calculator import to src.core.calculator
+  - `tests/test_calculator.py` — updated import to src.core.calculator
+  - `tests/test_cli.py` — updated import to src.core.calculator
+  - `tests/test_session.py` — updated import to src.core.calculator
+  - `tests/test_operations_normal.py` — new unit tests for NormalOperations (45 tests)
+  - `tests/test_operations_scientific.py` — new unit tests for ScientificOperations (115 tests)
+- **Purpose:** Refactor calculator into modular structure separating core logic, normal operations, and scientific operations to support future scientific-mode separation
+- **Risks:** Low — backward compatibility preserved via shim at src/calculator.py; all existing tests updated to new canonical import path
+- **Tests passed:** 947 passed, 0 failed
+
+Duration: 440.3s | Cost: $1.037619 USD | Turns: 16
+
 ## Run: update-diagrams — CalculatorSession Refactor Diagrams (2026-04-22)
 
 - **Branch:** task/issue-265-expert-team
@@ -302,3 +328,14 @@ Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
   - `artifacts/sequence_interactive_session_errors.puml` — expanded from 2 to 4 scenarios: added invalid operand string path and invalid domain error path; clarified that all interactive-mode errors continue the session without exit
 
 Duration: 146.8s | Cost: $0.363565 USD | Turns: 4
+
+## Run: update-diagrams — Expert Team Refactor Diagrams (2026-04-22)
+
+- **Branch:** task/issue-268-expert-team-refactor
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — class diagram showing Calculator facade delegating to NormalOperations and ScientificOperations
+  - `artifacts/activity_diagram_session_flow.puml` — activity diagram of user operation execution flow through session and core
+  - `artifacts/sequence_diagram_operation_execution.puml` — sequence diagram for add and square operation execution with delegation
+
+Duration: 217.7s | Cost: $0.540420 USD | Turns: 4

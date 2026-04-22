@@ -1,0 +1,48 @@
+@startuml activity_diagram_session_flow
+
+start
+
+:Display operation menu;
+
+repeat
+
+    :User selects operation;
+
+    if (Selection valid?) then (no)
+        :Show "Invalid selection" message;
+    else (yes)
+        :Determine arity via inspect.signature;
+
+        :Prompt for operands;
+
+        repeat
+            :User enters operand;
+            if (Operand is a valid number?) then (no)
+                :Show "Invalid input" message;
+            endif
+        repeat while (more operands needed?) is (yes)
+        ->no;
+
+        :Execute Calculator method;
+
+        if (Result or error?) then (error)
+            if (ZeroDivisionError?) then (yes)
+                :Display division-by-zero error;
+            else (no)
+                :Display domain/value error;
+            endif
+        else (result)
+            :Record in OperationHistory;
+            :Format and display result;
+        endif
+    endif
+
+repeat while (user exits?) is (no)
+->yes;
+
+:Save history to file;
+:Display "Goodbye!";
+
+stop
+
+@enduml
