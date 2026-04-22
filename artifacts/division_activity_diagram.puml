@@ -1,0 +1,17 @@
+@startuml division_activity_diagram
+
+start
+
+:Receive arguments a and b;
+
+if (b == 0?) then (yes)
+    :Raise ZeroDivisionError;
+    :Exception propagates to caller;
+    stop
+else (no)
+    :Execute a / b;
+    :Return float result;
+    stop
+endif
+
+@enduml

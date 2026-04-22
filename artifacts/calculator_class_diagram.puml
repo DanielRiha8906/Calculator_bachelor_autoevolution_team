@@ -1,0 +1,16 @@
+@startuml calculator_class_diagram
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    +add(a, b) : numeric
+    +subtract(a, b) : numeric
+    +multiply(a, b) : numeric
+    +divide(a, b) : float
+}
+
+component "__main__" as main_module
+
+main_module --> Calculator : uses
+
+@enduml
