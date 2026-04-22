@@ -1,0 +1,24 @@
+@startuml class_calculator
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    +add(a, b) : numeric
+    +subtract(a, b) : numeric
+    +multiply(a, b) : numeric
+    +divide(a, b) : numeric
+}
+
+package "src" {
+    class "__init__.py" as Init <<module>> {
+        re-exports Calculator
+    }
+    class "__main__.py" as Main <<module>> {
+        +main()
+    }
+}
+
+Init --> Calculator : imports & exports
+Main --> Calculator : imports and instantiates
+
+@enduml

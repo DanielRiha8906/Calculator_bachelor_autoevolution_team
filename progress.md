@@ -18,3 +18,24 @@ None identified. Only test file modified; no production code changed.
 
 ### Tokens / cost / turns
 Duration: 155.1s | Cost: $0.393760 USD | Turns: 14
+
+## Run: Diagram update — Calculator class and divide flow
+
+- **Branch:** task/issue-235-division-by-zero
+- **Date:** 2026-04-22
+
+### Files changed
+- `artifacts/class_calculator.puml` — class diagram for Calculator with module-level dependencies
+- `artifacts/activity_divide.puml` — activity diagram for the two divide() execution paths
+- `artifacts/sequence_main.puml` — sequence diagram for __main__.py::main() interactions
+
+### Purpose
+Add PlantUML diagrams documenting the Calculator class structure, divide() activity flow, and main() sequence for the division-by-zero feature branch.
+
+### Risks
+None. Documentation-only changes; no source or test files modified.
+
+### Test results
+N/A — no code changes.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
