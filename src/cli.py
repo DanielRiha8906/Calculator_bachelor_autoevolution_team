@@ -15,6 +15,9 @@ from typing import Union
 
 from .calculator import Calculator
 from .input_handler import ExpressionParser, InputValidator
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 # Numeric type alias, consistent with input_handler.py.
 Numeric = Union[int, float]
@@ -76,24 +79,63 @@ class CLIHandler:
         try:
             operation, operands = self._parser.parse(self._expression)
         except ValueError as exc:
+            logger.error(
+                "CLIHandler.run() parse error: expression=%r %s: %s",
+                self._expression,
+                type(exc).__name__,
+                exc,
+            )
             print(f"Input error: {exc}", file=sys.stderr)
             return 1
 
         try:
             self._validator.validate(operation, operands)
         except ValueError as exc:
+            logger.error(
+                "CLIHandler.run() validation error: expression=%r %s: %s",
+                self._expression,
+                type(exc).__name__,
+                exc,
+            )
             print(f"Validation error: {exc}", file=sys.stderr)
             return 1
 
         try:
             result = self._dispatch(operation, operands)
-        except ZeroDivisionError:
+        except ZeroDivisionError as exc:
+            logger.error(
+                "CLIHandler.run() math error: expression=%r operation=%r operands=%r"
+                " %s: %s",
+                self._expression,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             print("Math error: division by zero.", file=sys.stderr)
             return 1
         except ValueError as exc:
+            logger.error(
+                "CLIHandler.run() math error: expression=%r operation=%r operands=%r"
+                " %s: %s",
+                self._expression,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             print(f"Math error: {exc}", file=sys.stderr)
             return 1
         except TypeError as exc:
+            logger.error(
+                "CLIHandler.run() math error: expression=%r operation=%r operands=%r"
+                " %s: %s",
+                self._expression,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             print(f"Type error: {exc}", file=sys.stderr)
             return 1
 

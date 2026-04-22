@@ -16,6 +16,9 @@ from dataclasses import dataclass, field
 from typing import Union
 
 from .calculator import Calculator
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -90,10 +93,17 @@ class InputValidator:
             ValueError: If the operation is not recognised.
         """
         if operation not in SUPPORTED_OPERATIONS:
-            raise ValueError(
+            exc = ValueError(
                 f"Unknown operation '{operation}'. "
                 f"Supported operations: {', '.join(sorted(SUPPORTED_OPERATIONS))}"
             )
+            logger.warning(
+                "validate_operation() failed: operation=%r %s: %s",
+                operation,
+                type(exc).__name__,
+                exc,
+            )
+            raise exc
 
     def validate_operand_count(self, operation: str, operands: list[Numeric]) -> None:
         """Check that the number of operands matches what *operation* expects.
@@ -111,10 +121,18 @@ class InputValidator:
             expected = 2
 
         if len(operands) != expected:
-            raise ValueError(
+            exc = ValueError(
                 f"Operation '{operation}' expects {expected} operand(s), "
                 f"got {len(operands)}."
             )
+            logger.warning(
+                "validate_operand_count() failed: operation=%r operands=%r %s: %s",
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
+            raise exc
 
     def validate(self, operation: str, operands: list[Numeric]) -> None:
         """Run all validation checks for an expression.
@@ -175,10 +193,17 @@ class ExpressionParser:
         try:
             return float(token)
         except ValueError:
-            raise ValueError(
+            exc = ValueError(
                 f"'{token}' is not a valid number. "
                 "Operands must be integers or decimal numbers."
             )
+            logger.warning(
+                "_coerce_numeric() failed: value=%r %s: %s",
+                token,
+                type(exc).__name__,
+                exc,
+            )
+            raise exc
 
     def parse(self, raw_input: str) -> tuple[str, list[Numeric]]:
         """Parse *raw_input* into an ``(operation, operands)`` tuple.
@@ -197,7 +222,9 @@ class ExpressionParser:
         """
         tokens = raw_input.strip().split()
         if not tokens:
-            raise ValueError("Empty input. Please enter an expression.")
+            exc = ValueError("Empty input. Please enter an expression.")
+            logger.warning("parse() failed: empty raw_input %s: %s", type(exc).__name__, exc)
+            raise exc
 
         operation = tokens[0].lower()
         operands: list[Numeric] = [
@@ -281,11 +308,38 @@ class CalculatorREPL:
 
         try:
             result = self._dispatch(operation, operands)
-        except ZeroDivisionError:
+        except ZeroDivisionError as exc:
+            logger.error(
+                "_evaluate() dispatch error: raw_input=%r operation=%r operands=%r"
+                " %s: %s",
+                raw_input,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             return "Math error: division by zero."
         except ValueError as exc:
+            logger.error(
+                "_evaluate() dispatch error: raw_input=%r operation=%r operands=%r"
+                " %s: %s",
+                raw_input,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             return f"Math error: {exc}"
         except TypeError as exc:
+            logger.error(
+                "_evaluate() dispatch error: raw_input=%r operation=%r operands=%r"
+                " %s: %s",
+                raw_input,
+                operation,
+                operands,
+                type(exc).__name__,
+                exc,
+            )
             return f"Type error: {exc}"
 
         return f"Result: {result}"
