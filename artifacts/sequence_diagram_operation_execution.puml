@@ -1,102 +1,69 @@
 @startuml sequence_diagram_operation_execution
 
-participant "User" as User
-participant "main()" as Main
-participant "interactive_session()" as Session
-participant "get_operation_menu()" as GetMenu
-participant "get_arity()" as GetArity
-participant "get_operands()" as GetOperands
-participant "parse_float()" as ParseFloat
-participant "Calculator" as Calc
-participant "OperationHistory" as History
+participant User
+participant CLI
+participant CalculatorSession
+participant Calculator
+participant NormalOperations
+participant ScientificOperations
+participant OperationHistory
+participant Formatter
 
-Main -> Calc : Calculator()
-activate Calc
+== Normal operation: add ==
 
-Main -> Session : interactive_session(calc)
-activate Session
+User -> CLI : selects "add"
+CLI -> CalculatorSession : select_operation("add")
+CLI -> CalculatorSession : get_arity("add")
+activate CalculatorSession
+CalculatorSession --> CLI : 2
+deactivate CalculatorSession
 
-Session -> History : OperationHistory()
-activate History
+CLI -> CalculatorSession : collect_operands(2)
+activate CalculatorSession
+CalculatorSession --> CLI : [5.0, 3.0]
+deactivate CalculatorSession
 
-loop REPL iteration
+CLI -> CalculatorSession : execute_operation("add", [5.0, 3.0])
+activate CalculatorSession
 
-    Session -> GetMenu : get_operation_menu(calc)
-    activate GetMenu
-    GetMenu -> Calc : dir(calc) + callable filter
-    Calc --> GetMenu : method name list
-    GetMenu --> Session : ["add", "cube", "divide", ...]
-    deactivate GetMenu
+CalculatorSession -> Calculator : add(5.0, 3.0)
+activate Calculator
+Calculator -> NormalOperations : add(5.0, 3.0)
+activate NormalOperations
+NormalOperations --> Calculator : 8.0
+deactivate NormalOperations
+Calculator --> CalculatorSession : 8.0
+deactivate Calculator
 
-    Session -> User : display numbered menu\n(1. add, 2. cube, ..., quit/exit/q to quit)
+CalculatorSession -> OperationHistory : record("add", [5.0, 3.0], 8.0)
+CalculatorSession -> Formatter : format_result(8.0)
+Formatter --> CalculatorSession : "8.0"
+CalculatorSession --> CLI : "8.0"
+deactivate CalculatorSession
 
-    User -> Session : enters "abc" (invalid selection)
-    Session -> Session : int("abc") raises ValueError
-    Session -> User : "Invalid selection..."
+CLI -> User : display "Result: 8.0"
 
-    User -> Session : enters "1" (selects "add")
-    Session -> Session : choice = 1, op_name = "add"
+== Scientific operation: square ==
 
-    Session -> GetArity : get_arity(calc, "add")
-    activate GetArity
-    GetArity -> Calc : inspect.signature(calc.add)
-    Calc --> GetArity : (a, b) — 2 params
-    GetArity --> Session : 2
-    deactivate GetArity
+User -> CLI : selects "square"
+CLI -> CalculatorSession : execute_operation("square", [7.0])
+activate CalculatorSession
 
-    Session -> GetOperands : get_operands(2)
-    activate GetOperands
+CalculatorSession -> Calculator : square(7.0)
+activate Calculator
+Calculator -> ScientificOperations : square(7.0)
+activate ScientificOperations
+ScientificOperations --> Calculator : 49.0
+deactivate ScientificOperations
+Calculator --> CalculatorSession : 49.0
+deactivate Calculator
 
-    GetOperands -> User : "Enter operand 1: "
-    User -> GetOperands : "hello" (invalid)
-    GetOperands -> ParseFloat : parse_float("hello")
-    activate ParseFloat
-    ParseFloat --> GetOperands : ValueError
-    deactivate ParseFloat
-    GetOperands -> User : "Invalid input: hello. Please try again."
+CalculatorSession -> OperationHistory : record("square", [7.0], 49.0)
+CalculatorSession -> Formatter : format_result(49.0)
+Formatter --> CalculatorSession : "49.0"
+CalculatorSession --> CLI : "49.0"
+deactivate CalculatorSession
 
-    GetOperands -> User : "Enter operand 1: "
-    User -> GetOperands : "5"
-    GetOperands -> ParseFloat : parse_float("5")
-    activate ParseFloat
-    ParseFloat --> GetOperands : 5.0
-    deactivate ParseFloat
-
-    GetOperands -> User : "Enter operand 2: "
-    User -> GetOperands : "3"
-    GetOperands -> ParseFloat : parse_float("3")
-    activate ParseFloat
-    ParseFloat --> GetOperands : 3.0
-    deactivate ParseFloat
-
-    GetOperands --> Session : [5.0, 3.0]
-    deactivate GetOperands
-
-    Session -> Calc : add(5.0, 3.0)\n<<getattr(calc, "add")(5.0, 3.0)>>
-    Calc --> Session : 8.0
-    Session -> History : record_operation("add", [5.0, 3.0], 8.0)
-    History --> Session : (entry appended)
-    Session -> User : "Result: 8.0"
-
-end
-
-alt user types "q" to exit
-
-    Session -> GetMenu : get_operation_menu(calc)
-    activate GetMenu
-    GetMenu --> Session : ["add", "cube", ...]
-    deactivate GetMenu
-
-    Session -> User : display menu
-    User -> Session : "q"
-    Session -> History : save_to_file("history.txt")
-    History --> Session : (file written)
-    Session -> User : "Goodbye!"
-
-end
-
-deactivate History
-deactivate Session
-deactivate Calc
+CLI -> User : display "Result: 49.0"
 
 @enduml

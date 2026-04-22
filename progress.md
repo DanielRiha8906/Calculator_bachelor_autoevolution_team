@@ -328,3 +328,14 @@ Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
   - `artifacts/sequence_interactive_session_errors.puml` — expanded from 2 to 4 scenarios: added invalid operand string path and invalid domain error path; clarified that all interactive-mode errors continue the session without exit
 
 Duration: 146.8s | Cost: $0.363565 USD | Turns: 4
+
+## Run: update-diagrams — Expert Team Refactor Diagrams (2026-04-22)
+
+- **Branch:** task/issue-268-expert-team-refactor
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — class diagram showing Calculator facade delegating to NormalOperations and ScientificOperations
+  - `artifacts/activity_diagram_session_flow.puml` — activity diagram of user operation execution flow through session and core
+  - `artifacts/sequence_diagram_operation_execution.puml` — sequence diagram for add and square operation execution with delegation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
