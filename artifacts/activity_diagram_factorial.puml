@@ -1,0 +1,26 @@
+@startuml activity_diagram_factorial
+' Validation and execution flow for Calculator.factorial(n)
+
+start
+:Call factorial(n);
+
+if (isinstance(n, bool)?) then (yes)
+  :raise TypeError\n"...not bool";
+  stop
+endif
+
+if (isinstance(n, int)?) then (no)
+  :raise TypeError\n"...not int";
+  stop
+endif
+
+if (n < 0?) then (yes)
+  :raise ValueError\n"...negative values";
+  stop
+endif
+
+:Call math.factorial(n);
+:Return int result;
+stop
+
+@enduml

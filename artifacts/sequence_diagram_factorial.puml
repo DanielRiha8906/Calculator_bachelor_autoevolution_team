@@ -1,0 +1,33 @@
+@startuml sequence_diagram_factorial
+' Key interaction flows for Calculator.factorial()
+
+participant Client
+participant Calculator
+participant "math" as Math
+
+group Happy path: factorial(5)
+  Client -> Calculator : factorial(5)
+  Calculator -> Calculator : isinstance(5, bool)? -> False
+  Calculator -> Calculator : isinstance(5, int)? -> True
+  Calculator -> Calculator : 5 < 0? -> False
+  Calculator -> Math : factorial(5)
+  Math --> Calculator : 120
+  Calculator --> Client : 120
+end
+
+group Error: invalid type factorial("5")
+  Client -> Calculator : factorial("5")
+  Calculator -> Calculator : isinstance("5", bool)? -> False
+  Calculator -> Calculator : isinstance("5", int)? -> False
+  Calculator --> Client : raise TypeError
+end
+
+group Error: negative input factorial(-5)
+  Client -> Calculator : factorial(-5)
+  Calculator -> Calculator : isinstance(-5, bool)? -> False
+  Calculator -> Calculator : isinstance(-5, int)? -> True
+  Calculator -> Calculator : -5 < 0? -> True
+  Calculator --> Client : raise ValueError
+end
+
+@enduml

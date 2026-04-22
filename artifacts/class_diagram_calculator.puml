@@ -1,0 +1,17 @@
+@startuml class_diagram_calculator
+' Calculator class with all operations including new factorial method
+
+class Calculator {
+  +add(a, b) : Any
+  +subtract(a, b) : Any
+  +multiply(a, b) : Any
+  +divide(a, b) : Any
+  +factorial(n: int) : int
+}
+
+class "math" as math_module << (M, #FFD700) module >> {
+  +factorial(n: int) : int
+}
+
+Calculator ..> math_module : delegates to
+@enduml

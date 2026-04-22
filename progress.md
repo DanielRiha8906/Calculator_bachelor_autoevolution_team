@@ -1,3 +1,5 @@
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-241-factorial-operation
