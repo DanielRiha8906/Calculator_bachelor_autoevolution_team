@@ -1,0 +1,39 @@
+@startuml class_diagram_calculator
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+class Calculator {
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : float
+}
+
+class TestDivision {
+    + test_divide_positive_numbers(calc)
+    + test_divide_with_floats(calc)
+    + test_divide_negative_numbers(calc)
+    + test_divide_by_zero_raises_exception(calc)
+    + test_divide_zero_by_nonzero(calc)
+    + test_divide_non_numeric_inputs_raise_typeerror(calc, invalid_a, invalid_b) <<parametrized: 6 cases>>
+    + test_divide_result_precision(calc)
+    + test_divide_large_numbers(calc)
+    + test_divide_very_small_numbers(calc)
+}
+
+class "calc()" <<fixture>> {
+    Creates a Calculator instance per test.
+    Injected into every TestDivision test method.
+}
+
+TestDivision ..> Calculator : depends on
+TestDivision ..> "calc()" : uses
+
+note right of TestDivision
+  pytest test class
+  All methods receive a Calculator
+  instance via the calc() fixture.
+end note
+
+@enduml
