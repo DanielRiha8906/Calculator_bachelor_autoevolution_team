@@ -331,4 +331,4 @@ Duration: 328.6s | Cost: $0.912429 USD | Turns: 18
   - `artifacts/activity_diagram_interactive_loop.puml` — updated interactive session activity flow
   - `artifacts/sequence_diagram_operation_execution.puml` — updated operation execution sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
