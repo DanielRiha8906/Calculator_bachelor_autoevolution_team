@@ -13,7 +13,7 @@
 - **Risks:** display_error default stream changed from stdout to stderr — mitigated by updating existing tests
 - **Tests passed:** 282 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 323.5s | Cost: $0.765512 USD | Turns: 15
 
 ## Run: Issue #234 — Division-by-zero unit tests
 
