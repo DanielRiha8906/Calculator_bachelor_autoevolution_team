@@ -152,3 +152,14 @@ Duration: 224.8s | Cost: $0.616434 USD | Turns: 16
 - **Tests passed:** 141 passed, 0 failed
 
 Duration: 391.3s | Cost: $1.035493 USD | Turns: 24
+
+## Run: update-diagrams — CLI Interface UML (2026-04-22)
+
+- **Branch:** task/issue-253-cli-interface
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — Added main.py package with get_operation_arity, parse_arguments, _to_number, execute_operation, and main functions; shows relationships to Calculator and contrast with interactive CLI
+  - `artifacts/sequence_main.puml` — Replaced outdated basic diagram with accurate bash CLI sequence: parse_arguments, get_operation_arity, execute_operation, _to_number flow; includes three error paths
+  - `artifacts/activity_main_cli.puml` — New activity diagram for main.py bash CLI flow: arg validation, arity inspection, operand conversion, Calculator dispatch, exit codes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
