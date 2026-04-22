@@ -362,4 +362,4 @@ Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
   - `artifacts/sequence_diagram_mode_switch.puml` — updated to show full mode-toggle flow including initialization, is_operation_available filtering, and SCIENTIFIC mode second iteration
   - `artifacts/activity_diagram_interactive_session.puml` — updated to show mode-aware loop with get_available_operations, get_mode_display_name, and mode-switch branch
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
