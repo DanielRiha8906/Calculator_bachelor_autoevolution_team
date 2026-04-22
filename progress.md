@@ -17,4 +17,4 @@ None identified. Only test file modified; no production code changed.
 28 passed, 0 failed, 0 errors (0.03s)
 
 ### Tokens / cost / turns
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 155.1s | Cost: $0.393760 USD | Turns: 14
