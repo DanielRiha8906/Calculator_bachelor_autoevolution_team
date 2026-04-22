@@ -1,0 +1,8 @@
+@startuml Calculator_ClassDiagram
+class Calculator {
+    + add(a, b): numeric
+    + subtract(a, b): numeric
+    + multiply(a, b): numeric
+    + divide(a, b): numeric
+}
+@enduml

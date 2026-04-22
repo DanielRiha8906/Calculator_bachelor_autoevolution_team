@@ -1,0 +1,34 @@
+@startuml Calculator_DivideSequence
+participant TestDivide as test
+participant Calculator as calc
+participant Python as runtime
+
+test ->> calc: __init__()
+activate calc
+calc -->> test: self (Calculator instance)
+deactivate calc
+
+test ->> calc: divide(10, 2)
+activate calc
+calc ->> runtime: a / b (10 / 2)
+activate runtime
+runtime -->> calc: 5.0
+deactivate runtime
+calc -->> test: 5.0
+deactivate calc
+
+test ->> test: assert result == 5.0
+note over test: Assertion passes
+
+test ->> calc: divide(5, 0)
+activate calc
+calc ->> runtime: a / b (5 / 0)
+activate runtime
+runtime -x calc: ZeroDivisionError
+deactivate runtime
+calc -x test: ZeroDivisionError
+deactivate calc
+
+test ->> test: catch ZeroDivisionError
+note over test: Exception caught, test passes
+@enduml

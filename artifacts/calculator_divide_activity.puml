@@ -1,0 +1,17 @@
+@startuml Calculator_DivideActivity
+start
+  :input: a, b;
+  if (b == 0 or b == 0.0?) then (yes)
+    :raise ZeroDivisionError;
+    stop
+  else (no)
+    if (a and b are numeric?) then (yes)
+      :result = a / b;
+      :return result;
+      stop
+    else (no)
+      :raise TypeError;
+      stop
+    endif
+  endif
+@enduml
