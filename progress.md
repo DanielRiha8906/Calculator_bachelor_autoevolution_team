@@ -238,3 +238,14 @@ Duration: 242.4s | Cost: $0.645268 USD | Turns: 7
 - **Tests passed:** 586 passed, 0 failed
 
 Duration: 436.7s | Cost: $1.127227 USD | Turns: 17
+
+## Run: update-diagrams — Error logging UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-261-error-logging
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_error_logger.puml` — new class diagram showing error_logger module and its integration points in calculator, validation, and operations
+  - `artifacts/activity_error_flow.puml` — new activity diagram showing error flow from user input through validation and calculation to log file
+  - `artifacts/sequence_divide_by_zero.puml` — new sequence diagram for divide-by-zero error scenario
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

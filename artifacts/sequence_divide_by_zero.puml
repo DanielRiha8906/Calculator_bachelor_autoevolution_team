@@ -1,0 +1,50 @@
+@startuml sequence_divide_by_zero
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #555555
+
+title Divide-by-Zero Scenario — Error Logging Sequence
+
+actor User
+participant InputHandler
+participant validation
+participant OperationRegistry
+participant Calculator
+participant error_logger
+database "logs/error.log"
+
+User -> InputHandler : enter operands
+activate InputHandler
+
+InputHandler -> validation : validate_operand(raw_a)
+validation --> InputHandler : 5.0
+
+InputHandler -> validation : validate_operand(raw_b)
+validation --> InputHandler : 0.0
+
+InputHandler -> OperationRegistry : get_operation("divide")
+activate OperationRegistry
+OperationRegistry --> InputHandler : (Calculator.divide, arity=2, desc)
+deactivate OperationRegistry
+
+InputHandler -> Calculator : divide(5.0, 0.0)
+activate Calculator
+
+alt success path (b != 0)
+    Calculator --> InputHandler : result
+    InputHandler -> User : display result
+else error path (b == 0)
+    Calculator -> error_logger : log_calculation_error(\n  "divide", [5.0, 0.0], "division by zero")
+    activate error_logger
+    error_logger -> "logs/error.log" : append ISO-8601 log entry
+    "logs/error.log" --> error_logger : written
+    deactivate error_logger
+    Calculator -> Calculator : raise ZeroDivisionError
+    Calculator --> InputHandler : ZeroDivisionError propagates
+    deactivate Calculator
+    InputHandler -> User : display_error("division by zero")
+end
+
+deactivate InputHandler
+
+@enduml

@@ -1,0 +1,77 @@
+@startuml class_error_logger
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src" {
+
+    class "error_logger" as ErrorLogger << (M,#ADD8E6) module >> {
+        + log_validation_error(detail: str): None
+        + log_operation_error(operation_key: str, error_msg: str): None
+        + log_calculation_error(operation: str, operands: List, error_msg: str): None
+        --
+        logger: "calculator.errors"
+        output: logs/error.log (append)
+        fallback: NullHandler on OSError
+    }
+
+    class Calculator {
+        + divide(a, b): float
+        + factorial(n): int
+        + square_root(x): float
+        + power(x, y): float
+        + log(x): float
+        + ln(x): float
+        ..not modified..
+        + add(a, b): float
+        + subtract(a, b): float
+        + multiply(a, b): float
+        + square(x): float
+        + cube(x): float
+        + cube_root(x): float
+    }
+
+    class "validation" as Validation << (M,#ADD8E6) module >> {
+        + validate_operand(raw: str): float
+        + validate_operation(choice: str, available_operations: dict): bool
+        + get_validation_error_message(error: Exception): str
+        --
+        OperandValidationError(ValueError)
+        OperationValidationError(ValueError)
+    }
+
+    class OperationRegistry {
+        + __init__(calculator: Calculator)
+        + get_operation(key: str): tuple
+        + list_operations(): dict
+    }
+
+    class InputHandler {
+        + get_operand(prompt, max_retries): float
+        + get_operation_choice(available_operations, max_retries): str
+        + display_result(): None
+        + display_error(): None
+        + display_history(): None
+    }
+}
+
+ErrorLogger <.. Calculator : log_calculation_error
+ErrorLogger <.. Validation : log_validation_error\nlog_operation_error
+ErrorLogger <.. OperationRegistry : log_operation_error
+
+Validation <.. InputHandler : validate_operand\nget_validation_error_message
+
+Calculator <-- OperationRegistry : uses
+
+note right of ErrorLogger
+  All public functions are
+  exception-guarded — logging
+  never interrupts execution
+end note
+
+note bottom of Calculator
+  Only the 6 error-logging methods
+  call error_logger before re-raising
+end note
+
+@enduml
