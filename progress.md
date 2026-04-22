@@ -1,4 +1,20 @@
 
+## Run: Issue #269 — V2 Task 13 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-269-add-calculator-documentation
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `docs/README.md` — main documentation entry point covering usage, architecture overview, and operation summary
+  - `docs/OPERATIONS_REFERENCE.md` — complete per-operation reference with signatures, error conditions, and examples
+  - `docs/ARCHITECTURE.md` — detailed module hierarchy, data flow, class responsibilities, and extension points
+  - `docs/DEVELOPMENT.md` — developer guide for environment setup, adding operations, testing strategy, and git workflow
+  - `tests/test_documentation.py` — 55 tests verifying file existence, content quality, cross-links, operation coverage, and source file accuracy
+- **Purpose:** Add comprehensive documentation for the calculator application as required by issue #269
+- **Risks:** None — documentation only, no source code modified
+- **Tests passed:** 1214 passed, 0 failed
+
+Duration: 410.4s | Cost: $0.964297 USD | Turns: 16
+
 ## Run: Issue #266 — V2 Task 12 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-266-refactor-modules-scientific-mode
@@ -291,3 +307,14 @@ Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
   - `artifacts/sequence_math_operation.puml` — three-scenario sequence diagram covering binary arithmetic, unary advanced operation, and error propagation
 
 Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
+
+## Run: update-diagrams — Add documentation diagrams (2026-04-22)
+
+- **Branch:** task/issue-269-add-calculator-documentation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_engine_and_modes.puml` — class diagram of CalculatorEngine and operation-set composition pattern
+  - `artifacts/activity_operation_dispatch.puml` — activity diagram of operation dispatch pipeline (parse → validate → dispatch → execute → record → return)
+  - `artifacts/sequence_advanced_operation.puml` — sequence diagram for a complete advanced (unary) operation call through Calculator facade, CalculatorEngine, and AdvancedOperations
+
+Duration: 245.8s | Cost: $0.754668 USD | Turns: 17

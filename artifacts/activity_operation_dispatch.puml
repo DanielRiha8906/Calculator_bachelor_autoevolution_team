@@ -1,0 +1,73 @@
+@startuml activity_operation_dispatch
+
+skinparam backgroundColor white
+skinparam activity {
+  BorderColor #444444
+  BackgroundColor #F8F8F8
+  DiamondBackgroundColor #FFFFCC
+  DiamondBorderColor #999900
+}
+
+start
+
+:Receive raw expression string;
+
+:ExpressionParser.parse(expression)
+→ (operation: str, operands: list[Numeric]);
+
+if (Parse raised ValueError?) then (yes)
+  :Log warning;
+  :Return error message to caller;
+  stop
+else (no)
+endif
+
+:InputValidator.validate(operation, operands);
+
+if (Validate raised ValueError?) then (yes)
+  :Log warning;
+  :Return error message to caller;
+  stop
+else (no)
+endif
+
+:getattr(Calculator, operation)(*operands)
+  — Calculator delegates to CalculatorEngine;
+
+:CalculatorEngine selects operation set
+  BasicOperations  ←→  AdvancedOperations;
+
+fork
+  :BasicOperations method
+  (add / subtract / multiply / divide);
+fork again
+  :AdvancedOperations method
+  (factorial / square / cube /
+   square_root / cube_root /
+   power / natural_log / log_base_10);
+end fork
+
+:Compute numeric result;
+
+:_record(result)
+  [callback is None → no-op];
+
+if (Math error raised?
+  ZeroDivisionError / ValueError / TypeError) then (yes)
+  :Log error;
+  :Return error message to caller;
+  stop
+else (no)
+endif
+
+:CalculatorEngine._record_history
+  (operand1, operator, operand2, result);
+
+:Return result to Calculator facade;
+
+:Calculator returns result to surface layer
+  (CalculatorREPL or CLIHandler);
+
+stop
+
+@enduml

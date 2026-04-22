@@ -1,0 +1,73 @@
+@startuml sequence_advanced_operation
+
+skinparam backgroundColor white
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #444444
+
+actor User
+participant CalculatorREPL
+participant ExpressionParser
+participant InputValidator
+participant Calculator
+participant CalculatorEngine
+participant AdvancedOperations
+participant Logger
+
+User ->> CalculatorREPL : "factorial 5"
+
+activate CalculatorREPL
+
+CalculatorREPL ->> ExpressionParser : parse("factorial 5")
+activate ExpressionParser
+ExpressionParser -->> CalculatorREPL : ("factorial", [5])
+deactivate ExpressionParser
+
+CalculatorREPL ->> InputValidator : validate("factorial", [5])
+activate InputValidator
+InputValidator -->> CalculatorREPL : ok
+deactivate InputValidator
+
+CalculatorREPL ->> Calculator : factorial(5)
+activate Calculator
+
+Calculator ->> CalculatorEngine : factorial(5)
+activate CalculatorEngine
+
+CalculatorEngine ->> AdvancedOperations : factorial(5)
+activate AdvancedOperations
+
+alt Happy path: n=5 (valid int)
+  AdvancedOperations -> AdvancedOperations : compute 5! = 120
+  AdvancedOperations -> AdvancedOperations : _record(120)\n[callback is None → no-op]
+  AdvancedOperations -->> CalculatorEngine : 120
+  deactivate AdvancedOperations
+
+  CalculatorEngine -> CalculatorEngine : _record_history(5, "factorial", None, 120)
+  CalculatorEngine -->> Calculator : 120
+  deactivate CalculatorEngine
+
+  Calculator -->> CalculatorREPL : 120
+  deactivate Calculator
+
+  CalculatorREPL -->> User : "Result: 120"
+
+else Error path: n is not int (e.g. 5.0)
+  activate AdvancedOperations
+  AdvancedOperations ->> Logger : error("factorial() failed: expected int, got float")
+  AdvancedOperations -->> CalculatorEngine : raises TypeError
+  deactivate AdvancedOperations
+
+  activate CalculatorEngine
+  CalculatorEngine -->> Calculator : raises TypeError
+  deactivate CalculatorEngine
+
+  activate Calculator
+  Calculator -->> CalculatorREPL : raises TypeError
+  deactivate Calculator
+
+  CalculatorREPL -->> User : "Type error: ..."
+end
+
+deactivate CalculatorREPL
+
+@enduml

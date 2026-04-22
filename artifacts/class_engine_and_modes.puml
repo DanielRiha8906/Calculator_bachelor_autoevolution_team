@@ -1,0 +1,73 @@
+@startuml class_engine_and_modes
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam backgroundColor white
+
+note top of CalculatorEngine
+  BASIC_OPERATIONS = frozenset{add, subtract, multiply, divide}
+  ADVANCED_OPERATIONS = frozenset{factorial, square, cube,
+    square_root, cube_root, power, natural_log, log_base_10}
+end note
+
+abstract class BaseOperationSet {
+  # _record_callback : Optional[Callable]
+  # _record(result)
+  + {abstract} get_operations() : dict[str, Callable]
+}
+
+class BasicOperations {
+  + add(a, b) : Numeric
+  + subtract(a, b) : Numeric
+  + multiply(a, b) : Numeric
+  + divide(a, b) : Numeric
+}
+
+class AdvancedOperations {
+  + factorial(n) : int
+  + square(x) : Numeric
+  + cube(x) : Numeric
+  + square_root(x) : Numeric
+  + cube_root(x) : Numeric
+  + power(base, exp) : Numeric
+  + natural_log(x) : Numeric
+  + log_base_10(x) : Numeric
+}
+
+class CalculatorEngine {
+  - _mode : str
+  - _history : list[dict]
+  - _basic : BasicOperations
+  - _advanced : AdvancedOperations
+  - _record_history(op1, operator, op2, result)
+  + get_history() : list[dict]
+  + add(a, b) : Numeric
+  + subtract(a, b) : Numeric
+  + multiply(a, b) : Numeric
+  + divide(a, b) : Numeric
+  + factorial(n) : int
+  + square(x) : Numeric
+  + cube(x) : Numeric
+  + square_root(x) : Numeric
+  + cube_root(x) : Numeric
+  + power(base, exp) : Numeric
+  + natural_log(x) : Numeric
+  + log_base_10(x) : Numeric
+}
+
+class OperationRegistry {
+  + register_mode(name, operation_set)
+  + get(name) : Callable
+  + get_mode(name) : BaseOperationSet
+  + all_names() : list[str]
+}
+
+BaseOperationSet <|-- BasicOperations
+BaseOperationSet <|-- AdvancedOperations
+
+CalculatorEngine *-- BasicOperations : _basic
+CalculatorEngine *-- AdvancedOperations : _advanced
+
+OperationRegistry o-- BaseOperationSet : manages
+
+@enduml
