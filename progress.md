@@ -7,7 +7,7 @@
   - `artifacts/class_diagram_session.puml` — new class diagram showing CalculatorSession composition with OperationHistory and ErrorLogger, dependency on Calculator
   - `artifacts/activity_diagram_interactive_session.puml` — rewritten with cli/CalculatorSession swimlanes showing I/O separation from business logic
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 296.4s | Cost: $0.681399 USD | Turns: 12
 
 ## Run: Issue #265 — V2 Task 11 - Expert/team (2026-04-22)
 
