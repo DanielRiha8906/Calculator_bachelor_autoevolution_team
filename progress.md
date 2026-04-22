@@ -10,7 +10,7 @@
 - **Risks:** None — Calculator class is untouched; existing 237 tests unaffected; new interactive layer is purely additive
 - **Tests passed:** 295 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 321.7s | Cost: $0.675703 USD | Turns: 18
 
 ## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
 
