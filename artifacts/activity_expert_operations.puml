@@ -1,0 +1,59 @@
+@startuml activity_expert_operations
+
+' Flow 1: square_root(x) — Unary with domain constraint
+
+partition "square_root(x)" {
+
+    start
+
+    :Caller invokes Calculator.square_root(x);
+
+    if (isinstance(x, (int, float)) AND NOT isinstance(x, bool)?) then (yes)
+    else (no)
+        :raise TypeError("x must be an int or float");
+        stop
+    endif
+
+    if (x >= 0?) then (yes)
+    else (no)
+        :raise ValueError("x must be non-negative for square root");
+        stop
+    endif
+
+    :math.sqrt(x);
+
+    :return result as float;
+
+    stop
+
+}
+
+' Flow 2: power(base, exponent) — Binary with dual type validation
+
+partition "power(base, exponent)" {
+
+    start
+
+    :Caller invokes Calculator.power(base, exponent);
+
+    if (isinstance(base, (int, float)) AND NOT isinstance(base, bool)?) then (yes)
+    else (no)
+        :raise TypeError("base must be an int or float");
+        stop
+    endif
+
+    if (isinstance(exponent, (int, float)) AND NOT isinstance(exponent, bool)?) then (yes)
+    else (no)
+        :raise TypeError("exponent must be an int or float");
+        stop
+    endif
+
+    :base ** exponent\n(no domain constraint; 0**0 = 1.0);
+
+    :return result as float;
+
+    stop
+
+}
+
+@enduml

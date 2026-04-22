@@ -36,4 +36,39 @@ note right : Python raises ZeroDivisionError
 Calc -->> Caller : ZeroDivisionError
 deactivate Calc
 
+== Scenario E: square_root(9) happy path ==
+
+Caller ->> Calc : square_root(9)
+activate Calc
+note right : type check passes (9 is int)\ndomain check passes (9 >= 0)
+Calc -> Calc : math.sqrt(9) → 3.0
+Calc -->> Caller : 3.0
+deactivate Calc
+
+== Scenario F: square_root(-1) ValueError ==
+
+Caller ->> Calc : square_root(-1)
+activate Calc
+note right : type check passes (-1 is int)\ndomain check fails (-1 < 0)
+Calc -->> Caller : ValueError("x must be non-negative for square root")
+deactivate Calc
+
+== Scenario G: logarithm(100) happy path ==
+
+Caller ->> Calc : logarithm(100)
+activate Calc
+note right : type check passes (100 is int)\ndomain check passes (100 > 0)
+Calc -> Calc : math.log10(100) → 2.0
+Calc -->> Caller : 2.0
+deactivate Calc
+
+== Scenario H: power(2, 10) happy path ==
+
+Caller ->> Calc : power(2, 10)
+activate Calc
+note right : base type check passes\nexponent type check passes\nno domain constraints
+Calc -> Calc : 2 ** 10 → 1024.0
+Calc -->> Caller : 1024.0
+deactivate Calc
+
 @enduml
