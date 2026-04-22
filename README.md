@@ -31,6 +31,20 @@ calculator/
 
 ---
 
+## Documentation
+
+Detailed technical documentation is available in the `docs/` directory:
+
+| Document | Description |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module structure, class responsibilities, and the full dependency graph |
+| [docs/OPERATION_REFERENCE.md](docs/OPERATION_REFERENCE.md) | Every calculator operation with input types, output types, and error conditions |
+| [docs/SESSION_BEHAVIOR.md](docs/SESSION_BEHAVIOR.md) | Session lifecycle, history management, error logging, and retry semantics |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Installation, usage instructions, and worked examples |
+| [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) | Command-line invocation, interactive vs. CLI mode, and piped-input examples |
+
+---
+
 ## Autoevoluční engine
 
 Tento systém je implementován ve třech hlavních částech:
