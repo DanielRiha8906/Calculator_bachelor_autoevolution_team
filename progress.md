@@ -194,3 +194,14 @@ Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
 - **Tests passed:** 554 passed, 0 failed
 
 Duration: 280.7s | Cost: $0.748369 USD | Turns: 17
+
+## Run: update-diagrams — Add history-of-operations diagrams (2026-04-22)
+
+- **Branch:** task/issue-257-history-of-operations
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_history.puml` — new class diagram showing OperationRecord, OperationHistory, and their relationships to Calculator, CalculatorREPL, CLIHandler
+  - `artifacts/sequence_diagram_repl_history.puml` — new sequence diagram showing REPL operation flow including history logging
+  - `artifacts/sequence_diagram_cli.puml` — updated to include history logging step after successful Calculator dispatch
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

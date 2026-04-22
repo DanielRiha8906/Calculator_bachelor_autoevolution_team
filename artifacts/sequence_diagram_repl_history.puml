@@ -1,0 +1,81 @@
+@startuml sequence_diagram_repl_history
+
+skinparam ParticipantFontSize 13
+skinparam ArrowColor #444444
+skinparam ParticipantBorderColor #555555
+skinparam ParticipantBackgroundColor #FAFAFA
+skinparam SequenceGroupBorderColor #888888
+
+title REPL — Operation Flow with History Logging
+
+actor User
+participant "CalculatorREPL" as repl
+participant "ExpressionParser" as parser
+participant "InputValidator" as validator
+participant "Calculator" as calc
+participant "OperationHistory" as history
+
+User -> repl : input "add 5 3"
+activate repl
+
+repl -> repl : _evaluate("add 5 3")
+
+repl -> parser : parse("add 5 3")
+activate parser
+parser --> repl : ("add", [5, 3])
+deactivate parser
+
+repl -> validator : validate("add", [5, 3])
+activate validator
+validator --> repl : (passes)
+deactivate validator
+
+repl -> calc : add(5, 3)
+activate calc
+calc --> repl : 8
+deactivate calc
+
+note right of repl
+  Only on success — errors skip history
+end note
+
+repl -> history : append("add", [5, 3], 8)
+activate history
+history -> history : create OperationRecord(\n  timestamp=time.time(),\n  operation="add",\n  operands=[5, 3],\n  result=8\n)
+history -> history : _records.append(record)
+history --> repl : (done)
+deactivate history
+
+repl --> User : "Result: 8"
+deactivate repl
+
+|||
+
+User -> repl : input "divide 1 0"
+activate repl
+
+repl -> repl : _evaluate("divide 1 0")
+
+repl -> parser : parse("divide 1 0")
+activate parser
+parser --> repl : ("divide", [1, 0])
+deactivate parser
+
+repl -> validator : validate("divide", [1, 0])
+activate validator
+validator --> repl : (passes)
+deactivate validator
+
+repl -> calc : divide(1, 0)
+activate calc
+calc --> repl : raises ZeroDivisionError
+deactivate calc
+
+note right of repl
+  Error path — history NOT updated
+end note
+
+repl --> User : "Error: division by zero"
+deactivate repl
+
+@enduml

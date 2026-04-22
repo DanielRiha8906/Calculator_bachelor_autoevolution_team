@@ -15,6 +15,7 @@ participant "CLIHandler" as cli
 participant "ExpressionParser" as parser
 participant "InputValidator" as validator
 participant "Calculator" as calc
+participant "OperationHistory" as history
 participant "stdout / stderr" as out
 
 User -> main : invoke with sys.argv=["src.main", "add 5 3"]
@@ -48,6 +49,11 @@ alt successful path
   activate calc
   calc --> cli : return 8
   deactivate calc
+
+  cli -> history : append("add", [5, 3], 8)
+  activate history
+  history --> cli : (done)
+  deactivate history
 
   cli -> out : print(8)
   cli --> main : return 0

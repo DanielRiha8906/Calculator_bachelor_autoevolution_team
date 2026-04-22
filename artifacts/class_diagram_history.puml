@@ -1,0 +1,96 @@
+@startuml class_diagram_history
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam ArrowColor #444444
+skinparam ClassBorderColor #555555
+skinparam ClassBackgroundColor #FAFAFA
+
+title History of Operations — Class Structure
+
+package "src/history.py" {
+
+    class OperationRecord << (F,lightblue) frozen dataclass >> {
+        + timestamp : float
+        + operation : str
+        + operands : list
+        + result : Any
+    }
+
+    class OperationHistory {
+        - _records : list[OperationRecord]
+        + __init__()
+        + append(operation: str, operands: list, result: Any) : None
+        + get_all() : list[OperationRecord]
+        + clear() : None
+        + __len__() : int
+    }
+
+}
+
+class Calculator << src/calculator.py >> {
+    - _history : OperationHistory
+    + __init__()
+    + add(a, b) : Numeric
+    + subtract(a, b) : Numeric
+    + multiply(a, b) : Numeric
+    + divide(a, b) : Numeric
+    + factorial(n) : int
+    + square(x) : Numeric
+    + cube(x) : Numeric
+    + square_root(x) : float
+    + cube_root(x) : float
+    + power(base, exp) : Numeric
+    + natural_log(x) : float
+    + log_base_10(x) : float
+}
+
+class CalculatorREPL << src/input_handler.py >> {
+    - _calculator : Calculator
+    - _parser : ExpressionParser
+    - _validator : InputValidator
+    - _retry_config : RetryConfig
+    + __init__(calculator: Calculator, retry_config: RetryConfig = None)
+    + run() : None
+    - _evaluate(raw_input: str) : str
+    - _dispatch(operation: str, operands: list) : Numeric
+}
+
+class CLIHandler << src/cli.py >> {
+    - _expression : str
+    - _calculator : Calculator
+    - _parser : ExpressionParser
+    - _validator : InputValidator
+    + __init__(expression: str)
+    + run() : int
+    - _dispatch(operation: str, operands: list) : Numeric
+}
+
+note right of OperationRecord
+  Immutable value object.
+  Created inside OperationHistory.append()
+  using time.time() for timestamp.
+end note
+
+note bottom of CalculatorREPL
+  _evaluate() calls
+  _calculator._history.append()
+  only on successful dispatch.
+end note
+
+note bottom of CLIHandler
+  run() calls
+  _calculator._history.append()
+  only on successful dispatch.
+end note
+
+Calculator *-- OperationHistory : _history (1:1)
+OperationHistory o-- OperationRecord : _records (1:*)
+
+CalculatorREPL o-- Calculator : _calculator (passed in)
+CLIHandler *-- Calculator : _calculator (composes)
+
+CalculatorREPL ..> OperationHistory : appends via _calculator._history
+CLIHandler ..> OperationHistory : appends via _calculator._history
+
+@enduml
