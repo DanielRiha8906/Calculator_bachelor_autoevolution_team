@@ -15,7 +15,7 @@ None identified. New method is isolated; no existing methods modified.
 ### Test results
 134 passed, 0 failed (108 pre-existing + 26 new factorial tests)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 183.0s | Cost: $0.509196 USD | Turns: 15
 
 ---
 
