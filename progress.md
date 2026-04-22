@@ -8,7 +8,7 @@
   - `artifacts/activity_repl_loop.puml` — activity diagram updated: REPL loop with new history command branch (empty check, binary/unary format)
   - `artifacts/sequence_history.puml` — sequence diagram created: history command retrieval + binary operation with history recording flows
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 209.6s | Cost: $0.621194 USD | Turns: 12
 
 ## Run: Issue #257 — V2 Task 9 - Naive/team (2026-04-22)
 
