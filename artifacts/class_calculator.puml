@@ -1,0 +1,59 @@
+@startuml class_calculator
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    .. Basic Arithmetic ..
+    + add(a, b) : object
+    + subtract(a, b) : object
+    + multiply(a, b) : object
+    + divide(a, b) : object
+    .. Power / Root ..
+    + square(x: float) : float
+    + cube(x: float) : float
+    + power(base: float, exponent: float) : float
+    + square_root(x: float) : float
+    + cube_root(x: float) : float
+    .. Logarithmic ..
+    + natural_log(x: float) : float
+    + log_base_10(x: float) : float
+    .. Factorial ..
+    + factorial(n: int) : int
+}
+
+note right of Calculator::square_root
+  Raises ValueError if x < 0.
+  Delegates to math.sqrt(x).
+end note
+
+note right of Calculator::natural_log
+  Raises ValueError if x <= 0.
+  Delegates to math.log(x).
+end note
+
+note right of Calculator::log_base_10
+  Raises ValueError if x <= 0.
+  Delegates to math.log10(x).
+end note
+
+note right of Calculator::cube_root
+  Accepts all reals, preserves sign.
+  math.copysign(abs(x)**(1/3), x)
+end note
+
+note right of Calculator::factorial
+  Raises TypeError if n is bool or non-int.
+  Raises ValueError if n < 0.
+  Iterative implementation.
+end note
+
+class "math" <<stdlib>> {
+    + sqrt(x) : float
+    + log(x) : float
+    + log10(x) : float
+    + copysign(mag, sign) : float
+}
+
+Calculator ..> "math" : uses
+
+@enduml

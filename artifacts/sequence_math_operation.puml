@@ -1,0 +1,27 @@
+@startuml sequence_math_operation
+
+participant "Actor" as Actor
+participant "Calculator" as Calc
+participant "math" as Math
+
+== Happy Path: square_root(16) ==
+
+Actor ->> Calc : square_root(16)
+activate Calc
+note right of Calc : x=16, domain check: 16 >= 0, passes
+Calc ->> Math : sqrt(16)
+activate Math
+Math --> Calc : 4.0
+deactivate Math
+Calc --> Actor : 4.0
+deactivate Calc
+
+== Error Path: natural_log(-5) ==
+
+Actor ->> Calc : natural_log(-5)
+activate Calc
+note right of Calc : x=-5, domain check: -5 <= 0, fails
+Calc --> Actor : raise ValueError
+deactivate Calc
+
+@enduml

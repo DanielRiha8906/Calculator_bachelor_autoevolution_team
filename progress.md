@@ -1,4 +1,17 @@
 
+## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-242-advanced-math-ops
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added import math and 7 new methods: square, cube, square_root, cube_root, power, natural_log, log_base_10
+  - `tests/test_calculator.py` — added 7 test classes (125 new tests) covering all new methods
+- **Purpose:** Add square, cube, square root, cube root, power, log, and ln operations to the calculator as required by issue #242
+- **Risks:** None — additive changes only; no existing methods modified
+- **Tests passed:** 214 passed, 0 failed
+
+Duration: 232.1s | Cost: $0.572323 USD | Turns: 14
+
 ## Run: Issue #236 — Create tests for the calculator
 
 - **Branch:** task/issue-236-create-calculator-tests
@@ -74,3 +87,14 @@ Duration: 180.9s | Cost: $0.443277 USD | Turns: 16
 - **Date:** 2026-04-22
 
 Duration: 172.4s | Cost: $0.383842 USD | Turns: 6
+
+## Run: update-diagrams — Add advanced math ops UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-242-advanced-math-ops
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — updated class diagram with 7 new advanced math methods and math stdlib dependency
+  - `artifacts/activity_advanced_math.puml` — new activity diagram for domain-validation flows in square_root, natural_log, log_base_10, cube_root
+  - `artifacts/sequence_math_operation.puml` — new sequence diagram for square_root happy path and natural_log error path
+
+Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
