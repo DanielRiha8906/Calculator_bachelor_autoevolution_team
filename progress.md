@@ -1,3 +1,18 @@
+## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/history.py` — New OperationHistory class: record_operation(), get_history(), clear(), save_to_file(), _format_entry() with whole-number float collapsing
+  - `src/cli.py` — Integrated OperationHistory: instantiate per session, record after each successful operation, display on 'history'/'h' command, save to history.txt on all exit paths
+  - `tests/test_history.py` — 57 unit tests for OperationHistory class (recording, formatting, retrieval, clear, file persistence, edge cases)
+  - `tests/test_cli_history_integration.py` — 21 integration tests for CLI + history (recording, display, persistence, fresh session, no recording on error)
+- **Purpose:** Add session operation history tracking in function-style format (add(2,3)=5), display on request in interactive mode, persist to history.txt on session end
+- **Risks:** None — Calculator core untouched; history is purely additive; backward compatible
+- **Tests passed:** 573 passed, 0 failed
+
+Duration: 379.2s | Cost: $0.895947 USD | Turns: 15
+
 ## Run: Issue #256 — V2 Task 8 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-256-input-validation-retry
@@ -189,3 +204,25 @@ Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
   - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
 
 Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
+
+## Run: update-diagrams — Operation History UML (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_operation_history.puml` — new class diagram for OperationHistory and its cli.py integration
+  - `artifacts/activity_interactive_session.puml` — new activity diagram for interactive session with history command flow
+  - `artifacts/sequence_calculator_session.puml` — new sequence diagram for complete calculator session with history
+
+Duration: 242.4s | Cost: $0.685754 USD | Turns: 5
+
+## Run: update-diagrams — Add session-based operation history diagrams (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — added OperationHistory class and Session composition relationship
+  - `artifacts/activity_diagram_interactive_session.puml` — added history creation, history command check, record_operation after success, save_to_file on all exit paths
+  - `artifacts/sequence_diagram_operation_execution.puml` — added OperationHistory participant, record_operation after calc result, save_to_file on quit
+
+Duration: 262.4s | Cost: $0.703051 USD | Turns: 16

@@ -5,6 +5,7 @@ start
 :Create Calculator instance;
 :detect_mode() -> mode;
 :get_operation_menu(calc) -> operations;
+:Create OperationHistory();
 
 repeat
 
@@ -16,8 +17,20 @@ repeat
         :Read raw_choice;
 
         if (raw_choice in {quit, exit, q}?) then (yes)
+            :history.save_to_file("history.txt");
             :Print "Goodbye!";
             stop
+        else (no)
+        endif
+
+        if (raw_choice in {history, h}?) then (yes)
+            :history.get_history() -> entries;
+            if (entries is empty?) then (yes)
+                :Print "No history yet.";
+            else (no)
+                :Print each entry;
+            endif
+            :continue;
         else (no)
         endif
 
@@ -29,6 +42,7 @@ repeat
             :attempt_count += 1;
             if (attempt_count >= max_retries?) then (yes)
                 :Print "Maximum retry attempts exceeded";
+                :history.save_to_file("history.txt");
                 stop
             else (no)
             endif
@@ -55,6 +69,7 @@ repeat
                     :attempt_count += 1;
                     if (attempt_count >= max_retries?) then (yes)
                         :Print "Maximum retry attempts exceeded";
+                        :history.save_to_file("history.txt");
                         :Return None;
                         detach
                     else (no)
@@ -75,12 +90,13 @@ repeat
     }
 
     if (operands is None?) then (yes)
-        :Abort iteration — max retries hit;
-        backward: restart REPL loop;
+        :history.save_to_file("history.txt");
+        stop
     else (no)
     endif
 
     :result = getattr(calc, op_name)(*operands);
+    :history.record_operation(op_name, operands, result);
 
     if (Calculator raises exception?) then (yes)
         :Print "Error: {exc}";

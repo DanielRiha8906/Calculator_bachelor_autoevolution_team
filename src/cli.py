@@ -8,6 +8,7 @@ internal structure in advance.
 import inspect
 
 from .calculator import Calculator
+from .history import OperationHistory
 from .validation import (
     OperandValidationSession,
     OperationValidationSession,
@@ -136,6 +137,7 @@ def interactive_session(calculator: Calculator) -> None:
     mode = detect_mode()
     operations = get_operation_menu(calculator)
     op_session = OperationValidationSession(mode=mode, available_ops=operations)
+    history = OperationHistory()
 
     while True:
         # Refresh the operation list each iteration in case Calculator grows.
@@ -146,13 +148,26 @@ def interactive_session(calculator: Calculator) -> None:
         for idx, op_name in enumerate(operations, start=1):
             print(f"  {idx}. {op_name}")
         print("  (type 'quit', 'exit', or 'q' to exit)")
+        print("  (type 'history' or 'h' to view operation history)")
 
         raw_choice = input("\nSelect operation (name or number): ").strip()
 
         # Handle quit aliases before passing to the validation session.
         if raw_choice.lower() in {"quit", "exit", "q"}:
+            history.save_to_file("history.txt")
             print("Goodbye!")
             break
+
+        # Handle history display command.
+        if raw_choice.lower() in {"history", "h"}:
+            entries = history.get_history()
+            if entries:
+                print("\nOperation history:")
+                for entry in entries:
+                    print(f"  {entry}")
+            else:
+                print("  No history yet.")
+            continue
 
         # Resolve a numeric shortcut to an operation name.
         resolved_choice = raw_choice
@@ -170,6 +185,7 @@ def interactive_session(calculator: Calculator) -> None:
                         f"Maximum retry attempts ({op_session._max_retries}) "
                         "exceeded. Session terminated."
                     )
+                    history.save_to_file("history.txt")
                     break
                 continue
         except ValueError:
@@ -190,6 +206,7 @@ def interactive_session(calculator: Calculator) -> None:
                     f"Maximum retry attempts ({op_session._max_retries}) "
                     "exceeded. Session terminated."
                 )
+                history.save_to_file("history.txt")
                 break
             continue
 
@@ -201,10 +218,12 @@ def interactive_session(calculator: Calculator) -> None:
 
         if operands is None:
             # Operand retry limit reached — end the session gracefully.
+            history.save_to_file("history.txt")
             break
 
         try:
             result = getattr(calculator, op_name)(*operands)
+            history.record_operation(op_name, operands, result)
             print(f"  Result: {result}")
         except Exception as exc:  # noqa: BLE001
             print(f"  Error: {exc}")

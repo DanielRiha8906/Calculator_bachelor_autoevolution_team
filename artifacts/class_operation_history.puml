@@ -1,0 +1,57 @@
+@startuml class_operation_history
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src/history.py" {
+    class OperationHistory {
+        -_entries : list[str]
+        --
+        +__init__() : None
+        +record_operation(operation_name, args, result) : None
+        +get_history() : list[str]
+        +clear() : None
+        +save_to_file(filepath="history.txt") : None
+        -{static}_format_entry(operation_name, args, result) : str
+    }
+
+    note right of OperationHistory
+      _format_entry collapses whole-number
+      floats to int form: 9.0 -> "9"
+      Example: "add(2, 3) = 5"
+      No dependency on Calculator or CLI
+    end note
+}
+
+package "src/cli.py" {
+    class "interactive_session()" as Session <<function>> {
+        +calculator : Calculator
+        --
+        Creates OperationHistory per session
+        Records after each successful op
+        Displays history on 'h' / 'history'
+        Saves to file on all exit paths
+    }
+}
+
+package "src/calculator.py" {
+    class Calculator {
+        .. Binary ..
+        +add(a, b) : numeric
+        +subtract(a, b) : numeric
+        +multiply(a, b) : numeric
+        +divide(a, b) : numeric
+        +power(base, exponent) : numeric
+        .. Unary ..
+        +square(x) : numeric
+        +square_root(x) : numeric
+        +logarithm(x) : numeric
+        +factorial(n) : int
+    }
+}
+
+Session *-- OperationHistory : <<creates per session>>
+Session --> Calculator : dispatches operations\ngetattr(calc, op)(*args)
+OperationHistory ..> Calculator : no dependency
+
+@enduml

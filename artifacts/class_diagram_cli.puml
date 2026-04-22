@@ -22,6 +22,18 @@ package "src/calculator.py" {
     }
 }
 
+package "src/history.py" {
+    class OperationHistory {
+        -_entries: list[str]
+        --
+        +record_operation(operation_name: str, args: list, result: object) : None
+        +get_history() : list[str]
+        +clear() : None
+        +save_to_file(filepath: str = "history.txt") : None
+        -{static} _format_entry(operation_name, args, result) : str
+    }
+}
+
 package "src/cli.py" {
     class "get_operation_menu()" as GetMenu <<function>> {
         +calculator: Calculator
@@ -59,8 +71,10 @@ package "src/cli.py" {
         +calculator: Calculator
         --
         REPL loop: menu -> select -> collect -> dispatch
-        Exits on: quit / exit / q
-        Catches all Calculator exceptions
+        Creates OperationHistory per session
+        Records after successful op
+        Displays history on 'h'/'history'
+        Saves to file on all exit paths
     }
 }
 
@@ -117,6 +131,7 @@ package "main.py" {
 Main --> Calculator : <<instantiates>>
 Main --> Session : calls
 
+Session *-- OperationHistory : <<creates per session>>
 Session --> GetMenu : calls each iteration
 Session --> GetArity : calls after selection
 Session --> GetOperands : calls to collect inputs
