@@ -24,7 +24,15 @@ package "Core Calculation" {
         +__init__(calculator: Calculator)
         +get_operation(key: str) : tuple
         +list_operations() : dict
+        +register_operation(key: str, method: callable, arity: int, description: str) : None
     }
+
+    note right of OperationRegistry
+        Registers 12 built-in operations on init.
+        6 with error logging: divide, factorial,
+        square_root, power, log, ln.
+        register_operation() enables runtime extension.
+    end note
 
     class CalculationEngine {
         -_calculator: Calculator

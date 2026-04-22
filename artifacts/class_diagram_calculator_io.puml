@@ -18,6 +18,9 @@ class Calculator {
 }
 
 class InputHandler {
+    +history: Any
+    +__init__(history: Any = None)
+    +display_history() : None
     +get_operation_choice(available_operations: dict, max_retries: int) : str
     +get_operand(prompt: str, max_retries: int) : float
     +display_result(operation: str, operands: list, result: float) : None
@@ -35,9 +38,27 @@ class OperationRegistry {
     +__init__(calculator: Calculator) : None
     +get_operation(key: str) : tuple
     +list_operations() : dict
+    +register_operation(key: str, method: callable, arity: int, description: str) : None
 }
 
 OperationRegistry *--> Calculator : holds reference and bound methods
+
+class CalculationEngine {
+    -_calculator: Calculator
+    -_registry: OperationRegistry
+    +__init__(calculator: Calculator, registry: OperationRegistry)
+    +execute_operation(operation_key: str, operands: list) : float
+}
+
+CalculationEngine *--> Calculator
+CalculationEngine *--> OperationRegistry
+
+class UserInterface {
+    +display_result(operation, operands, result) : None
+    +display_error(message: str) : None
+    +display_operations(available_operations: dict) : None
+    +display_history(history_str: str) : None
+}
 
 class cli {
     +parse_args(argv: list[str]) : tuple[str, list[float]]

@@ -294,3 +294,14 @@ Duration: 507.6s | Cost: $1.237620 USD | Turns: 15
   - `artifacts/sequence_diagram_workflow_operation_execution.puml` — new sequence diagram for refactored operation execution path
 
 Duration: 246.6s | Cost: $0.706330 USD | Turns: 16
+
+## Run: update-diagrams — Modular Refactor Diagram Sync (2026-04-22)
+
+- **Branch:** task/issue-267-modular-refactor
+- **PR target:** exp/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — added register_operation() to OperationRegistry
+  - `artifacts/class_diagram_workflow.puml` — expanded Calculator to all 12 ops; added UserInterface.display_operations() and display_history()
+  - `artifacts/class_diagram_calculator_io.puml` — added CalculationEngine, UserInterface, register_operation(), InputHandler.display_history()
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
