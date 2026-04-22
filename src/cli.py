@@ -97,6 +97,7 @@ class CLIHandler:
             print(f"Type error: {exc}", file=sys.stderr)
             return 1
 
+        self._calculator._history.append(operation, operands, result)
         print(result)
         return 0
 

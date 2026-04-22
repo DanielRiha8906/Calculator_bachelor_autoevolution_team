@@ -288,6 +288,7 @@ class CalculatorREPL:
         except TypeError as exc:
             return f"Type error: {exc}"
 
+        self._calculator._history.append(operation, operands, result)
         return f"Result: {result}"
 
     # ------------------------------------------------------------------

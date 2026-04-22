@@ -176,3 +176,21 @@ Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
   - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
 
 Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
+
+## Run: Issue #257 — V2 Task 9 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-257-history-of-operations
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/history.py` — new module with OperationRecord (frozen dataclass) and OperationHistory (in-memory append-only list)
+  - `src/calculator.py` — added __init__ to initialize self._history = OperationHistory()
+  - `src/input_handler.py` — log successful operations to history in CalculatorREPL._evaluate
+  - `src/cli.py` — log successful operations to history in CLIHandler.run
+  - `src/__init__.py` — export OperationRecord and OperationHistory
+  - `tests/test_history.py` — 32 unit tests for OperationRecord and OperationHistory
+  - `tests/test_calculator_history_integration.py` — 49 integration tests for history logging in REPL and CLI
+- **Purpose:** Add operation history to the calculator, recording each successful operation with its operands, result, and timestamp
+- **Risks:** None — purely additive change; existing calculation methods unchanged
+- **Tests passed:** 554 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

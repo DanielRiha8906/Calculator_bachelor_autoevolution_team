@@ -1,7 +1,12 @@
 import math
 
+from .history import OperationHistory
+
 
 class Calculator:
+    def __init__(self) -> None:
+        self._history: OperationHistory = OperationHistory()
+
     def add(self, a, b):
         return a + b
 
