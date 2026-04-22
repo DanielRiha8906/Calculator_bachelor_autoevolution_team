@@ -157,4 +157,4 @@ Duration: 297.1s | Cost: $0.812856 USD | Turns: 15
   - `artifacts/activity_diagram_cli_mode.puml` — new activity diagram for CLI execution flow: argv dispatch, parse, execute, format, stdout/stderr, exit codes
   - `artifacts/sequence_diagram_cli_execution.puml` — new sequence diagram tracing __main__ → cli_main → parse_args → execute_cli → OperationRegistry → Calculator → stdout
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 196.9s | Cost: $0.514913 USD | Turns: 12
