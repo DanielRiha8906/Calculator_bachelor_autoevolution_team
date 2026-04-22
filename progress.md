@@ -219,6 +219,20 @@ Duration: 349.5s | Cost: $1.000426 USD | Turns: 16
 
 Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
 
+## Run: Issue #263 — V2 Task 11 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-263-separate-calculator-logic
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/logic.py` — new module with `CalculatorEngine` class containing all 12 computation methods and history tracking; no UI dependencies
+  - `src/calculator.py` — refactored to thin facade delegating all method calls to `CalculatorEngine`; public API preserved for backward compatibility
+  - `tests/test_logic.py` — 233 new tests for `CalculatorEngine` directly (all operations, history tracking, error cases, history isolation, import path)
+- **Purpose:** Separate calculator logic from interface by extracting all computation into a dedicated `CalculatorEngine` in `src/logic.py`, with `Calculator` becoming a backward-compatible facade
+- **Risks:** None — facade preserves public API; all existing tests pass unchanged
+- **Tests passed:** 604 passed, 0 failed
+
+Duration: 315.1s | Cost: $0.853848 USD | Turns: 18
+
 ## Run: update-diagrams — Add error logging diagrams (2026-04-22)
 
 - **Branch:** task/issue-260-error-logging
@@ -229,3 +243,14 @@ Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
   - `artifacts/sequence_diagram_cli_repl_logging.puml` — new sequence diagram showing CLI and REPL error paths with logger.warning() and logger.error() call sites
 
 Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
+
+## Run: update-diagrams — CalculatorEngine facade diagrams (2026-04-22)
+
+- **Branch:** task/issue-263-separate-calculator-logic
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator_facade.puml` — new class diagram showing CalculatorEngine + Calculator facade pattern and delegation
+  - `artifacts/sequence_calculator_facade_division.puml` — new sequence diagram showing division delegation and error path through facade layers
+  - `artifacts/sequence_calculator_factorial_validation.puml` — new sequence diagram showing factorial type/value validation, logger integration, and three execution paths
+
+Duration: 224.2s | Cost: $0.617987 USD | Turns: 12

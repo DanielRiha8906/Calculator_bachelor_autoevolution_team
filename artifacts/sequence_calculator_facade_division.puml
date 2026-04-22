@@ -1,0 +1,44 @@
+@startuml sequence_calculator_facade_division
+
+participant Actor
+participant Calculator
+participant CalculatorEngine
+participant Logger
+
+== Happy Path: divide(10, 2) ==
+
+Actor ->> Calculator : divide(10, 2)
+activate Calculator
+Calculator ->> CalculatorEngine : divide(10, 2)
+note right : delegation
+activate CalculatorEngine
+CalculatorEngine ->> CalculatorEngine : result = 10 / 2 = 5.0
+CalculatorEngine ->> CalculatorEngine : _record_history(10, "divide", 2, 5.0)
+deactivate CalculatorEngine
+Calculator -->> Actor : return 5.0
+deactivate Calculator
+
+== Error Path: divide(10, 0) ==
+
+Actor ->> Calculator : divide(10, 0)
+activate Calculator
+Calculator ->> CalculatorEngine : divide(10, 0)
+activate CalculatorEngine
+
+alt division succeeds
+    CalculatorEngine ->> CalculatorEngine : result = 10 / 2 = 5.0
+    CalculatorEngine ->> CalculatorEngine : _record_history(10, "divide", 2, 5.0)
+    CalculatorEngine -->> Actor : return 5.0
+else ZeroDivisionError
+    CalculatorEngine ->> CalculatorEngine : attempt 10 / 0 -> ZeroDivisionError
+    CalculatorEngine ->> Logger : error("divide() failed: ...")
+    activate Logger
+    deactivate Logger
+    CalculatorEngine -->> Actor : raise ZeroDivisionError
+    note right : history NOT recorded
+end
+
+deactivate CalculatorEngine
+deactivate Calculator
+
+@enduml

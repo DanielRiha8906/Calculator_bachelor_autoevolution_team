@@ -1,0 +1,67 @@
+@startuml class_calculator_facade
+
+skinparam classAttributeIconSize 0
+
+class CalculatorEngine {
+    - _history : list[dict]
+    --
+    - _record_history(operand1, operator: str, operand2, result) : None
+    + get_history() : list[dict]
+    .. Basic Arithmetic ..
+    + add(a, b) : object
+    + subtract(a, b) : object
+    + multiply(a, b) : object
+    + divide(a, b) : object
+    .. Power / Root ..
+    + power(base: float, exponent: float) : float
+    + square(x: float) : float
+    + cube(x: float) : float
+    + square_root(x: float) : float
+    + cube_root(x: float) : float
+    .. Logarithmic ..
+    + natural_log(x: float) : float
+    + log_base_10(x: float) : float
+    .. Factorial ..
+    + factorial(n: int) : int
+}
+
+note right of CalculatorEngine
+  Pure computation engine.
+  No UI/IO dependencies.
+end note
+
+class Calculator {
+    - _engine : CalculatorEngine
+    --
+    + get_history() : list[dict]
+    .. Basic Arithmetic ..
+    + add(a, b) : object
+    + subtract(a, b) : object
+    + multiply(a, b) : object
+    + divide(a, b) : object
+    .. Power / Root ..
+    + power(base: float, exponent: float) : float
+    + square(x: float) : float
+    + cube(x: float) : float
+    + square_root(x: float) : float
+    + cube_root(x: float) : float
+    .. Logarithmic ..
+    + natural_log(x: float) : float
+    + log_base_10(x: float) : float
+    .. Factorial ..
+    + factorial(n: int) : int
+}
+
+note right of Calculator
+  Facade. All computation
+  delegated to CalculatorEngine.
+end note
+
+class Logger {
+    + get_logger(name) : Logger
+}
+
+Calculator *-- CalculatorEngine : delegates to
+CalculatorEngine ..> Logger : uses for error logging
+
+@enduml
