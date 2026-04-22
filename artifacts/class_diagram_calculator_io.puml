@@ -24,6 +24,14 @@ class InputHandler {
     +display_error(message: str) : None
 }
 
+class CLIHandler {
+    +parse_arguments(args: list[str]) : tuple[str, list[str]]
+    +validate_operands(operands: list[str], arity: int) : list[float]
+    +print_result(description: str, operands: list[float], result: float) : None
+    +print_error(message: str) : None
+    +is_cli_mode(args: list[str]) : bool
+}
+
 class OperationRegistry {
     -_registry: dict
     +__init__(calculator: Calculator) : None
@@ -32,5 +40,7 @@ class OperationRegistry {
 }
 
 OperationRegistry *--> Calculator : holds reference and bound methods
+CLIHandler ..> OperationRegistry : uses get_operation
+InputHandler ..> OperationRegistry : uses list_operations, get_operation
 
 @enduml

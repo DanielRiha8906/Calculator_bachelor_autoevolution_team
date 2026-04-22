@@ -1,45 +1,70 @@
-@startuml activity_diagram_interactive_loop
+@startuml activity_diagram_main_dispatch
 
 start
 
 :Instantiate Calculator;
 :Instantiate InputHandler;
 :Instantiate OperationRegistry(calculator);
-:Print welcome message;
+:Instantiate CLIHandler;
 
-repeat
-    :handler.get_operation_choice(registry.list_operations());
+if (cli.is_cli_mode(sys.argv[1:])?) then (yes)
+    :cli.parse_arguments(sys.argv[1:]);
+    :Unpack (operation_key, operand_strings);
+    :registry.get_operation(operation_key);
+    :Unpack (method, arity, description);
+    :cli.validate_operands(operand_strings, arity);
 
-    if (choice == "exit"?) then (yes)
-        :Print "Goodbye!";
-        stop
+    if (operation_key == "factorial"?) then (yes)
+        :Cast operands[0] float -> int;
     else (no)
-        :registry.get_operation(choice);
-        :Unpack (method, arity, description);
-
-        if (arity == 1?) then (yes)
-            :handler.get_operand(prompt);
-            if (operation == "factorial"?) then (yes)
-                :Cast operand float -> int;
-            else (no)
-            endif
-            :operands = [value];
-        else (no)
-            :handler.get_operand("Enter first operand: ");
-            :handler.get_operand("Enter second operand: ");
-            :operands = [first, second];
-        endif
-
-        :result = method(*operands);
-        :handler.display_result(description, operands, result);
     endif
 
-backward: (next iteration)
-repeat while (KeyboardInterrupt?) is (no)
-->yes;
+    :result = method(*operands);
+    :cli.print_result(description, operands, result);
+    :sys.exit(0);
+    stop
+else (no)
+    :Print welcome message;
 
-:Print "Goodbye!";
+    repeat
+        :handler.get_operation_choice(registry.list_operations());
 
-stop
+        if (choice == "exit"?) then (yes)
+            :Print "Goodbye!";
+            stop
+        else (no)
+            :registry.get_operation(choice);
+            :Unpack (method, arity, description);
+
+            if (arity == 1?) then (yes)
+                :handler.get_operand(prompt);
+                if (operation == "factorial"?) then (yes)
+                    :Cast operand float -> int;
+                else (no)
+                endif
+                :operands = [value];
+            else (no)
+                :handler.get_operand("Enter first operand: ");
+                :handler.get_operand("Enter second operand: ");
+                :operands = [first, second];
+            endif
+
+            :result = method(*operands);
+            :handler.display_result(description, operands, result);
+        endif
+
+    backward: (next iteration)
+    repeat while (KeyboardInterrupt?) is (no)
+    ->yes;
+
+    :Print "Goodbye!";
+    stop
+endif
+
+note right
+  On ValueError / ZeroDivisionError / KeyError
+  in CLI path: cli.print_error(str(exc))
+  then sys.exit(1)
+end note
 
 @enduml

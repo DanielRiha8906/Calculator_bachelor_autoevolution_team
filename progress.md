@@ -150,3 +150,14 @@ Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
   - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
 
 Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
+
+## Run: update-diagrams — Add CLIHandler to class and activity diagrams (2026-04-22)
+
+- **Branch:** task/issue-252-cli-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — added CLIHandler class with 5 methods and dependency relationships to OperationRegistry and InputHandler
+  - `artifacts/activity_diagram_interactive_loop.puml` — restructured to show dual-mode dispatch: CLI path (parse args, validate, execute, exit) before interactive loop branch
+  - `artifacts/cli_mode_sequence_diagram.puml` — new sequence diagram for CLI mode execution: User → main → CLIHandler → OperationRegistry → Calculator
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

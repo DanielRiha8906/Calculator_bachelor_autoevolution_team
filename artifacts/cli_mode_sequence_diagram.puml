@@ -1,0 +1,31 @@
+@startuml cli_mode_sequence_diagram
+
+actor User
+participant "main()" as main
+participant CLIHandler as cli
+participant OperationRegistry as registry
+participant Calculator as calc
+
+User -> main : execute with args ["add", "3", "5"]
+
+main -> cli : is_cli_mode(sys.argv[1:])
+cli --> main : True
+
+main -> cli : parse_arguments(["add", "3", "5"])
+cli --> main : ("add", ["3", "5"])
+
+main -> registry : get_operation("add")
+registry --> main : (Calculator.add, 2, "Addition")
+
+main -> cli : validate_operands(["3", "5"], 2)
+cli --> main : [3.0, 5.0]
+
+main -> calc : add(3.0, 5.0)
+calc --> main : 8.0
+
+main -> cli : print_result("Addition", [3.0, 5.0], 8.0)
+cli -> cli : print("Result: 8.0")
+
+main -> main : sys.exit(0)
+
+@enduml
