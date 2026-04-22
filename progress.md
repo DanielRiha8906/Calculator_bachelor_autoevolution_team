@@ -1,3 +1,26 @@
+## Run: Issue #238 — V2 Task 2 Expert/team unit test suite
+
+- **Branch:** task/issue-238-unit-test-suite
+- **Target PR branch:** exp2/expert-team
+- **Date:** 2026-04-22
+
+### Files changed
+- `tests/test_calculator.py` — added 69 new tests across three new classes: TestAdd (25 tests), TestSubtract (25 tests), TestMultiply (19 tests)
+
+### Purpose
+Create a comprehensive unit test suite for all four calculator operations. The existing file had TestDivide only (39 tests). Added TestAdd, TestSubtract, and TestMultiply covering normal inputs, edge cases (large/small numbers, float precision), and error conditions (TypeError for invalid inputs). No source changes were needed.
+
+### Risks
+None identified. Only test file modified; no production code changed.
+
+### Test results
+108 passed, 0 failed, 0 errors (0.07s)
+
+### Tokens / cost / turns
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #235 — Division by zero test coverage
 
 - **Branch:** task/issue-235-division-by-zero
