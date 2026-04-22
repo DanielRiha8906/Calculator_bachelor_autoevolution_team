@@ -140,4 +140,4 @@ Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
 - **Risks:** None — additive changes only; REPL behavior unchanged when no arguments are passed
 - **Tests passed:** 450 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
