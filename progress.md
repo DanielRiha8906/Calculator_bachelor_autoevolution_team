@@ -7,7 +7,7 @@
   - `artifacts/class_diagram_session.puml` — added src/mode.py package (CalculatorMode, ModeConfig); added 6 trig methods to Calculator; added mode state fields/methods to CalculatorSession
   - `artifacts/activity_diagram_interactive_session.puml` — added mode selection step at session start; added mode/m command handler for mid-session switching
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 300.2s | Cost: $1.018745 USD | Turns: 21
 
 ## Run: Issue #274 — V2 Task 14 - Expert/team (2026-04-22)
 
