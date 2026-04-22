@@ -30,6 +30,8 @@ class InputHandler {
 class UserInterface {
     +display_result(operation, operands, result)
     +display_error(message: str)
+    +display_operations(available_operations: dict) : None
+    +display_history(history_str: str) : None
 }
 
 class OperationHistory {
@@ -49,6 +51,11 @@ class Calculator {
     +subtract(a, b) : numeric
     +multiply(a, b) : numeric
     +divide(a, b) : float
+    +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
     +power(x: float, y: float) : float
     +log(x: float) : float
     +ln(x: float) : float

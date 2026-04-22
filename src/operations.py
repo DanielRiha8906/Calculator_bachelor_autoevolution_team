@@ -1,4 +1,26 @@
-"""Registry mapping operation keys to Calculator methods with metadata."""
+"""Registry mapping operation keys to Calculator methods with metadata.
+
+The registry is intentionally open to extension: third-party or scientific
+operations can be added at runtime without modifying this module or
+``Calculator``.  Example::
+
+    import math
+    from src.operations import OperationRegistry
+    from src.calculator import Calculator
+
+    calc = Calculator()
+    registry = OperationRegistry(calc)
+
+    # Register a new scientific operation — sine with one operand.
+    registry.register_operation(
+        key="sin",
+        method=math.sin,
+        arity=1,
+        description="Sine of x in radians (sin x)",
+    )
+
+    # The engine will now resolve "sin" like any built-in operation.
+"""
 
 from . import error_logger
 from .calculator import Calculator
@@ -12,6 +34,20 @@ class OperationRegistry:
         (bound_method, arity: int, description: str)
 
     where ``arity`` is the number of operands the method expects (1 or 2).
+
+    Built-in operations are populated in ``__init__``.  Additional operations
+    can be added at any time via :meth:`register_operation` without subclassing
+    or modifying this file.  Any operation registered this way is immediately
+    available to ``CalculationEngine.execute_operation``.
+
+    Example — adding a scientific function after construction::
+
+        registry.register_operation(
+            key="sin",
+            method=math.sin,
+            arity=1,
+            description="Sine of x in radians (sin x)",
+        )
     """
 
     def __init__(self, calculator: Calculator) -> None:
@@ -60,3 +96,46 @@ class OperationRegistry:
             Dict mapping each key to its human-readable description.
         """
         return {key: entry[2] for key, entry in self._registry.items()}
+
+    def register_operation(
+        self,
+        key: str,
+        method: callable,
+        arity: int,
+        description: str,
+    ) -> None:
+        """Register a new operation in the registry.
+
+        Allows callers to extend the registry with custom or scientific
+        operations at runtime without modifying this module or
+        ``Calculator``.
+
+        Args:
+            key: Unique string identifier for the operation (e.g. ``"sin"``).
+                Must not already exist in the registry.
+            method: A callable that accepts exactly ``arity`` positional
+                numeric arguments and returns a numeric result.
+            arity: The number of operands the operation expects.  Must be a
+                positive integer (>= 1).
+            description: A short human-readable description shown by
+                :meth:`list_operations` (e.g. ``"Sine of x in radians"``).
+
+        Raises:
+            ValueError: If ``key`` is already registered, or if ``arity`` is
+                not a positive integer.
+            TypeError: If ``method`` is not callable.
+        """
+        if key in self._registry:
+            raise ValueError(
+                f"Operation '{key}' is already registered. "
+                "Use a different key or remove the existing entry first."
+            )
+        if not callable(method):
+            raise TypeError(
+                f"'method' must be callable, got {type(method).__name__!r}."
+            )
+        if not isinstance(arity, int) or isinstance(arity, bool) or arity < 1:
+            raise ValueError(
+                f"'arity' must be a positive integer, got {arity!r}."
+            )
+        self._registry[key] = (method, arity, description)
