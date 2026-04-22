@@ -12,6 +12,22 @@
 
 Duration: 232.1s | Cost: $0.572323 USD | Turns: 14
 
+## Run: Issue #245 — V2 Task 5 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-245-user-input
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/input_handler.py` — new module with InputValidator, ExpressionParser, and CalculatorREPL classes
+  - `src/main.py` — new entry point that starts the interactive calculator REPL
+  - `src/__init__.py` — export InputValidator, ExpressionParser, CalculatorREPL
+  - `tests/test_input_handler.py` — 124 tests covering all input handling classes and edge cases
+  - `tests/test_main.py` — 12 integration tests for the main entry point
+- **Purpose:** Add user input to the calculator via an interactive REPL that parses space-separated expressions (e.g. "add 5 3"), validates operands, and returns results
+- **Risks:** None — additive changes only; Calculator class and existing tests unchanged
+- **Tests passed:** 146 passed, 0 failed
+
+Duration: 354.5s | Cost: $0.739122 USD | Turns: 16
+
 ## Run: Issue #236 — Create tests for the calculator
 
 - **Branch:** task/issue-236-create-calculator-tests
@@ -98,3 +114,14 @@ Duration: 172.4s | Cost: $0.383842 USD | Turns: 6
   - `artifacts/sequence_math_operation.puml` — new sequence diagram for square_root happy path and natural_log error path
 
 Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
+
+## Run: update-diagrams — Add user input REPL diagrams (2026-04-22)
+
+- **Branch:** task/issue-245-user-input
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_input_handler.puml` — new class diagram showing InputValidator, ExpressionParser, CalculatorREPL and their composition with Calculator
+  - `artifacts/activity_repl_pipeline.puml` — new activity diagram for the REPL evaluation pipeline (_evaluate flow with all error branches)
+  - `artifacts/sequence_repl_interaction.puml` — new sequence diagram showing happy path and validation error path through the REPL
+
+Duration: 226.3s | Cost: $0.485512 USD | Turns: 7

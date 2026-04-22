@@ -1,0 +1,44 @@
+@startuml activity_repl_pipeline
+
+title REPL Evaluation Pipeline (_evaluate)
+
+start
+
+:raw_input received;
+
+:ExpressionParser.parse(raw_input);
+
+if (parse raises ValueError?) then (yes)
+    :return "Input error: <message>";
+    stop
+else (no)
+    :operation, operands obtained;
+endif
+
+:InputValidator.validate(operation, operands);
+
+if (validate raises ValueError?) then (yes)
+    :return "Validation error: <message>";
+    stop
+else (no)
+    :validation passed;
+endif
+
+:_dispatch(operation, operands);
+note right: calls matching Calculator method
+
+if (ZeroDivisionError or ValueError?) then (yes)
+    :return "Math error: <message>";
+    stop
+else if (TypeError?) then (yes)
+    :return "Type error: <message>";
+    stop
+else (no)
+    :result = Numeric value;
+endif
+
+:return "Result: {value}";
+
+stop
+
+@enduml
