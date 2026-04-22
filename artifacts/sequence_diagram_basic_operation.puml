@@ -1,0 +1,28 @@
+@startuml sequence_diagram_basic_operation
+title Calculator — Two-Operand Operation (e.g. Addition)
+
+actor User
+participant InputHandler
+participant OperationRegistry
+participant Calculator
+
+User -> InputHandler : select operation
+InputHandler -> OperationRegistry : list_operations()
+OperationRegistry --> InputHandler : {key: (method, arity, description), ...}
+InputHandler --> User : display operation menu
+
+User -> InputHandler : enter choice ("add")
+InputHandler -> OperationRegistry : get_operation("add")
+OperationRegistry --> InputHandler : (Calculator.add, 2, "Addition (a + b)")
+
+InputHandler --> User : prompt for operand A
+User -> InputHandler : enter operand A
+
+InputHandler --> User : prompt for operand B
+User -> InputHandler : enter operand B
+
+InputHandler -> Calculator : add(a, b)
+Calculator --> InputHandler : result (float)
+
+InputHandler --> User : display_result("add", [a, b], result)
+@enduml

@@ -1,0 +1,25 @@
+@startuml sequence_diagram_single_operand
+title Calculator — Single-Operand Operation with Error Handling (e.g. Factorial)
+
+actor User
+participant InputHandler
+participant OperationRegistry
+participant Calculator
+
+User -> InputHandler : enter choice ("factorial")
+InputHandler -> OperationRegistry : get_operation("factorial")
+OperationRegistry --> InputHandler : (Calculator.factorial, 1, "Factorial (n!)")
+
+InputHandler --> User : prompt for operand
+User -> InputHandler : enter operand n
+
+InputHandler -> Calculator : factorial(n)
+
+alt successful execution
+  Calculator --> InputHandler : result (int)
+  InputHandler --> User : display_result("factorial", [n], result)
+else ValueError (negative or non-integer input)
+  Calculator --> InputHandler : raises ValueError
+  InputHandler --> User : display_error(error message)
+end
+@enduml

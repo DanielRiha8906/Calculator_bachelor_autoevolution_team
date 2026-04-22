@@ -1,0 +1,30 @@
+@startuml activity_diagram
+title Calculator — Main Operation Flow
+
+start
+:Build OperationRegistry from Calculator;
+:Create InputHandler;
+
+repeat
+  :Display available operations;
+  :User selects operation;
+  if (choice == "exit" or "quit"?) then (yes)
+    stop
+  else (no)
+    :Fetch (method, arity, description)\nfrom OperationRegistry;
+    if (arity == 2?) then (yes)
+      :Get operand A from user;
+      :Get operand B from user;
+    else (no)
+      :Get operand A from user;
+    endif
+    :Execute Calculator method with operand(s);
+    if (operation succeeds?) then (yes)
+      :display_result(operation, operands, result);
+    else (no)
+      :display_error(error message);
+    endif
+  endif
+repeat while (continue?) is (yes)
+stop
+@enduml

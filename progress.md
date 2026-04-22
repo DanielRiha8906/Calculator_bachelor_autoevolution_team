@@ -133,3 +133,20 @@ Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
   - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
 
 Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
+
+## Run: Issue #249 — V2 Task 6 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-249-plantuml-diagrams
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — class diagram for Calculator, OperationRegistry, InputHandler with all 12 methods and relationships
+  - `artifacts/activity_diagram.puml` — activity diagram for the main calculator operation loop
+  - `artifacts/sequence_diagram_basic_operation.puml` — sequence diagram for two-operand operation (addition)
+  - `artifacts/sequence_diagram_single_operand.puml` — sequence diagram for single-operand operation with error handling (factorial)
+  - `artifacts/sequence_diagram_exit_flow.puml` — sequence diagram for exit/quit flow
+  - `tests/test_plantuml_artifacts.py` — 42 tests verifying file existence, PlantUML structure validity, class diagram completeness, and diagram content
+- **Purpose:** Create PlantUML documentation diagrams (class, activity, sequence) for the calculator and place them in artifacts/ as required by Issue #249
+- **Risks:** None. Documentation-only artifacts; no source code modified
+- **Tests passed:** 42 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

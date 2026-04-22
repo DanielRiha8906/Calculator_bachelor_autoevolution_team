@@ -1,0 +1,34 @@
+@startuml class_diagram
+title Calculator — Class Diagram
+
+class Calculator {
+  +add(a, b) : float
+  +subtract(a, b) : float
+  +multiply(a, b) : float
+  +divide(a, b) : float
+  +power(x, y) : float
+  +factorial(n) : int
+  +square(x) : float
+  +cube(x) : float
+  +square_root(x) : float
+  +cube_root(x) : float
+  +log(x) : float
+  +ln(x) : float
+}
+
+class OperationRegistry {
+  -_registry : dict
+  +__init__(calculator) : void
+  +get_operation(key) : tuple
+  +list_operations() : dict
+}
+
+class InputHandler {
+  +get_operation_choice(available_operations) : str
+  +get_operand(prompt) : float
+  +display_result(operation, operands, result) : void
+  +display_error(message) : void
+}
+
+OperationRegistry --> Calculator : holds bound methods of
+@enduml

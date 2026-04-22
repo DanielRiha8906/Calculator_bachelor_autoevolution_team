@@ -1,0 +1,11 @@
+@startuml sequence_diagram_exit_flow
+title Calculator — Exit Flow
+
+actor User
+participant InputHandler
+participant Application
+
+User -> InputHandler : enter "exit" or "quit"
+InputHandler --> Application : returns sentinel value ("exit" / "quit")
+Application --> User : calculator terminates normally
+@enduml
