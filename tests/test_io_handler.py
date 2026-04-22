@@ -512,3 +512,219 @@ class TestInputHandlerValidationErrorLogging:
             handler_obj.flush()
             content = temp_log_file.read_text()
             assert "VALIDATION_ERROR:" in content
+
+
+class TestUserInterfaceInitialization:
+    """Test suite for UserInterface initialization."""
+
+    def test_user_interface_initializes(self):
+        """Test that UserInterface can be instantiated."""
+        from src.io_handler import UserInterface
+        ui = UserInterface()
+        assert ui is not None
+
+
+class TestUserInterfaceDisplayResult:
+    """Test suite for UserInterface.display_result() method."""
+
+    @pytest.fixture
+    def ui(self):
+        """Fixture to provide a UserInterface instance."""
+        from src.io_handler import UserInterface
+        return UserInterface()
+
+    def test_display_result_binary_operation(self, ui, capsys):
+        """Test result display for a binary operation."""
+        ui.display_result("add", [5, 3], 8)
+        captured = capsys.readouterr()
+        assert "Result of add(5, 3) = 8" in captured.out
+
+    def test_display_result_unary_operation(self, ui, capsys):
+        """Test result display for a unary operation."""
+        ui.display_result("square", [5], 25)
+        captured = capsys.readouterr()
+        assert "Result of square(5) = 25" in captured.out
+
+    def test_display_result_float_operands(self, ui, capsys):
+        """Test result display with float operands."""
+        ui.display_result("divide", [10.0, 2.5], 4.0)
+        captured = capsys.readouterr()
+        assert "Result of divide(10.0, 2.5) = 4.0" in captured.out
+
+    def test_display_result_float_result(self, ui, capsys):
+        """Test result display with float result."""
+        ui.display_result("divide", [5, 2], 2.5)
+        captured = capsys.readouterr()
+        assert "Result of divide(5, 2) = 2.5" in captured.out
+
+    def test_display_result_negative_operands(self, ui, capsys):
+        """Test result display with negative operands."""
+        ui.display_result("multiply", [-3, 4], -12)
+        captured = capsys.readouterr()
+        assert "Result of multiply(-3, 4) = -12" in captured.out
+
+    def test_display_result_zero_result(self, ui, capsys):
+        """Test result display with zero result."""
+        ui.display_result("subtract", [5, 5], 0)
+        captured = capsys.readouterr()
+        assert "Result of subtract(5, 5) = 0" in captured.out
+
+    def test_display_result_returns_none(self, ui):
+        """Test that display_result returns None."""
+        result = ui.display_result("add", [1, 2], 3)
+        assert result is None
+
+
+class TestUserInterfaceDisplayError:
+    """Test suite for UserInterface.display_error() method."""
+
+    @pytest.fixture
+    def ui(self):
+        """Fixture to provide a UserInterface instance."""
+        from src.io_handler import UserInterface
+        return UserInterface()
+
+    def test_display_error_simple_message(self, ui, capsys):
+        """Test error display with a simple message."""
+        ui.display_error("Something went wrong")
+        captured = capsys.readouterr()
+        assert "Error: Something went wrong" in captured.out
+
+    def test_display_error_division_by_zero(self, ui, capsys):
+        """Test error display for division by zero."""
+        ui.display_error("division by zero")
+        captured = capsys.readouterr()
+        assert "Error: division by zero" in captured.out
+
+    def test_display_error_invalid_operation(self, ui, capsys):
+        """Test error display for invalid operation."""
+        ui.display_error("Unknown operation: 'unknown'")
+        captured = capsys.readouterr()
+        assert "Error: Unknown operation: 'unknown'" in captured.out
+
+    def test_display_error_empty_message(self, ui, capsys):
+        """Test error display with empty message."""
+        ui.display_error("")
+        captured = capsys.readouterr()
+        assert "Error: " in captured.out
+
+    def test_display_error_special_characters(self, ui, capsys):
+        """Test error display with special characters."""
+        ui.display_error("Invalid input: expect 5.5 or 'exit'")
+        captured = capsys.readouterr()
+        assert "Error: Invalid input: expect 5.5 or 'exit'" in captured.out
+
+    def test_display_error_returns_none(self, ui):
+        """Test that display_error returns None."""
+        result = ui.display_error("error message")
+        assert result is None
+
+
+class TestUserInterfaceDisplayOperations:
+    """Test suite for UserInterface.display_operations() method."""
+
+    @pytest.fixture
+    def ui(self):
+        """Fixture to provide a UserInterface instance."""
+        from src.io_handler import UserInterface
+        return UserInterface()
+
+    @pytest.fixture
+    def sample_operations(self):
+        """Fixture providing sample operations dict."""
+        return {
+            "add": "Addition (a + b)",
+            "subtract": "Subtraction (a - b)",
+            "multiply": "Multiplication (a * b)",
+        }
+
+    def test_display_operations_prints_header(self, ui, sample_operations, capsys):
+        """Test that display_operations prints the header."""
+        ui.display_operations(sample_operations)
+        captured = capsys.readouterr()
+        assert "Available operations:" in captured.out
+
+    def test_display_operations_prints_each_operation(self, ui, sample_operations, capsys):
+        """Test that display_operations prints each operation key and description."""
+        ui.display_operations(sample_operations)
+        captured = capsys.readouterr()
+        assert "add: Addition (a + b)" in captured.out
+        assert "subtract: Subtraction (a - b)" in captured.out
+        assert "multiply: Multiplication (a * b)" in captured.out
+
+    def test_display_operations_prints_exit_line(self, ui, sample_operations, capsys):
+        """Test that display_operations prints the exit/quit line."""
+        ui.display_operations(sample_operations)
+        captured = capsys.readouterr()
+        assert "exit / quit: Exit the calculator" in captured.out
+
+    def test_display_operations_empty_dict(self, ui, capsys):
+        """Test display_operations with empty operations dict."""
+        ui.display_operations({})
+        captured = capsys.readouterr()
+        assert "Available operations:" in captured.out
+        assert "exit / quit: Exit the calculator" in captured.out
+
+    def test_display_operations_returns_none(self, ui, sample_operations):
+        """Test that display_operations returns None."""
+        result = ui.display_operations(sample_operations)
+        assert result is None
+
+    def test_display_operations_with_single_operation(self, ui, capsys):
+        """Test display_operations with a single operation."""
+        ui.display_operations({"add": "Addition"})
+        captured = capsys.readouterr()
+        assert "add: Addition" in captured.out
+        assert "exit / quit:" in captured.out
+
+
+class TestUserInterfaceDisplayHistory:
+    """Test suite for UserInterface.display_history() method."""
+
+    @pytest.fixture
+    def ui(self):
+        """Fixture to provide a UserInterface instance."""
+        from src.io_handler import UserInterface
+        return UserInterface()
+
+    def test_display_history_prints_provided_string(self, ui, capsys):
+        """Test that display_history prints the provided history string."""
+        history_str = "1. add(1, 2) = 3\n2. multiply(3, 4) = 12"
+        ui.display_history(history_str)
+        captured = capsys.readouterr()
+        assert "1. add(1, 2) = 3" in captured.out
+        assert "2. multiply(3, 4) = 12" in captured.out
+
+    def test_display_history_with_empty_string(self, ui, capsys):
+        """Test display_history with empty string."""
+        ui.display_history("")
+        captured = capsys.readouterr()
+        # Empty string should still result in output (just empty line or nothing)
+        assert captured.out == "\n" or captured.out == ""
+
+    def test_display_history_with_no_history_message(self, ui, capsys):
+        """Test display_history with 'No history yet.' message."""
+        ui.display_history("No history yet.")
+        captured = capsys.readouterr()
+        assert "No history yet." in captured.out
+
+    def test_display_history_multiline(self, ui, capsys):
+        """Test display_history with multiple lines."""
+        history_str = "1. add(1, 2) = 3\n2. subtract(5, 2) = 3\n3. multiply(3, 4) = 12"
+        ui.display_history(history_str)
+        captured = capsys.readouterr()
+        assert "1. add(1, 2) = 3" in captured.out
+        assert "2. subtract(5, 2) = 3" in captured.out
+        assert "3. multiply(3, 4) = 12" in captured.out
+
+    def test_display_history_returns_none(self, ui):
+        """Test that display_history returns None."""
+        result = ui.display_history("1. add(1, 2) = 3")
+        assert result is None
+
+    def test_display_history_with_special_characters(self, ui, capsys):
+        """Test display_history with special characters."""
+        history_str = "1. sqrt(4) = 2.0"
+        ui.display_history(history_str)
+        captured = capsys.readouterr()
+        assert "1. sqrt(4) = 2.0" in captured.out

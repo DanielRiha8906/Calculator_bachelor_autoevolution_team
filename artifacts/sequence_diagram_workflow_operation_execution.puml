@@ -1,0 +1,45 @@
+@startuml sequence_diagram_workflow_operation_execution
+
+participant User
+participant InputHandler
+participant CalculatorWorkflow
+participant CalculationEngine
+participant OperationRegistry
+participant Calculator
+participant OperationHistory
+participant UserInterface
+
+User -> InputHandler : (prompt) Select an operation
+InputHandler -> User : display operations list
+
+User -> InputHandler : enter choice
+InputHandler -> CalculatorWorkflow : return operation_key
+
+loop for each operand (per arity)
+    CalculatorWorkflow -> InputHandler : get_operand()
+    activate InputHandler
+    User -> InputHandler : enter operand
+    InputHandler --> CalculatorWorkflow : operand value
+    deactivate InputHandler
+end
+
+CalculatorWorkflow -> CalculationEngine : execute_operation(key, operands)
+activate CalculationEngine
+
+CalculationEngine -> OperationRegistry : get_operation(key)
+activate OperationRegistry
+OperationRegistry --> CalculationEngine : (method, arity, description)
+deactivate OperationRegistry
+
+CalculationEngine -> Calculator : method(*operands)
+activate Calculator
+Calculator --> CalculationEngine : result
+deactivate Calculator
+
+CalculationEngine --> CalculatorWorkflow : result
+deactivate CalculationEngine
+
+CalculatorWorkflow -> OperationHistory : record_operation(key, operands, result)
+CalculatorWorkflow -> UserInterface : display_result(key, operands, result)
+
+@enduml

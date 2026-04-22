@@ -26,7 +26,30 @@ package "Core Calculation" {
         +list_operations() : dict
     }
 
+    class CalculationEngine {
+        -_calculator: Calculator
+        -_registry: OperationRegistry
+        +__init__(calculator: Calculator, registry: OperationRegistry)
+        +execute_operation(operation_key: str, operands: list) : float
+    }
+
     OperationRegistry *--> Calculator : holds bound methods
+    CalculationEngine *--> Calculator
+    CalculationEngine *--> OperationRegistry
+}
+
+package "Session Orchestration" {
+    class CalculatorWorkflow {
+        -_engine: CalculationEngine
+        -_input_handler: InputHandler
+        -_ui: UserInterface
+        -_history: OperationHistory
+        +run()
+        -_get_operands(operation_key: str) : list
+        -_handle_calculation_error(error: Exception)
+    }
+
+    CalculatorWorkflow *--> CalculationEngine
 }
 
 package "I/O and History" {
@@ -36,6 +59,11 @@ package "I/O and History" {
         +display_history()
         +get_operation_choice(available_operations: dict, max_retries: int) : str
         +get_operand(prompt: str, max_retries: int) : float
+        +display_result(operation, operands, result)
+        +display_error(message: str)
+    }
+
+    class UserInterface {
         +display_result(operation, operands, result)
         +display_error(message: str)
     }
@@ -56,6 +84,10 @@ package "I/O and History" {
 
     InputHandler o--> OperationHistory : optional reference
 }
+
+CalculatorWorkflow *--> InputHandler
+CalculatorWorkflow *--> UserInterface
+CalculatorWorkflow *--> OperationHistory
 
 package "Validation" {
     class validation <<module>> {

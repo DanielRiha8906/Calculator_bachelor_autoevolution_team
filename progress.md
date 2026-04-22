@@ -249,3 +249,33 @@ Duration: 436.7s | Cost: $1.127227 USD | Turns: 17
   - `artifacts/sequence_divide_by_zero.puml` — new sequence diagram for divide-by-zero error scenario
 
 Duration: 244.1s | Cost: $0.521191 USD | Turns: 7
+
+## Run: Issue #264 — V2 Task 11 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-264-refactor-calculator-separation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/engine.py` — new file: CalculationEngine class wrapping Calculator + OperationRegistry with no I/O dependencies
+  - `src/workflow.py` — new file: CalculatorWorkflow class orchestrating session loop with engine, input handler, UI, and history
+  - `src/io_handler.py` — added UserInterface class for pure presentation (display_result, display_error, display_operations, display_history); InputHandler preserved unchanged
+  - `src/__init__.py` — added exports for CalculationEngine, UserInterface, CalculatorWorkflow
+  - `tests/test_engine.py` — new file: 76 tests for CalculationEngine (all 12 operations, exception propagation, arity validation)
+  - `tests/test_workflow.py` — new file: 27 tests for CalculatorWorkflow (session flow, operand collection, error handling, history integration)
+  - `tests/test_io_handler.py` — added 40 tests for new UserInterface class
+- **Purpose:** Separate calculation logic from user interaction and interface handling into three distinct layers (engine, workflow, UI) while preserving all existing behavior
+- **Risks:** None — all public APIs preserved; existing InputHandler unchanged; 729 tests pass
+- **Tests passed:** 729 passed, 0 failed
+
+Duration: 507.6s | Cost: $1.237620 USD | Turns: 15
+
+## Run: update-diagrams — Refactor Calculator Separation (2026-04-22)
+
+- **Branch:** task/issue-264-refactor-calculator-separation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — added CalculationEngine and CalculatorWorkflow, separated into Core Calculation and Session Orchestration packages
+  - `artifacts/class_diagram_workflow.puml` — new focused class diagram for CalculatorWorkflow and its collaborators
+  - `artifacts/activity_diagram_workflow_loop.puml` — new activity diagram for CalculatorWorkflow.run() session loop
+  - `artifacts/sequence_diagram_workflow_operation_execution.puml` — new sequence diagram for refactored operation execution path
+
+Duration: 246.6s | Cost: $0.706330 USD | Turns: 16

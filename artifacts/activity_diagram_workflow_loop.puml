@@ -1,0 +1,31 @@
+@startuml activity_diagram_workflow_loop
+
+start
+
+:workflow.run() begins;
+:List available operations\nvia engine._registry.list_operations();
+
+repeat
+    :InputHandler.get_operation_choice();
+
+    if (operation == "exit" or "quit"?) then (yes)
+        stop
+    else (no)
+        :_get_operands(operation_key)\n— fetch arity from registry\n— collect operand(s) via InputHandler.get_operand();
+
+        :engine.execute_operation(key, operands);
+
+        if (Exception raised?) then (yes)
+            :_handle_calculation_error(error);
+            :ui.display_error(message);
+        else (no)
+            :history.record_operation(key, operands, result);
+            :ui.display_result(key, operands, result);
+        endif
+    endif
+
+repeat while (session continues)
+
+stop
+
+@enduml
