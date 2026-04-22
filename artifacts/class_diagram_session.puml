@@ -1,0 +1,110 @@
+@startuml class_diagram_session
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src/session.py" {
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        -_error_logger: ErrorLogger
+        -_operation_list: list[str]
+        --
+        -_get_operation_list() : list[str]
+        -_get_arity(op_name: str) : int
+        ..
+        +select_operation(raw_choice: str, mode: str) : tuple[str | None, int]
+        +collect_operands(arity: int, mode: str) : tuple[list[float] | None, int]
+        +execute_operation(op_name: str, operands: list[float]) : tuple[object, str | None]
+        +get_arity(op_name: str) : int
+        +record_history(op_name: str, operands: list[float], result: object) : None
+        +get_history() : list[str]
+        +save_history(filepath: str) : None
+        +get_operation_list() : list[str]
+        +max_retries : int <<property>>
+    }
+}
+
+package "src/calculator.py" {
+    class Calculator {
+        +add(a, b) : numeric
+        +subtract(a, b) : numeric
+        +multiply(a, b) : numeric
+        +divide(a, b) : numeric
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +logarithm(x: float) : float
+        +natural_logarithm(x: float) : float
+        +power(base: float, exponent: float) : float
+    }
+}
+
+package "src/history.py" {
+    class OperationHistory {
+        -_entries: list[str]
+        --
+        +record_operation(operation_name: str, args: list, result: object) : None
+        +get_history() : list[str]
+        +clear() : None
+        +save_to_file(filepath: str) : None
+    }
+}
+
+package "src/error_logger.py" {
+    class ErrorLogger {
+        -_logger: logging.Logger
+        --
+        +log_unsupported_operation(operation_name) : None
+        +log_invalid_operand(operand, reason) : None
+        +log_incorrect_arity(operation_name, expected, got) : None
+        +log_division_by_zero(numerator) : None
+        +log_invalid_domain(operation_name, operand, reason) : None
+    }
+}
+
+package "src/validation.py" {
+    class OperandValidationSession {
+        -_mode
+        -_max_retries
+        -_attempt_count
+        --
+        +reset_counter() : None
+        +validate_input(prompt_fn, error_msg) : float | None
+    }
+
+    class OperationValidationSession {
+        -_mode
+        -_available_ops
+        -_max_retries
+        -_attempt_count
+        --
+        +reset_counter() : None
+        +validate_input(prompt_fn) : str | None
+    }
+}
+
+' Composition: CalculatorSession owns OperationHistory and ErrorLogger
+CalculatorSession *--> OperationHistory : owns (creates internally)
+CalculatorSession *--> ErrorLogger : owns (creates internally)
+
+' Dependency: Calculator is injected, not owned
+CalculatorSession --> Calculator : uses (injected)
+
+' Dependency: OperandValidationSession created inside collect_operands()
+CalculatorSession ..> OperandValidationSession : creates in collect_operands()
+
+note bottom of CalculatorSession
+  Encapsulates all REPL state and business logic.
+  No I/O internally; I/O delegated to cli.interactive_session()
+end note
+
+note right of OperandValidationSession
+  Created transiently inside
+  CalculatorSession.collect_operands()
+  for each operand collection cycle.
+end note
+
+@enduml

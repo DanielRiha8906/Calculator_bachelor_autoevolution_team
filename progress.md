@@ -1,3 +1,14 @@
+## Run: update-diagrams — CalculatorSession Refactor Diagrams (2026-04-22)
+
+- **Branch:** task/issue-265-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — added CalculatorSession class, formatter module package, delegation arrows from interactive_session()
+  - `artifacts/class_diagram_session.puml` — new class diagram showing CalculatorSession composition with OperationHistory and ErrorLogger, dependency on Calculator
+  - `artifacts/activity_diagram_interactive_session.puml` — rewritten with cli/CalculatorSession swimlanes showing I/O separation from business logic
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #265 — V2 Task 11 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-265-expert-team

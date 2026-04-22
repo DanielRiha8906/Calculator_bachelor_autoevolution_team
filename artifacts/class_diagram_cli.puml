@@ -29,18 +29,66 @@ package "src/history.py" {
         +record_operation(operation_name: str, args: list, result: object) : None
         +get_history() : list[str]
         +clear() : None
-        +save_to_file(filepath: str = "history.txt") : None
-        -{static} _format_entry(operation_name, args, result) : str
+        +save_to_file(filepath: str) : None
+    }
+}
+
+package "src/error_logger.py" {
+    class ErrorLogger {
+        -_logger: logging.Logger
+        --
+        +log_unsupported_operation(operation_name) : None
+        +log_invalid_operand(operand, reason) : None
+        +log_incorrect_arity(operation_name, expected, got) : None
+        +log_division_by_zero(numerator) : None
+        +log_invalid_domain(operation_name, operand, reason) : None
+    }
+}
+
+package "src/formatter.py" <<module>> {
+    class "formatter (pure functions)" as Formatter <<module>> {
+        {static} +format_menu_header(operations: list[str]) : str
+        {static} +format_quit_instruction() : str
+        {static} +format_history_header() : str
+        {static} +format_operation_error(operation: str) : str
+        {static} +format_result(op_name: str, operands: list[float], result: object) : str
+        {static} +format_error(error_msg: str) : str
+    }
+}
+
+package "src/session.py" {
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        -_error_logger: ErrorLogger
+        -_operation_list: list[str]
+        --
+        +select_operation(raw_choice: str, mode: str) : tuple[str | None, int]
+        +collect_operands(arity: int, mode: str) : tuple[list[float] | None, int]
+        +execute_operation(op_name: str, operands: list[float]) : tuple[object, str | None]
+        +get_arity(op_name: str) : int
+        +record_history(op_name: str, operands: list[float], result: object) : None
+        +get_history() : list[str]
+        +save_history(filepath: str) : None
+        +get_operation_list() : list[str]
+        +max_retries : int <<property>>
     }
 }
 
 package "src/cli.py" {
+    class "interactive_session()" as Session <<function>> {
+        +calculator: Calculator
+        --
+        REPL loop: menu -> select -> collect -> execute -> record
+        Delegates all state/logic to CalculatorSession
+        Uses formatter for all output strings
+    }
+
     class "get_operation_menu()" as GetMenu <<function>> {
         +calculator: Calculator
         --
         Returns list[str] of public method names
-        Uses dir() + callable() filter
-        Excludes dunder methods
+        (legacy helper)
     }
 
     class "get_arity()" as GetArity <<function>> {
@@ -48,8 +96,7 @@ package "src/cli.py" {
         +op_name: str
         --
         Returns int (1 or 2)
-        Uses inspect.signature()
-        Counts params excluding self
+        (legacy helper)
     }
 
     class "parse_float()" as ParseFloat <<function>> {
@@ -61,20 +108,10 @@ package "src/cli.py" {
 
     class "get_operands()" as GetOperands <<function>> {
         +arity: int
+        +mode: str
         --
-        Returns list[float]
-        Prompts user arity times
-        Re-prompts on ValueError
-    }
-
-    class "interactive_session()" as Session <<function>> {
-        +calculator: Calculator
-        --
-        REPL loop: menu -> select -> collect -> dispatch
-        Creates OperationHistory per session
-        Records after successful op
-        Displays history on 'h'/'history'
-        Saves to file on all exit paths
+        Returns list[float] | None
+        (legacy helper)
     }
 }
 
@@ -87,28 +124,10 @@ package "src/__main__.py" {
 }
 
 package "main.py" {
-    class "get_operation_arity()" as BashGetArity <<function>> {
-        +operation_name: str
+    class "main()" as BashMain <<function>> {
         --
-        Returns int (arity) or -1 if unknown
-        Uses inspect.signature() on unbound method
-        Reflects Calculator class (not instance)
-    }
-
-    class "parse_arguments()" as ParseArgs <<function>> {
-        +args: list[str]
-        --
-        Returns tuple[str, list[str]]
-        Extracts (operation_name, operands_list)
-        Exits code 1 if no args
-    }
-
-    class "_to_number()" as ToNumber <<function>> {
-        +value: str
-        --
-        Returns int | float
-        Tries int() first, falls back to float()
-        Raises ValueError if neither works
+        Bash CLI orchestrator: parse -> validate -> execute
+        Exits code 0 on success, 1 on any error
     }
 
     class "execute_operation()" as ExecuteOp <<function>> {
@@ -116,55 +135,50 @@ package "main.py" {
         +operation_name: str
         +operands: list[str]
         --
-        Converts operand strings to numbers
-        Dispatches via getattr()
-        Returns Calculator result
-    }
-
-    class "main()" as BashMain <<function>> {
-        --
-        Bash CLI orchestrator: parse -> validate -> execute
-        Exits code 0 on success, 1 on any error
+        Dispatches via getattr(); returns result
     }
 }
 
+' __main__ -> interactive_session
 Main --> Calculator : <<instantiates>>
-Main --> Session : calls
+Main ..> Session : calls
 
-Session *-- OperationHistory : <<creates per session>>
-Session --> GetMenu : calls each iteration
-Session --> GetArity : calls after selection
-Session --> GetOperands : calls to collect inputs
-Session --> Calculator : <<dynamic dispatch>>\ngetattr(calc, op_name)(*operands)
+' interactive_session delegates to CalculatorSession
+Session ..> CalculatorSession : select_operation()
+Session ..> CalculatorSession : get_arity()
+Session ..> CalculatorSession : collect_operands()
+Session ..> CalculatorSession : execute_operation()
+Session ..> CalculatorSession : record_history()
+Session ..> CalculatorSession : save_history()
+Session ..> CalculatorSession : get_history()
+Session ..> Formatter : format_menu_header()\nformat_result()\nformat_error()\nformat_history_header()
 
+' CalculatorSession composition
+CalculatorSession *-- OperationHistory : owns
+CalculatorSession *-- ErrorLogger : owns
+CalculatorSession --> Calculator : uses (injected)
+
+' legacy cli helpers
 GetMenu --> Calculator : introspects via dir()
-GetArity --> Calculator : inspects via inspect.signature()
-GetOperands --> ParseFloat : validates each input string
+GetArity --> Calculator : inspect.signature()
+GetOperands --> ParseFloat : validates input
 
-BashMain --> ParseArgs : parse sys.argv[1:]
-BashMain --> BashGetArity : inspect operation arity
+' bash main
 BashMain --> ExecuteOp : invoke operation
 BashMain --> Calculator : <<instantiates>>
 
-ExecuteOp --> ToNumber : convert each operand
-ExecuteOp --> Calculator : <<dynamic dispatch>>\ngetattr(calc, op_name)(*numeric_operands)
-BashGetArity --> Calculator : inspects unbound method via inspect.signature()
-
-note right of BashMain
-  Bash CLI: non-interactive, single execution
-  parse -> validate arity -> execute -> exit 0/1
-end note
-
-note right of BashGetArity
-  Key difference from src/cli.py::get_arity():
-  Inspects unbound method (Calculator.method)
-  NOT bound instance method (calc.method)
-  Returns -1 if operation not found
-end note
-
 note right of Session
-  Interactive REPL: continuous menu loop
-  Uses dynamic dispatch with bound methods
+  interactive_session() now delegates
+  all REPL state and business logic to
+  CalculatorSession. Legacy helper functions
+  (get_arity, get_operands, etc.) remain
+  for backward compatibility.
+end note
+
+note right of Formatter
+  Pure functions — no I/O, no imports
+  from src/. All output string construction
+  is centralised here.
 end note
 
 @enduml
