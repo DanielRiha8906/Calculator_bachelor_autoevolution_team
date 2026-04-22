@@ -132,4 +132,4 @@ Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
   - `artifacts/activity_diagram_interactive_loop.puml` — new activity diagram for main() interactive session loop
   - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
