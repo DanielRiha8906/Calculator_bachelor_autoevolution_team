@@ -1,4 +1,20 @@
 
+## Run: Issue #269 — V2 Task 13 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-269-add-calculator-documentation
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `docs/README.md` — main documentation entry point covering usage, architecture overview, and operation summary
+  - `docs/OPERATIONS_REFERENCE.md` — complete per-operation reference with signatures, error conditions, and examples
+  - `docs/ARCHITECTURE.md` — detailed module hierarchy, data flow, class responsibilities, and extension points
+  - `docs/DEVELOPMENT.md` — developer guide for environment setup, adding operations, testing strategy, and git workflow
+  - `tests/test_documentation.py` — 55 tests verifying file existence, content quality, cross-links, operation coverage, and source file accuracy
+- **Purpose:** Add comprehensive documentation for the calculator application as required by issue #269
+- **Risks:** None — documentation only, no source code modified
+- **Tests passed:** 1214 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #266 — V2 Task 12 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-266-refactor-modules-scientific-mode
