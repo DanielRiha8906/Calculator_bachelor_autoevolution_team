@@ -1,0 +1,53 @@
+@startuml sequence_repl_interaction
+
+title REPL Interaction — Happy Path and Validation Error
+
+actor User
+participant CalculatorREPL
+participant ExpressionParser
+participant InputValidator
+participant Calculator
+
+User -> CalculatorREPL : input line
+
+activate CalculatorREPL
+CalculatorREPL -> CalculatorREPL : _evaluate(raw_input)
+
+alt valid input: "add 5 3"
+
+    CalculatorREPL -> ExpressionParser : parse("add 5 3")
+    activate ExpressionParser
+    ExpressionParser --> CalculatorREPL : ("add", [5, 3])
+    deactivate ExpressionParser
+
+    CalculatorREPL -> InputValidator : validate("add", [5, 3])
+    activate InputValidator
+    InputValidator --> CalculatorREPL : (passes)
+    deactivate InputValidator
+
+    CalculatorREPL -> Calculator : add(5, 3)
+    activate Calculator
+    Calculator --> CalculatorREPL : 8
+    deactivate Calculator
+
+    CalculatorREPL --> User : "Result: 8"
+
+else invalid op: "sqrt 9"
+
+    CalculatorREPL -> ExpressionParser : parse("sqrt 9")
+    activate ExpressionParser
+    ExpressionParser --> CalculatorREPL : ("sqrt", [9])
+    deactivate ExpressionParser
+
+    CalculatorREPL -> InputValidator : validate("sqrt", [9])
+    activate InputValidator
+    InputValidator --> CalculatorREPL : raises ValueError\n("sqrt" not in SUPPORTED_OPERATIONS)
+    deactivate InputValidator
+
+    CalculatorREPL --> User : "Validation error: ..."
+
+end
+
+deactivate CalculatorREPL
+
+@enduml

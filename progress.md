@@ -114,3 +114,14 @@ Duration: 172.4s | Cost: $0.383842 USD | Turns: 6
   - `artifacts/sequence_math_operation.puml` — new sequence diagram for square_root happy path and natural_log error path
 
 Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
+
+## Run: update-diagrams — Add user input REPL diagrams (2026-04-22)
+
+- **Branch:** task/issue-245-user-input
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_input_handler.puml` — new class diagram showing InputValidator, ExpressionParser, CalculatorREPL and their composition with Calculator
+  - `artifacts/activity_repl_pipeline.puml` — new activity diagram for the REPL evaluation pipeline (_evaluate flow with all error branches)
+  - `artifacts/sequence_repl_interaction.puml` — new sequence diagram showing happy path and validation error path through the REPL
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

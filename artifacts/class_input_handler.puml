@@ -1,0 +1,58 @@
+@startuml class_input_handler
+
+skinparam classAttributeIconSize 0
+
+package "input_handler module" {
+
+    class InputValidator {
+        - SUPPORTED_OPERATIONS : frozenset
+        + validate_operation(operation: str) : None
+        + validate_operand_count(operation: str, operands: list) : None
+        + validate(operation: str, operands: list) : None
+    }
+
+    class ExpressionParser {
+        - _coerce_numeric(token: str) : Numeric
+        + parse(raw_input: str) : tuple[str, list]
+    }
+
+    class CalculatorREPL {
+        - _calculator : Calculator
+        - _parser : ExpressionParser
+        - _validator : InputValidator
+        - _EXIT_COMMANDS : frozenset
+        + __init__(calculator: Calculator)
+        + run() : None
+        - _evaluate(raw_input: str) : str
+        - _dispatch(operation: str, operands: list) : Numeric
+    }
+
+}
+
+class Calculator {
+    .. Arithmetic ..
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    .. Power / Root ..
+    + square(x)
+    + cube(x)
+    + power(base, exponent)
+    + square_root(x)
+    + cube_root(x)
+    .. Logarithmic ..
+    + natural_log(x)
+    + log_base_10(x)
+    .. Factorial ..
+    + factorial(n)
+}
+
+CalculatorREPL *-- Calculator : _calculator
+CalculatorREPL *-- ExpressionParser : _parser
+CalculatorREPL *-- InputValidator : _validator
+
+CalculatorREPL ..> InputValidator : validates via
+CalculatorREPL ..> ExpressionParser : parses via
+
+@enduml
