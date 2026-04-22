@@ -1,3 +1,14 @@
+## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_architecture.puml` — added src.mode package (CalculatorMode enum, ModeConfig dataclass); added 6 trig methods to ScientificOperations and Calculator; added _current_mode, set_mode(), get_current_mode() to CalculatorSession
+  - `artifacts/class_diagram_session.puml` — added src/mode.py package (CalculatorMode, ModeConfig); added 6 trig methods to Calculator; added mode state fields/methods to CalculatorSession
+  - `artifacts/activity_diagram_interactive_session.puml` — added mode selection step at session start; added mode/m command handler for mid-session switching
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #274 — V2 Task 14 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-274-expert-team
