@@ -58,4 +58,4 @@ Duration: 231.9s | Cost: $0.505006 USD | Turns: 17
 - **Risks:** None — isolated method addition, no existing code modified.
 - **Tests passed:** 89/89 (70 pre-existing + 19 new)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 180.9s | Cost: $0.443277 USD | Turns: 16
