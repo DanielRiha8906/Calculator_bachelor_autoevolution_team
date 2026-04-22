@@ -178,3 +178,14 @@ Duration: 391.3s | Cost: $1.035493 USD | Turns: 24
   - `artifacts/activity_main_cli.puml` — New activity diagram for main.py bash CLI flow: arg validation, arity inspection, operand conversion, Calculator dispatch, exit codes
 
 Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
+
+- **Branch:** task/issue-256-input-validation-retry
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_validation.puml` — new class diagram showing Calculator, OperandValidationSession, OperationValidationSession, and cli.py dependencies
+  - `artifacts/activity_diagram_interactive_session.puml` — new activity diagram for interactive_session() REPL loop with retry logic
+  - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
