@@ -1,0 +1,84 @@
+@startuml sequence_diagram_retry_flow
+
+title Bad Input → Retry → Success
+
+actor User
+participant "run()\nCalculatorREPL" as REPL
+participant "_evaluate()" as Eval
+participant "ExpressionParser\n.parse()" as Parser
+participant "InputValidator\n.validate()" as Validator
+participant "_dispatch()" as Dispatch
+participant Calculator
+
+== First attempt: invalid input ==
+
+User ->> REPL : enters invalid expression
+activate REPL
+
+REPL ->> Eval : _evaluate(raw)
+activate Eval
+
+Eval ->> Parser : parse(raw)
+Parser -->> Eval : (op, operands)
+
+Eval ->> Validator : validate(op, operands)
+Validator -->> Eval : raises ValueError
+
+Eval -->> REPL : "Validation error: ..."
+deactivate Eval
+
+REPL -> REPL : response not "Result:" → enter retry loop
+REPL ->> User : "Invalid input. Attempt 1/3. Please try again: "
+
+== Retry attempt 1: still invalid ==
+
+User ->> REPL : still-invalid expression
+
+REPL ->> Eval : _evaluate(raw)
+activate Eval
+
+Eval ->> Parser : parse(raw)
+Parser -->> Eval : (op, operands)
+
+Eval ->> Validator : validate(op, operands)
+Validator -->> Eval : raises ValueError
+
+Eval -->> REPL : "Validation error: ..."
+deactivate Eval
+
+REPL -> REPL : print error, continue retry
+REPL ->> User : "Invalid input. Attempt 2/3. Please try again: "
+
+== Retry attempt 2: valid input ==
+
+User ->> REPL : valid expression
+
+REPL ->> Eval : _evaluate(raw)
+activate Eval
+
+Eval ->> Parser : parse(raw)
+Parser -->> Eval : (op, operands)
+
+Eval ->> Validator : validate(op, operands)
+Validator -->> Eval : OK (no exception)
+
+Eval ->> Dispatch : _dispatch(op, operands)
+activate Dispatch
+
+Dispatch ->> Calculator : op(*operands)
+Calculator -->> Dispatch : numeric result
+
+Dispatch -->> Eval : numeric result
+deactivate Dispatch
+
+Eval -->> REPL : "Result: 42"
+deactivate Eval
+
+REPL -> REPL : response starts with "Result:" → break retry loop
+REPL ->> User : prints "Result: 42"
+
+deactivate REPL
+
+note over REPL : Returns to main loop
+
+@enduml

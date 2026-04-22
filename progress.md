@@ -1,4 +1,17 @@
 
+## Run: Issue #254 — V2 Task 8 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-254-input-validation-retry
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/input_handler.py` — added `RetryConfig` dataclass and retry loop in `CalculatorREPL.run()` allowing up to 3 configurable re-prompts on bad input
+  - `tests/test_input_handler.py` — added 20 new tests covering RetryConfig defaults, retry prompt numbering, exhaustion message, success on retry, and exit/interrupt handling
+- **Purpose:** Add input validation retry logic so users can correct bad input up to a configurable number of times before returning to the main prompt
+- **Risks:** None — retry logic is additive; `_evaluate()` and all existing methods unchanged
+- **Tests passed:** 473 passed, 0 failed
+
+Duration: 337.6s | Cost: $0.830250 USD | Turns: 14
+
 ## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-242-advanced-math-ops
@@ -152,3 +165,14 @@ Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
   - `artifacts/sequence_diagram_cli.puml` — end-to-end CLI expression evaluation sequence
 
 Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
+
+- **Branch:** task/issue-254-input-validation-retry
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_input_handler.puml` — class diagram for input_handler module with new RetryConfig dataclass
+  - `artifacts/activity_diagram_repl_run.puml` — activity diagram for CalculatorREPL.run() with retry sub-flow
+  - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
+
+Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
