@@ -8,13 +8,19 @@ internal structure in advance.
 import inspect
 
 from .calculator import Calculator
-from .error_logger import ErrorLogger
-from .history import OperationHistory
+from .formatter import (
+    format_error,
+    format_history_header,
+    format_menu_header,
+    format_quit_instruction,
+    format_result,
+)
+from .session import CalculatorSession
 from .validation import (
     OperandValidationSession,
     OperationValidationSession,
     detect_mode,
-    format_operation_error,
+    format_operation_error as validation_format_operation_error,
 )
 
 
@@ -136,72 +142,44 @@ def interactive_session(calculator: Calculator) -> None:
         calculator: The Calculator instance to use for all computations.
     """
     mode = detect_mode()
-    operations = get_operation_menu(calculator)
+    session = CalculatorSession(calculator)
+    operations = session.get_operation_list()
     op_session = OperationValidationSession(mode=mode, available_ops=operations)
-    history = OperationHistory()
-    error_logger = ErrorLogger()
 
     while True:
         # Refresh the operation list each iteration in case Calculator grows.
-        operations = get_operation_menu(calculator)
+        operations = session.get_operation_list()
         op_session._available_ops = operations
 
-        print("\nAvailable operations:")
-        for idx, op_name in enumerate(operations, start=1):
-            print(f"  {idx}. {op_name}")
-        print("  (type 'quit', 'exit', or 'q' to exit)")
-        print("  (type 'history' or 'h' to view operation history)")
+        print(format_menu_header(operations))
+        print(format_quit_instruction())
 
         raw_choice = input("\nSelect operation (name or number): ").strip()
 
         # Handle quit aliases before passing to the validation session.
         if raw_choice.lower() in {"quit", "exit", "q"}:
-            history.save_to_file("history.txt")
+            session.save_history("history.txt")
             print("Goodbye!")
             break
 
         # Handle history display command.
         if raw_choice.lower() in {"history", "h"}:
-            entries = history.get_history()
+            entries = session.get_history()
             if entries:
-                print("\nOperation history:")
+                print(format_history_header())
                 for entry in entries:
                     print(f"  {entry}")
             else:
                 print("  No history yet.")
             continue
 
-        # Resolve a numeric shortcut to an operation name.
-        resolved_choice = raw_choice
-        try:
-            idx = int(raw_choice)
-            if 1 <= idx <= len(operations):
-                resolved_choice = operations[idx - 1]
-            else:
-                print(
-                    f"  Selection out of range. Choose between 1 and {len(operations)}."
-                )
-                op_session._attempt_count += 1
-                if op_session.attempt_count >= op_session._max_retries:
-                    print(
-                        f"Maximum retry attempts ({op_session._max_retries}) "
-                        "exceeded. Session terminated."
-                    )
-                    history.save_to_file("history.txt")
-                    break
-                continue
-        except ValueError:
-            pass  # not a number — treat as an operation name and validate below
+        # Resolve the raw choice to a canonical operation name.
+        op_name, exit_code = session.select_operation(raw_choice, mode)
 
-        # Validate the (possibly resolved) operation name.
-        ops_lower: dict[str, str] = {op.lower(): op for op in operations}
-        matched = ops_lower.get(resolved_choice.lower())
-
-        if matched is None:
-            error_logger.log_unsupported_operation(resolved_choice)
+        if exit_code == 2:
+            # Numeric index was out of range.
             print(
-                f"  Invalid selection '{resolved_choice}'. "
-                + format_operation_error(operations)
+                f"  Selection out of range. Choose between 1 and {len(operations)}."
             )
             op_session._attempt_count += 1
             if op_session.attempt_count >= op_session._max_retries:
@@ -209,52 +187,46 @@ def interactive_session(calculator: Calculator) -> None:
                     f"Maximum retry attempts ({op_session._max_retries}) "
                     "exceeded. Session terminated."
                 )
-                history.save_to_file("history.txt")
+                session.save_history("history.txt")
                 break
             continue
 
-        op_name = matched
+        if op_name is None:
+            # Unrecognised operation name — reconstruct the same error string
+            # that the original code produced.
+            print(
+                f"  Invalid selection '{raw_choice}'. "
+                + validation_format_operation_error(operations)
+            )
+            op_session._attempt_count += 1
+            if op_session.attempt_count >= op_session._max_retries:
+                print(
+                    f"Maximum retry attempts ({op_session._max_retries}) "
+                    "exceeded. Session terminated."
+                )
+                session.save_history("history.txt")
+                break
+            continue
+
         op_session.reset_counter()
 
-        arity = get_arity(calculator, op_name)
+        arity = session.get_arity(op_name)
 
-        # In CLI mode OperandValidationSession raises SystemExit on invalid
-        # operand input.  Intercept it here so we can log the event before
-        # the process terminates; then re-raise to preserve original behaviour.
+        # collect_operands handles logging; re-raise SystemExit for CLI mode.
         try:
-            operands = get_operands(arity, mode=mode)
-        except SystemExit as exc:
-            # The SystemExit message contains the offending value; log with
-            # a generic reason since the raw string is embedded in the message.
-            error_logger.log_invalid_operand(
-                str(exc).split("'")[1] if "'" in str(exc) else "unknown",
-                str(exc),
-            )
+            operands, op_exit_code = session.collect_operands(arity, mode=mode)
+        except SystemExit:
             raise
 
         if operands is None:
-            # Operand retry limit reached in interactive mode — end the
-            # session gracefully.  Individual invalid entries were already
-            # reported by the validation session; log the overall session
-            # failure here.
-            error_logger.log_invalid_operand(
-                "interactive-session",
-                "Maximum retry attempts exceeded for operand input.",
-            )
-            history.save_to_file("history.txt")
+            # Operand retry limit reached in interactive mode.
+            session.save_history("history.txt")
             break
 
-        try:
-            result = getattr(calculator, op_name)(*operands)
-            history.record_operation(op_name, operands, result)
-            print(f"  Result: {result}")
-        except ZeroDivisionError as exc:
-            numerator = operands[0] if operands else float("nan")
-            error_logger.log_division_by_zero(numerator)
-            print(f"  Error: {exc}")
-        except ValueError as exc:
-            operand_ctx = operands[0] if operands else float("nan")
-            error_logger.log_invalid_domain(op_name, operand_ctx, str(exc))
-            print(f"  Error: {exc}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"  Error: {exc}")
+        result, error_msg = session.execute_operation(op_name, operands)
+
+        if error_msg is not None:
+            print(format_error(error_msg))
+        else:
+            session.record_history(op_name, operands, result)
+            print(format_result(op_name, operands, result))

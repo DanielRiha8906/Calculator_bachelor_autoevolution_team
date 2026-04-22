@@ -1,112 +1,111 @@
 @startuml activity_diagram_interactive_session
 
+|cli.interactive_session|
 start
 
-:Create Calculator instance;
 :detect_mode() -> mode;
-:get_operation_menu(calc) -> operations;
-:Create OperationHistory();
+:CalculatorSession(calculator) -> session;
+:session.get_operation_list() -> operations;
 
 repeat
 
-    :Create OperationValidationSession\n(mode, operations, max_retries=5);
-    :reset_counter();
+    :format_menu_header(operations) -> print;
+    :format_quit_instruction() -> print;
+    :input("Select operation...") -> raw_choice;
 
-    repeat
-        :Prompt "Select operation (number or name): ";
-        :Read raw_choice;
-
-        if (raw_choice in {quit, exit, q}?) then (yes)
-            :history.save_to_file("history.txt");
-            :Print "Goodbye!";
-            stop
-        else (no)
-        endif
-
-        if (raw_choice in {history, h}?) then (yes)
-            :history.get_history() -> entries;
-            if (entries is empty?) then (yes)
-                :Print "No history yet.";
-            else (no)
-                :Print each entry;
-            endif
-            :continue;
-        else (no)
-        endif
-
-        if (raw_choice is valid operation?) then (yes)
-            :op_name = selected operation;
-        else (no — invalid)
-            :format_operation_error(operations);
-            :Print formatted error;
-            :attempt_count += 1;
-            if (attempt_count >= max_retries?) then (yes)
-                :Print "Maximum retry attempts exceeded";
-                :history.save_to_file("history.txt");
-                stop
-            else (no)
-            endif
-        endif
-    repeat while (valid op obtained?) is (no)
-    -> yes;
-
-    :get_arity(calc, op_name) -> arity;
-
-    :get_operands(arity, mode) -> operands;
-
-    partition "get_operands() — per operand" {
-        :Create OperandValidationSession\n(mode, max_retries=5);
-
-        fork
-            :<color:green>interactive mode</color>;
-            repeat
-                :Prompt "Enter operand {i}: ";
-                :Read raw input;
-                if (parse_float(raw) succeeds?) then (yes)
-                    :Append float to operands;
-                else (no — ValueError)
-                    :Print error message;
-                    :attempt_count += 1;
-                    if (attempt_count >= max_retries?) then (yes)
-                        :Print "Maximum retry attempts exceeded";
-                        :history.save_to_file("history.txt");
-                        :Return None;
-                        detach
-                    else (no)
-                    endif
-                endif
-            repeat while (valid float obtained?) is (no)
-            -> yes;
-        fork again
-            :<color:blue>cli mode</color>;
-            :Single attempt — parse_float(raw);
-            if (parse_float succeeds?) then (yes)
-                :Append float to operands;
-            else (no)
-                :Print error and exit(1);
-                stop
-            endif
-        end fork
-    }
-
-    if (operands is None?) then (yes)
-        :history.save_to_file("history.txt");
+    if (raw_choice in {quit, exit, q}?) then (yes)
+        |CalculatorSession|
+        :save_history("history.txt");
+        |cli.interactive_session|
         stop
     else (no)
     endif
 
-    :result = getattr(calc, op_name)(*operands);
-    :history.record_operation(op_name, operands, result);
-
-    if (Calculator raises exception?) then (yes)
-        :Print "Error: {exc}";
+    if (raw_choice in {history, h}?) then (yes)
+        |CalculatorSession|
+        :get_history() -> entries;
+        |cli.interactive_session|
+        if (entries empty?) then (yes)
+            :print "No history yet.";
+        else (no)
+            :format_history_header() -> print;
+            :print entries;
+        endif
+        :continue;
     else (no)
-        :Print "Result: {result}";
     endif
 
-    :get_operation_menu(calc) -> operations;
+    |CalculatorSession|
+    :select_operation(raw_choice, mode)\n-> (op_name, exit_code);
 
-repeat while (user continues?) is (yes — loop back to menu)
+    |cli.interactive_session|
+    if (exit_code == 2 — out of range?) then (yes)
+        :print error;
+        :retry_count += 1;
+        if (retry_count >= max_retries?) then (yes)
+            |CalculatorSession|
+            :save_history("history.txt");
+            |cli.interactive_session|
+            stop
+        else (no)
+            :continue;
+        endif
+    else (no)
+    endif
+
+    if (op_name is None — unrecognized?) then (yes)
+        :format_error() -> print;
+        :retry_count += 1;
+        if (retry_count >= max_retries?) then (yes)
+            |CalculatorSession|
+            :save_history("history.txt");
+            |cli.interactive_session|
+            stop
+        else (no)
+            :continue;
+        endif
+    else (no)
+    endif
+
+    :retry_count = 0;
+
+    |CalculatorSession|
+    :get_arity(op_name) -> arity;
+    :collect_operands(arity, mode)\n-> (operands, exit_code);
+    note right
+      Creates OperandValidationSession
+      internally; loops up to max_retries
+      per operand in interactive mode
+    end note
+
+    |cli.interactive_session|
+    if (operands is None — max retries exceeded?) then (yes)
+        |CalculatorSession|
+        :save_history("history.txt");
+        |cli.interactive_session|
+        stop
+    else (no)
+    endif
+
+    |CalculatorSession|
+    :execute_operation(op_name, operands)\n-> (result, error_msg);
+    note right
+      Calls Calculator.<op_name>(*operands)
+      Catches TypeError, ValueError,
+      ZeroDivisionError -> error_msg
+    end note
+
+    |cli.interactive_session|
+    if (error_msg is not None?) then (yes)
+        :format_error(error_msg) -> print;
+    else (no)
+        |CalculatorSession|
+        :record_history(op_name, operands, result);
+        |cli.interactive_session|
+        :format_result(op_name, operands, result) -> print;
+    endif
+
+repeat while (session continues?) is (yes — loop to menu)
 
 stop
 
