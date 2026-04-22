@@ -1,0 +1,18 @@
+@startuml logarithm_activity_diagram
+
+start
+
+:Receive argument x;
+
+if (x > 0?) then (yes)
+    :Execute log10(x) or ln(x);
+    :Return float result;
+    stop
+else (no)
+    :Raise ValueError;
+    :"Logarithm only defined for positive numbers";
+    :Exception propagates to caller;
+    stop
+endif
+
+@enduml

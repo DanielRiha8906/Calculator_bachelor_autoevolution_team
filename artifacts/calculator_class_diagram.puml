@@ -8,6 +8,13 @@ class Calculator {
     +multiply(a, b) : numeric
     +divide(a, b) : float
     +factorial(n: int) : int
+    +square(x: float) : float
+    +cube(x: float) : float
+    +square_root(x: float) : float
+    +cube_root(x: float) : float
+    +power(x: float, y: float) : float
+    +log(x: float) : float
+    +ln(x: float) : float
 }
 
 component "__main__" as main_module
