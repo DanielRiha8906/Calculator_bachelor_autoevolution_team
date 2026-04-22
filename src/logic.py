@@ -4,11 +4,15 @@ Contains :class:`CalculatorEngine`, which implements all arithmetic and
 mathematical operations along with operation history tracking.  This module
 has no UI or IO dependencies and can be used independently of any interface
 layer.
+
+Computation is delegated to :class:`~src.modes.basic.BasicOperations` and
+:class:`~src.modes.advanced.AdvancedOperations`, which are composed into the
+engine at construction time.
 """
 
-import math
-
 from .logger import get_logger
+from .modes.basic import BasicOperations
+from .modes.advanced import AdvancedOperations
 
 logger = get_logger(__name__)
 
@@ -20,13 +24,31 @@ class CalculatorEngine:
     operation is appended to an internal history list that can be retrieved
     via :meth:`get_history`.
 
+    Computation is delegated to :class:`~src.modes.basic.BasicOperations`
+    and :class:`~src.modes.advanced.AdvancedOperations`, which are injected
+    with a history-recording callback.
+
     No UI or IO dependencies are present in this class; it is safe to
     instantiate and use in any context.
+
+    Args:
+        mode: Reserved for future use.  Defaults to ``'basic'``.  Currently
+            both basic and advanced operations are always available regardless
+            of this setting, preserving full backward compatibility.
     """
 
-    def __init__(self) -> None:
-        """Initialise the CalculatorEngine with an empty history."""
+    def __init__(self, mode: str = "basic") -> None:
+        """Initialise the CalculatorEngine with an empty history.
+
+        Args:
+            mode: Operation mode selector.  Defaults to ``'basic'``.
+        """
+        self._mode = mode
         self._history: list[dict] = []
+        # Operation sets are composed in, receiving a partial callback so
+        # that they trigger _record_history without knowing about it.
+        self._basic = BasicOperations(record_callback=None)
+        self._advanced = AdvancedOperations(record_callback=None)
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -71,32 +93,24 @@ class CalculatorEngine:
         return self._history
 
     def add(self, a, b):
-        result = a + b
+        result = self._basic.add(a, b)
         self._record_history(a, "add", b, result)
         return result
 
     def subtract(self, a, b):
-        result = a - b
+        result = self._basic.subtract(a, b)
         self._record_history(a, "subtract", b, result)
         return result
 
     def multiply(self, a, b):
-        result = a * b
+        result = self._basic.multiply(a, b)
         self._record_history(a, "multiply", b, result)
         return result
 
     def divide(self, a, b):
-        try:
-            result = a / b
-        except ZeroDivisionError as exc:
-            logger.error(
-                "divide() failed: operands=(%r, %r) %s: %s",
-                a,
-                b,
-                type(exc).__name__,
-                exc,
-            )
-            raise
+        # ZeroDivisionError is raised inside BasicOperations.divide (with
+        # its own logging) and propagates unchanged here.
+        result = self._basic.divide(a, b)
         self._record_history(a, "divide", b, result)
         return result
 
@@ -113,31 +127,7 @@ class CalculatorEngine:
             TypeError: If n is not an integer (e.g. float, str, list, None).
             ValueError: If n is a negative integer.
         """
-        if not isinstance(n, int) or isinstance(n, bool):
-            exc = TypeError(
-                f"factorial() requires a non-negative integer, got {type(n).__name__}"
-            )
-            logger.error(
-                "factorial() failed: operand=%r %s: %s",
-                n,
-                type(exc).__name__,
-                exc,
-            )
-            raise exc
-        if n < 0:
-            exc = ValueError(
-                f"factorial() is not defined for negative integers, got {n}"
-            )
-            logger.error(
-                "factorial() failed: operand=%r %s: %s",
-                n,
-                type(exc).__name__,
-                exc,
-            )
-            raise exc
-        result = 1
-        for i in range(2, n + 1):
-            result *= i
+        result = self._advanced.factorial(n)
         self._record_history(n, "factorial", None, result)
         return result
 
@@ -150,7 +140,7 @@ class CalculatorEngine:
         Returns:
             x multiplied by itself.
         """
-        result = x * x
+        result = self._advanced.square(x)
         self._record_history(x, "square", None, result)
         return result
 
@@ -163,7 +153,7 @@ class CalculatorEngine:
         Returns:
             x multiplied by itself twice.
         """
-        result = x * x * x
+        result = self._advanced.cube(x)
         self._record_history(x, "cube", None, result)
         return result
 
@@ -179,16 +169,7 @@ class CalculatorEngine:
         Raises:
             ValueError: If x is negative.
         """
-        try:
-            result = math.sqrt(x)
-        except ValueError as exc:
-            logger.error(
-                "square_root() failed: operand=%r %s: %s",
-                x,
-                type(exc).__name__,
-                exc,
-            )
-            raise
+        result = self._advanced.square_root(x)
         self._record_history(x, "square_root", None, result)
         return result
 
@@ -203,7 +184,7 @@ class CalculatorEngine:
         Returns:
             The real cube root of x.
         """
-        result = math.copysign(abs(x) ** (1 / 3), x)
+        result = self._advanced.cube_root(x)
         self._record_history(x, "cube_root", None, result)
         return result
 
@@ -217,7 +198,7 @@ class CalculatorEngine:
         Returns:
             base raised to the power of exponent.
         """
-        result = base ** exponent
+        result = self._advanced.power(base, exponent)
         self._record_history(base, "power", exponent, result)
         return result
 
@@ -233,16 +214,7 @@ class CalculatorEngine:
         Raises:
             ValueError: If x is less than or equal to 0.
         """
-        try:
-            result = math.log(x)
-        except ValueError as exc:
-            logger.error(
-                "natural_log() failed: operand=%r %s: %s",
-                x,
-                type(exc).__name__,
-                exc,
-            )
-            raise
+        result = self._advanced.natural_log(x)
         self._record_history(x, "natural_log", None, result)
         return result
 
@@ -258,15 +230,6 @@ class CalculatorEngine:
         Raises:
             ValueError: If x is less than or equal to 0.
         """
-        try:
-            result = math.log10(x)
-        except ValueError as exc:
-            logger.error(
-                "log_base_10() failed: operand=%r %s: %s",
-                x,
-                type(exc).__name__,
-                exc,
-            )
-            raise
+        result = self._advanced.log_base_10(x)
         self._record_history(x, "log_base_10", None, result)
         return result

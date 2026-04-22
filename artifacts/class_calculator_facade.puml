@@ -1,67 +1,138 @@
 @startuml class_calculator_facade
+title Calculator System — Class Structure
 
-skinparam classAttributeIconSize 0
+package "src" {
+  class Calculator {
+    - _mode: str
+    - _engine: CalculatorEngine
+    + __init__(mode: str = "basic")
+    + set_mode(mode: str): None
+    + get_history(): list[dict]
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + factorial(n: int): int
+    + square(x: float): float
+    + cube(x: float): float
+    + square_root(x: float): float
+    + cube_root(x: float): float
+    + power(base: float, exponent: float): float
+    + natural_log(x: float): float
+    + log_base_10(x: float): float
+  }
 
-class CalculatorEngine {
-    - _history : list[dict]
-    --
-    - _record_history(operand1, operator: str, operand2, result) : None
-    + get_history() : list[dict]
-    .. Basic Arithmetic ..
-    + add(a, b) : object
-    + subtract(a, b) : object
-    + multiply(a, b) : object
-    + divide(a, b) : object
-    .. Power / Root ..
-    + power(base: float, exponent: float) : float
-    + square(x: float) : float
-    + cube(x: float) : float
-    + square_root(x: float) : float
-    + cube_root(x: float) : float
-    .. Logarithmic ..
-    + natural_log(x: float) : float
-    + log_base_10(x: float) : float
-    .. Factorial ..
-    + factorial(n: int) : int
+  class CalculatorEngine {
+    - _mode: str
+    - _history: list[dict]
+    - _basic: BasicOperations
+    - _advanced: AdvancedOperations
+    + __init__(mode: str = "basic")
+    - _record_history(operand1, operator: str, operand2, result): None
+    + get_history(): list[dict]
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + factorial(n: int): int
+    + square(x: float): float
+    + square_root(x: float): float
+    + power(base: float, exponent: float): float
+    + natural_log(x: float): float
+    + log_base_10(x: float): float
+  }
+
+  class CalculatorREPL {
+    - _EXIT_COMMANDS: frozenset[str]
+    - _calculator: Calculator
+    - _parser: ExpressionParser
+    - _validator: InputValidator
+    - _retry_config: RetryConfig
+    + __init__(calculator: Calculator, retry_config: RetryConfig)
+    - _dispatch(operation: str, operands: list): Numeric
+    - _evaluate(raw_input: str): str
+    + run(): None
+  }
+
+  class CLIHandler {
+    - _expression: str
+    - _calculator: Calculator
+    - _parser: ExpressionParser
+    - _validator: InputValidator
+    + __init__(expression: str)
+    - _dispatch(operation: str, operands: list): Numeric
+    + run(): int
+  }
+
+  class InputValidator {
+    + validate_operation(operation: str): None
+    + validate_operand_count(operation: str, operands: list): None
+    + validate(operation: str, operands: list): None
+  }
+
+  class ExpressionParser {
+    - _coerce_numeric(token: str): Numeric
+    + parse(raw_input: str): tuple[str, list]
+  }
+
+  class RetryConfig <<dataclass>> {
+    + max_retries: int = 3
+  }
 }
 
-note right of CalculatorEngine
-  Pure computation engine.
-  No UI/IO dependencies.
-end note
+package "src.modes" {
+  abstract class BaseOperationSet {
+    - _record_callback: Optional[Callable]
+    + __init__(record_callback: Optional[Callable])
+    # _record(result): None
+    + {abstract} get_operations(): dict[str, Callable]
+  }
 
-class Calculator {
-    - _engine : CalculatorEngine
-    --
-    + get_history() : list[dict]
-    .. Basic Arithmetic ..
-    + add(a, b) : object
-    + subtract(a, b) : object
-    + multiply(a, b) : object
-    + divide(a, b) : object
-    .. Power / Root ..
-    + power(base: float, exponent: float) : float
-    + square(x: float) : float
-    + cube(x: float) : float
-    + square_root(x: float) : float
-    + cube_root(x: float) : float
-    .. Logarithmic ..
-    + natural_log(x: float) : float
-    + log_base_10(x: float) : float
-    .. Factorial ..
-    + factorial(n: int) : int
+  class BasicOperations {
+    + __init__(record_callback: Optional[Callable])
+    + get_operations(): dict[str, Callable]
+    + add(a: Numeric, b: Numeric): Numeric
+    + subtract(a: Numeric, b: Numeric): Numeric
+    + multiply(a: Numeric, b: Numeric): Numeric
+    + divide(a: Numeric, b: Numeric): float
+  }
+
+  class AdvancedOperations {
+    + __init__(record_callback: Optional[Callable])
+    + get_operations(): dict[str, Callable]
+    + factorial(n: int): int
+    + square(x: float): float
+    + cube(x: float): float
+    + square_root(x: float): float
+    + cube_root(x: float): float
+    + power(base: float, exponent: float): float
+    + natural_log(x: float): float
+    + log_base_10(x: float): float
+  }
+
+  class OperationRegistry {
+    - _operations: dict[str, Callable]
+    - _operation_mode: dict[str, str]
+    + __init__()
+    + register_mode(mode: str, operations: dict): None
+    + get(name: str): Callable
+    + get_mode(name: str): str
+    + all_names(): frozenset[str]
+  }
 }
 
-note right of Calculator
-  Facade. All computation
-  delegated to CalculatorEngine.
-end note
-
-class Logger {
-    + get_logger(name) : Logger
-}
-
-Calculator *-- CalculatorEngine : delegates to
-CalculatorEngine ..> Logger : uses for error logging
+' Relationships
+Calculator "1" *-- "1" CalculatorEngine : delegates to
+CalculatorEngine "1" *-- "1" BasicOperations : composes
+CalculatorEngine "1" *-- "1" AdvancedOperations : composes
+BasicOperations --|> BaseOperationSet
+AdvancedOperations --|> BaseOperationSet
+CalculatorREPL o-- Calculator : holds
+CalculatorREPL *-- ExpressionParser
+CalculatorREPL *-- InputValidator
+CalculatorREPL *-- RetryConfig
+CLIHandler *-- Calculator
+CLIHandler *-- ExpressionParser
+CLIHandler *-- InputValidator
 
 @enduml

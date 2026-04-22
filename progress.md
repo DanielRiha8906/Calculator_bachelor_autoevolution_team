@@ -1,4 +1,30 @@
 
+## Run: Issue #266 — V2 Task 12 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-266-refactor-modules-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/modes/__init__.py` — new package init exporting BasicOperations, AdvancedOperations, OperationRegistry
+  - `src/modes/operations.py` — new BaseOperationSet ABC, OperationRegistry, BASIC_OPERATIONS and ADVANCED_OPERATIONS constants
+  - `src/modes/basic.py` — new BasicOperations class with add, subtract, multiply, divide and optional record_callback
+  - `src/modes/advanced.py` — new AdvancedOperations class with 8 advanced math operations and optional record_callback
+  - `src/logic.py` — CalculatorEngine gains optional mode parameter, delegates computation to composed operation classes
+  - `src/calculator.py` — Calculator facade gains optional mode parameter and set_mode() method
+  - `src/input_handler.py` — operation constants derived from BASIC_OPERATIONS/ADVANCED_OPERATIONS instead of hardcoded
+  - `src/__init__.py` — exports BasicOperations, AdvancedOperations, OperationRegistry
+  - `tests/test_modes_operations.py` — 34 new tests for OperationRegistry and constants
+  - `tests/test_modes_basic.py` — 95 new tests for BasicOperations
+  - `tests/test_modes_advanced.py` — 107 new tests for AdvancedOperations
+  - `tests/test_modes_init.py` — 22 new tests for package exports
+  - `tests/test_logic.py` — extended with 8 mode parameter tests
+  - `tests/test_calculator.py` — extended with 11 mode and set_mode tests
+  - `tests/test_input_handler.py` — extended with 11 constant derivation tests
+- **Purpose:** Refactor calculator into a modes package separating basic and advanced operations; prepare extensible architecture for future scientific mode without changing existing behavior
+- **Risks:** None — default mode is 'basic', all existing public APIs preserved, no behavioral changes
+- **Tests passed:** 1159 passed, 0 failed
+
+Duration: 541.3s | Cost: $1.286037 USD | Turns: 15
+
 ## Run: update-diagrams — History of Operations (#257) (2026-04-22)
 
 - **Branch:** task/issue-257-history-of-operations
@@ -254,3 +280,14 @@ Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
   - `artifacts/sequence_calculator_factorial_validation.puml` — new sequence diagram showing factorial type/value validation, logger integration, and three execution paths
 
 Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
+
+## Run: update-diagrams — Refactor modules scientific mode (2026-04-22)
+
+- **Branch:** task/issue-266-refactor-modules-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator_facade.puml` — full class hierarchy with facade, inheritance, composition, aggregation across src/ and src/modes/
+  - `artifacts/activity_repl_pipeline.puml` — REPL request pipeline activity flow including parse, validate, dispatch, history recording, and retry logic
+  - `artifacts/sequence_math_operation.puml` — three-scenario sequence diagram covering binary arithmetic, unary advanced operation, and error propagation
+
+Duration: 304.2s | Cost: $0.850068 USD | Turns: 11

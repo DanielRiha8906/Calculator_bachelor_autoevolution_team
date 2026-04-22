@@ -1,44 +1,95 @@
 @startuml activity_repl_pipeline
-
-title REPL Evaluation Pipeline (_evaluate)
+title REPL Request Pipeline — Activity Flow
 
 start
 
-:raw_input received;
+:main() routes to CalculatorREPL;
+:Print welcome message and supported operations;
 
-:ExpressionParser.parse(raw_input);
+repeat
+  :Read line from stdin;
 
-if (parse raises ValueError?) then (yes)
-    :return "Input error: <message>";
+  if (input empty?) then (yes)
+    :Skip;
+  elseif (input == "history"?) then (yes)
+    :Retrieve history from Calculator;
+    :Print history entries;
+  elseif (input in EXIT_COMMANDS?) then (yes)
+    :Print "Goodbye!";
     stop
-else (no)
-    :operation, operands obtained;
-endif
+  else (no)
+    :_evaluate(raw_input);
 
-:InputValidator.validate(operation, operands);
+    partition "ExpressionParser.parse()" {
+      :Tokenize input string;
+      :Lowercase operation token;
+      :Coerce operand tokens to Numeric;
+      if (Parse error?) then (yes)
+        :Return error message;
+        note right: skips to retry
+      else (no)
+        :Return (operation, operands);
+      endif
+    }
 
-if (validate raises ValueError?) then (yes)
-    :return "Validation error: <message>";
-    stop
-else (no)
-    :validation passed;
-endif
+    partition "InputValidator.validate()" {
+      :validate_operation(operation);
+      if (Unknown operation?) then (yes)
+        :Return validation error;
+      else (no)
+        :validate_operand_count(operation, operands);
+        if (Wrong operand count?) then (yes)
+          :Return validation error;
+        else (no)
+        endif
+      endif
+    }
 
-:_dispatch(operation, operands);
-note right: calls matching Calculator method
+    partition "_dispatch(operation, operands)" {
+      :getattr(Calculator, operation_name);
+      :Call method(*operands);
 
-if (ZeroDivisionError or ValueError?) then (yes)
-    :return "Math error: <message>";
-    stop
-else if (TypeError?) then (yes)
-    :return "Type error: <message>";
-    stop
-else (no)
-    :result = Numeric value;
-endif
+      partition "Calculator → CalculatorEngine" {
+        :Delegate to CalculatorEngine method;
+        if (Basic operation?) then (yes)
+          :BasicOperations.method(operands);
+        else (no)
+          :AdvancedOperations.method(operands);
+        endif
+        :_record_history(operand1, op, operand2, result);
+        :Return result;
+      }
 
-:return "Result: {value}";
+      if (Exception raised?) then (ZeroDivisionError)
+        :Return "Math error: division by zero.";
+      elseif (ValueError) then (yes)
+        :Return "Math error: {exc}";
+      elseif (TypeError) then (yes)
+        :Return "Type error: {exc}";
+      else (success)
+        :Return "Result: {result}";
+      endif
+    }
 
+    if (Response starts with "Result:"?) then (yes)
+      :Print result to user;
+    else (no)
+      :Enter retry loop;
+      repeat
+        :Print error and prompt retry (attempt N/max);
+        :_evaluate(new_input);
+      repeat while (Result? or retries exhausted?) is (no error yet)
+      if (Max retries reached?) then (yes)
+        :Print "Too many invalid attempts";
+      else (no)
+        :Print result;
+      endif
+    endif
+  endif
+
+repeat while (KeyboardInterrupt or EOF?) is (no)
+
+:Handle interrupt gracefully;
 stop
 
 @enduml

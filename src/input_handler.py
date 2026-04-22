@@ -17,6 +17,7 @@ from typing import Union
 
 from .calculator import Calculator
 from .logger import get_logger
+from .modes.operations import BASIC_OPERATIONS, ADVANCED_OPERATIONS
 
 logger = get_logger(__name__)
 
@@ -43,29 +44,17 @@ class RetryConfig:
 # ---------------------------------------------------------------------------
 
 # Maps operation name → expected number of operands.
+# Populated from the canonical sets in modes.operations so that any future
+# addition to those sets is automatically reflected here.
 _ONE_OPERAND_OPS: frozenset[str] = frozenset(
-    {
-        "factorial",
-        "square",
-        "cube",
-        "square_root",
-        "cube_root",
-        "natural_log",
-        "log_base_10",
-    }
+    ADVANCED_OPERATIONS - {"power"}
 )
 
 _TWO_OPERAND_OPS: frozenset[str] = frozenset(
-    {
-        "add",
-        "subtract",
-        "multiply",
-        "divide",
-        "power",
-    }
+    BASIC_OPERATIONS | {"power"}
 )
 
-SUPPORTED_OPERATIONS: frozenset[str] = _ONE_OPERAND_OPS | _TWO_OPERAND_OPS
+SUPPORTED_OPERATIONS: frozenset[str] = BASIC_OPERATIONS | ADVANCED_OPERATIONS
 
 # Numeric type alias used throughout this module.
 Numeric = Union[int, float]

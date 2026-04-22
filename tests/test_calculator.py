@@ -543,3 +543,102 @@ class TestLogBase10:
         """Test that log₁₀ of non-positive numbers raises ValueError."""
         with pytest.raises(ValueError):
             calculator.log_base_10(x)
+
+
+# =============================================================================
+# TestModeParameter
+# =============================================================================
+
+
+class TestModeParameter:
+    """Tests for Calculator mode parameter and set_mode method."""
+
+    def test_calculator_initializes_with_default_mode(self):
+        """Test that Calculator() uses 'basic' as default mode."""
+        calc = Calculator()
+        assert calc._mode == "basic"
+
+    def test_calculator_initializes_with_explicit_mode(self):
+        """Test that Calculator(mode='basic') works."""
+        calc = Calculator(mode="basic")
+        assert calc._mode == "basic"
+
+    def test_calculator_accepts_mode_parameter(self):
+        """Test that Calculator accepts mode parameter at construction."""
+        calc = Calculator(mode="advanced")
+        assert calc._mode == "advanced"
+
+    def test_set_mode_changes_mode(self):
+        """Test that set_mode() changes the calculator mode."""
+        calc = Calculator(mode="basic")
+        assert calc._mode == "basic"
+        calc.set_mode("advanced")
+        assert calc._mode == "advanced"
+
+    def test_set_mode_reinitializes_engine(self):
+        """Test that set_mode() reinitializes the underlying engine."""
+        calc = Calculator()
+        engine1 = calc._engine
+        calc.set_mode("advanced")
+        engine2 = calc._engine
+        assert engine1 is not engine2  # Different object instances
+
+    def test_set_mode_clears_history(self):
+        """Test that set_mode() clears the operation history."""
+        calc = Calculator()
+        calc.add(1, 2)
+        calc.multiply(3, 4)
+        assert len(calc.get_history()) == 2
+        calc.set_mode("advanced")
+        assert len(calc.get_history()) == 0
+
+    def test_operations_work_after_set_mode(self):
+        """Test that operations still work correctly after set_mode()."""
+        calc = Calculator(mode="basic")
+        calc.add(1, 2)
+        calc.set_mode("advanced")
+        # Operations should still work
+        result = calc.multiply(3, 4)
+        assert result == 12
+        result = calc.factorial(5)
+        assert result == 120
+
+    def test_history_recorded_after_set_mode(self):
+        """Test that history is recorded after calling set_mode()."""
+        calc = Calculator()
+        calc.set_mode("advanced")
+        calc.add(5, 3)
+        calc.factorial(4)
+        history = calc.get_history()
+        assert len(history) == 2
+        assert history[0]["operator"] == "add"
+        assert history[1]["operator"] == "factorial"
+
+    def test_backward_compatibility_default_mode(self):
+        """Test that Calculator() with no args works identically to before."""
+        calc = Calculator()
+        assert calc.add(2, 3) == 5
+        assert calc.multiply(4, 5) == 20
+        assert calc.divide(10, 2) == 5.0
+        assert calc.factorial(5) == 120
+
+    def test_mode_parameter_does_not_affect_operations(self):
+        """Test that mode parameter doesn't change operation behavior."""
+        calc1 = Calculator(mode="basic")
+        calc2 = Calculator(mode="advanced")
+        calc3 = Calculator()  # default
+
+        # All should produce identical results
+        assert calc1.add(5, 3) == calc2.add(5, 3) == calc3.add(5, 3)
+        assert calc1.factorial(4) == calc2.factorial(4) == calc3.factorial(4)
+        assert calc1.square_root(9) == calc2.square_root(9) == calc3.square_root(9)
+
+    def test_set_mode_to_same_mode(self):
+        """Test that set_mode to the same mode works."""
+        calc = Calculator(mode="basic")
+        calc.add(1, 2)
+        calc.set_mode("basic")
+        # History should be cleared even when setting to same mode
+        assert len(calc.get_history()) == 0
+        # Operations should still work
+        assert calc.add(3, 4) == 7

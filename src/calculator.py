@@ -14,11 +14,39 @@ class Calculator:
     Exposes the same public interface that was present before the
     engine was extracted into :mod:`src.logic`, ensuring that no
     existing caller or test needs to change.
+
+    Args:
+        mode: Operation mode passed through to :class:`~src.logic.CalculatorEngine`.
+            Defaults to ``'basic'``.  Currently both basic and advanced
+            operations are always available; the parameter is accepted for
+            future extensibility.
     """
 
-    def __init__(self) -> None:
-        """Initialise the Calculator and its underlying CalculatorEngine."""
-        self._engine = CalculatorEngine()
+    def __init__(self, mode: str = "basic") -> None:
+        """Initialise the Calculator and its underlying CalculatorEngine.
+
+        Args:
+            mode: Operation mode selector.  Defaults to ``'basic'``.
+        """
+        self._mode = mode
+        self._engine = CalculatorEngine(mode=mode)
+
+    # ------------------------------------------------------------------
+    # Mode management
+    # ------------------------------------------------------------------
+
+    def set_mode(self, mode: str) -> None:
+        """Switch the calculator to a different operation mode at runtime.
+
+        Re-instantiates the underlying :class:`~src.logic.CalculatorEngine`
+        with the new mode.  Existing history is cleared as part of the
+        re-instantiation.
+
+        Args:
+            mode: The new mode string (e.g. ``'basic'``).
+        """
+        self._mode = mode
+        self._engine = CalculatorEngine(mode=mode)
 
     # ------------------------------------------------------------------
     # History

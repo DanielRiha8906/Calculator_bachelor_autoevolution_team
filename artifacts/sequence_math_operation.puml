@@ -1,27 +1,73 @@
 @startuml sequence_math_operation
+title Single Operation — Sequence (REPL → Facade → Engine → Modes)
 
-participant "Actor" as Actor
-participant "Calculator" as Calc
-participant "math" as Math
+actor User
+participant "CalculatorREPL" as REPL
+participant "ExpressionParser" as Parser
+participant "InputValidator" as Validator
+participant "Calculator" as Facade
+participant "CalculatorEngine" as Engine
+participant "BasicOperations\n/ AdvancedOperations" as Ops
 
-== Happy Path: square_root(16) ==
+== Binary arithmetic: "add 5 3" ==
 
-Actor ->> Calc : square_root(16)
-activate Calc
-note right of Calc : x=16, domain check: 16 >= 0, passes
-Calc ->> Math : sqrt(16)
-activate Math
-Math --> Calc : 4.0
-deactivate Math
-Calc --> Actor : 4.0
-deactivate Calc
+User -> REPL: input "add 5 3"
+REPL -> Parser: parse("add 5 3")
+Parser -> Parser: _coerce_numeric("5")
+Parser -> Parser: _coerce_numeric("3")
+Parser --> REPL: ("add", [5, 3])
 
-== Error Path: natural_log(-5) ==
+REPL -> Validator: validate("add", [5, 3])
+Validator -> Validator: validate_operation("add")
+Validator -> Validator: validate_operand_count("add", [5, 3])
+Validator --> REPL: None (valid)
 
-Actor ->> Calc : natural_log(-5)
-activate Calc
-note right of Calc : x=-5, domain check: -5 <= 0, fails
-Calc --> Actor : raise ValueError
-deactivate Calc
+REPL -> Facade: add(5, 3)
+Facade -> Engine: add(5, 3)
+Engine -> Ops: add(5, 3)
+Ops -> Ops: result = 5 + 3
+Ops -> Ops: _record(8)
+Ops --> Engine: 8
+Engine -> Engine: _record_history(5, "add", 3, 8)
+Engine --> Facade: 8
+Facade --> REPL: 8
+REPL -> User: print "Result: 8"
+
+== Unary advanced: "factorial 5" ==
+
+User -> REPL: input "factorial 5"
+REPL -> Parser: parse("factorial 5")
+Parser -> Parser: _coerce_numeric("5")
+Parser --> REPL: ("factorial", [5])
+
+REPL -> Validator: validate("factorial", [5])
+Validator --> REPL: None (valid)
+
+REPL -> Facade: factorial(5)
+Facade -> Engine: factorial(5)
+Engine -> Ops: factorial(5)
+Ops -> Ops: result = 120
+Ops -> Ops: _record(120)
+Ops --> Engine: 120
+Engine -> Engine: _record_history(5, "factorial", None, 120)
+Engine --> Facade: 120
+Facade --> REPL: 120
+REPL -> User: print "Result: 120"
+
+== Error case: "divide 10 0" ==
+
+User -> REPL: input "divide 10 0"
+REPL -> Parser: parse("divide 10 0")
+Parser --> REPL: ("divide", [10, 0])
+REPL -> Validator: validate("divide", [10, 0])
+Validator --> REPL: None (valid)
+REPL -> Facade: divide(10, 0)
+Facade -> Engine: divide(10, 0)
+Engine -> Ops: divide(10, 0)
+Ops --> Engine: raise ZeroDivisionError
+Engine --> Facade: raise ZeroDivisionError
+Facade --> REPL: raise ZeroDivisionError
+REPL -> REPL: catch ZeroDivisionError
+REPL -> User: print "Math error: division by zero."
 
 @enduml
