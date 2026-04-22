@@ -139,3 +139,16 @@ Duration: 250.6s | Cost: $0.564973 USD | Turns: 17
   - `artifacts/sequence_calculator_operations.puml` — Appended 4 new scenarios (E-H) for square_root happy path, square_root ValueError, logarithm happy path, and power happy path
 
 Duration: 224.8s | Cost: $0.616434 USD | Turns: 16
+
+## Run: Issue #253 — V2 Task 7 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-253-cli-interface
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `main.py` — New CLI entry point with `get_operation_arity`, `parse_arguments`, `_to_number`, `execute_operation`, and `main`; uses `inspect.signature` for dynamic arity detection
+  - `tests/test_main_cli.py` — 141 tests covering all operations, error handling, output format, consistency, and internal unit tests
+- **Purpose:** Add bash-accessible CLI so the calculator can be invoked as `python main.py <operation> [operands...]`
+- **Risks:** None — additive change; existing source and tests untouched
+- **Tests passed:** 141 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
