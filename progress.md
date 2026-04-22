@@ -13,7 +13,7 @@
 - **Risks:** None — existing behavior fully preserved; validation.py format_operation_error kept for backward compatibility
 - **Tests passed:** 787 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 472.1s | Cost: $1.019134 USD | Turns: 16
 
 ## Run: update-diagrams — Add error logging PlantUML diagrams (2026-04-22)
 
