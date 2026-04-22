@@ -1,3 +1,17 @@
+## Run: Issue #247 — V2 Task 5 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-247-interactive-input
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/cli.py` — New interactive CLI module with menu-driven session loop, arity detection via inspect, operand collection with re-prompt on invalid input, and graceful error handling
+  - `src/__main__.py` — Updated entry point to instantiate Calculator and call interactive_session
+  - `tests/test_cli.py` — 58 new tests covering get_arity, parse_float, get_operation_menu, get_operands, and interactive_session (full session flow, exit conditions, error handling)
+- **Purpose:** Add interactive user input so the calculator reads operation selection and operands at runtime, supports 1- and 2-operand operations, and allows multiple calculations per session
+- **Risks:** None — Calculator class is untouched; existing 237 tests unaffected; new interactive layer is purely additive
+- **Tests passed:** 295 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-241-factorial-operation
