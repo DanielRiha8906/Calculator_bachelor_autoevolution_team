@@ -231,7 +231,7 @@ Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
 - **Risks:** None — facade preserves public API; all existing tests pass unchanged
 - **Tests passed:** 604 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 315.1s | Cost: $0.853848 USD | Turns: 18
 
 ## Run: update-diagrams — Add error logging diagrams (2026-04-22)
 
