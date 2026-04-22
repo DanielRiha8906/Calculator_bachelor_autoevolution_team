@@ -1,0 +1,18 @@
+@startuml
+title Calculator Class Structure
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a: numeric, b: numeric) : numeric
+    + subtract(a: numeric, b: numeric) : numeric
+    + multiply(a: numeric, b: numeric) : numeric
+    + divide(a: numeric, b: numeric) : numeric
+}
+
+note right of Calculator
+  divide() delegates to Python's / operator
+  ZeroDivisionError raised natively on b=0
+end note
+
+@enduml

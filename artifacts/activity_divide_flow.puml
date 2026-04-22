@@ -1,0 +1,27 @@
+@startuml
+title Calculator.divide() Operation Flow
+
+start
+
+:Call divide(a, b);
+
+:Invoke Python / operator (a / b);
+
+note right
+  Python's / operator performs
+  the zero-check natively
+end note
+
+if (b == 0?) then (yes)
+  :Python raises ZeroDivisionError;
+  :Exception propagates to caller;
+  stop
+  note right: ZeroDivisionError thrown
+else (no)
+  :Operator executes normal division;
+  :Return result (numeric);
+  stop
+  note right: Return result to caller
+endif
+
+@enduml

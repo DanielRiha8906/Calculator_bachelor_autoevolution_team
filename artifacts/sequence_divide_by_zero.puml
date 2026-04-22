@@ -1,0 +1,30 @@
+@startuml
+title Division by Zero Test Execution
+
+actor TestFunction
+participant Calculator
+boundary PythonRuntime
+control "pytest.raises" as PytestRaises
+
+TestFunction -> Calculator : create instance
+activate Calculator
+
+TestFunction -> PytestRaises : enter context (expects ZeroDivisionError)
+activate PytestRaises
+
+PytestRaises -> Calculator : divide(5, 0)
+Calculator -> PythonRuntime : invoke 5 / 0
+activate PythonRuntime
+
+PythonRuntime --> Calculator : raise ZeroDivisionError("division by zero")
+deactivate PythonRuntime
+
+Calculator --> PytestRaises : ZeroDivisionError propagates
+deactivate Calculator
+
+PytestRaises --> TestFunction : exception caught and verified
+deactivate PytestRaises
+
+note over TestFunction : test passes — assertion satisfied
+
+@enduml
