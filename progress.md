@@ -23,7 +23,7 @@
 - **Risks:** None — default mode is 'basic', all existing public APIs preserved, no behavioral changes
 - **Tests passed:** 1159 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 541.3s | Cost: $1.286037 USD | Turns: 15
 
 ## Run: update-diagrams — History of Operations (#257) (2026-04-22)
 
