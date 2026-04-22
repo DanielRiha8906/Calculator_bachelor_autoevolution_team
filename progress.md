@@ -113,4 +113,4 @@ Duration: 250.6s | Cost: $0.564973 USD | Turns: 17
   - `artifacts/activity_expert_operations.puml` — New activity diagram for square_root (with domain constraint) and power (binary validation) flows
   - `artifacts/sequence_calculator_operations.puml` — Appended 4 new scenarios (E-H) for square_root happy path, square_root ValueError, logarithm happy path, and power happy path
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 224.8s | Cost: $0.616434 USD | Turns: 16
