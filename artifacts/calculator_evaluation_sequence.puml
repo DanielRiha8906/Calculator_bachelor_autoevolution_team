@@ -1,0 +1,36 @@
+@startuml calculator_evaluation_sequence
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantFontStyle bold
+skinparam responseMessageBelowArrow true
+
+actor       User             as user
+participant CalculatorREPL   as repl
+participant ExpressionParser as parser
+participant InputValidator   as validator
+participant Calculator       as calc
+
+user  -> repl    : raw input string\n(e.g. "add 5 3")
+
+repl  -> parser  : parse(raw_input)
+parser -> parser : _coerce_numeric(token)\nfor each operand token
+parser --> repl  : (operation, operands)\n(e.g. ("add", [5, 3]))
+
+repl  -> validator : validate(operation, operands)
+alt validation fails
+    validator --> repl : raises ValueError
+    repl  --> user     : "Validation error: <message>"
+else validation passes
+    validator --> repl : returns None
+
+    repl  -> calc  : <operation>(*operands)\n(e.g. add(5, 3))
+    alt math / type error
+        calc --> repl  : raises ValueError / ZeroDivisionError / TypeError
+        repl --> user  : "Math error: <message>"
+    else success
+        calc  --> repl : numeric result
+        repl  --> user : "Result: <value>"
+    end
+end
+
+@enduml

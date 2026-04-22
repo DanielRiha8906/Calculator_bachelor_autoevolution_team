@@ -1,0 +1,60 @@
+@startuml calculator_repl_activity
+
+skinparam activityFontSize 13
+skinparam arrowFontSize 11
+skinparam ActivityDiamondFontSize 12
+
+start
+
+:Print welcome message and supported operations;
+
+repeat
+
+  :Read user input from stdin;
+
+  if (empty input?) then (yes)
+    :Skip — loop back;
+  else (no)
+
+    if (exit / quit command?) then (yes)
+      :Print "Goodbye!";
+      stop
+    else (no)
+
+      :ExpressionParser.parse(raw_input);
+
+      if (parse error?) then (yes)
+        :Print input error message;
+      else (no)
+
+        :InputValidator.validate(operation, operands);
+
+        if (validation error?) then (yes)
+          :Print validation error message;
+        else (no)
+
+          :Dispatch to Calculator method with operands;
+
+          if (math / type error?) then (yes)
+            :Print math or type error message;
+          else (no)
+            :Format result string;
+            :Print "Result: <value>";
+          endif
+
+        endif
+
+      endif
+
+    endif
+
+  endif
+
+repeat while (KeyboardInterrupt / EOFError?) is (no)
+-> yes;
+
+:Print "Interrupted. Goodbye!";
+
+stop
+
+@enduml

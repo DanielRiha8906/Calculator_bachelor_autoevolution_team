@@ -1,4 +1,19 @@
 
+## Run: Issue #248 — V2 Task 6 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-248-plantUML-diagrams
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/calculator_class_diagram.puml` — new PlantUML class diagram for all five system components and their relationships
+  - `artifacts/calculator_repl_activity.puml` — new PlantUML activity diagram for the REPL loop and decision points
+  - `artifacts/calculator_evaluation_sequence.puml` — new PlantUML sequence diagram for a single expression evaluation
+  - `tests/test_diagrams.py` — new test file with 56 tests validating diagram file existence, syntax, and structure
+- **Purpose:** Create focused PlantUML diagrams documenting the calculator architecture for thesis documentation
+- **Risks:** None — documentation-only changes; no source code modified
+- **Tests passed:** 56 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-242-advanced-math-ops

@@ -1,0 +1,59 @@
+@startuml calculator_class_diagram
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+hide empty members
+
+class Calculator {
+    + add(a, b) : float
+    + subtract(a, b) : float
+    + multiply(a, b) : float
+    + divide(a, b) : float
+    + factorial(n: int) : int
+    + square(x: float) : float
+    + cube(x: float) : float
+    + square_root(x: float) : float
+    + cube_root(x: float) : float
+    + power(base: float, exponent: float) : float
+    + natural_log(x: float) : float
+    + log_base_10(x: float) : float
+}
+
+class InputValidator {
+    + validate_operation(operation: str) : None
+    + validate_operand_count(operation: str, operands: list) : None
+    + validate(operation: str, operands: list) : None
+}
+
+class ExpressionParser {
+    + parse(raw_input: str) : tuple
+    - _coerce_numeric(token: str) : Numeric
+}
+
+class CalculatorREPL {
+    - _calculator : Calculator
+    - _parser : ExpressionParser
+    - _validator : InputValidator
+    - _EXIT_COMMANDS : frozenset
+    + run() : None
+    - _evaluate(raw_input: str) : str
+    - _dispatch(operation: str, operands: list) : Numeric
+}
+
+class Main {
+    + main() : None
+}
+
+CalculatorREPL *-- Calculator       : uses
+CalculatorREPL *-- ExpressionParser : uses
+CalculatorREPL *-- InputValidator   : uses
+Main ..> CalculatorREPL             : creates and runs
+
+note bottom of ExpressionParser
+  Input format:
+  OPERATION OPERAND1 [OPERAND2]
+  e.g. "add 5 3" or "square 7"
+end note
+
+@enduml
