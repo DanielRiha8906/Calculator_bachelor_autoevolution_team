@@ -228,4 +228,4 @@ Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
   - `artifacts/activity_diagram_error_logging.puml` — new activity diagram for three error detection and logging flows (math error, invalid token, unknown operation)
   - `artifacts/sequence_diagram_cli_repl_logging.puml` — new sequence diagram showing CLI and REPL error paths with logger.warning() and logger.error() call sites
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
