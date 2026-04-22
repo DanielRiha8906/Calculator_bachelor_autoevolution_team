@@ -1,0 +1,49 @@
+@startuml sequence_diagram_cli_execution
+
+participant "__main__" as main
+participant "cli_main" as cli_main
+participant "parse_args" as parse_args
+participant "execute_cli" as execute_cli
+participant "OperationRegistry" as registry
+participant "Calculator" as calc
+
+activate main
+
+main ->> cli_main : cli_main(["add", "3", "5"])
+activate cli_main
+
+cli_main ->> parse_args : parse_args(["add", "3", "5"])
+activate parse_args
+
+alt parse error (e.g. non-numeric operand)
+    parse_args -->> cli_main : raises ValueError
+    cli_main ->> cli_main : print "Error: ..." to stderr
+    cli_main ->> main : sys.exit(1)
+else success
+    parse_args -->> cli_main : ("add", [3.0, 5.0])
+    deactivate parse_args
+
+    cli_main ->> execute_cli : execute_cli("add", [3.0, 5.0])
+    activate execute_cli
+
+    execute_cli ->> registry : get_operation("add")
+    activate registry
+    registry -->> execute_cli : (method, 2, "Addition (a + b)")
+    deactivate registry
+
+    execute_cli ->> calc : add(3.0, 5.0)
+    activate calc
+    calc -->> execute_cli : 8.0
+    deactivate calc
+
+    execute_cli -->> cli_main : 8.0
+    deactivate execute_cli
+
+    note over cli_main : Format 8.0 → print "8" to stdout
+    cli_main ->> main : sys.exit(0)
+end
+
+deactivate cli_main
+deactivate main
+
+@enduml

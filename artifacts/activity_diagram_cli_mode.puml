@@ -1,0 +1,73 @@
+@startuml activity_diagram_cli_mode
+
+start
+
+if (len(sys.argv) > 1?) then (yes)
+    :cli_main(argv);
+else (no)
+    :Run interactive main();
+    stop
+endif
+
+if (argv empty?) then (yes)
+    :Print usage to stderr;
+    :sys.exit(1);
+    stop
+else (no)
+    :Extract operation name (argv[0]);
+    :Convert remaining tokens to float operands;
+    if (Conversion error?) then (yes)
+        :Print "Error: {message}" to stderr;
+        :sys.exit(1);
+        stop
+    else (no)
+    endif
+endif
+
+:Instantiate Calculator and OperationRegistry;
+:Lookup operation via registry.get_operation(operation);
+
+if (Operation unknown (KeyError)?) then (yes)
+    :Print "Error: {message}" to stderr;
+    :sys.exit(1);
+    stop
+else (no)
+endif
+
+:Validate: len(operands) == arity;
+
+if (Arity mismatch?) then (yes)
+    :Print "Error: {message}" to stderr;
+    :sys.exit(1);
+    stop
+else (no)
+endif
+
+if (Operation in INT_OPERAND_OPERATIONS?) then (yes)
+    :Convert operands to int;
+else (no)
+endif
+
+:Call method(*operands);
+
+if (ValueError or ZeroDivisionError?) then (yes)
+    :Print "Error: {message}" to stderr;
+    :sys.exit(1);
+    stop
+else (no)
+endif
+
+:Return result;
+
+if (result is whole-number float?) then (yes)
+    :Format as int(result);
+else (no)
+    :Format as-is;
+endif
+
+:Print result to stdout;
+:sys.exit(0);
+
+stop
+
+@enduml

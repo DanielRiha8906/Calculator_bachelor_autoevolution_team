@@ -147,3 +147,14 @@ Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
 - **Tests passed:** 278 passed, 0 failed
 
 Duration: 297.1s | Cost: $0.812856 USD | Turns: 15
+
+## Run: update-diagrams — Add CLI mode diagrams (2026-04-22)
+
+- **Branch:** task/issue-252-cli-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — updated class diagram adding cli module with parse_args, execute_cli, cli_main; dependencies on Calculator and OperationRegistry
+  - `artifacts/activity_diagram_cli_mode.puml` — new activity diagram for CLI execution flow: argv dispatch, parse, execute, format, stdout/stderr, exit codes
+  - `artifacts/sequence_diagram_cli_execution.puml` — new sequence diagram tracing __main__ → cli_main → parse_args → execute_cli → OperationRegistry → Calculator → stdout
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

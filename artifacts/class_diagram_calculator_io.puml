@@ -33,4 +33,13 @@ class OperationRegistry {
 
 OperationRegistry *--> Calculator : holds reference and bound methods
 
+class cli {
+    +parse_args(argv: list[str]) : tuple[str, list[float]]
+    +execute_cli(operation: str, operands: list[float]) : float | int
+    +cli_main(argv: list[str]) : void
+}
+
+cli --> Calculator : uses in execute_cli
+cli --> OperationRegistry : uses in execute_cli
+
 @enduml
