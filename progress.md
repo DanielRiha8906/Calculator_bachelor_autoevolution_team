@@ -26,7 +26,7 @@ Duration: 232.1s | Cost: $0.572323 USD | Turns: 14
 - **Risks:** None — additive changes only; Calculator class and existing tests unchanged
 - **Tests passed:** 146 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 354.5s | Cost: $0.739122 USD | Turns: 16
 
 ## Run: Issue #236 — Create tests for the calculator
 
