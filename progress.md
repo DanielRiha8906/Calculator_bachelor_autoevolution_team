@@ -372,4 +372,4 @@ Duration: 217.7s | Cost: $0.540420 USD | Turns: 4
   - `artifacts/activity_diagram_interactive_session.puml` — updated REPL loop with correct mode parameter threading, retry exit conditions, and swimlane separation
   - `artifacts/sequence_diagram_operation_execution.puml` — updated sequence diagram with mode param fix, error scenarios (division by zero, invalid domain), and ErrorLogger calls
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 338.8s | Cost: $0.949443 USD | Turns: 25
