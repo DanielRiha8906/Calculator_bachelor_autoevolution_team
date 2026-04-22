@@ -338,4 +338,4 @@ Duration: 146.8s | Cost: $0.363565 USD | Turns: 4
   - `artifacts/activity_diagram_session_flow.puml` — activity diagram of user operation execution flow through session and core
   - `artifacts/sequence_diagram_operation_execution.puml` — sequence diagram for add and square operation execution with delegation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 217.7s | Cost: $0.540420 USD | Turns: 4
