@@ -189,3 +189,22 @@ Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
   - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
 
 Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
+
+## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/history.py` — new OperationHistory class: in-memory entry storage, function-style formatting, file persistence
+  - `src/session.py` — new CalculatorSession class: wraps Calculator to transparently record operations to history, save_and_close() persists to file
+  - `src/repl.py` — new CalculatorREPL class: interactive REPL with history/help/exit commands, main() entry point
+  - `src/__init__.py` — added exports for OperationHistory, CalculatorSession, CalculatorREPL
+  - `tests/test_history.py` — 27 tests covering formatting, storage, and file persistence for OperationHistory
+  - `tests/test_session.py` — 27 tests covering session init, wrapped calculator operations, and persistence
+  - `tests/test_repl.py` — 44 tests covering command execution, history display, REPL loop, and main()
+  - `tests/test_calculator.py` — added TestCalculatorHistoryIntegration with 8 integration tests
+- **Purpose:** Add session-based operation history tracking with function-style notation, interactive display, and file persistence on session end
+- **Risks:** None — calculator.py untouched; all new modules additive; existing tests unchanged
+- **Tests passed:** 601 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

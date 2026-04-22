@@ -367,3 +367,89 @@ class TestMultiply:
         """Test multiplication with invalid second operand type raises TypeError."""
         with pytest.raises(TypeError):
             calculator.multiply(5, invalid_input)
+
+
+class TestCalculatorHistoryIntegration:
+    """Test suite for Calculator integration with CalculatorSession and history."""
+
+    @pytest.fixture
+    def session(self):
+        """Fixture providing a fresh CalculatorSession."""
+        from src.session import CalculatorSession
+        return CalculatorSession()
+
+    def test_session_add_records_to_history(self, session):
+        """Test that add operation via session records to history."""
+        calc = session.get_calculator()
+        result = calc.add(2, 3)
+        assert result == 5
+        entries = session.get_history()
+        assert len(entries) == 1
+        assert entries[0] == "add(2, 3) = 5"
+
+    def test_session_multiply_records_to_history(self, session):
+        """Test that multiply operation via session records to history."""
+        calc = session.get_calculator()
+        result = calc.multiply(4, 5)
+        assert result == 20
+        entries = session.get_history()
+        assert len(entries) == 1
+        assert entries[0] == "multiply(4, 5) = 20"
+
+    def test_session_unary_records_to_history(self, session):
+        """Test that unary operation (square) via session records to history."""
+        calc = session.get_calculator()
+        result = calc.square(5)
+        assert result == 25.0
+        entries = session.get_history()
+        assert len(entries) == 1
+        assert entries[0] == "square(5) = 25"
+
+    def test_session_history_accumulates(self, session):
+        """Test that multiple operations accumulate in session history."""
+        calc = session.get_calculator()
+        calc.add(1, 1)
+        calc.multiply(2, 2)
+        calc.subtract(10, 3)
+        entries = session.get_history()
+        assert len(entries) == 3
+        assert entries[0] == "add(1, 1) = 2"
+        assert entries[1] == "multiply(2, 2) = 4"
+        assert entries[2] == "subtract(10, 3) = 7"
+
+    def test_session_fresh_on_new_session(self):
+        """Test that two sessions don't share history."""
+        from src.session import CalculatorSession
+        session1 = CalculatorSession()
+        session2 = CalculatorSession()
+
+        calc1 = session1.get_calculator()
+        calc1.add(1, 1)
+
+        # session2 should have empty history
+        assert len(session2.get_history()) == 0
+        assert len(session1.get_history()) == 1
+
+    def test_session_divide_records_with_float_result(self, session):
+        """Test that divide operation records float results correctly."""
+        calc = session.get_calculator()
+        result = calc.divide(7, 2)
+        assert result == 3.5
+        entries = session.get_history()
+        assert entries[0] == "divide(7, 2) = 3.5"
+
+    def test_session_factorial_records(self, session):
+        """Test that factorial operation records to history."""
+        calc = session.get_calculator()
+        result = calc.factorial(5)
+        assert result == 120
+        entries = session.get_history()
+        assert entries[0] == "factorial(5) = 120"
+
+    def test_session_power_records(self, session):
+        """Test that power operation records to history."""
+        calc = session.get_calculator()
+        result = calc.power(2, 8)
+        assert result == 256.0
+        entries = session.get_history()
+        assert entries[0] == "power(2, 8) = 256"
