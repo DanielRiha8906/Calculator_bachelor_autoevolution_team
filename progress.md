@@ -352,3 +352,14 @@ Duration: 328.6s | Cost: $0.912429 USD | Turns: 18
   - `artifacts/sequence_diagram_operation_execution.puml` — updated operation execution sequence
 
 Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
+
+## Run: update-diagrams — Scientific Mode Diagrams (2026-04-22)
+
+- **Branch:** task/issue-273-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_mode_system.puml` — updated ModeManager, CalculatorMode, OperationRegistry with complete signatures and mode-filtering relationships
+  - `artifacts/sequence_diagram_mode_switch.puml` — updated to show full mode-toggle flow including initialization, is_operation_available filtering, and SCIENTIFIC mode second iteration
+  - `artifacts/activity_diagram_interactive_session.puml` — updated to show mode-aware loop with get_available_operations, get_mode_display_name, and mode-switch branch
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
