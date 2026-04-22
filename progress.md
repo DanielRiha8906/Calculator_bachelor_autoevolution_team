@@ -10,7 +10,7 @@
 - **Risks:** None — additive changes only; no existing methods modified
 - **Tests passed:** 214 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 232.1s | Cost: $0.572323 USD | Turns: 14
 
 ## Run: Issue #236 — Create tests for the calculator
 
