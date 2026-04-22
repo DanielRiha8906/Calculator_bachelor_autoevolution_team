@@ -1,12 +1,12 @@
 @startuml sequence_diagram_test_division
 
 participant "Pytest Framework" as Pytest
-participant "calc() fixture" as Fixture
+participant "calculator fixture" as Fixture
 participant "Calculator" as Calc
 
 == Happy Path: divide returns a result ==
 
-Pytest -> Fixture : invoke calc() fixture
+Pytest -> Fixture : invoke calculator() fixture
 activate Fixture
 Fixture -> Calc : Calculator()
 activate Calc
@@ -14,6 +14,11 @@ Fixture --> Pytest : Calculator instance
 deactivate Fixture
 
 Pytest ->> Calc : divide(a, b)
+note right of Calc
+  divide() may raise:
+  - ZeroDivisionError (b == 0)
+  - TypeError (non-numeric a or b)
+end note
 Calc --> Pytest : float result
 deactivate Calc
 
@@ -22,7 +27,7 @@ note right : assertion passes
 
 == Exception Path: divide by zero ==
 
-Pytest -> Fixture : invoke calc() fixture
+Pytest -> Fixture : invoke calculator() fixture
 activate Fixture
 Fixture -> Calc : Calculator()
 activate Calc

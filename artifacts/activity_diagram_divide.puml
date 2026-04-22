@@ -4,22 +4,27 @@ start
 
 :Receive arguments a and b;
 
-if (b == 0?) then (yes)
-    :Raise ZeroDivisionError;
-    stop
+:Attempt: a / b via Python's / operator;
+note right
+  No explicit checks in source.
+  Exceptions raised by Python's / operator.
+end note
+
+if (Exception raised?) then (yes)
+    fork
+        if (TypeError?) then (yes)
+            :Raise TypeError;
+            stop
+        endif
+    fork again
+        if (ZeroDivisionError?) then (yes)
+            :Raise ZeroDivisionError;
+            stop
+        endif
+    end fork
 else (no)
-endif
-
-if (a and b are numeric?) then (no)
-    :Raise TypeError;
+    :Return float result;
     stop
-else (yes)
 endif
-
-:Compute a / b;
-
-:Return float result;
-
-stop
 
 @enduml
