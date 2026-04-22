@@ -125,3 +125,30 @@ Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
   - `artifacts/sequence_repl_interaction.puml` — new sequence diagram showing happy path and validation error path through the REPL
 
 Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
+
+## Run: Issue #251 — V2 Task 7 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-251-cli-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/cli.py` — new module with CLIHandler class and main_cli() for non-interactive expression evaluation from bash
+  - `src/__init__.py` — added CLIHandler import and export
+  - `src/main.py` — added CLI routing logic with _is_calculator_expression() guard; falls back to REPL when no valid expression argument
+  - `tests/test_cli.py` — 90 tests covering success paths, error paths, argument parsing, routing logic, and exports
+
+- **Purpose:** Add CLI mode so the calculator can be invoked with an expression argument from bash (e.g. `python -m src.main "add 5 3"`), printing the result to stdout and exiting with code 0 on success or 1 on error.
+- **Risks:** None — additive changes only; REPL behavior unchanged when no arguments are passed
+- **Tests passed:** 450 passed, 0 failed
+
+Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
+
+## Run: update-diagrams — Add CLI mode UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-251-cli-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — class structure showing CLIHandler and shared services
+  - `artifacts/activity_diagram_cli.puml` — activity flows for CLI/REPL routing and CLIHandler execution
+  - `artifacts/sequence_diagram_cli.puml` — end-to-end CLI expression evaluation sequence
+
+Duration: 184.2s | Cost: $0.463289 USD | Turns: 7

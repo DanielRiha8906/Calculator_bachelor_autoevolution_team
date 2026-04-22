@@ -1,0 +1,74 @@
+@startuml class_diagram_cli
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam ArrowColor #444444
+skinparam ClassBorderColor #555555
+skinparam ClassBackgroundColor #FAFAFA
+skinparam StereotypeCBackgroundColor #D0E8FF
+
+title CLI Mode — Class Structure
+
+class Calculator {
+  + add(a, b) : Numeric
+  + subtract(a, b) : Numeric
+  + multiply(a, b) : Numeric
+  + divide(a, b) : Numeric
+  + factorial(n) : int
+  + square(x) : Numeric
+  + cube(x) : Numeric
+  + square_root(x) : float
+  + cube_root(x) : float
+  + power(base, exponent) : Numeric
+  + natural_log(x) : float
+  + log_base_10(x) : float
+}
+
+class ExpressionParser {
+  + parse(raw_input: str) : tuple
+  - _coerce_numeric(token: str) : Numeric
+}
+
+class InputValidator {
+  + validate(operation: str, operands: list) : None
+  + validate_operation(operation: str) : None
+  + validate_operand_count(operation: str, operands: list) : None
+}
+
+class CLIHandler <<NEW>> {
+  - _expression: str
+  - _calculator: Calculator
+  - _parser: ExpressionParser
+  - _validator: InputValidator
+  + __init__(expression: str)
+  + run() : int
+  - _dispatch(operation: str, operands: list) : Numeric
+}
+
+class CalculatorREPL {
+  - _calculator: Calculator
+  - _parser: ExpressionParser
+  - _validator: InputValidator
+  - _EXIT_COMMANDS: frozenset
+  + __init__(calculator: Calculator)
+  + run() : None
+  - _dispatch(operation, operands) : Numeric
+  - _evaluate(raw_input: str) : str
+}
+
+note top of CLIHandler
+  Invoked by main() when a valid
+  expression argument is detected,
+  or directly via main_cli().
+  Exits with code 0 on success, 1 on error.
+end note
+
+CLIHandler *-- Calculator : composes
+CLIHandler *-- ExpressionParser : composes
+CLIHandler *-- InputValidator : composes
+
+CalculatorREPL o-- Calculator : uses (passed in)
+CalculatorREPL *-- ExpressionParser : composes
+CalculatorREPL *-- InputValidator : composes
+
+@enduml

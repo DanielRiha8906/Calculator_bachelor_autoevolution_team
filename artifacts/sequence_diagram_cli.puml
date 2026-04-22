@@ -1,0 +1,74 @@
+@startuml sequence_diagram_cli
+
+skinparam ParticipantFontSize 13
+skinparam ArrowColor #444444
+skinparam ParticipantBorderColor #555555
+skinparam ParticipantBackgroundColor #FAFAFA
+skinparam SequenceGroupBorderColor #888888
+
+title CLI Mode — End-to-End Expression Evaluation
+
+actor User
+participant "main()" as main
+participant "_is_calculator_expression()" as guard
+participant "CLIHandler" as cli
+participant "ExpressionParser" as parser
+participant "InputValidator" as validator
+participant "Calculator" as calc
+participant "stdout / stderr" as out
+
+User -> main : invoke with sys.argv=["src.main", "add 5 3"]
+activate main
+
+main -> main : check len(sys.argv) > 1  →  True
+main -> guard : check "add 5 3"
+activate guard
+guard --> main : return True
+deactivate guard
+
+main -> cli : CLIHandler("add 5 3")
+activate cli
+cli -> cli : init _calculator, _parser, _validator
+
+main -> cli : run()
+
+alt successful path
+
+  cli -> parser : parse("add 5 3")
+  activate parser
+  parser --> cli : return ("add", [5, 3])
+  deactivate parser
+
+  cli -> validator : validate("add", [5, 3])
+  activate validator
+  validator --> cli : return (success)
+  deactivate validator
+
+  cli -> calc : add(5, 3)
+  activate calc
+  calc --> cli : return 8
+  deactivate calc
+
+  cli -> out : print(8)
+  cli --> main : return 0
+  deactivate cli
+
+  main -> User : sys.exit(0)
+
+else parse error
+
+  cli -> parser : parse(expression)
+  activate parser
+  parser --> cli : raise ValueError
+  deactivate parser
+
+  cli -> out : print error to stderr
+  cli --> main : return 1
+
+  main -> User : sys.exit(1)
+
+end
+
+deactivate main
+
+@enduml
