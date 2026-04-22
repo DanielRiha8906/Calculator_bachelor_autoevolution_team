@@ -280,3 +280,14 @@ Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
   - `artifacts/sequence_calculator_factorial_validation.puml` — new sequence diagram showing factorial type/value validation, logger integration, and three execution paths
 
 Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
+
+## Run: update-diagrams — Refactor modules scientific mode (2026-04-22)
+
+- **Branch:** task/issue-266-refactor-modules-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator_facade.puml` — full class hierarchy with facade, inheritance, composition, aggregation across src/ and src/modes/
+  - `artifacts/activity_repl_pipeline.puml` — REPL request pipeline activity flow including parse, validate, dispatch, history recording, and retry logic
+  - `artifacts/sequence_math_operation.puml` — three-scenario sequence diagram covering binary arithmetic, unary advanced operation, and error propagation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
