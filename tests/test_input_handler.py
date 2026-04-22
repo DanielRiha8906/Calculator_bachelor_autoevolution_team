@@ -865,3 +865,44 @@ class TestModuleExports:
             "natural_log", "log_base_10",
         }
         assert SUPPORTED_OPERATIONS == expected_ops
+
+    def test_one_operand_ops_derived_from_canonical_sets(self):
+        """Test that _ONE_OPERAND_OPS is derived from ADVANCED_OPERATIONS minus 'power'."""
+        from src.modes.operations import ADVANCED_OPERATIONS
+        expected = ADVANCED_OPERATIONS - {"power"}
+        assert _ONE_OPERAND_OPS == expected
+
+    def test_two_operand_ops_derived_from_canonical_sets(self):
+        """Test that _TWO_OPERAND_OPS is derived from BASIC_OPERATIONS plus 'power'."""
+        from src.modes.operations import BASIC_OPERATIONS
+        expected = BASIC_OPERATIONS | {"power"}
+        assert _TWO_OPERAND_OPS == expected
+
+    def test_one_operand_ops_contains_expected_operations(self):
+        """Test that _ONE_OPERAND_OPS contains all expected unary operations."""
+        expected = {
+            "factorial", "square", "cube", "square_root", "cube_root",
+            "natural_log", "log_base_10",
+        }
+        assert _ONE_OPERAND_OPS == expected
+
+    def test_two_operand_ops_contains_expected_operations(self):
+        """Test that _TWO_OPERAND_OPS contains all expected binary operations."""
+        expected = {"add", "subtract", "multiply", "divide", "power"}
+        assert _TWO_OPERAND_OPS == expected
+
+    def test_one_and_two_operand_ops_do_not_overlap(self):
+        """Test that _ONE_OPERAND_OPS and _TWO_OPERAND_OPS have no overlap."""
+        assert len(_ONE_OPERAND_OPS & _TWO_OPERAND_OPS) == 0
+
+    def test_one_operand_ops_is_frozenset(self):
+        """Test that _ONE_OPERAND_OPS is a frozenset."""
+        assert isinstance(_ONE_OPERAND_OPS, frozenset)
+
+    def test_two_operand_ops_is_frozenset(self):
+        """Test that _TWO_OPERAND_OPS is a frozenset."""
+        assert isinstance(_TWO_OPERAND_OPS, frozenset)
+
+    def test_supported_operations_is_frozenset(self):
+        """Test that SUPPORTED_OPERATIONS is a frozenset."""
+        assert isinstance(SUPPORTED_OPERATIONS, frozenset)
