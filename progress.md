@@ -1,3 +1,18 @@
+## Run: Issue #267 — V2 Task 12 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-267-modular-refactor
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/operations.py` — added `register_operation()` method with full validation + expanded module docstring with extension example
+  - `src/calculator.py` — added module-level and class-level docstrings directing future scientific extensions to `register_operation()`
+  - `src/engine.py` — expanded module docstring explaining coordination with `OperationRegistry` and automatic support for dynamically registered operations
+  - `tests/test_operations.py` — added 43 new tests in `TestRegisterOperation` class covering happy path, duplicate keys, non-callable methods, arity validation, description fields, callable types, and state/side-effect assertions
+- **Purpose:** Refactor calculator for better modularity: enable future scientific operations to be registered without modifying core logic or interface modules, establishing a clear plugin-like extension pattern
+- **Risks:** None — changes are purely additive; no existing method signatures or behaviors were altered
+- **Tests passed:** 772 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #234 — Division-by-zero unit tests
 
 - **Branch:** task/issue-234-division-by-zero

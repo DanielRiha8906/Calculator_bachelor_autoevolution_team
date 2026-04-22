@@ -1,4 +1,17 @@
-"""Pure calculation engine that orchestrates operation execution."""
+"""Pure calculation engine that orchestrates operation execution.
+
+``CalculationEngine`` acts as the single coordination point between the
+caller and the operation layer.  It holds references to a ``Calculator``
+instance (which owns the arithmetic logic) and an ``OperationRegistry``
+(which maps string keys to callable methods with their arity).
+
+On each call to :meth:`CalculationEngine.execute_operation`, the engine
+delegates entirely to the registry for key resolution and to the bound
+method for computation.  As a result, **any operation registered via
+``OperationRegistry.register_operation()`` is automatically available to
+the engine** — no changes to this module are needed to support new
+operations.
+"""
 
 from .calculator import Calculator
 from .operations import OperationRegistry

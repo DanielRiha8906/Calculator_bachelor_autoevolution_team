@@ -1,9 +1,36 @@
+"""Core arithmetic operations for the calculator.
+
+This module contains only the built-in, foundational arithmetic and
+mathematical operations (addition, subtraction, multiplication, division,
+powers, roots, logarithms, and factorial).
+
+Extension note
+--------------
+Do **not** add future scientific functions (e.g. trigonometric, hyperbolic,
+or statistical operations) directly to the ``Calculator`` class.  Instead,
+register them at runtime via ``OperationRegistry.register_operation()``.
+This keeps the core class focused and allows third-party extensions without
+subclassing or modifying this file.
+"""
+
 import math
 
 from . import error_logger
 
 
 class Calculator:
+    """Provides core arithmetic and mathematical operations.
+
+    Each public method performs a single, well-defined computation.
+    Any domain or arithmetic errors are logged via ``error_logger`` before
+    being re-raised so that callers always receive the original exception type.
+
+    Note:
+        This class intentionally covers only foundational operations.  For
+        scientific or domain-specific functions, use
+        ``OperationRegistry.register_operation()`` to extend the registry
+        without touching this class.
+    """
     def add(self, a, b):
         return a + b
 
