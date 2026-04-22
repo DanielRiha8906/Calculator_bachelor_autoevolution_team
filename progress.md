@@ -237,4 +237,4 @@ Duration: 242.4s | Cost: $0.645268 USD | Turns: 7
 - **Risks:** None — logging is transparent (never changes exception propagation), falls back gracefully on I/O failure
 - **Tests passed:** 586 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 436.7s | Cost: $1.127227 USD | Turns: 17
