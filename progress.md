@@ -304,4 +304,4 @@ Duration: 246.6s | Cost: $0.706330 USD | Turns: 16
   - `artifacts/class_diagram_workflow.puml` — expanded Calculator to all 12 ops; added UserInterface.display_operations() and display_history()
   - `artifacts/class_diagram_calculator_io.puml` — added CalculationEngine, UserInterface, register_operation(), InputHandler.display_history()
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 328.6s | Cost: $0.912429 USD | Turns: 18
