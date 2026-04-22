@@ -1,6 +1,7 @@
 """Entry point for the interactive calculator session."""
 
 from .calculator import Calculator
+from .history import OperationHistory
 from .io_handler import InputHandler, InputRetryExhaustedError
 from .operations import OperationRegistry
 
@@ -8,14 +9,18 @@ from .operations import OperationRegistry
 def main() -> None:
     """Run the interactive calculator loop.
 
-    Initialises Calculator, InputHandler, and OperationRegistry, then enters
-    an infinite loop that prompts the user for an operation and operands,
-    invokes the operation, and displays the result.  The loop exits cleanly
-    on KeyboardInterrupt, when the user types "exit" / "quit", or when the
-    user exhausts all retry attempts for any input prompt.
+    Initialises Calculator, InputHandler, OperationHistory, and OperationRegistry,
+    then enters an infinite loop that prompts the user for an operation and
+    operands, invokes the operation, displays the result, and records it in the
+    history log.  The loop exits cleanly on KeyboardInterrupt, when the user
+    types "exit" / "quit", or when the user exhausts all retry attempts for any
+    input prompt.
     """
+    history = OperationHistory()
+    history.clear()
+
     calc = Calculator()
-    handler = InputHandler()
+    handler = InputHandler(history=history)
     registry = OperationRegistry(calc)
 
     print("Welcome to the Calculator. Press Ctrl+C or type 'exit' to quit.")
@@ -48,6 +53,7 @@ def main() -> None:
 
             result = method(*operands)
             handler.display_result(description, operands, result)
+            history.record_operation(choice, operands, result)
 
         except ValueError as exc:
             handler.display_error(str(exc))

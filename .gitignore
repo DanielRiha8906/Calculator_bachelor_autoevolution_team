@@ -209,3 +209,6 @@ __marimo__/
 secrets/
 key.txt
 prompt_additions.txt
+
+# Calculator session history (runtime-generated, not persisted across sessions)
+history.txt

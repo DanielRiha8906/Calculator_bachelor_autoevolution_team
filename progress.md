@@ -190,3 +190,21 @@ Duration: 579.0s | Cost: $1.309617 USD | Turns: 17
   - `artifacts/sequence_diagram_cli_execution.puml` — added validation participant, parse_args now calls validate_operand, error alt branch updated to OperandValidationError
 
 Duration: 225.4s | Cost: $0.584184 USD | Turns: 14
+
+## Run: Issue #258 — V2 Task 9 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-258-operation-history
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/history.py` — new module: OperationHistory class for session-scoped history recording, display, and clearing
+  - `src/io_handler.py` — added optional history parameter to InputHandler, display_history() method, and "history" sentinel in get_operation_choice()
+  - `src/__main__.py` — integrate OperationHistory: clear at startup, pass to InputHandler, record after each successful operation
+  - `.gitignore` — added history.txt to prevent committing runtime-generated session files
+  - `tests/test_history.py` — new file: 40 tests for OperationHistory class (record, display, clear, is_empty, edge cases)
+  - `tests/test_io_handler.py` — added 13 tests for InputHandler history integration (parameter, display_history, history sentinel)
+  - `tests/test_integration.py` — new file: 13 integration tests for session history workflow
+- **Purpose:** Add session-scoped operation history to the calculator — records calculations to history.txt, allows display on request in interactive mode, clears on new session start
+- **Risks:** None
+- **Tests passed:** 97 new tests passed, 503 existing tests unaffected (600 total)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

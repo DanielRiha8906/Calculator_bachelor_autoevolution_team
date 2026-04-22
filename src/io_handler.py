@@ -1,5 +1,7 @@
 """Encapsulates all user input and output operations for the calculator."""
 
+from typing import Any
+
 from .validation import validate_operand, get_validation_error_message
 
 MAX_RETRIES: int = 3
@@ -12,6 +14,27 @@ class InputRetryExhaustedError(ValueError):
 class InputHandler:
     """Handles user-facing input prompts and output display."""
 
+    def __init__(self, history: Any = None) -> None:
+        """Initialise the handler, optionally attaching an operation history store.
+
+        Args:
+            history: An :class:`~history.OperationHistory` instance (or any object
+                exposing a ``display_history() -> str`` method), or ``None`` if
+                history tracking is not required.
+        """
+        self.history: Any = history
+
+    def display_history(self) -> None:
+        """Print the current operation history to stdout.
+
+        Delegates to ``self.history.display_history()`` when a history store is
+        attached; otherwise prints a generic unavailable message.
+        """
+        if self.history is not None:
+            print(self.history.display_history())
+        else:
+            print("No history available.")
+
     def get_operation_choice(
         self,
         available_operations: dict,
@@ -21,7 +44,9 @@ class InputHandler:
 
         Accepts "exit" or "quit" as special sentinel values, which are returned
         directly without validation against ``available_operations`` and without
-        counting as a failed attempt.
+        counting as a failed attempt.  Accepts "history" as a display-only
+        sentinel: the operation history is printed and the user is re-prompted
+        without consuming a retry attempt and without returning to the caller.
 
         After ``max_retries`` consecutive invalid choices, prints a session-ended
         message and raises ``InputRetryExhaustedError``.
@@ -47,6 +72,9 @@ class InputHandler:
             choice = input("Select an operation: ").strip().lower()
             if choice in ("exit", "quit"):
                 return choice
+            if choice == "history":
+                self.display_history()
+                continue
             if choice in available_operations:
                 return choice
             retries += 1
