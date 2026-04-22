@@ -290,4 +290,4 @@ Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
   - `artifacts/activity_repl_pipeline.puml` — REPL request pipeline activity flow including parse, validate, dispatch, history recording, and retry logic
   - `artifacts/sequence_math_operation.puml` — three-scenario sequence diagram covering binary arithmetic, unary advanced operation, and error propagation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
