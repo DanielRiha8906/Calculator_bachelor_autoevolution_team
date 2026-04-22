@@ -219,6 +219,20 @@ Duration: 349.5s | Cost: $1.000426 USD | Turns: 16
 
 Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
 
+## Run: Issue #263 — V2 Task 11 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-263-separate-calculator-logic
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/logic.py` — new module with `CalculatorEngine` class containing all 12 computation methods and history tracking; no UI dependencies
+  - `src/calculator.py` — refactored to thin facade delegating all method calls to `CalculatorEngine`; public API preserved for backward compatibility
+  - `tests/test_logic.py` — 233 new tests for `CalculatorEngine` directly (all operations, history tracking, error cases, history isolation, import path)
+- **Purpose:** Separate calculator logic from interface by extracting all computation into a dedicated `CalculatorEngine` in `src/logic.py`, with `Calculator` becoming a backward-compatible facade
+- **Risks:** None — facade preserves public API; all existing tests pass unchanged
+- **Tests passed:** 604 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Add error logging diagrams (2026-04-22)
 
 - **Branch:** task/issue-260-error-logging
