@@ -1,0 +1,122 @@
+@startuml class_diagram_scientific_mode
+title Scientific Mode — Class Integration (PR #353)
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam backgroundColor white
+
+package "src" {
+  class Calculator {
+    - _engine : CalculatorEngine
+    - _mode : str
+    + __init__(mode="advanced")
+    + set_mode(mode: str)
+    + get_history() : list[dict]
+    .. arithmetic ..
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    .. advanced ..
+    + factorial(n)
+    + power(base, exp)
+    + natural_log(x)
+    + log_base_10(x)
+    .. scientific (PR #353) ..
+    + sin(x)  + cos(x)  + tan(x)
+    + asin(x) + acos(x) + atan(x)
+    + sinh(x) + cosh(x) + tanh(x)
+    + degrees(x) + radians(x)
+    + exp(x)  + ln(x)
+  }
+
+  class CalculatorEngine {
+    - _history : list[dict]
+    - _basic : BasicOperations
+    - _advanced : AdvancedOperations
+    - _scientific : ScientificOperations
+    - _mode : str
+    + __init__(mode="advanced")
+    + set_mode(mode: str)
+    + get_operations() : dict
+    + get_history() : list[dict]
+    - _activate_mode(mode: str)
+    - _record_history(op1, operator, op2, result)
+    .. delegates scientific ops ..
+    + sin(x)  + cos(x)  + tan(x)
+    + asin(x) + acos(x) + atan(x)
+    + sinh(x) + cosh(x) + tanh(x)
+    + exp(x)  + ln(x)
+  }
+
+  class CalculatorREPL {
+    - _calculator : Calculator
+    - _parser : ExpressionParser
+    - _validator : InputValidator
+    - _retry_config : RetryConfig
+    + __init__(calculator, retry_config=None)
+    + run()
+    - _dispatch(operation, operands)
+    - _evaluate(raw_input)
+    - _handle_mode_command(args)
+  }
+}
+
+package "src.modes" {
+  abstract class BaseOperationSet {
+    # _record_callback : Optional[Callable]
+    # _record(result)
+    + {abstract} get_operations() : dict[str, Callable]
+  }
+
+  class BasicOperations {
+    + get_operations() : dict
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+  }
+
+  class AdvancedOperations {
+    + get_operations() : dict
+    + factorial(n)
+    + square(x)  + cube(x)
+    + square_root(x) + cube_root(x)
+    + power(base, exp)
+    + natural_log(x) + log_base_10(x)
+  }
+
+  class ScientificOperations << (N,#ADD1B2) NEW >> {
+    + get_operations() : dict
+    + sin(x)  + cos(x)  + tan(x)
+    + asin(x) + acos(x) + atan(x)
+    + sinh(x) + cosh(x) + tanh(x)
+    + degrees(x) + radians(x)
+    + exp(x)  + ln(x)
+    .. raises ValueError ..
+    note: asin, acos, ln validate domain
+  }
+}
+
+note right of ScientificOperations
+  [NEW] Added in PR #353
+  asin(x): requires -1 <= x <= 1
+  acos(x): requires -1 <= x <= 1
+  ln(x):   requires x > 0
+end note
+
+' Inheritance
+BaseOperationSet <|-- BasicOperations
+BaseOperationSet <|-- AdvancedOperations
+BaseOperationSet <|-- ScientificOperations
+
+' Composition
+Calculator "1" *-- "1" CalculatorEngine : delegates to >
+CalculatorEngine "1" *-- "1" BasicOperations : _basic
+CalculatorEngine "1" *-- "0..1" AdvancedOperations : _advanced
+CalculatorEngine "1" *-- "0..1" ScientificOperations : _scientific
+
+' REPL association
+CalculatorREPL "1" *-- "1" Calculator : _calculator
+
+@enduml

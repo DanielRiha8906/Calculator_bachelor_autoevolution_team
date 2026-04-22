@@ -340,3 +340,14 @@ Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
   - `artifacts/sequence_advanced_operation.puml` — sequence diagram for a complete advanced (unary) operation call through Calculator facade, CalculatorEngine, and AdvancedOperations
 
 Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
+
+## Run: update-diagrams — Scientific mode PlantUML diagrams (2026-04-22)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_scientific_mode.puml` — Class diagram showing ScientificOperations integration with CalculatorEngine and facade hierarchy
+  - `artifacts/activity_diagram_mode_switching.puml` — Activity diagram for REPL mode-switch flow with validation and history preservation
+  - `artifacts/sequence_diagram_scientific_calculation.puml` — Sequence diagram for sin(x) scientific calculation including domain-error alt scenario
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
