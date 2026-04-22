@@ -1,0 +1,138 @@
+@startuml class_diagram_validation
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src/calculator.py" {
+    class Calculator {
+        .. Binary operations ..
+        +add(a, b) : numeric
+        +subtract(a, b) : numeric
+        +multiply(a, b) : numeric
+        +divide(a, b) : numeric
+        +power(base, exponent) : numeric
+        .. Unary operations ..
+        +factorial(n) : int
+        +square(x) : numeric
+        +cube(x) : numeric
+        +square_root(x) : numeric
+        +cube_root(x) : numeric
+        +logarithm(x) : numeric
+        +natural_logarithm(x) : numeric
+    }
+}
+
+package "src/validation.py" {
+    class OperandValidationSession {
+        +attempt_count : int
+        -_mode : str
+        -_max_retries : int
+        --
+        +__init__(mode, max_retries=5)
+        +reset_counter() : None
+        +validate_input(prompt_fn, error_msg) : float | None
+    }
+
+    class OperationValidationSession {
+        +attempt_count : int
+        -_mode : str
+        -_available_ops : list[str]
+        -_max_retries : int
+        --
+        +__init__(mode, available_ops, max_retries=5)
+        +reset_counter() : None
+        +validate_input(prompt_fn) : str | None
+    }
+
+    class "detect_mode()" as DetectMode <<function>> {
+        --
+        Returns 'interactive' or 'cli'
+        Based on sys.stdin.isatty() check
+    }
+
+    class "format_operation_error()" as FormatOpError <<function>> {
+        +available_ops : list[str]
+        --
+        Returns formatted error string
+        Lists valid operations for the user
+    }
+}
+
+package "src/cli.py" {
+    class "interactive_session()" as Session <<function>> {
+        +calculator : Calculator
+        --
+        REPL loop with retry logic
+        Max 5 retries for op and operand
+        Exits on quit or max retries exceeded
+    }
+
+    class "get_operands()" as GetOperands <<function>> {
+        +arity : int
+        +mode : str
+        --
+        Returns list[float] | None
+        Instantiates OperandValidationSession
+        Fails fast in cli mode
+    }
+
+    class "get_operation_menu()" as GetMenu <<function>> {
+        +calculator : Calculator
+        --
+        Returns list[str] of public op names
+    }
+
+    class "get_arity()" as GetArity <<function>> {
+        +calculator : Calculator
+        +op_name : str
+        --
+        Returns int via inspect.signature()
+    }
+
+    class "parse_float()" as ParseFloat <<function>> {
+        +value : str
+        --
+        Returns float or raises ValueError
+    }
+}
+
+package "src/__main__.py" {
+    class "main()" as Main <<function>> {
+        --
+        Instantiates Calculator
+        Calls interactive_session(calc)
+    }
+}
+
+Main --> Calculator : <<instantiates>>
+Main --> Session : calls
+
+Session --> DetectMode : detect mode on start
+Session --> GetMenu : build op list each iteration
+Session --> OperationValidationSession : <<instantiates>>
+Session --> GetArity : after valid op selected
+Session --> GetOperands : collect operands
+Session --> Calculator : <<dynamic dispatch>>\ngetattr(calc, op_name)(*operands)
+
+GetOperands --> OperandValidationSession : <<instantiates>>
+GetOperands --> ParseFloat : passed as prompt_fn
+
+OperationValidationSession --> FormatOpError : build error message
+OperationValidationSession --> DetectMode : mode check for fail-fast
+
+GetMenu --> Calculator : introspects via dir()
+GetArity --> Calculator : inspects via inspect.signature()
+
+note right of OperandValidationSession
+  interactive mode: re-prompts up to max_retries
+  cli mode: single attempt, returns None on failure
+  None signals caller to abort or SystemExit
+end note
+
+note right of OperationValidationSession
+  interactive mode: shows formatted error + retries
+  cli mode: single attempt, returns None on failure
+  attempt_count reset per outer REPL iteration
+end note
+
+@enduml

@@ -410,3 +410,160 @@ class TestInteractiveSession:
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         # Should calculate multiply(2.5, 4) = 10.0
         assert any("10" in str(output) for output in printed_output)
+
+
+class TestRetryLimitOperands:
+    """Test retry limit behavior for operand validation."""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture providing a Calculator instance."""
+        return Calculator()
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operand_retry_limit_five_invalid_inputs(self, mock_print, mock_input):
+        """get_operands should return None after 5 consecutive invalid inputs."""
+        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        result = get_operands(arity=1, mode="interactive")
+        assert result is None
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operand_retry_limit_prints_termination_message(self, mock_print, mock_input):
+        """get_operands should print termination message after retry limit."""
+        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        get_operands(arity=1, mode="interactive")
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        assert any("Maximum retry attempts" in str(output) for output in printed_output)
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operand_counter_resets_on_success(self, mock_print, mock_input):
+        """Operand counter should reset after successful parse."""
+        # 2 failures, then success on operand 1
+        # Then 2 failures on operand 2, then success
+        mock_input.side_effect = ["a", "b", "5.0", "x", "y", "3.0"]
+        result = get_operands(arity=2, mode="interactive")
+        assert result == [5.0, 3.0]
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operand_retry_limit_per_operand(self, mock_print, mock_input):
+        """Each operand should have its own 5-failure limit."""
+        # Operand 1: 3 failures then success
+        # Operand 2: 5 failures (should return None)
+        mock_input.side_effect = ["a", "b", "c", "5.0", "x", "y", "z", "w", "v"]
+        result = get_operands(arity=2, mode="interactive")
+        assert result is None
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operand_multiple_valid_inputs(self, mock_print, mock_input):
+        """Should handle arity > 1 with all valid inputs."""
+        mock_input.side_effect = ["1.0", "2.0", "3.0"]
+        result = get_operands(arity=3, mode="interactive")
+        assert result == [1.0, 2.0, 3.0]
+
+
+class TestRetryLimitOperations:
+    """Test retry limit behavior for operation validation."""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture providing a Calculator instance."""
+        return Calculator()
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operation_retry_limit_five_invalid_entries(self, mock_print, mock_input, calculator):
+        """interactive_session should terminate after 5 consecutive invalid operations."""
+        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        interactive_session(calculator)
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        assert any("Maximum retry attempts" in str(output) for output in printed_output)
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operation_retry_limit_no_goodbye_on_termination(self, mock_print, mock_input, calculator):
+        """Should not print 'Goodbye!' when session terminates due to retry limit."""
+        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        interactive_session(calculator)
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        # When terminated by retry limit, "Goodbye!" should not appear
+        # (it only appears when user explicitly enters quit/exit/q)
+        assert not any("Goodbye" in str(output) for output in printed_output)
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operation_error_message_includes_available_operations(self, mock_print, mock_input, calculator):
+        """Error message for invalid operation should list available operations."""
+        mock_input.side_effect = ["invalid_op", "q"]
+        interactive_session(calculator)
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        output_str = " ".join(str(output) for output in printed_output)
+        assert "Invalid" in output_str
+        # Should include at least some operations
+        assert any(op in output_str for op in ["add", "subtract", "multiply"])
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operation_counter_resets_on_valid_operation(self, mock_print, mock_input, calculator):
+        """Operation counter should reset after successfully selecting a valid operation."""
+        menu = get_operation_menu(calculator)
+        add_idx = menu.index("add") + 1
+        # First: 1 invalid operation (counter = 1)
+        # Then: valid operation 'add' with operands 2 and 3 (counter resets to 0)
+        # Then: quit
+        mock_input.side_effect = [
+            "invalid1",
+            str(add_idx), "2", "3",  # Valid operation, counter resets
+            "q"  # Quit
+        ]
+        interactive_session(calculator)
+        # If counter reset properly, we should see "Goodbye!"
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        assert any("Goodbye" in str(output) for output in printed_output)
+
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_operation_retry_shows_invalid_message(self, mock_print, mock_input, calculator):
+        """Should show 'Invalid selection' message for invalid operation."""
+        mock_input.side_effect = ["bad_op", "q"]
+        interactive_session(calculator)
+        printed_output = [call[0][0] for call in mock_print.call_args_list]
+        assert any("Invalid" in str(output) and "selection" in str(output).lower() for output in printed_output)
+
+
+class TestCLIModeBehavior:
+    """Test CLI mode behavior (no retries, immediate failure)."""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture providing a Calculator instance."""
+        return Calculator()
+
+    @patch("builtins.input")
+    def test_get_operands_cli_mode_invalid_raises_system_exit(self, mock_input):
+        """get_operands in CLI mode should raise SystemExit on invalid input."""
+        mock_input.return_value = "invalid"
+        with pytest.raises(SystemExit):
+            get_operands(arity=1, mode="cli")
+
+    @patch("builtins.input")
+    def test_get_operands_cli_mode_no_retry(self, mock_input):
+        """get_operands in CLI mode should not retry on invalid input."""
+        mock_input.return_value = "invalid"
+        try:
+            get_operands(arity=1, mode="cli")
+        except SystemExit:
+            pass
+        # Should only call input once
+        assert mock_input.call_count == 1
+
+    @patch("builtins.input")
+    def test_get_operands_cli_mode_valid_input_succeeds(self, mock_input):
+        """get_operands in CLI mode should accept valid input."""
+        mock_input.side_effect = ["5.0", "3.0"]
+        result = get_operands(arity=2, mode="cli")
+        assert result == [5.0, 3.0]

@@ -1,3 +1,18 @@
+## Run: Issue #256 — V2 Task 8 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-256-input-validation-retry
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/validation.py` — New centralized validation module: detect_mode(), format_operation_error(), OperandValidationSession, OperationValidationSession with retry logic and CLI fail-fast
+  - `src/cli.py` — Integrated OperandValidationSession and OperationValidationSession; get_operands() accepts explicit mode parameter; interactive_session() detects mode and enforces 5-attempt retry limit for both operation and operand inputs
+  - `tests/test_validation.py` — 46 new unit tests for all validation module components
+  - `tests/test_cli.py` — 13 new tests for retry limits, CLI mode behavior, and operation error messages (no existing tests deleted)
+- **Purpose:** Add input validation with retry logic in interactive mode (max 5 consecutive failures before termination) and fail-fast behavior in bash CLI mode; invalid operation shows list of available operations
+- **Risks:** None — Calculator core untouched; happy-path behavior unchanged; mode detection defaults to interactive for backward compatibility
+- **Tests passed:** 495 passed, 0 failed
+
+Duration: 512.6s | Cost: $1.121016 USD | Turns: 17
+
 ## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
 
 - **Branch:** task/issue-247-interactive-input
@@ -163,3 +178,14 @@ Duration: 391.3s | Cost: $1.035493 USD | Turns: 24
   - `artifacts/activity_main_cli.puml` — New activity diagram for main.py bash CLI flow: arg validation, arity inspection, operand conversion, Calculator dispatch, exit codes
 
 Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
+
+- **Branch:** task/issue-256-input-validation-retry
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_validation.puml` — new class diagram showing Calculator, OperandValidationSession, OperationValidationSession, and cli.py dependencies
+  - `artifacts/activity_diagram_interactive_session.puml` — new activity diagram for interactive_session() REPL loop with retry logic
+  - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
+
+Duration: 224.1s | Cost: $0.543512 USD | Turns: 6

@@ -1,0 +1,95 @@
+@startuml sequence_diagram_retry_flow
+
+participant User
+participant "interactive_session" as Session
+participant "OperationValidationSession" as OpSession
+participant "OperandValidationSession" as OperandSession
+participant Calculator
+
+Session -> Session : detect_mode() -> 'interactive'
+Session -> Session : get_operation_menu(calc) -> operations
+Session -> OpSession : <<create>>(mode='interactive', available_ops, max_retries=5)
+activate OpSession
+
+== Invalid Operation — Retry ==
+
+User -> Session : enters invalid operation "xyz"
+Session -> OpSession : validate_input(prompt_fn)
+activate OpSession
+OpSession -> OpSession : attempt_count += 1
+OpSession -> Session : format_operation_error(available_ops)
+Session -> User : "Invalid operation 'xyz'. Valid operations: [...]"
+deactivate OpSession
+
+User -> Session : enters invalid operation "999"
+Session -> OpSession : validate_input(prompt_fn)
+activate OpSession
+OpSession -> OpSession : attempt_count += 1
+OpSession -> Session : format_operation_error(available_ops)
+Session -> User : "Invalid operation '999'. Valid operations: [...]"
+deactivate OpSession
+
+== Valid Operation Selected ==
+
+User -> Session : enters valid operation "add"
+Session -> OpSession : validate_input(prompt_fn)
+activate OpSession
+OpSession --> Session : returns "add"
+deactivate OpSession
+deactivate OpSession
+
+Session -> Session : get_arity(calc, "add") -> 2
+Session -> OperandSession : <<create>>(mode='interactive', max_retries=5)
+activate OperandSession
+
+== Invalid Operand — Retry ==
+
+Session -> OperandSession : validate_input(prompt_fn, error_msg) for operand 1
+activate OperandSession
+User -> Session : enters "abc"
+OperandSession -> OperandSession : parse_float("abc") raises ValueError
+OperandSession -> OperandSession : attempt_count += 1
+OperandSession --> Session : re-prompts
+Session -> User : "Invalid input: 'abc'. Please enter a numeric value."
+deactivate OperandSession
+
+== Valid Operand Entered ==
+
+Session -> OperandSession : validate_input(prompt_fn, error_msg) for operand 1
+activate OperandSession
+User -> Session : enters "5"
+OperandSession -> OperandSession : parse_float("5") -> 5.0
+OperandSession --> Session : returns 5.0
+deactivate OperandSession
+
+Session -> OperandSession : validate_input(prompt_fn, error_msg) for operand 2
+activate OperandSession
+User -> Session : enters "3"
+OperandSession -> OperandSession : parse_float("3") -> 3.0
+OperandSession --> Session : returns 3.0
+deactivate OperandSession
+deactivate OperandSession
+
+== Calculation and Result ==
+
+Session -> Calculator : add(5.0, 3.0)
+activate Calculator
+Calculator --> Session : 8.0
+deactivate Calculator
+
+Session -> User : "Result: 8.0"
+
+note over OpSession
+  attempt_count incremented on each
+  invalid input. At max_retries=5,
+  validate_input returns None and
+  session terminates with error message.
+end note
+
+note over OperandSession
+  Same retry logic as OperationValidationSession.
+  In cli mode, single attempt only —
+  failure raises SystemExit immediately.
+end note
+
+@enduml
