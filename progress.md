@@ -1,4 +1,17 @@
 
+## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-242-advanced-math-ops
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added import math and 7 new methods: square, cube, square_root, cube_root, power, natural_log, log_base_10
+  - `tests/test_calculator.py` — added 7 test classes (125 new tests) covering all new methods
+- **Purpose:** Add square, cube, square root, cube root, power, log, and ln operations to the calculator as required by issue #242
+- **Risks:** None — additive changes only; no existing methods modified
+- **Tests passed:** 214 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #236 — Create tests for the calculator
 
 - **Branch:** task/issue-236-create-calculator-tests
