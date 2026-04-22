@@ -7,7 +7,7 @@
   - `artifacts/activity_diagram_interactive_session.puml` — Activity diagram for interactive_session REPL loop including get_operands sub-flow
   - `artifacts/sequence_diagram_operation_execution.puml` — Sequence diagram for full operation execution with error handling and exit flow
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 303.7s | Cost: $0.545734 USD | Turns: 7
 
 ## Run: Issue #247 — V2 Task 5 - Expert/team (2026-04-22)
 
