@@ -19,7 +19,7 @@
 - **Risks:** Default mode changed from "basic" to "advanced" — existing callers relying on mode attribute string may need updating
 - **Tests passed:** 1389 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 732.3s | Cost: $1.965830 USD | Turns: 14
 
 ## Run: Issue #269 — V2 Task 13 - Naive/team (2026-04-22)
 
