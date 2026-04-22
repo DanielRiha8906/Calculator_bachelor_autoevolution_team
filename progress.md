@@ -1,4 +1,4 @@
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 181.0s | Cost: $0.423872 USD | Turns: 10
 
 ## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
 
