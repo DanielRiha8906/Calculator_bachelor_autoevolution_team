@@ -266,4 +266,4 @@ Duration: 244.1s | Cost: $0.521191 USD | Turns: 7
 - **Risks:** None — all public APIs preserved; existing InputHandler unchanged; 729 tests pass
 - **Tests passed:** 729 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 507.6s | Cost: $1.237620 USD | Turns: 15
