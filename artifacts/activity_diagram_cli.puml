@@ -1,0 +1,59 @@
+@startuml activity_diagram_cli
+
+skinparam ActivityFontSize 13
+skinparam ArrowColor #444444
+skinparam ActivityBorderColor #555555
+skinparam ActivityBackgroundColor #FAFAFA
+skinparam ActivityDiamondBackgroundColor #FFF8DC
+
+title CLI Mode — Activity Flows
+
+|main()|
+start
+:Receive sys.argv;
+
+if (len(sys.argv) > 1\nAND _is_calculator_expression(argv[1])?) then (yes)
+  :Create CLIHandler(argv[1]);
+  :exit_code = handler.run();
+
+  |CLIHandler.run()|
+  :Try parse(expression);
+
+  if (ParseError?) then (yes)
+    :Print error to stderr;
+    :return 1;
+    stop
+  else (no)
+    :operation, operands = result;
+    :Try validate(operation, operands);
+
+    if (ValidationError?) then (yes)
+      :Print error to stderr;
+      :return 1;
+      stop
+    else (no)
+      :Try _dispatch(operation, operands);
+
+      if (ZeroDivisionError\nor ValueError\nor TypeError?) then (yes)
+        :Print error to stderr;
+        :return 1;
+        stop
+      else (no)
+        :Print result to stdout;
+        :return 0;
+      endif
+    endif
+  endif
+
+  |main()|
+  :sys.exit(exit_code);
+  stop
+
+else (no)
+  :Create Calculator();
+  :Create CalculatorREPL(calculator);
+  :repl.run();
+  stop
+endif
+
+@enduml

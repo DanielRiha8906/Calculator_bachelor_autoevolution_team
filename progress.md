@@ -141,3 +141,14 @@ Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
 - **Tests passed:** 450 passed, 0 failed
 
 Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
+
+## Run: update-diagrams — Add CLI mode UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-251-cli-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — class structure showing CLIHandler and shared services
+  - `artifacts/activity_diagram_cli.puml` — activity flows for CLI/REPL routing and CLIHandler execution
+  - `artifacts/sequence_diagram_cli.puml` — end-to-end CLI expression evaluation sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
