@@ -133,3 +133,28 @@ Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
   - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
 
 Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
+
+## Run: Issue #252 — V2 Task 7 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-252-cli-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/cli.py` — new CLI module with parse_args, execute_cli, and cli_main functions for non-interactive argument-driven operation execution
+  - `src/__main__.py` — added CLI dispatch: if sys.argv has arguments, delegates to cli_main; otherwise runs existing interactive loop
+  - `tests/test_cli.py` — 63 new tests covering argument parsing, operation execution, integration (stdout/stderr/exit codes), and edge cases
+- **Purpose:** Add CLI mode so the calculator can be executed from bash with operation and operands as command-line arguments, printing the result to stdout
+- **Risks:** None. Additive change; Calculator, OperationRegistry, and InputHandler are untouched; interactive mode unchanged
+- **Tests passed:** 278 passed, 0 failed
+
+Duration: 297.1s | Cost: $0.812856 USD | Turns: 15
+
+## Run: update-diagrams — Add CLI mode diagrams (2026-04-22)
+
+- **Branch:** task/issue-252-cli-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — updated class diagram adding cli module with parse_args, execute_cli, cli_main; dependencies on Calculator and OperationRegistry
+  - `artifacts/activity_diagram_cli_mode.puml` — new activity diagram for CLI execution flow: argv dispatch, parse, execute, format, stdout/stderr, exit codes
+  - `artifacts/sequence_diagram_cli_execution.puml` — new sequence diagram tracing __main__ → cli_main → parse_args → execute_cli → OperationRegistry → Calculator → stdout
+
+Duration: 196.9s | Cost: $0.514913 USD | Turns: 12

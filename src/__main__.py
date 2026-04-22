@@ -54,4 +54,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if len(sys.argv) > 1:
+        from .cli import cli_main
+        cli_main(sys.argv[1:])
+    else:
+        main()
