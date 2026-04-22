@@ -10,30 +10,71 @@ class Calculator {
     + divide(a, b) : float
 }
 
-class TestDivision {
-    + test_divide_positive_numbers(calc)
-    + test_divide_with_floats(calc)
-    + test_divide_negative_numbers(calc)
-    + test_divide_by_zero_raises_exception(calc)
-    + test_divide_zero_by_nonzero(calc)
-    + test_divide_non_numeric_inputs_raise_typeerror(calc, invalid_a, invalid_b) <<parametrized: 6 cases>>
-    + test_divide_result_precision(calc)
-    + test_divide_large_numbers(calc)
-    + test_divide_very_small_numbers(calc)
+class "calculator" <<fixture>> {
+    Creates a Calculator instance per test.
+    Injected into every test method.
 }
 
-class "calc()" <<fixture>> {
-    Creates a Calculator instance per test.
-    Injected into every TestDivision test method.
+class TestDivision {
+    + test_divide_positive_numbers(calculator)
+    + test_divide_with_floats(calculator)
+    + test_divide_negative_numbers(calculator)
+    + test_divide_by_zero_raises_exception(calculator)
+    + test_divide_zero_by_nonzero(calculator)
+    + test_divide_non_numeric_inputs_raise_typeerror(calculator, invalid_a, invalid_b) <<parametrized: 6 cases>>
+    + test_divide_result_precision(calculator)
+    + test_divide_large_numbers(calculator)
+    + test_divide_very_small_numbers(calculator)
+}
+
+class TestAddition {
+    + test_add_various_numbers(calculator, a, b, expected) <<parametrized: 11 cases>>
+    + test_add_non_numeric_inputs_raise_typeerror(calculator, invalid_a, invalid_b) <<parametrized: 8 cases>>
+}
+
+class TestSubtraction {
+    + test_subtract_various_numbers(calculator, a, b, expected) <<parametrized: 12 cases>>
+    + test_subtract_non_numeric_inputs_raise_typeerror(calculator, invalid_a, invalid_b) <<parametrized: 8 cases>>
+}
+
+class TestMultiplication {
+    + test_multiply_various_numbers(calculator, a, b, expected) <<parametrized: 11 cases>>
+    + test_multiply_non_numeric_inputs_raise_typeerror(calculator, invalid_a, invalid_b) <<parametrized: 4 cases>>
+    + test_multiply_with_strings_and_lists(calculator, a, b, expected) <<parametrized: 2 cases>>
 }
 
 TestDivision ..> Calculator : depends on
-TestDivision ..> "calc()" : uses
+TestAddition ..> Calculator : depends on
+TestSubtraction ..> Calculator : depends on
+TestMultiplication ..> Calculator : depends on
 
-note right of TestDivision
-  pytest test class
+TestDivision ..> "calculator" : uses
+TestAddition ..> "calculator" : uses
+TestSubtraction ..> "calculator" : uses
+TestMultiplication ..> "calculator" : uses
+
+note bottom of TestDivision
+  pytest test classes.
   All methods receive a Calculator
-  instance via the calc() fixture.
+  instance via the calculator() fixture.
+end note
+
+note bottom of TestAddition
+  pytest test classes.
+  All methods receive a Calculator
+  instance via the calculator() fixture.
+end note
+
+note bottom of TestSubtraction
+  pytest test classes.
+  All methods receive a Calculator
+  instance via the calculator() fixture.
+end note
+
+note bottom of TestMultiplication
+  pytest test classes.
+  All methods receive a Calculator
+  instance via the calculator() fixture.
 end note
 
 @enduml
