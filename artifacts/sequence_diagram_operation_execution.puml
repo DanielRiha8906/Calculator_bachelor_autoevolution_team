@@ -1,42 +1,89 @@
 @startuml sequence_diagram_operation_execution
 
-participant "main()" as main
+participant "User" as user
 participant "InputHandler" as handler
 participant "OperationRegistry" as registry
+participant "CalculationEngine" as engine
 participant "Calculator" as calc
+participant "OperationHistory" as history
+participant "UserInterface" as ui
+participant "error_logger" as logger
 
-activate main
-
-main ->> handler : get_operation_choice(ops)
 activate handler
-handler -->> main : "add"
-deactivate handler
 
-main ->> registry : get_operation("add")
+handler ->> registry : list_operations()
 activate registry
-registry -->> main : (calculator.add, 2, "Addition")
+registry -->> handler : available_operations: dict
 deactivate registry
 
-main ->> handler : get_operand("Enter first operand: ")
-activate handler
-handler -->> main : 5.0
-deactivate handler
+handler ->> user : display operations menu
+user ->> handler : operation choice (e.g. "add")
 
-main ->> handler : get_operand("Enter second operand: ")
-activate handler
-handler -->> main : 3.0
-deactivate handler
+handler ->> handler : validate_operation(choice, available_operations)
 
-main ->> calc : add(5.0, 3.0)
+alt invalid choice
+    handler ->> logger : log_operation_error(choice, msg)
+    handler ->> user : show error, prompt retry
+    note over handler : up to max_retries attempts;\nInputRetryExhaustedError if exhausted
+end
+
+handler ->> registry : get_operation("add")
+activate registry
+registry -->> handler : (Calculator.add, arity=2, "Addition")
+deactivate registry
+
+handler ->> user : prompt "Enter first operand: "
+user ->> handler : raw string (e.g. "5")
+handler ->> handler : validate_operand("5") -> 5.0
+
+alt invalid operand
+    handler ->> logger : log_validation_error(detail)
+    handler ->> user : show error, prompt retry
+    note over handler : up to max_retries attempts;\nInputRetryExhaustedError if exhausted
+end
+
+handler ->> user : prompt "Enter second operand: "
+user ->> handler : raw string (e.g. "3")
+handler ->> handler : validate_operand("3") -> 3.0
+
+handler ->> engine : execute_operation("add", [5.0, 3.0])
+activate engine
+
+engine ->> registry : get_operation("add")
+activate registry
+registry -->> engine : (Calculator.add, 2, "Addition")
+deactivate registry
+
+engine ->> calc : add(5.0, 3.0)
 activate calc
-calc -->> main : 8.0
-deactivate calc
 
-main ->> handler : display_result("Addition", [5.0, 3.0], 8.0)
-activate handler
-handler -->> main : None
+alt calculation error (e.g. ZeroDivisionError, domain error)
+    calc ->> logger : log_calculation_error(op, operands, msg)
+    calc -->> engine : raises exception
+    deactivate calc
+    engine -->> handler : propagates exception
+    deactivate engine
+    handler ->> ui : display_error(message)
+    activate ui
+    ui ->> user : show formatted error
+    deactivate ui
+else success
+    calc -->> engine : 8.0
+    deactivate calc
+    engine -->> handler : 8.0
+    deactivate engine
+
+    handler ->> history : record_operation("add", [5.0, 3.0], 8.0)
+    activate history
+    history -->> handler : (written to history.txt)
+    deactivate history
+
+    handler ->> ui : display_result("Addition", [5.0, 3.0], 8.0)
+    activate ui
+    ui ->> user : show formatted result
+    deactivate ui
+end
+
 deactivate handler
-
-deactivate main
 
 @enduml

@@ -1,3 +1,58 @@
+# Calculator — self-evolving software
+
+## Overview
+
+This repository contains a command-line calculator application written in
+Python 3.12.  The calculator is the primary subject of an autonomous
+self-evolution experiment: a multi-agent system driven by a large language
+model iteratively extends and improves the application's source code without
+human intervention.
+
+The calculator itself supports two modes of operation:
+
+- **Interactive REPL** — launch with `python -m src` (no arguments) to enter
+  a menu-driven session with history tracking and retry-limited input.
+- **CLI mode** — pass an operation and operands as arguments
+  (`python -m src add 3 5`) for single-expression execution from scripts or
+  pipelines.
+
+## Key features
+
+- **12 built-in operations:** `add`, `subtract`, `multiply`, `divide`,
+  `power`, `factorial`, `square`, `cube`, `square_root`, `cube_root`, `log`
+  (base-10), and `ln` (natural logarithm).
+- **Operation history** — every result in an interactive session is recorded
+  and can be reviewed with the `history` command.
+- **Extensibility** — new operations can be registered at runtime via
+  `OperationRegistry.register_operation()` without modifying any existing
+  source file.
+- **Structured error logging** — all domain errors are written to
+  `logs/error.log` in ISO-8601 timestamped format. Logging failures are
+  silently suppressed and never crash the application.
+- **No external dependencies** — the application relies only on the Python
+  standard library; `pytest` is the sole development dependency.
+
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| [GETTING_STARTED.md](GETTING_STARTED.md) | Installation, prerequisites, and usage examples for both modes |
+| [OPERATIONS.md](OPERATIONS.md) | Complete reference for every built-in operation and the registry extension API |
+| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Module-by-module architecture overview and design principles |
+
+## Quick project structure
+
+```
+src/          Application source code
+tests/        Pytest test suite
+artifacts/    PlantUML development diagrams
+logs/         Runtime error log (auto-created)
+Calc_prompty/ Prompt files for the auto-evolution system
+progress.md   Per-run experiment log
+```
+
+---
+
 # Kalkulačka — autoevoluční software
 
 **Název bakalářské práce:**  
