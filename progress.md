@@ -204,4 +204,4 @@ Duration: 280.7s | Cost: $0.748369 USD | Turns: 17
   - `artifacts/sequence_diagram_repl_history.puml` — new sequence diagram showing REPL operation flow including history logging
   - `artifacts/sequence_diagram_cli.puml` — updated to include history logging step after successful Calculator dispatch
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 220.0s | Cost: $0.555024 USD | Turns: 7
