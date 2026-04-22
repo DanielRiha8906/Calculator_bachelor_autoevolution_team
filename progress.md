@@ -87,3 +87,14 @@ Duration: 180.9s | Cost: $0.443277 USD | Turns: 16
 - **Date:** 2026-04-22
 
 Duration: 172.4s | Cost: $0.383842 USD | Turns: 6
+
+## Run: update-diagrams — Add advanced math ops UML diagrams (2026-04-22)
+
+- **Branch:** task/issue-242-advanced-math-ops
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — updated class diagram with 7 new advanced math methods and math stdlib dependency
+  - `artifacts/activity_advanced_math.puml` — new activity diagram for domain-validation flows in square_root, natural_log, log_base_10, cube_root
+  - `artifacts/sequence_math_operation.puml` — new sequence diagram for square_root happy path and natural_log error path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
