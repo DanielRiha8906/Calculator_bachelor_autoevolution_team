@@ -104,3 +104,32 @@ Duration: 233.3s | Cost: $0.555553 USD | Turns: 14
   - `artifacts/logarithm_activity_diagram.puml` — new activity diagram illustrating domain validation pattern for logarithmic operations
 
 Duration: 213.2s | Cost: $0.454326 USD | Turns: 15
+
+## Run: Issue #246 — V2 Task 5 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-246-interactive-input
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/io_handler.py` — new InputHandler class encapsulating all user I/O (get_operation_choice, get_operand, display_result, display_error)
+  - `src/operations.py` — new OperationRegistry class mapping 12 operation keys to Calculator methods with arity metadata
+  - `src/__main__.py` — replaced hardcoded demo with interactive session loop using InputHandler and OperationRegistry
+  - `src/__init__.py` — added InputHandler and OperationRegistry to exports and __all__
+  - `tests/test_io_handler.py` — 31 unit tests for InputHandler
+  - `tests/test_operations.py` — 49 unit tests for OperationRegistry
+  - `tests/test_interactive_session.py` — 36 integration tests for main() interactive loop
+- **Purpose:** Add interactive runtime user input so the calculator reads operation and operand values from the user, performs calculations, and loops for continued use
+- **Risks:** None. Additive change; Calculator class untouched; all 99 existing tests still pass
+- **Tests passed:** 215 passed, 0 failed
+
+Duration: 387.4s | Cost: $0.797204 USD | Turns: 18
+
+## Run: update-diagrams — Add interactive input diagrams (2026-04-22)
+
+- **Branch:** task/issue-246-interactive-input
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — new class diagram for Calculator, InputHandler, OperationRegistry
+  - `artifacts/activity_diagram_interactive_loop.puml` — new activity diagram for main() interactive session loop
+  - `artifacts/sequence_diagram_operation_execution.puml` — new sequence diagram for operation execution happy path
+
+Duration: 192.6s | Cost: $0.431689 USD | Turns: 7

@@ -1,0 +1,42 @@
+@startuml sequence_diagram_operation_execution
+
+participant "main()" as main
+participant "InputHandler" as handler
+participant "OperationRegistry" as registry
+participant "Calculator" as calc
+
+activate main
+
+main ->> handler : get_operation_choice(ops)
+activate handler
+handler -->> main : "add"
+deactivate handler
+
+main ->> registry : get_operation("add")
+activate registry
+registry -->> main : (calculator.add, 2, "Addition")
+deactivate registry
+
+main ->> handler : get_operand("Enter first operand: ")
+activate handler
+handler -->> main : 5.0
+deactivate handler
+
+main ->> handler : get_operand("Enter second operand: ")
+activate handler
+handler -->> main : 3.0
+deactivate handler
+
+main ->> calc : add(5.0, 3.0)
+activate calc
+calc -->> main : 8.0
+deactivate calc
+
+main ->> handler : display_result("Addition", [5.0, 3.0], 8.0)
+activate handler
+handler -->> main : None
+deactivate handler
+
+deactivate main
+
+@enduml
