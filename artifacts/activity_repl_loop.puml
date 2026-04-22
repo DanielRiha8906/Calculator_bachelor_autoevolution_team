@@ -1,0 +1,88 @@
+@startuml activity_repl_loop
+
+title REPL Main Loop — History of Operations
+
+start
+
+:Display welcome message;
+
+repeat
+
+    :Read input line;
+
+    if (KeyboardInterrupt?) then (yes)
+        :Print "Interrupted. Goodbye!";
+        stop
+    elseif (EOFError?) then (yes)
+        stop
+    endif
+
+    :Strip whitespace;
+
+    if (Empty input?) then (yes)
+        note right: skip silently, continue loop
+    elseif (raw.lower() == "history"?) then (yes)
+
+        :call get_history();
+
+        if (History is empty?) then (yes)
+            :Print "No history yet.";
+        else (not empty)
+            :For each entry in history;
+            if (entry.operand2 is None?) then (yes)
+                :Print "{n}. {op1} {operator} = {result}";
+            else (binary)
+                :Print "{n}. {op1} {operator} {op2} = {result}";
+            endif
+        endif
+
+    elseif (Exit command?) then (yes)
+        :Print "Goodbye!";
+        stop
+    else (expression)
+
+        :_evaluate(raw_input);
+
+        if (Response starts with "Result:"?) then (yes)
+            :Print response;
+        else (error)
+
+            :Print error response;
+            :Enter retry sub-loop (attempts 1..max_retries);
+
+            repeat
+
+                :Prompt "Invalid input. Attempt X/N. Please try again: ";
+
+                if (KeyboardInterrupt?) then (yes)
+                    :Print "Interrupted. Goodbye!";
+                    stop
+                elseif (EOFError?) then (yes)
+                    stop
+                elseif (Exit command?) then (yes)
+                    :Print "Goodbye!";
+                    stop
+                else (continue)
+                    :_evaluate(raw_input);
+                    if (Response starts with "Result:"?) then (yes)
+                        :Print response;
+                        break
+                    else (still invalid)
+                        :Print error;
+                    endif
+                endif
+
+            repeat while (More retry attempts?) is (yes)
+            -> no (all retries exhausted);
+
+            :Print "Too many invalid attempts.";
+
+        endif
+
+    endif
+
+repeat while (Continue?) is (yes)
+
+stop
+
+@enduml

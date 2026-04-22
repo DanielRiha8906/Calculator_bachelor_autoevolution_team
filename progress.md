@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — History of Operations (#257) (2026-04-22)
+
+- **Branch:** task/issue-257-history-of-operations
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — class diagram updated: Calculator now stateful with _history field, _record_history, get_history; full method inventory
+  - `artifacts/activity_repl_loop.puml` — activity diagram updated: REPL loop with new history command branch (empty check, binary/unary format)
+  - `artifacts/sequence_history.puml` — sequence diagram created: history command retrieval + binary operation with history recording flows
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #257 — V2 Task 9 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-257-history-of-operations
