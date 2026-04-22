@@ -179,3 +179,14 @@ Duration: 196.9s | Cost: $0.514913 USD | Turns: 12
 - **Tests passed:** 437 passed, 0 failed
 
 Duration: 579.0s | Cost: $1.309617 USD | Turns: 17
+
+## Run: update-diagrams — Add validation module to class, activity, and sequence diagrams (2026-04-22)
+
+- **Branch:** task/issue-255-input-validation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_io.puml` — added validation module with OperandValidationError, OperationValidationError, validate_operand, validate_operation, get_validation_error_message; updated InputHandler signatures and added InputRetryExhaustedError; added dependency arrows from InputHandler and cli to validation
+  - `artifacts/activity_diagram_interactive_loop.puml` — added InputRetryExhaustedError catch-and-break paths after get_operation_choice and get_operand calls
+  - `artifacts/sequence_diagram_cli_execution.puml` — added validation participant, parse_args now calls validate_operand, error alt branch updated to OperandValidationError
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
