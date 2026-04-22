@@ -218,4 +218,4 @@ Duration: 414.2s | Cost: $0.988088 USD | Turns: 21
   - `artifacts/activity_diagram_interactive_session.puml` — updated to include history recording step and history sentinel branch
   - `artifacts/sequence_diagram_history_command.puml` — new diagram: history command invocation sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 242.4s | Cost: $0.645268 USD | Turns: 7
