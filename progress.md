@@ -19,3 +19,25 @@ Low. Change is isolated to one method; backward-compatible for all valid inputs.
 
 ### Tokens / Cost / Turns
 Duration: 167.2s | Cost: $0.369482 USD | Turns: 14
+
+## Run: Diagram Update — Issue #234 Division by Zero
+
+- **Branch:** task/issue-234-division-by-zero
+- **Date:** 2026-04-22
+
+### Files changed
+- `artifacts/class_calculator.puml` — created: Calculator class diagram with divide() type hints and ZeroDivisionError dependency
+- `artifacts/activity_divide.puml` — created: activity diagram for divide() guard logic
+- `artifacts/sequence_main_calculator.puml` — created: sequence diagram for __main__ to Calculator interaction
+
+### Purpose
+Add PlantUML diagrams documenting the Calculator class structure and divide() behavior introduced in issue #234.
+
+### Risks
+Low. Diagram-only change, no source or test modifications.
+
+### Test results
+N/A — diagram-only run.
+
+### Tokens / Cost / Turns
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,0 +1,25 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a: float, b: float) : float
+}
+
+class ZeroDivisionError <<builtin>> {
+    + message: str
+}
+
+note as MainNote
+  __main__
+  ----
+  main()
+end note
+
+Calculator ..> ZeroDivisionError : raises
+MainNote ..> Calculator : instantiates & calls
+
+@enduml

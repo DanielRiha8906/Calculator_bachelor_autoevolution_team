@@ -1,0 +1,15 @@
+@startuml
+
+start
+
+:divide(a: float, b: float);
+
+if (b == 0?) then (yes)
+    :raise ZeroDivisionError\n("Cannot divide by zero");
+    stop
+else (no)
+    :return a / b;
+    stop
+endif
+
+@enduml
