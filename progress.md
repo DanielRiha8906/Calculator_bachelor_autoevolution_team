@@ -7,7 +7,7 @@
   - `artifacts/activity_error_handling_main.puml` — New activity diagram: 5 error-category branches in main() each routing to corresponding ErrorLogger method
   - `artifacts/sequence_interactive_session_errors.puml` — New sequence diagram: interactive session with invalid-operation and division-by-zero error flows
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 184.4s | Cost: $0.525104 USD | Turns: 8
 
 ## Run: Issue #262 — V2 Task 10 - Expert/team (2026-04-22)
 
