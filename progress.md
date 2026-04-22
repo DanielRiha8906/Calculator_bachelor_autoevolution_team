@@ -188,4 +188,4 @@ Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
   - `artifacts/activity_diagram_interactive_session.puml` — new activity diagram for interactive_session() REPL loop with retry logic
   - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
