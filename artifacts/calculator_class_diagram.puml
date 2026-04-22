@@ -5,11 +5,13 @@ skinparam classFontStyle bold
 skinparam packageStyle rectangle
 hide empty members
 
+note "Numeric = Union[int, float]" as N
+
 class Calculator {
-    + add(a, b) : float
-    + subtract(a, b) : float
-    + multiply(a, b) : float
-    + divide(a, b) : float
+    + add(a, b) : Numeric
+    + subtract(a, b) : Numeric
+    + multiply(a, b) : Numeric
+    + divide(a, b) : Numeric
     + factorial(n: int) : int
     + square(x: float) : float
     + cube(x: float) : float
@@ -19,6 +21,10 @@ class Calculator {
     + natural_log(x: float) : float
     + log_base_10(x: float) : float
 }
+
+note bottom of Calculator
+  Stateless — no instance attributes
+end note
 
 class InputValidator {
     + validate_operation(operation: str) : None
@@ -36,6 +42,7 @@ class CalculatorREPL {
     - _parser : ExpressionParser
     - _validator : InputValidator
     - _EXIT_COMMANDS : frozenset
+    + __init__(calculator: Calculator) : None
     + run() : None
     - _evaluate(raw_input: str) : str
     - _dispatch(operation: str, operands: list) : Numeric

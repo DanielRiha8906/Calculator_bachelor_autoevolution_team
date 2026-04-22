@@ -140,3 +140,12 @@ Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
   - `artifacts/sequence_repl_interaction.puml` — new sequence diagram showing happy path and validation error path through the REPL
 
 Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
+
+## Run: update-diagrams — Update calculator class diagram with constructor and type clarifications (2026-04-22)
+
+- **Branch:** task/issue-248-plantUML-diagrams
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/calculator_class_diagram.puml` — added CalculatorREPL.__init__, Numeric return types for basic ops, type alias note, stateless note for Calculator
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
