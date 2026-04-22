@@ -12,7 +12,7 @@
 - **Risks:** None
 - **Tests passed:** 71 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 424.9s | Cost: $0.974609 USD | Turns: 15
 
 ## Run: Issue #259 — V2 Task 9 - Expert/team (2026-04-22)
 
