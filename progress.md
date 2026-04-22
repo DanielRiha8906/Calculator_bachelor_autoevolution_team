@@ -89,4 +89,4 @@ Duration: 190.0s | Cost: $0.469532 USD | Turns: 9
   - `artifacts/activity_factorial.puml` — New activity diagram for factorial validation and computation flow
   - `artifacts/sequence_calculator_operations.puml` — New sequence diagram for key calculator operation scenarios
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 193.5s | Cost: $0.430946 USD | Turns: 4
