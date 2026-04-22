@@ -18,7 +18,7 @@
 - **Risks:** Interactive session now requires mode selection before operation selection; existing tests may need mode to be set explicitly
 - **Tests passed:** 162 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 523.0s | Cost: $1.252148 USD | Turns: 15
 
 ## Run: Issue #271 — V2 Task 13 - Expert/team (2026-04-22)
 
