@@ -2,10 +2,15 @@
 
 start
 
+:Instantiate OperationHistory;
 :Instantiate Calculator;
-:Instantiate InputHandler;
 :Instantiate OperationRegistry(calculator);
-:Print welcome message;
+:Instantiate CalculationEngine(calculator, registry);
+:Instantiate InputHandler(history);
+:Instantiate UserInterface;
+:Instantiate CalculatorWorkflow(engine, handler, ui, history);
+:history.clear();
+:workflow.run();
 
 repeat
     :handler.get_operation_choice(registry.list_operations());
@@ -16,43 +21,48 @@ repeat
     else (no)
     endif
 
-    if (choice == "exit"?) then (yes)
+    if (choice == "exit" or "quit"?) then (yes)
         :Print "Goodbye!";
         stop
     else (no)
-        :registry.get_operation(choice);
-        :Unpack (method, arity, description);
+    endif
 
-        if (arity == 1?) then (yes)
+    if (choice == "history"?) then (yes)
+        :handler.display_history();
+    else (no)
+        :engine.execute_operation(key, operands);
+        note right
+            engine calls registry.get_operation()
+            then calls Calculator method
+        end note
+
+        fork
+            :_get_operands(operation_key);
+            :For each required operand:;
             :handler.get_operand(prompt);
             if (InputRetryExhaustedError raised?) then (yes)
                 :Print "Session ended.";
                 stop
             else (no)
             endif
-            if (operation == "factorial"?) then (yes)
-                :Cast operand float -> int;
+        fork again
+            :validate each raw operand\nvia validation module;
+            if (OperandValidationError?) then (yes)
+                :error_logger.log_validation_error();
+                :retry or raise InputRetryExhaustedError;
             else (no)
             endif
-            :operands = [value];
-        else (no)
-            :handler.get_operand("Enter first operand: ");
-            if (InputRetryExhaustedError raised?) then (yes)
-                :Print "Session ended.";
-                stop
-            else (no)
-            endif
-            :handler.get_operand("Enter second operand: ");
-            if (InputRetryExhaustedError raised?) then (yes)
-                :Print "Session ended.";
-                stop
-            else (no)
-            endif
-            :operands = [first, second];
-        endif
+        end fork
 
-        :result = method(*operands);
-        :handler.display_result(description, operands, result);
+        :engine.execute_operation(operation_key, operands);
+
+        if (ValueError or ZeroDivisionError?) then (yes)
+            :_handle_calculation_error(error);
+            :ui.display_error(message);
+        else (no)
+            :history.record_operation(op, operands, result);
+            :ui.display_result(operation, operands, result);
+        endif
     endif
 
 backward: (next iteration)

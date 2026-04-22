@@ -5,10 +5,10 @@ skinparam packageStyle rectangle
 
 package "Core Calculation" {
     class Calculator {
-        +add(a, b) : numeric
-        +subtract(a, b) : numeric
-        +multiply(a, b) : numeric
-        +divide(a, b) : float
+        +add(a: float, b: float) : float
+        +subtract(a: float, b: float) : float
+        +multiply(a: float, b: float) : float
+        +divide(a: float, b: float) : float
         +factorial(n: int) : int
         +square(x: float) : float
         +cube(x: float) : float
@@ -20,19 +20,12 @@ package "Core Calculation" {
     }
 
     class OperationRegistry {
-        -_registry: dict
+        -_registry: dict[str, tuple]
         +__init__(calculator: Calculator)
         +get_operation(key: str) : tuple
         +list_operations() : dict
-        +register_operation(key: str, method: callable, arity: int, description: str) : None
+        +register_operation(key: str, method: callable, arity: int, description: str)
     }
-
-    note right of OperationRegistry
-        Registers 12 built-in operations on init.
-        6 with error logging: divide, factorial,
-        square_root, power, log, ln.
-        register_operation() enables runtime extension.
-    end note
 
     class CalculationEngine {
         -_calculator: Calculator
@@ -52,18 +45,22 @@ package "Session Orchestration" {
         -_input_handler: InputHandler
         -_ui: UserInterface
         -_history: OperationHistory
+        +__init__(engine: CalculationEngine, input_handler: InputHandler, ui: UserInterface, history: OperationHistory)
         +run()
-        -_get_operands(operation_key: str) : list
+        -_get_operands(operation_key: str) : list[float]
         -_handle_calculation_error(error: Exception)
     }
 
     CalculatorWorkflow *--> CalculationEngine
+    CalculatorWorkflow *--> InputHandler
+    CalculatorWorkflow *--> UserInterface
+    CalculatorWorkflow *--> OperationHistory
 }
 
 package "I/O and History" {
     class InputHandler {
         +history: Any
-        +__init__(history: Any = None)
+        +__init__(history: Any)
         +display_history()
         +get_operation_choice(available_operations: dict, max_retries: int) : str
         +get_operand(prompt: str, max_retries: int) : float
@@ -74,16 +71,13 @@ package "I/O and History" {
     class UserInterface {
         +display_result(operation, operands, result)
         +display_error(message: str)
+        +display_operations(available_operations: dict)
+        +display_history(history_str: str)
     }
-
-    class InputRetryExhaustedError {
-    }
-    ValueError <|-- InputRetryExhaustedError
-    InputHandler ..> InputRetryExhaustedError : raises
 
     class OperationHistory {
         +filename: str
-        +__init__(filename: str = "history.txt")
+        +__init__(filename: str)
         +record_operation(operation: str, operands: list, result: float)
         +display_history() : str
         +clear()
@@ -93,34 +87,55 @@ package "I/O and History" {
     InputHandler o--> OperationHistory : optional reference
 }
 
-CalculatorWorkflow *--> InputHandler
-CalculatorWorkflow *--> UserInterface
-CalculatorWorkflow *--> OperationHistory
-
 package "Validation" {
     class validation <<module>> {
         +validate_operand(raw: str) : float
+        +validate_operation(choice: str, available_operations: dict) : bool
         +get_validation_error_message(error) : str
     }
 
     class OperandValidationError {
     }
-    ValueError <|-- OperandValidationError
-
     class OperationValidationError {
     }
+
+    ValueError <|-- OperandValidationError
     ValueError <|-- OperationValidationError
+    ValueError <|-- InputRetryExhaustedError
 
     validation ..> OperandValidationError : raises
     validation ..> OperationValidationError : raises
 }
 
+class InputRetryExhaustedError {
+}
+
+InputHandler ..> InputRetryExhaustedError : raises
 InputHandler ..> validation : uses
 
+package "Utilities" {
+    class error_logger <<module>> {
+        +log_validation_error(detail: str)
+        +log_operation_error(operation_key: str, error_msg: str)
+        +log_calculation_error(operation: str, operands: list, error_msg: str)
+    }
+}
+
+Calculator ..> error_logger : calls on domain errors
+OperationRegistry ..> error_logger : calls on unknown key
+validation ..> error_logger : calls on invalid input
+
 component "__main__" as main_module
-main_module ..> Calculator : creates
-main_module ..> OperationRegistry : creates
-main_module ..> InputHandler : creates
-main_module ..> OperationHistory : creates
+main_module ..> Calculator : creates (interactive)
+main_module ..> OperationRegistry : creates (interactive)
+main_module ..> CalculationEngine : creates (interactive)
+main_module ..> CalculatorWorkflow : creates (interactive)
+
+component "cli" as cli_module
+cli_module ..> Calculator : creates (CLI)
+cli_module ..> OperationRegistry : creates (CLI)
+cli_module ..> validation : uses
+
+main_module ..> cli_module : dispatches if argv
 
 @enduml

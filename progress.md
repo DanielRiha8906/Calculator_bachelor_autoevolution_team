@@ -321,3 +321,14 @@ Duration: 246.6s | Cost: $0.706330 USD | Turns: 16
   - `artifacts/class_diagram_calculator_io.puml` — added CalculationEngine, UserInterface, register_operation(), InputHandler.display_history()
 
 Duration: 328.6s | Cost: $0.912429 USD | Turns: 18
+
+## Run: update-diagrams — Add documentation diagrams (2026-04-22)
+
+- **Branch:** task/issue-270-add-documentation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — updated class diagram covering full domain model
+  - `artifacts/activity_diagram_interactive_loop.puml` — updated interactive session activity flow
+  - `artifacts/sequence_diagram_operation_execution.puml` — updated operation execution sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
