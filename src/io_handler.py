@@ -39,6 +39,7 @@ class InputHandler:
         self,
         available_operations: dict,
         max_retries: int = MAX_RETRIES,
+        current_mode: str = "Normal",
     ) -> str:
         """Display the operation list, prompt the user, and return a valid selection.
 
@@ -47,6 +48,8 @@ class InputHandler:
         counting as a failed attempt.  Accepts "history" as a display-only
         sentinel: the operation history is printed and the user is re-prompted
         without consuming a retry attempt and without returning to the caller.
+        Accepts "mode", "switch", or "m" as mode-toggle sentinels: the string
+        ``"mode"`` is returned so the caller can handle the mode switch.
 
         After ``max_retries`` consecutive invalid choices, prints a session-ended
         message and raises ``InputRetryExhaustedError``.
@@ -54,17 +57,23 @@ class InputHandler:
         Args:
             available_operations: Mapping of operation key -> display string.
             max_retries: Maximum number of invalid attempts before aborting.
+            current_mode: Human-readable label of the active mode, e.g.
+                ``"Normal"`` or ``"Scientific"``.  Displayed above the
+                operation list.
 
         Returns:
-            A key present in ``available_operations``, or "exit" / "quit".
+            A key present in ``available_operations``, ``"exit"`` / ``"quit"``,
+            or ``"mode"`` when the user requests a mode toggle.
 
         Raises:
             InputRetryExhaustedError: When ``max_retries`` invalid entries are
                 made in succession.
         """
-        print("\nAvailable operations:")
+        print(f"\nCurrent mode: {current_mode}")
+        print("Available operations:")
         for key, description in available_operations.items():
             print(f"  {key}: {description}")
+        print("  mode / switch / m: Toggle between Normal and Scientific mode")
         print("  exit / quit: Exit the calculator")
 
         retries: int = 0
@@ -72,6 +81,8 @@ class InputHandler:
             choice = input("Select an operation: ").strip().lower()
             if choice in ("exit", "quit"):
                 return choice
+            if choice in ("mode", "switch", "m"):
+                return "mode"
             if choice == "history":
                 self.display_history()
                 continue
@@ -172,15 +183,22 @@ class UserInterface:
         """
         print(f"Error: {message}")
 
-    def display_operations(self, available_operations: dict) -> None:
+    def display_operations(
+        self, available_operations: dict, current_mode: str = "Normal"
+    ) -> None:
         """Print the list of available operations.
 
         Args:
             available_operations: Mapping of operation key to display string.
+            current_mode: Human-readable label of the active mode, e.g.
+                ``"Normal"`` or ``"Scientific"``.  Displayed above the
+                operation list.
         """
-        print("\nAvailable operations:")
+        print(f"\nCurrent mode: {current_mode}")
+        print("Available operations:")
         for key, description in available_operations.items():
             print(f"  {key}: {description}")
+        print("  mode / switch / m: Toggle between Normal and Scientific mode")
         print("  exit / quit: Exit the calculator")
 
     def display_history(self, history_str: str) -> None:

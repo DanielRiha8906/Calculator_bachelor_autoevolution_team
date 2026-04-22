@@ -3,18 +3,25 @@
 from .calculator import Calculator
 from .history import OperationHistory
 from .io_handler import InputHandler, InputRetryExhaustedError
+from .mode_manager import ModeManager
 from .operations import OperationRegistry
 
 
 def main() -> None:
     """Run the interactive calculator loop.
 
-    Initialises Calculator, InputHandler, OperationHistory, and OperationRegistry,
-    then enters an infinite loop that prompts the user for an operation and
-    operands, invokes the operation, displays the result, and records it in the
-    history log.  The loop exits cleanly on KeyboardInterrupt, when the user
-    types "exit" / "quit", or when the user exhausts all retry attempts for any
+    Initialises Calculator, InputHandler, OperationHistory, OperationRegistry,
+    and ModeManager, then enters an infinite loop that prompts the user for an
+    operation and operands, invokes the operation, displays the result, and
+    records it in the history log.
+
+    The loop exits cleanly on KeyboardInterrupt, when the user types
+    "exit" / "quit", or when the user exhausts all retry attempts for any
     input prompt.
+
+    The user may type "mode", "switch", or "m" to toggle between Normal and
+    Scientific mode.  Scientific mode exposes additional trigonometric
+    operations (sin, cos, tan).
     """
     history = OperationHistory()
     history.clear()
@@ -22,19 +29,29 @@ def main() -> None:
     calc = Calculator()
     handler = InputHandler(history=history)
     registry = OperationRegistry(calc)
+    mode_manager = ModeManager()
 
     print("Welcome to the Calculator. Press Ctrl+C or type 'exit' to quit.")
 
     while True:
         try:
             try:
-                choice = handler.get_operation_choice(registry.list_operations())
+                available = registry.get_available_operations(mode_manager)
+                choice = handler.get_operation_choice(
+                    available,
+                    current_mode=mode_manager.get_mode_display_name(),
+                )
             except InputRetryExhaustedError:
                 break
 
             if choice in ("exit", "quit"):
                 print("Goodbye!")
                 break
+
+            if choice == "mode":
+                mode_manager.switch_mode()
+                print(f"Switched to {mode_manager.get_mode_display_name()} mode.")
+                continue
 
             method, arity, description = registry.get_operation(choice)
 

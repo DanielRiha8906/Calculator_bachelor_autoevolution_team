@@ -1,0 +1,17 @@
+@startuml sequence_diagram_mode_switch
+actor User
+participant "__main__" as Main
+participant "InputHandler" as IO
+participant "ModeManager" as MM
+
+User -> Main: start interactive session
+Main -> MM: ModeManager()
+Main -> IO: display_operations(mode=NORMAL)
+User -> IO: enter "mode"
+IO -> Main: return "mode"
+Main -> MM: switch_mode()
+MM -> Main: mode = SCIENTIFIC
+Main -> IO: display_operations(mode=SCIENTIFIC)
+User -> IO: enter operation
+IO -> Main: return operation name
+@enduml

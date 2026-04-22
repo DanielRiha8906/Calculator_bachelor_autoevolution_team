@@ -1,0 +1,27 @@
+@startuml class_diagram_mode_system
+class CalculatorMode {
+  NORMAL
+  SCIENTIFIC
+}
+
+class ModeManager {
+  -_current_mode: CalculatorMode
+  +get_current_mode(): CalculatorMode
+  +switch_mode(): void
+  +set_mode(mode: CalculatorMode): void
+  +get_mode_display_name(): str
+  +is_operation_available(op: str, sci_ops: set): bool
+}
+
+class OperationRegistry {
+  -_operations: dict
+  -_scientific_operations: set
+  +register_operation(name, func, ...): void
+  +register_scientific(name, func, ...): void
+  +get_available_operations(mode_manager): dict
+  +list_operations(): dict
+}
+
+ModeManager ..> CalculatorMode
+OperationRegistry ..> ModeManager
+@enduml
