@@ -81,3 +81,16 @@ All 40 tests passed (12 new + 28 existing). No regressions.
 Duration: 210.9s | Cost: $0.476329 USD | Turns: 15
 
 Duration: 162.7s | Cost: $0.365086 USD | Turns: 11
+
+## Run: Issue #243 — V2 Task 4 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-243-new-operations
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added 7 new methods: square, cube, square_root, cube_root, power, log, ln
+  - `tests/test_calculator.py` — added 7 new test classes with 59 tests covering all new operations
+- **Purpose:** Add square, cube, square root, cube root, power, log (base-10), and ln (natural log) as supported calculator operations with correct edge-case handling
+- **Risks:** None. Additive change only; no existing methods modified; uses standard library math module already imported
+- **Tests passed:** 99 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

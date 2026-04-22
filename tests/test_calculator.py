@@ -242,3 +242,215 @@ class TestCalculatorFactorial:
         """Test that boolean inputs raise ValueError (bool is subclass of int but should be rejected)"""
         with pytest.raises(ValueError, match="Factorial is only defined for non-negative integers"):
             calculator.factorial(bool_input)
+
+
+class TestCalculatorSquare:
+    """Test suite for Calculator.square() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,expected", [
+        (2, 4),
+        (3, 9),
+        (5, 25),
+        (-2, 4),
+        (-5, 25),
+        (0, 0),
+        (1.5, 2.25),
+        (0.5, 0.25),
+    ])
+    def test_square_various_values(self, calculator, x, expected):
+        """Test square for positive, negative, zero, and floating-point values"""
+        assert calculator.square(x) == expected
+
+
+class TestCalculatorCube:
+    """Test suite for Calculator.cube() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,expected", [
+        (2, 8),
+        (3, 27),
+        (-2, -8),
+        (-3, -27),
+        (0, 0),
+        (1.5, 3.375),
+    ])
+    def test_cube_various_values(self, calculator, x, expected):
+        """Test cube for positive, negative, zero, and floating-point values"""
+        result = calculator.cube(x)
+        assert result == pytest.approx(expected)
+
+
+class TestCalculatorSquareRoot:
+    """Test suite for Calculator.square_root() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0),
+        (1, 1),
+        (4, 2),
+        (9, 3),
+        (100, 10),
+        (0.25, 0.5),
+    ])
+    def test_square_root_perfect_squares(self, calculator, x, expected):
+        """Test square root of perfect squares and floating-point values"""
+        assert calculator.square_root(x) == expected
+
+    def test_square_root_non_perfect_square(self, calculator):
+        """Test square root of non-perfect square"""
+        result = calculator.square_root(2)
+        assert result == pytest.approx(1.4142, rel=1e-4)
+
+    @pytest.mark.parametrize("x", [-1, -0.5])
+    def test_square_root_negative_input(self, calculator, x):
+        """Test that negative inputs raise ValueError"""
+        with pytest.raises(ValueError, match="Square root is not defined for negative numbers"):
+            calculator.square_root(x)
+
+
+class TestCalculatorCubeRoot:
+    """Test suite for Calculator.cube_root() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,expected", [
+        (0, 0),
+        (1, 1),
+        (8, 2),
+        (27, 3),
+        (-1, -1),
+        (-8, -2),
+        (-27, -3),
+    ])
+    def test_cube_root_perfect_cubes(self, calculator, x, expected):
+        """Test cube root of perfect cubes (positive and negative)"""
+        result = calculator.cube_root(x)
+        assert result == pytest.approx(expected)
+
+    @pytest.mark.parametrize("x,expected", [
+        (2, 1.2599),
+        (-2, -1.2599),
+    ])
+    def test_cube_root_non_perfect_cubes(self, calculator, x, expected):
+        """Test cube root of non-perfect cubes with sign preservation"""
+        result = calculator.cube_root(x)
+        assert result == pytest.approx(expected, rel=1e-4)
+
+    def test_cube_root_large_value(self, calculator):
+        """Test cube root of large value"""
+        result = calculator.cube_root(1e9)
+        assert result == pytest.approx(1000, rel=1e-4)
+
+
+class TestCalculatorPower:
+    """Test suite for Calculator.power() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,y,expected", [
+        (2, 3, 8),
+        (5, 2, 25),
+        (10, 0, 1),
+        (0, 2, 0),
+        (2, -1, 0.5),
+        (4, -2, 0.0625),
+        (4, 0.5, 2.0),
+        (-2, 2, 4),
+        (-2, 3, -8),
+    ])
+    def test_power_various_exponents(self, calculator, x, y, expected):
+        """Test power with integer, negative, and float exponents"""
+        result = calculator.power(x, y)
+        assert result == pytest.approx(expected)
+
+    @pytest.mark.parametrize("y", [-1, -2])
+    def test_power_zero_base_negative_exponent(self, calculator, y):
+        """Test that 0^(-n) raises ValueError"""
+        with pytest.raises(ValueError, match="0 raised to a negative power is undefined"):
+            calculator.power(0, y)
+
+
+class TestCalculatorLog:
+    """Test suite for Calculator.log() method (base-10 logarithm)"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    @pytest.mark.parametrize("x,expected", [
+        (1, 0),
+        (10, 1),
+        (100, 2),
+        (1000, 3),
+        (0.1, -1),
+        (0.01, -2),
+    ])
+    def test_log_powers_of_ten(self, calculator, x, expected):
+        """Test log (base-10) of powers of 10"""
+        result = calculator.log(x)
+        assert result == pytest.approx(expected)
+
+    def test_log_non_power_of_ten(self, calculator):
+        """Test log of non-power-of-ten value"""
+        result = calculator.log(2)
+        assert result == pytest.approx(0.3010, rel=1e-3)
+
+    @pytest.mark.parametrize("x", [0, -1])
+    def test_log_non_positive_input(self, calculator, x):
+        """Test that zero and negative inputs raise ValueError"""
+        with pytest.raises(ValueError, match="Logarithm is only defined for positive numbers"):
+            calculator.log(x)
+
+
+class TestCalculatorLn:
+    """Test suite for Calculator.ln() method (natural logarithm)"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    def test_ln_one(self, calculator):
+        """Test natural log of 1"""
+        assert calculator.ln(1) == 0
+
+    def test_ln_e(self, calculator):
+        """Test natural log of e (should be ~1.0)"""
+        result = calculator.ln(math.e)
+        assert result == pytest.approx(1.0)
+
+    def test_ln_two(self, calculator):
+        """Test natural log of 2"""
+        result = calculator.ln(2)
+        assert result == pytest.approx(0.6931, rel=1e-4)
+
+    def test_ln_half(self, calculator):
+        """Test natural log of 0.5 (should be negative)"""
+        result = calculator.ln(0.5)
+        assert result < 0
+
+    @pytest.mark.parametrize("x", [0, -1])
+    def test_ln_non_positive_input(self, calculator, x):
+        """Test that zero and negative inputs raise ValueError"""
+        with pytest.raises(ValueError, match="Natural logarithm is only defined for positive numbers"):
+            calculator.ln(x)
