@@ -56,3 +56,26 @@ All 28 tests passed (19 new + 9 existing division tests). No regressions. Operat
 Duration: 180.1s | Cost: $0.405448 USD | Turns: 14
 
 Duration: 151.4s | Cost: $0.392515 USD | Turns: 15
+
+## Run: Issue #240 — V2 Task 3 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-240-factorial-operation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+- `src/calculator.py` — added `import math` and `factorial(self, n: int) -> int` method with input validation
+- `src/__main__.py` — added factorial demonstration line
+- `tests/test_calculator.py` — added `TestCalculatorFactorial` class with 12 tests covering boundary cases, positive values, and invalid inputs
+
+### Purpose
+
+Add factorial as a supported calculator operation per Issue #240. Implements unary factorial method on Calculator class with validation for non-negative integers, rejecting negatives, floats, strings, and booleans.
+
+### Risks
+
+None. Additive change; `math.factorial` from standard library; no existing code modified.
+
+### Test results
+
+All 40 tests passed (12 new + 28 existing). No regressions.
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

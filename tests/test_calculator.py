@@ -188,3 +188,57 @@ class TestCalculatorBasicOperations:
         assert calculator.multiply(0.1, 0.1) == pytest.approx(0.01)
         assert calculator.multiply(1.5, 1.5) == 2.25
         assert calculator.multiply(-0.5, 2) == -1.0
+
+
+class TestCalculatorFactorial:
+    """Test suite for Calculator.factorial() method"""
+
+    @pytest.fixture
+    def calculator(self):
+        """Fixture to provide a Calculator instance for each test"""
+        return Calculator()
+
+    def test_factorial_zero(self, calculator):
+        """Test factorial of zero (0! = 1)"""
+        assert calculator.factorial(0) == 1
+
+    def test_factorial_one(self, calculator):
+        """Test factorial of one (1! = 1)"""
+        assert calculator.factorial(1) == 1
+
+    @pytest.mark.parametrize("n,expected", [
+        (2, 2),
+        (3, 6),
+        (5, 120),
+    ])
+    def test_factorial_small_positive(self, calculator, n, expected):
+        """Test factorial for small positive integers"""
+        assert calculator.factorial(n) == expected
+
+    def test_factorial_medium_value(self, calculator):
+        """Test factorial of medium positive integer (10!)"""
+        assert calculator.factorial(10) == 3628800
+
+    def test_factorial_large_value(self, calculator):
+        """Test factorial of large positive integer (20!)"""
+        assert calculator.factorial(20) == 2432902008176640000
+
+    def test_factorial_negative_input(self, calculator):
+        """Test that negative inputs raise ValueError"""
+        with pytest.raises(ValueError, match="Factorial is only defined for non-negative integers"):
+            calculator.factorial(-1)
+
+    @pytest.mark.parametrize("invalid_input", [
+        3.0,
+        "5",
+    ])
+    def test_factorial_invalid_type_input(self, calculator, invalid_input):
+        """Test that non-integer inputs raise ValueError"""
+        with pytest.raises(ValueError, match="Factorial is only defined for non-negative integers"):
+            calculator.factorial(invalid_input)
+
+    @pytest.mark.parametrize("bool_input", [True, False])
+    def test_factorial_bool_input(self, calculator, bool_input):
+        """Test that boolean inputs raise ValueError (bool is subclass of int but should be rejected)"""
+        with pytest.raises(ValueError, match="Factorial is only defined for non-negative integers"):
+            calculator.factorial(bool_input)
