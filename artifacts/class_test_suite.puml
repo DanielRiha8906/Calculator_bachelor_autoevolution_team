@@ -1,0 +1,59 @@
+@startuml class_test_suite
+
+skinparam classAttributeIconSize 0
+
+class pytest_framework <<framework>> {
+    +fixture
+    +mark.parametrize
+    +approx
+}
+
+package "tests" {
+    class TestDivide {
+        {static} calculator : Calculator
+        +test_divide_positive_numbers()
+        +test_divide_zero_numerator()
+        +test_divide_by_zero_int()
+        +test_divide_by_zero_float()
+        +test_divide_very_large_numbers()
+        +test_divide_invalid_numerator()
+        +test_divide_invalid_denominator()
+    }
+
+    class TestAdd {
+        {static} calculator : Calculator
+        +test_add_positive_integers()
+        +test_add_negative_numbers()
+        +test_add_floats()
+        +test_add_mixed_int_float()
+        +test_add_invalid_first_operand()
+        +test_add_invalid_second_operand()
+    }
+
+    class TestSubtract {
+        {static} calculator : Calculator
+        +test_subtract_positive_integers()
+        +test_subtract_negative_numbers()
+        +test_subtract_floats()
+        +test_subtract_mixed_int_float()
+        +test_subtract_invalid_first_operand()
+        +test_subtract_invalid_second_operand()
+    }
+
+    class TestMultiply {
+        {static} calculator : Calculator
+        +test_multiply_positive_integers()
+        +test_multiply_negative_numbers()
+        +test_multiply_floats()
+        +test_multiply_very_large_numbers()
+        +test_multiply_invalid_first_operand()
+        +test_multiply_invalid_second_operand()
+    }
+}
+
+TestDivide ..> pytest_framework : uses
+TestAdd ..> pytest_framework : uses
+TestSubtract ..> pytest_framework : uses
+TestMultiply ..> pytest_framework : uses
+
+@enduml

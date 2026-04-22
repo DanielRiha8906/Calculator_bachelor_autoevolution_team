@@ -18,7 +18,26 @@ package "src" {
     }
 }
 
+package "tests" {
+    class TestDivide <<test>> {
+        +test_divide_*() : void
+    }
+    class TestAdd <<test>> {
+        +test_add_*() : void
+    }
+    class TestSubtract <<test>> {
+        +test_subtract_*() : void
+    }
+    class TestMultiply <<test>> {
+        +test_multiply_*() : void
+    }
+}
+
 Init --> Calculator : imports & exports
 Main --> Calculator : imports and instantiates
+TestDivide --> Calculator : tests
+TestAdd --> Calculator : tests
+TestSubtract --> Calculator : tests
+TestMultiply --> Calculator : tests
 
 @enduml
