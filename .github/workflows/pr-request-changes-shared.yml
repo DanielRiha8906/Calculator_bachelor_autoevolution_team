@@ -69,12 +69,12 @@ jobs:
           anthropic_api_key: ${{ secrets.anthropic_api_key }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
-          claude_args: "--max-turns 18"
+          claude_args: "--max-turns 24"
           prompt: |
-            You are fixing an existing pull request for the **${{ inputs.experiment_name }}** experiment.
-
+            You are the orchestrator of an autonomous multi-agent PR-fix pipeline. There is no human in the loop.
             Active branch: ${{ inputs.pr_head_ref }}
             Target branch: ${{ inputs.branch }}
+            Repository: ${{ github.repository }}
             Do NOT access, inspect, or reference any other branch — only ${{ inputs.pr_head_ref }} is in scope.
 
             Pull request #${{ inputs.pr_number }}: ${{ inputs.pr_title }}
@@ -84,18 +84,46 @@ jobs:
 
             A maintainer added the label `request-changes:${{ inputs.experiment_name }}`.
 
-            Instructions:
-            - Inspect the current PR branch only
-            - Make only the changes needed to address review feedback or fix issues
-            - Run the test suite; all tests must pass before committing
-            - Commit and push fixes to the same branch (${{ inputs.pr_head_ref }})
-            - Do not open a new PR
-            - Do not modify workflow or governance files unless explicitly required
+            The standard pipeline is:
+            1. github-task-analyst — pass the PR number, title, body, and repository. Instruct it to fetch the PR review comments and produce a requirements brief of what must be fixed.
+            2. system-architect — pass the analyst's requirements brief only. It will produce a file-level plan covering the source and test changes needed to address the review feedback.
+            3. python-code-implementer — pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/ — do not summarize, paraphrase, or delegate those steps. The implementer must receive zero test-related instructions. Tests are exclusively the pytest-edge-tester's responsibility.
+            4. pytest-edge-tester — pass the implementer's report (changed files) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
+            5. YOU (orchestrator) — run the test suite, then commit and push all changes to ${{ inputs.pr_head_ref }}. Do not open a new PR.
+
+            Follow this sequence by default. You may ONLY invoke these four agents: github-task-analyst, system-architect, python-code-implementer, pytest-edge-tester.
+            Do NOT invoke any other agent (Explore, general-purpose, Plan, or any other) for any reason.
+            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.
+
+            When invoking each agent, pass ONLY what is listed here — nothing more:
+            - github-task-analyst: pass the PR number, title, body, and repository only. Instruct it to read the PR review comments. Do NOT tell it to read source files or explore the repo.
+            - system-architect: pass the analyst's requirements brief only.
+            - python-code-implementer: pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/. The implementer must receive zero test-related instructions.
+            - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
 
             Constraints:
             - Never push directly to ${{ inputs.branch }} or main
+            - Do not open a new PR — push fixes to the existing branch ${{ inputs.pr_head_ref }}
             - Follow CLAUDE.md strictly
-            - Never access or reference sibling experiment branches
+            - Do not modify workflow or governance files unless explicitly required by the review feedback
+
+            Progress logging format (mandatory):
+            Append a new entry to progress.md using this exact format:
+
+            ## Run: Fix PR #<N> — <title> (<date>)
+
+            - **Branch:** <branch>
+            - **PR target:** <base branch>
+            - **Files changed:**
+              - `path/to/file.py` — description of change
+            - **Purpose:** <why this change was made>
+            - **Risks:** <risks or "None">
+            - **Tests passed:** <X passed, Y failed>
+
+            Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+            The last line must be written exactly as plain text, no markdown, no bold, no symbols.
+            Do not estimate or guess these values — the workflow will replace PENDING with real values after this run completes.
 
       - name: Log cost and turns
         if: always()
@@ -118,3 +146,149 @@ jobs:
           echo "| Total cost | \$$COST USD |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Turns | $TURNS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Duration | ${DURATION_S}s |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Patch progress.md with actual cost
+        if: always()
+        run: |
+          EXEC_FILE="${{ steps.run-claude.outputs.execution_file }}"
+          if [ -z "$EXEC_FILE" ] || [ ! -f "$EXEC_FILE" ]; then
+            echo "No execution file, skipping progress.md patch."
+            exit 0
+          fi
+          RESULT=$(jq '.[] | select(.type == "result")' "$EXEC_FILE")
+          COST=$(echo "$RESULT" | jq -r '.total_cost_usd // "N/A"')
+          TURNS=$(echo "$RESULT" | jq -r '.num_turns // "N/A"')
+          DURATION=$(echo "$RESULT" | jq -r '.duration_ms // 0')
+          DURATION_S=$(echo "scale=1; $DURATION / 1000" | bc)
+          if [ "$COST" != "N/A" ]; then
+            COST_FMT=$(printf "%.6f" "$COST" 2>/dev/null || echo "$COST")
+          else
+            COST_FMT="$COST"
+          fi
+
+          git fetch --all --quiet
+          git checkout -b "${{ inputs.pr_head_ref }}" "origin/${{ inputs.pr_head_ref }}" 2>/dev/null || git checkout "${{ inputs.pr_head_ref }}"
+          git pull origin "${{ inputs.pr_head_ref }}" --ff-only 2>/dev/null || true
+
+          if [ ! -f "progress.md" ] || ! grep -q "PENDING" progress.md; then
+            echo "No PENDING placeholder in progress.md, skipping."
+            exit 0
+          fi
+
+          export ACTUAL_LINE="Duration: ${DURATION_S}s | Cost: \$${COST_FMT} USD | Turns: ${TURNS}"
+          python3 - <<'PYEOF'
+          import os
+          content = open('progress.md').read()
+          actual = os.environ['ACTUAL_LINE']
+          new = content.replace('Duration: PENDING | Cost: PENDING | Turns: PENDING', actual, 1)
+          open('progress.md', 'w').write(new)
+          PYEOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add progress.md
+          git commit -m "chore: update progress.md with actual workflow cost"
+          git push origin "${{ inputs.pr_head_ref }}"
+
+  update-diagrams:
+    needs: claude-fix
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.pr_head_ref }}
+          fetch-depth: 1
+
+      - name: Run Claude Code for diagram update
+        id: run-claude-diagrams
+        uses: anthropics/claude-code-action@v1
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          anthropic_api_key: ${{ secrets.anthropic_api_key }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          claude_args: "--max-turns 35"
+          prompt: |
+            You are the orchestrator of an autonomous multi-agent diagram-update pipeline. There is no human in the loop.
+            Active branch: ${{ inputs.pr_head_ref }}
+            Repository: ${{ github.repository }}
+            All changes must be pushed to ${{ inputs.pr_head_ref }}, never main.
+
+            The reduced pipeline for this diagram-update run is:
+            1. github-task-analyst — pass the PR number (${{ inputs.pr_number }}) and repository (${{ github.repository }}). Instruct it to find the pull request and produce a brief of what was added, removed, or modified in `src/` based on the PR diff and commit messages.
+            2. system-architect — pass the analyst's brief only. It will read `src/` and produce a structural specification: class inventory, relationships, activity flows, and component interactions needed for the PlantUML diagrams.
+            3. uml-diagram-designer — pass the architect's structural specification only. It will create or update the diagram files in `artifacts/`, append the PENDING progress line to `progress.md`, commit, and push.
+
+            You may ONLY invoke these three agents: github-task-analyst, system-architect, uml-diagram-designer.
+            Do NOT invoke python-code-implementer, pytest-edge-tester, or any other agent — there is no Python implementation and no test targets in a diagram-update run.
+            Do NOT modify any files yourself — all file work is delegated to uml-diagram-designer.
+
+            Constraints:
+            - Never push to main
+            - Follow CLAUDE.md strictly
+            - Do not modify workflow or governance files
+
+            Progress logging format (mandatory):
+            Append a new entry to progress.md using this exact format:
+
+            ## Run: update-diagrams — <title> (<date>)
+
+            - **Branch:** <branch>
+            - **PR target:** <base branch>
+            - **Files changed:**
+              - `artifacts/file.puml` — description of change
+
+            Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+            The last line must be written exactly as plain text, no markdown, no bold, no symbols.
+            Do not estimate or guess these values — the workflow will replace PENDING with real values after this run completes.
+
+      - name: Patch progress.md with diagram run cost
+        if: always()
+        run: |
+          EXEC_FILE="${{ steps.run-claude-diagrams.outputs.execution_file }}"
+          if [ -z "$EXEC_FILE" ] || [ ! -f "$EXEC_FILE" ]; then
+            echo "No execution file found, skipping diagram cost patch."
+            exit 0
+          fi
+          RESULT=$(jq '.[] | select(.type == "result")' "$EXEC_FILE")
+          COST=$(echo "$RESULT" | jq -r '.total_cost_usd // "N/A"')
+          TURNS=$(echo "$RESULT" | jq -r '.num_turns // "N/A"')
+          DURATION=$(echo "$RESULT" | jq -r '.duration_ms // 0')
+          DURATION_S=$(echo "scale=1; $DURATION / 1000" | bc)
+          if [ "$COST" != "N/A" ]; then
+            COST_FMT=$(printf "%.6f" "$COST" 2>/dev/null || echo "$COST")
+          else
+            COST_FMT="$COST"
+          fi
+
+          git fetch --all --quiet
+          git checkout -b "${{ inputs.pr_head_ref }}" "origin/${{ inputs.pr_head_ref }}" 2>/dev/null || git checkout "${{ inputs.pr_head_ref }}"
+          git pull origin "${{ inputs.pr_head_ref }}" --ff-only 2>/dev/null || true
+
+          if [ ! -f "progress.md" ] || ! grep -q "PENDING" progress.md; then
+            echo "No PENDING placeholder in progress.md, skipping."
+            exit 0
+          fi
+
+          export ACTUAL_LINE="Duration: ${DURATION_S}s | Cost: \$${COST_FMT} USD | Turns: ${TURNS}"
+          python3 - <<'PYEOF'
+          import os
+          content = open('progress.md').read()
+          actual = os.environ['ACTUAL_LINE']
+          new = content.replace('Duration: PENDING | Cost: PENDING | Turns: PENDING', actual, 1)
+          open('progress.md', 'w').write(new)
+          PYEOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add progress.md
+          git commit -m "chore: update progress.md with diagram run cost" || echo "Nothing to commit"
+          git push origin "${{ inputs.pr_head_ref }}"
