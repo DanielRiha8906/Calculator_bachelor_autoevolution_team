@@ -124,4 +124,4 @@ Duration: 190.5s | Cost: $0.455877 USD | Turns: 10
   - `artifacts/activity_repl_pipeline.puml` — new activity diagram for the REPL evaluation pipeline (_evaluate flow with all error branches)
   - `artifacts/sequence_repl_interaction.puml` — new sequence diagram showing happy path and validation error path through the REPL
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
