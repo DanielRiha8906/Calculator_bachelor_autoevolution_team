@@ -307,3 +307,14 @@ Duration: 224.2s | Cost: $0.617987 USD | Turns: 12
   - `artifacts/sequence_math_operation.puml` — three-scenario sequence diagram covering binary arithmetic, unary advanced operation, and error propagation
 
 Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
+
+## Run: update-diagrams — Add documentation diagrams (2026-04-22)
+
+- **Branch:** task/issue-269-add-calculator-documentation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_engine_and_modes.puml` — class diagram of CalculatorEngine and operation-set composition pattern
+  - `artifacts/activity_operation_dispatch.puml` — activity diagram of operation dispatch pipeline (parse → validate → dispatch → execute → record → return)
+  - `artifacts/sequence_advanced_operation.puml` — sequence diagram for a complete advanced (unary) operation call through Calculator facade, CalculatorEngine, and AdvancedOperations
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
