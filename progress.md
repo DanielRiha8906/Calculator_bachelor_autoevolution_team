@@ -278,4 +278,4 @@ Duration: 507.6s | Cost: $1.237620 USD | Turns: 15
   - `artifacts/activity_diagram_workflow_loop.puml` — new activity diagram for CalculatorWorkflow.run() session loop
   - `artifacts/sequence_diagram_workflow_operation_execution.puml` — new sequence diagram for refactored operation execution path
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 246.6s | Cost: $0.706330 USD | Turns: 16
