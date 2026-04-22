@@ -1,0 +1,52 @@
+@startuml sequence_calculator_session
+
+participant User
+participant "interactive_session" as Session
+participant OperationHistory
+participant Calculator
+participant FileSystem
+
+== Session Start ==
+
+Session -> OperationHistory : <<create>>()
+activate OperationHistory
+
+Session -> User : display operation menu
+
+== Operation: add(2, 3) ==
+
+User ->> Session : selects "add"
+Session -> Session : get_arity(calc, "add") -> 2
+Session -> User : "Enter operand 1:"
+User ->> Session : "2"
+Session -> User : "Enter operand 2:"
+User ->> Session : "3"
+
+Session -> Calculator : add(2, 3)
+activate Calculator
+Calculator --> Session : 5
+deactivate Calculator
+
+Session -> OperationHistory : record_operation("add", [2, 3], 5)
+Session -> User : "Result: 5"
+
+== History Display ==
+
+User ->> Session : "h"
+Session -> OperationHistory : get_history()
+OperationHistory --> Session : ["add(2, 3) = 5"]
+Session -> User : "add(2, 3) = 5"
+
+== Exit with Persistence ==
+
+User ->> Session : "q"
+Session -> OperationHistory : save_to_file("history.txt")
+activate OperationHistory
+OperationHistory -> FileSystem : write entries to "history.txt"
+FileSystem --> OperationHistory : ok
+deactivate OperationHistory
+
+Session -> User : "Goodbye!"
+deactivate OperationHistory
+
+@enduml

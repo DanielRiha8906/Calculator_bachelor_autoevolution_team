@@ -1,0 +1,57 @@
+@startuml activity_interactive_session
+
+start
+
+:detect_mode() -> mode;
+:get_operation_menu(calc) -> operations;
+:Create OperationHistory;
+:Create OperationValidationSession\n(mode, operations, max_retries=5);
+
+repeat
+
+    :Display menu and prompt;
+
+    :Read raw_choice;
+
+    if (quit / exit / q?) then (yes)
+        :save_to_file("history.txt");
+        :Print "Goodbye!";
+        stop
+    endif
+
+    if (raw_choice == 'history' or 'h'?) then (yes)
+        :get_history() -> entries;
+        :Print each entry;
+        backward: continue loop;
+    endif
+
+    :validate_input(prompt_fn) -> op_name;
+
+    if (op_name is None?\n(max retries exceeded)) then (yes)
+        :save_to_file("history.txt");
+        stop
+    endif
+
+    :get_arity(calc, op_name) -> arity;
+    :get_operands(arity, mode) -> operands;
+
+    if (operands is None?\n(max retries exceeded)) then (yes)
+        :save_to_file("history.txt");
+        stop
+    endif
+
+    :result = getattr(calc, op_name)(*operands);
+
+    if (Calculator raises exception?) then (yes)
+        :Print "Error: {exc}";
+        note right: operation NOT recorded
+    else (no)
+        :record_operation(op_name, operands, result);
+        :Print "Result: {result}";
+    endif
+
+repeat while (session active?) is (yes)
+
+stop
+
+@enduml

@@ -204,3 +204,14 @@ Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
   - `artifacts/sequence_diagram_retry_flow.puml` — new sequence diagram showing retry flow for operation and operand validation
 
 Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
+
+## Run: update-diagrams — Operation History UML (2026-04-22)
+
+- **Branch:** task/issue-259-operation-history
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_operation_history.puml` — new class diagram for OperationHistory and its cli.py integration
+  - `artifacts/activity_interactive_session.puml` — new activity diagram for interactive session with history command flow
+  - `artifacts/sequence_calculator_session.puml` — new sequence diagram for complete calculator session with history
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
