@@ -150,3 +150,14 @@ Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
 - **Tests passed:** 42 passed, 0 failed
 
 Duration: 281.7s | Cost: $0.653606 USD | Turns: 15
+
+## Run: update-diagrams — Update PlantUML diagrams for calculator architecture (2026-04-22)
+
+- **Branch:** task/issue-249-plantuml-diagrams
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added main() entry point entity and dependency arrows to all three classes
+  - `artifacts/activity_diagram.puml` — verified and updated exception handling branches and loop-back logic
+  - `artifacts/main_sequence_diagram.puml` — full rewrite with all four participants, init, operation loop, error alt frame, and exit path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

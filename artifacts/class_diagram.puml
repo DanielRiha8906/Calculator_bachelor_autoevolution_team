@@ -1,13 +1,15 @@
 @startuml class_diagram
 title Calculator — Class Diagram
 
+component [main()] <<entry point>>
+
 class Calculator {
   +add(a, b) : float
   +subtract(a, b) : float
   +multiply(a, b) : float
   +divide(a, b) : float
   +power(x, y) : float
-  +factorial(n) : int
+  +factorial(n: int) : int
   +square(x) : float
   +cube(x) : float
   +square_root(x) : float
@@ -18,17 +20,23 @@ class Calculator {
 
 class OperationRegistry {
   -_registry : dict
-  +__init__(calculator) : void
-  +get_operation(key) : tuple
+  +__init__(calculator: Calculator) : None
+  +get_operation(key: str) : tuple
   +list_operations() : dict
 }
 
 class InputHandler {
-  +get_operation_choice(available_operations) : str
-  +get_operand(prompt) : float
-  +display_result(operation, operands, result) : void
-  +display_error(message) : void
+  +get_operation_choice(available_operations: dict) : str
+  +get_operand(prompt: str) : float
+  +display_result(operation, operands, result) : None
+  +display_error(message: str) : None
 }
+
+[main()] ..> Calculator : creates
+[main()] ..> InputHandler : creates
+[main()] ..> OperationRegistry : creates
+[main()] ..> InputHandler : uses
+[main()] ..> OperationRegistry : uses
 
 OperationRegistry --> Calculator : holds bound methods of
 @enduml

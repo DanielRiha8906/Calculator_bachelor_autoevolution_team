@@ -2,29 +2,40 @@
 title Calculator — Main Operation Flow
 
 start
-:Build OperationRegistry from Calculator;
+
+:Create Calculator;
 :Create InputHandler;
+:Create OperationRegistry(calculator);
 
 repeat
   :Display available operations;
-  :User selects operation;
+  :get_operation_choice(operations);
+
   if (choice == "exit" or "quit"?) then (yes)
     stop
   else (no)
-    :Fetch (method, arity, description)\nfrom OperationRegistry;
-    if (arity == 2?) then (yes)
-      :Get operand A from user;
-      :Get operand B from user;
+    :get_operation(choice) from OperationRegistry;
+    if (KeyError — unknown key?) then (yes)
+      :display_error("Unknown operation");
     else (no)
-      :Get operand A from user;
-    endif
-    :Execute Calculator method with operand(s);
-    if (operation succeeds?) then (yes)
-      :display_result(operation, operands, result);
-    else (no)
-      :display_error(error message);
+      if (arity == 2?) then (yes)
+        :get_operand("Enter first operand: ");
+        :get_operand("Enter second operand: ");
+      else (no)
+        :get_operand("Enter operand: ");
+      endif
+
+      :Execute Calculator method with operand(s);
+
+      if (operation succeeds?) then (yes)
+        :display_result(operation, operands, result);
+      else (no — ValueError or ZeroDivisionError)
+        :display_error(error message);
+      endif
     endif
   endif
-repeat while (continue?) is (yes)
+
+repeat while (KeyboardInterrupt?) is (no)
+-> yes;
 stop
 @enduml

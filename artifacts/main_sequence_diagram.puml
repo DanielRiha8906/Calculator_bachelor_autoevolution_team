@@ -1,28 +1,65 @@
 @startuml main_sequence_diagram
+title Calculator — Main Interaction Sequence
 
 participant "main" as main
 participant "Calculator" as calc
+participant "InputHandler" as ih
+participant "OperationRegistry" as reg
 
+== Initialization ==
 main -> calc : <<create>>
+main -> ih : <<create>>
+main -> reg : <<create>>(calc)
+
+== Operation Selection ==
+main -> reg : list_operations()
+reg -->> main : operations dict
+
+main -> ih : get_operation_choice(operations)
+activate ih
+ih -->> main : "add"
+deactivate ih
+
+== Operation Lookup ==
+main -> reg : get_operation("add")
+activate reg
+reg -->> main : (method, 2, "Addition (a + b)")
+deactivate reg
+
+== Operand Collection (arity = 2) ==
+main -> ih : get_operand("Enter first operand: ")
+activate ih
+ih -->> main : 10.0
+deactivate ih
+
+main -> ih : get_operand("Enter second operand: ")
+activate ih
+ih -->> main : 5.0
+deactivate ih
+
+== Execution ==
+main -> calc : add(10, 5)
 activate calc
-
-main ->> calc : add(10, 5)
 calc -->> main : 15
-
-main ->> calc : subtract(10, 5)
-calc -->> main : 5
-
-main ->> calc : multiply(10, 5)
-calc -->> main : 50
-
-main ->> calc : divide(10, 5)
-calc -->> main : 2.0
-
-main ->> calc : factorial(5)
-calc -->> main : 120
-
 deactivate calc
 
-main -> main : print results
+== Result Display ==
+main -> ih : display_result("Addition (a + b)", [10, 5], 15)
+
+== Error Path (alt) ==
+alt ZeroDivisionError example
+  main -> calc : divide(10, 0)
+  activate calc
+  calc -->> main : ZeroDivisionError
+  deactivate calc
+  main -> ih : display_error("Division by zero...")
+end
+
+== Exit ==
+main -> ih : get_operation_choice(operations)
+activate ih
+ih -->> main : "exit"
+deactivate ih
+main -> main : break loop
 
 @enduml
