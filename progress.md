@@ -146,4 +146,4 @@ Duration: 192.6s | Cost: $0.431689 USD | Turns: 7
 - **Risks:** None. Additive change; Calculator, OperationRegistry, and InputHandler are untouched; interactive mode unchanged
 - **Tests passed:** 278 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 297.1s | Cost: $0.812856 USD | Turns: 15
