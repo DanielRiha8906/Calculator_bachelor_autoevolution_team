@@ -148,4 +148,4 @@ Duration: 226.3s | Cost: $0.485512 USD | Turns: 7
 - **Files changed:**
   - `artifacts/calculator_class_diagram.puml` — added CalculatorREPL.__init__, Numeric return types for basic ops, type alias note, stateless note for Calculator
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 163.1s | Cost: $0.420991 USD | Turns: 12
