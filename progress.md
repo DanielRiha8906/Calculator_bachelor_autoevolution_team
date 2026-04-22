@@ -12,7 +12,7 @@
 - **Risks:** Calculator is now stateful; existing code that assumes statelessness is unaffected as all changes are additive
 - **Tests passed:** 566 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 305.2s | Cost: $0.825085 USD | Turns: 14
 
 ## Run: Issue #254 — V2 Task 8 - Naive/team (2026-04-22)
 
