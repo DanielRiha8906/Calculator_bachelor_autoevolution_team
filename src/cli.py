@@ -7,7 +7,7 @@ internal structure in advance.
 
 import inspect
 
-from .calculator import Calculator
+from .core.calculator import Calculator
 from .formatter import (
     format_error,
     format_history_header,

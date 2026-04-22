@@ -1,4 +1,4 @@
-from .calculator import Calculator
+from .core.calculator import Calculator
 from .cli import interactive_session
 
 def main():

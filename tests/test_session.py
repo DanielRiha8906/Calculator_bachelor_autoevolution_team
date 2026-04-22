@@ -6,7 +6,7 @@ import tempfile
 import os
 
 from src.session import CalculatorSession
-from src.calculator import Calculator
+from src.core.calculator import Calculator
 
 
 class TestSelectOperation:

@@ -8,7 +8,7 @@ return results and optional error strings; they never call ``print`` or
 
 import inspect
 
-from .calculator import Calculator
+from .core.calculator import Calculator
 from .error_logger import ErrorLogger
 from .history import OperationHistory
 from .validation import (
