@@ -265,3 +265,12 @@ Duration: 262.4s | Cost: $0.703051 USD | Turns: 16
 - **Tests passed:** 644 passed, 0 failed
 
 Duration: 261.6s | Cost: $0.660773 USD | Turns: 18
+
+## Run: update-diagrams — Error Logging Diagrams (2026-04-22)
+
+- **Branch:** task/issue-262-error-logging
+- **PR target:** task/issue-262-error-logging
+- **Files changed:**
+  - `artifacts/sequence_interactive_session_errors.puml` — expanded from 2 to 4 scenarios: added invalid operand string path and invalid domain error path; clarified that all interactive-mode errors continue the session without exit
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
