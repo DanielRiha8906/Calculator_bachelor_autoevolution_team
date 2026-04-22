@@ -8,7 +8,7 @@
 - **Risks:** None — documentation artifacts only; no source code modified
 - **Tests passed:** 324 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 292.6s | Cost: $0.730656 USD | Turns: 19
 
 ## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
 
