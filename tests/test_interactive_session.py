@@ -115,15 +115,17 @@ class TestErrorHandling:
         # Loop should continue after error
         assert "Goodbye!" in captured.out
 
-    @patch("builtins.input", side_effect=["add", "abc", "3", "exit"])
+    @patch("builtins.input", side_effect=["add", "abc", "5", "3", "exit"])
     def test_handles_invalid_operand_input(self, mock_input, capsys):
-        """Test that invalid operand input (non-numeric) triggers error."""
+        """Test that invalid operand input (non-numeric) triggers error and retries."""
         main()
         captured = capsys.readouterr()
         assert "Error:" in captured.out
         # The error message may vary, but should contain something about the invalid input
-        # Loop should continue
+        # Loop should continue after retry
         assert "Goodbye!" in captured.out
+        # Should have executed add(5, 3) = 8
+        assert "Result of Addition (a + b)(5.0, 3.0) = 8.0" in captured.out
 
     @patch("builtins.input", side_effect=["square_root", "-1", "exit"])
     def test_handles_math_domain_error(self, mock_input, capsys):

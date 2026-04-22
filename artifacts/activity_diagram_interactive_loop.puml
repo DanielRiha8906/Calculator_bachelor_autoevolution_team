@@ -10,6 +10,12 @@ start
 repeat
     :handler.get_operation_choice(registry.list_operations());
 
+    if (InputRetryExhaustedError raised?) then (yes)
+        :Print "Session ended.";
+        stop
+    else (no)
+    endif
+
     if (choice == "exit"?) then (yes)
         :Print "Goodbye!";
         stop
@@ -19,6 +25,11 @@ repeat
 
         if (arity == 1?) then (yes)
             :handler.get_operand(prompt);
+            if (InputRetryExhaustedError raised?) then (yes)
+                :Print "Session ended.";
+                stop
+            else (no)
+            endif
             if (operation == "factorial"?) then (yes)
                 :Cast operand float -> int;
             else (no)
@@ -26,7 +37,17 @@ repeat
             :operands = [value];
         else (no)
             :handler.get_operand("Enter first operand: ");
+            if (InputRetryExhaustedError raised?) then (yes)
+                :Print "Session ended.";
+                stop
+            else (no)
+            endif
             :handler.get_operand("Enter second operand: ");
+            if (InputRetryExhaustedError raised?) then (yes)
+                :Print "Session ended.";
+                stop
+            else (no)
+            endif
             :operands = [first, second];
         endif
 

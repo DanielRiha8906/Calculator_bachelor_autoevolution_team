@@ -4,6 +4,7 @@ import sys
 
 from .calculator import Calculator
 from .operations import OperationRegistry
+from .validation import OperandValidationError, validate_operand
 
 # Operations whose underlying Calculator method expects an int, not a float.
 _INT_OPERAND_OPERATIONS: frozenset[str] = frozenset({"factorial"})
@@ -28,7 +29,7 @@ def parse_args(argv: list[str]) -> tuple[str, list[float]]:
 
     Raises:
         SystemExit: If ``argv`` is empty (prints usage to stderr first).
-        ValueError: If any operand string cannot be converted to float.
+        OperandValidationError: If any operand string cannot be converted to float.
     """
     if not argv:
         print(_USAGE, file=sys.stderr)
@@ -40,9 +41,11 @@ def parse_args(argv: list[str]) -> tuple[str, list[float]]:
     operands: list[float] = []
     for token in raw_operands:
         try:
-            operands.append(float(token))
-        except ValueError:
-            raise ValueError(f"Invalid numeric operand: '{token}'")
+            operands.append(validate_operand(token))
+        except OperandValidationError as exc:
+            raise OperandValidationError(
+                f"Invalid numeric operand: {exc}"
+            ) from exc
 
     return operation, operands
 
@@ -102,14 +105,17 @@ def cli_main(argv: list[str]) -> None:
     """
     try:
         operation, operands = parse_args(argv)
-    except ValueError as exc:
+    except OperandValidationError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
     try:
         result = execute_cli(operation, operands)
-    except KeyError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+    except KeyError:
+        print(
+            f"Error: Invalid operation — '{operation}' is not a supported operation.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     except (ValueError, ZeroDivisionError) as exc:
         print(f"Error: {exc}", file=sys.stderr)

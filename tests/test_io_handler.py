@@ -63,14 +63,14 @@ class TestGetOperationChoice:
         result = handler.get_operation_choice(available_ops)
         assert result == "quit"
 
-    @patch("builtins.input", side_effect=["", "  ", "xyz", "add"])
+    @patch("builtins.input", side_effect=["", "  ", "add"])
     def test_get_operation_choice_multiple_invalid_inputs(self, mock_input, handler, available_ops, capsys):
         """Test multiple invalid inputs before a valid one."""
         result = handler.get_operation_choice(available_ops)
         assert result == "add"
         captured = capsys.readouterr()
         # Should have printed invalid choice messages for each invalid input
-        assert captured.out.count("Invalid choice") == 3
+        assert captured.out.count("Invalid choice") == 2
 
     @patch("builtins.input", return_value=" multiply ")
     def test_get_operation_choice_with_whitespace(self, mock_input, handler, available_ops, capsys):

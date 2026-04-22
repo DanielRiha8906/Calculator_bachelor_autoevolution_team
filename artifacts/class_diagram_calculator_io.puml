@@ -18,11 +18,17 @@ class Calculator {
 }
 
 class InputHandler {
-    +get_operation_choice(available_operations: dict) : str
-    +get_operand(prompt: str) : float
+    +get_operation_choice(available_operations: dict, max_retries: int) : str
+    +get_operand(prompt: str, max_retries: int) : float
     +display_result(operation: str, operands: list, result: float) : None
     +display_error(message: str) : None
 }
+
+class InputRetryExhaustedError {
+}
+ValueError <|-- InputRetryExhaustedError
+
+InputHandler ..> InputRetryExhaustedError : raises
 
 class OperationRegistry {
     -_registry: dict
@@ -41,5 +47,25 @@ class cli {
 
 cli --> Calculator : uses in execute_cli
 cli --> OperationRegistry : uses in execute_cli
+
+class validation {
+    +validate_operand(raw: str) : float
+    +validate_operation(choice: str, available_operations: dict) : bool
+    +get_validation_error_message(error: Exception) : str
+}
+
+class OperandValidationError {
+}
+ValueError <|-- OperandValidationError
+
+class OperationValidationError {
+}
+ValueError <|-- OperationValidationError
+
+validation ..> OperandValidationError : raises
+validation ..> OperationValidationError : raises
+
+InputHandler ..> validation : uses
+cli ..> validation : uses
 
 @enduml

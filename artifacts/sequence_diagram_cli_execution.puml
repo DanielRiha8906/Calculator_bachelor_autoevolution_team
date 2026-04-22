@@ -3,6 +3,7 @@
 participant "__main__" as main
 participant "cli_main" as cli_main
 participant "parse_args" as parse_args
+participant "validation" as validation
 participant "execute_cli" as execute_cli
 participant "OperationRegistry" as registry
 participant "Calculator" as calc
@@ -15,11 +16,25 @@ activate cli_main
 cli_main ->> parse_args : parse_args(["add", "3", "5"])
 activate parse_args
 
-alt parse error (e.g. non-numeric operand)
-    parse_args -->> cli_main : raises ValueError
-    cli_main ->> cli_main : print "Error: ..." to stderr
+alt parse error (non-numeric operand)
+    parse_args ->> validation : validate_operand(token)
+    activate validation
+    validation -->> parse_args : raises OperandValidationError
+    deactivate validation
+    parse_args -->> cli_main : raises OperandValidationError
+    cli_main ->> cli_main : catch OperandValidationError\nprint "Error: ..." to stderr
     cli_main ->> main : sys.exit(1)
 else success
+    parse_args ->> validation : validate_operand("3")
+    activate validation
+    validation -->> parse_args : 3.0
+    deactivate validation
+
+    parse_args ->> validation : validate_operand("5")
+    activate validation
+    validation -->> parse_args : 5.0
+    deactivate validation
+
     parse_args -->> cli_main : ("add", [3.0, 5.0])
     deactivate parse_args
 
