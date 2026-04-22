@@ -16,7 +16,7 @@
 - **Risks:** None — sin/cos/tan are new ops; all 12 existing normal operations unchanged
 - **Tests passed:** 924 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 485.1s | Cost: $1.122613 USD | Turns: 15
 
 ## Run: Issue #270 — V2 Task 13 - Structured/team (2026-04-22)
 
