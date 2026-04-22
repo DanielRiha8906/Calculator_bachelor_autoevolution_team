@@ -12,7 +12,7 @@
 - **Risks:** None — documentation only; no production code changed
 - **Tests passed:** 814 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 418.8s | Cost: $0.987126 USD | Turns: 15
 
 ## Run: Issue #267 — V2 Task 12 - Structured/team (2026-04-22)
 
