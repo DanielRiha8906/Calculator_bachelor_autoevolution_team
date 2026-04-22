@@ -1,0 +1,67 @@
+@startuml activity_diagram_error_logging
+
+skinparam ActivityBorderColor #555555
+skinparam ActivityBackgroundColor #F8F8F8
+skinparam ArrowColor #555555
+
+title Error Detection and Logging Flows
+
+start
+
+:User sends expression input;
+
+' ─── Path A: Math / Type Error ─────────────────────────────
+note right: **Path A — Math / Type Error**
+
+:ExpressionParser.parse() → OK;
+:InputValidator.validate() → OK;
+:Calculator method called;
+
+if (Exception raised inside Calculator?) then (yes)
+    :logger.error(operands + exception details);
+    :Exception re-raised;
+    :Handler catches (CLIHandler.run or\nCalculatorREPL._evaluate);
+    :handler calls logger.error(expression context);
+    :User receives error message;
+    note right
+        CLI  → stderr
+        REPL → inline message
+    end note
+else (no)
+    ' ─── Path B: Invalid Operand Token ─────────────────────
+    note right: **Path B — Invalid Operand Token**
+
+    :ExpressionParser._coerce_numeric(token);
+
+    if (Token parses as int or float?) then (no)
+        :Construct ValueError;
+        :logger.warning(token value + exception);
+        :ValueError raised;
+        :Handler catches → "Input error" message to user;
+    else (yes)
+        ' ─── Path C: Unknown / Invalid Operation ───────────
+        note right: **Path C — Unknown / Invalid Operation**
+
+        :InputValidator.validate_operation(op);
+
+        if (Operation in SUPPORTED_OPERATIONS?) then (no)
+            :Construct ValueError;
+            :logger.warning(operation name + exception);
+            :ValueError raised;
+            :Handler catches → "Validation error" message to user;
+        else (yes)
+            :Calculation succeeds → result returned to user;
+        endif
+    endif
+endif
+
+' ─── Log Destination Fork ──────────────────────────────────
+fork
+    :StreamHandler\n(WARNING+ → console);
+fork again
+    :FileHandler\n(DEBUG+   → calculator.log);
+end fork
+
+stop
+
+@enduml

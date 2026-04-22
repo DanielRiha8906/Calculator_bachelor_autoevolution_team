@@ -1,5 +1,9 @@
 import math
 
+from .logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class Calculator:
     """Basic calculator with operation history tracking."""
@@ -66,7 +70,17 @@ class Calculator:
         return result
 
     def divide(self, a, b):
-        result = a / b
+        try:
+            result = a / b
+        except ZeroDivisionError as exc:
+            logger.error(
+                "divide() failed: operands=(%r, %r) %s: %s",
+                a,
+                b,
+                type(exc).__name__,
+                exc,
+            )
+            raise
         self._record_history(a, "divide", b, result)
         return result
 
@@ -84,13 +98,27 @@ class Calculator:
             ValueError: If n is a negative integer.
         """
         if not isinstance(n, int) or isinstance(n, bool):
-            raise TypeError(
+            exc = TypeError(
                 f"factorial() requires a non-negative integer, got {type(n).__name__}"
             )
+            logger.error(
+                "factorial() failed: operand=%r %s: %s",
+                n,
+                type(exc).__name__,
+                exc,
+            )
+            raise exc
         if n < 0:
-            raise ValueError(
+            exc = ValueError(
                 f"factorial() is not defined for negative integers, got {n}"
             )
+            logger.error(
+                "factorial() failed: operand=%r %s: %s",
+                n,
+                type(exc).__name__,
+                exc,
+            )
+            raise exc
         result = 1
         for i in range(2, n + 1):
             result *= i
@@ -135,7 +163,16 @@ class Calculator:
         Raises:
             ValueError: If x is negative.
         """
-        result = math.sqrt(x)
+        try:
+            result = math.sqrt(x)
+        except ValueError as exc:
+            logger.error(
+                "square_root() failed: operand=%r %s: %s",
+                x,
+                type(exc).__name__,
+                exc,
+            )
+            raise
         self._record_history(x, "square_root", None, result)
         return result
 
@@ -180,7 +217,16 @@ class Calculator:
         Raises:
             ValueError: If x is less than or equal to 0.
         """
-        result = math.log(x)
+        try:
+            result = math.log(x)
+        except ValueError as exc:
+            logger.error(
+                "natural_log() failed: operand=%r %s: %s",
+                x,
+                type(exc).__name__,
+                exc,
+            )
+            raise
         self._record_history(x, "natural_log", None, result)
         return result
 
@@ -196,6 +242,15 @@ class Calculator:
         Raises:
             ValueError: If x is less than or equal to 0.
         """
-        result = math.log10(x)
+        try:
+            result = math.log10(x)
+        except ValueError as exc:
+            logger.error(
+                "log_base_10() failed: operand=%r %s: %s",
+                x,
+                type(exc).__name__,
+                exc,
+            )
+            raise
         self._record_history(x, "log_base_10", None, result)
         return result

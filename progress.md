@@ -192,6 +192,22 @@ Duration: 335.8s | Cost: $0.871881 USD | Turns: 18
 
 Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
 
+## Run: Issue #260 — V2 Task 10 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-260-error-logging
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/logger.py` — new centralized logging factory using Python standard `logging` module; configures console (WARNING) and file (DEBUG) handlers
+  - `src/calculator.py` — added `logger.error()` calls in `divide`, `factorial`, `square_root`, `natural_log`, `log_base_10` before re-raising exceptions
+  - `src/input_handler.py` — added `logger.warning()` in `ExpressionParser._coerce_numeric`, `ExpressionParser.parse`, `InputValidator.validate_operation`, `InputValidator.validate_operand_count`; `logger.error()` in `CalculatorREPL._evaluate`
+  - `src/cli.py` — added `logger.error()` in `CLIHandler.run()` parse, validation, and math error branches
+  - `tests/test_error_logging.py` — 75 tests verifying error logging at all instrumented points using pytest `caplog` fixture
+- **Purpose:** Add comprehensive error logging to all calculator error paths for operational visibility and thesis experiment traceability
+- **Risks:** None — logging is purely additive; all existing APIs and exception propagation behavior unchanged
+- **Tests passed:** 641 passed, 0 failed
+
+Duration: 349.5s | Cost: $1.000426 USD | Turns: 16
+
 ## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-22)
 
 - **Branch:** task/issue-254-input-validation-retry
@@ -202,3 +218,14 @@ Duration: 184.2s | Cost: $0.463289 USD | Turns: 7
   - `artifacts/sequence_diagram_retry_flow.puml` — sequence diagram for bad-input retry scenario
 
 Duration: 225.9s | Cost: $0.573481 USD | Turns: 9
+
+## Run: update-diagrams — Add error logging diagrams (2026-04-22)
+
+- **Branch:** task/issue-260-error-logging
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_logging.puml` — new class diagram showing logger module integrated across Calculator, InputValidator, ExpressionParser, CalculatorREPL, and CLIHandler
+  - `artifacts/activity_diagram_error_logging.puml` — new activity diagram for three error detection and logging flows (math error, invalid token, unknown operation)
+  - `artifacts/sequence_diagram_cli_repl_logging.puml` — new sequence diagram showing CLI and REPL error paths with logger.warning() and logger.error() call sites
+
+Duration: 234.2s | Cost: $0.569458 USD | Turns: 12
