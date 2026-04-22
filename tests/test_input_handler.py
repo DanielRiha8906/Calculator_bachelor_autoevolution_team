@@ -4,6 +4,8 @@ Tests cover:
 - InputValidator: operation name validation and operand count checking
 - ExpressionParser: parsing expressions and coercing numeric types
 - CalculatorREPL: execution, error handling, and exit conditions
+- RetryConfig: configuration for bad-input retry behavior
+- Retry logic: REPL re-prompts user on invalid input up to max_retries times
 """
 
 import pytest
@@ -15,7 +17,33 @@ from src.input_handler import (
     SUPPORTED_OPERATIONS,
     _ONE_OPERAND_OPS,
     _TWO_OPERAND_OPS,
+    RetryConfig,
 )
+
+
+# =============================================================================
+# TestRetryConfig
+# =============================================================================
+
+
+class TestRetryConfig:
+    """Unit tests for RetryConfig dataclass."""
+
+    def test_default_max_retries_is_three(self):
+        """Test that RetryConfig() has max_retries == 3 by default."""
+        config = RetryConfig()
+        assert config.max_retries == 3
+
+    def test_max_retries_can_be_customized(self):
+        """Test that RetryConfig(max_retries=5) has max_retries == 5."""
+        config = RetryConfig(max_retries=5)
+        assert config.max_retries == 5
+
+    @pytest.mark.parametrize("custom_max", [1, 2, 5, 10])
+    def test_max_retries_can_be_set_to_various_values(self, custom_max):
+        """Test that max_retries can be set to various positive integers."""
+        config = RetryConfig(max_retries=custom_max)
+        assert config.max_retries == custom_max
 
 
 # =============================================================================
@@ -571,6 +599,240 @@ class TestCalculatorREPL:
 
         with pytest.raises(ValueError):
             repl._dispatch("factorial", [-1])
+
+    # -------------------------------------------------------------------------
+    # Retry logic tests
+    # -------------------------------------------------------------------------
+
+    def test_repl_accepts_custom_retry_config(self, calculator):
+        """Test that CalculatorREPL accepts and stores a custom RetryConfig."""
+        config = RetryConfig(max_retries=5)
+        repl = CalculatorREPL(calculator, retry_config=config)
+        assert repl._retry_config.max_retries == 5
+
+    def test_repl_uses_default_retry_config_when_not_provided(self, repl):
+        """Test that CalculatorREPL uses default RetryConfig when none is provided."""
+        assert repl._retry_config.max_retries == 3
+
+    def test_valid_input_on_first_attempt_no_retry_prompts(self, repl, capsys):
+        """Test that valid expression on first try produces no retry prompts."""
+        with patch("builtins.input", side_effect=["add 5 3", "exit"]):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Result: 8" in captured.out
+        assert "Attempt" not in captured.out
+        assert "Invalid input" not in captured.out
+
+    def test_invalid_input_triggers_retry_prompt(self, repl, capsys):
+        """Test that invalid input triggers a retry prompt."""
+        with patch("builtins.input", side_effect=["invalid_op 5", "exit"]) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Error message should be printed
+        assert "Validation error:" in captured.out
+        # input() should be called at least twice: main prompt and retry prompt
+        assert mock_input.call_count >= 2
+        # Second call should be the retry prompt with "Attempt 1/3"
+        retry_prompt = mock_input.call_args_list[1][0][0]
+        assert "Attempt 1/3" in retry_prompt
+        assert "Please try again:" in retry_prompt
+
+    def test_max_retries_exceeded_prints_exhaustion_message(self, repl, capsys):
+        """Test that three consecutive invalid inputs prints exhaustion message."""
+        # First invalid input triggers retry loop
+        # Attempts 1, 2, 3 all fail, then we're back at main loop and exit
+        inputs = ["badop", "badop2", "badop3", "badop4", "exit"]
+        with patch("builtins.input", side_effect=inputs):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Too many invalid attempts" in captured.out
+        assert "Returning to main prompt" in captured.out
+
+    def test_retry_succeeds_on_second_attempt(self, repl, capsys):
+        """Test that invalid then valid input succeeds, prints result, no exhaustion."""
+        inputs = ["invalid_op 5", "add 5 3", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Result: 8" in captured.out
+        assert "Validation error:" in captured.out
+        assert "Too many invalid attempts" not in captured.out
+        # Verify retry prompt was triggered
+        assert mock_input.call_count >= 2
+        retry_prompt = mock_input.call_args_list[1][0][0]
+        assert "Attempt 1/3" in retry_prompt
+
+    def test_exit_during_retry_terminates_cleanly(self, repl, capsys):
+        """Test that typing 'exit' at a retry prompt terminates cleanly."""
+        inputs = ["invalid_op 5", "exit"]
+        with patch("builtins.input", side_effect=inputs):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Goodbye!" in captured.out
+
+    def test_quit_during_retry_terminates_cleanly(self, repl, capsys):
+        """Test that typing 'quit' at a retry prompt terminates cleanly."""
+        inputs = ["invalid_op 5", "quit"]
+        with patch("builtins.input", side_effect=inputs):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Goodbye!" in captured.out
+
+    def test_keyboard_interrupt_during_retry_exits(self, repl, capsys):
+        """Test that KeyboardInterrupt during retry exits cleanly."""
+        # First input is invalid (triggers retry), then KeyboardInterrupt
+        def input_sequence(prompt):
+            if "Attempt" in prompt:
+                raise KeyboardInterrupt()
+            return "invalid_op 5"
+
+        with patch("builtins.input", side_effect=input_sequence):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Interrupted" in captured.out or "Goodbye" in captured.out
+
+    def test_eof_during_retry_exits_cleanly(self, repl, capsys):
+        """Test that EOFError (piped input) during retry exits cleanly."""
+        # First input is invalid (triggers retry), then EOFError
+        def input_sequence(prompt):
+            if "Attempt" in prompt:
+                raise EOFError()
+            return "invalid_op 5"
+
+        with patch("builtins.input", side_effect=input_sequence):
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Should exit without error
+
+    def test_custom_max_retries_limits_attempts(self, calculator, capsys):
+        """Test that custom max_retries limits retry attempts correctly."""
+        config = RetryConfig(max_retries=2)
+        repl = CalculatorREPL(calculator, retry_config=config)
+
+        # First invalid input, then 2 retry attempts, then back to main loop, exit
+        inputs = ["badop1", "badop2", "badop3", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Should show Attempt 1/2 and Attempt 2/2, but not Attempt 3/2
+        assert "Too many invalid attempts" in captured.out
+        # Verify from mock calls
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) == 2
+        assert "Attempt 1/2" in retry_calls[0][0][0]
+        assert "Attempt 2/2" in retry_calls[1][0][0]
+
+    def test_retry_loop_shows_correct_attempt_numbers(self, repl, capsys):
+        """Test that retry loop shows correct attempt numbers."""
+        inputs = ["bad1", "bad2", "add 5 3", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Verify from mock calls that we got the right attempt prompts
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) == 2
+        assert "Attempt 1/3" in retry_calls[0][0][0]
+        assert "Attempt 2/3" in retry_calls[1][0][0]
+        # Should not try a 3rd time since it succeeds on the 2nd retry
+        assert not any("Attempt 3/3" in call[0][0] for call in retry_calls)
+
+    def test_successful_retry_breaks_from_retry_loop(self, repl, capsys):
+        """Test that a successful evaluation breaks from the retry loop."""
+        inputs = ["badop", "factorial 5", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Result: 120" in captured.out
+        # Verify only 1 retry attempt was made (success on first retry)
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) == 1
+        assert "Attempt 1/3" in retry_calls[0][0][0]
+        # Should not continue to Attempt 2/3
+        assert not any("Attempt 2/3" in call[0][0] for call in retry_calls)
+
+    def test_retry_counts_each_failed_attempt(self, repl, capsys):
+        """Test that retry counter increments for each invalid attempt."""
+        inputs = ["bad1", "bad2", "bad3", "bad4", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Verify all three attempt prompts appear
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) == 3
+        assert "Attempt 1/3" in retry_calls[0][0][0]
+        assert "Attempt 2/3" in retry_calls[1][0][0]
+        assert "Attempt 3/3" in retry_calls[2][0][0]
+
+    def test_different_error_types_all_trigger_retry(self, repl, capsys):
+        """Test that different error types (validation, input, math) all trigger retry."""
+        inputs = [
+            "unknown 5 3",  # Validation error
+            "add 5",  # Validation error (wrong operand count)
+            "add 5 abc",  # Input error
+            "divide 10 0",  # Math error
+            "exit",
+        ]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        # Verify retry was triggered
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) >= 1
+        assert "Attempt 1" in retry_calls[0][0][0]
+
+    def test_run_invalid_then_valid_succeeds_on_retry(self, calculator, capsys):
+        """Integration: User enters invalid expression, then valid one on retry."""
+        repl = CalculatorREPL(calculator)
+        inputs = ["unknown_operation 5", "add 10 20", "exit"]
+        with patch("builtins.input", side_effect=inputs) as mock_input:
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Validation error:" in captured.out
+        assert "Result: 30" in captured.out
+        # Verify retry prompt was triggered
+        retry_calls = [call for call in mock_input.call_args_list
+                       if "Attempt" in call[0][0]]
+        assert len(retry_calls) >= 1
+        assert "Attempt 1/3" in retry_calls[0][0][0]
+
+    def test_run_exhausts_retries_then_continues_at_prompt(self, calculator, capsys):
+        """Integration: User exhausts retries, then gets back to main prompt."""
+        repl = CalculatorREPL(calculator)
+        inputs = [
+            "badop1",
+            "badop2",
+            "badop3",
+            "badop4",
+            "add 5 3",
+            "exit",
+        ]
+        with patch("builtins.input", side_effect=inputs):
+            repl.run()
+
+        captured = capsys.readouterr()
+        assert "Too many invalid attempts" in captured.out
+        assert "Returning to main prompt" in captured.out
+        # Should return to main prompt and accept the valid input
+        assert "Result: 8" in captured.out
 
 
 # =============================================================================

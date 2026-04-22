@@ -1,4 +1,17 @@
 
+## Run: Issue #254 — V2 Task 8 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-254-input-validation-retry
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/input_handler.py` — added `RetryConfig` dataclass and retry loop in `CalculatorREPL.run()` allowing up to 3 configurable re-prompts on bad input
+  - `tests/test_input_handler.py` — added 20 new tests covering RetryConfig defaults, retry prompt numbering, exhaustion message, success on retry, and exit/interrupt handling
+- **Purpose:** Add input validation retry logic so users can correct bad input up to a configurable number of times before returning to the main prompt
+- **Risks:** None — retry logic is additive; `_evaluate()` and all existing methods unchanged
+- **Tests passed:** 473 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #242 — V2 Task 4 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-242-advanced-math-ops

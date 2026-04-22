@@ -12,9 +12,28 @@ Provides three cooperating classes:
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Union
 
 from .calculator import Calculator
+
+
+# ---------------------------------------------------------------------------
+# RetryConfig
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class RetryConfig:
+    """Configuration for the bad-input retry behaviour in ``CalculatorREPL``.
+
+    Attributes:
+        max_retries: Maximum number of times the REPL re-prompts the user
+            after an invalid expression before returning to the main prompt.
+            Must be a positive integer.  Defaults to ``3``.
+    """
+
+    max_retries: int = field(default=3)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -206,10 +225,15 @@ class CalculatorREPL:
 
     _EXIT_COMMANDS: frozenset[str] = frozenset({"exit", "quit"})
 
-    def __init__(self, calculator: Calculator) -> None:
+    def __init__(
+        self,
+        calculator: Calculator,
+        retry_config: RetryConfig | None = None,
+    ) -> None:
         self._calculator = calculator
         self._parser = ExpressionParser()
         self._validator = InputValidator()
+        self._retry_config: RetryConfig = retry_config or RetryConfig()
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -300,4 +324,34 @@ class CalculatorREPL:
                 print("Goodbye!")
                 break
 
-            print(self._evaluate(raw))
+            response = self._evaluate(raw)
+            if response.startswith("Result:"):
+                print(response)
+                continue
+
+            # Bad input — enter retry loop.
+            print(response)
+            max_retries = self._retry_config.max_retries
+            for attempt in range(1, max_retries + 1):
+                try:
+                    raw = input(
+                        f"Invalid input. Attempt {attempt}/{max_retries}."
+                        " Please try again: "
+                    ).strip()
+                except KeyboardInterrupt:
+                    print("\nInterrupted. Goodbye!")
+                    return
+                except EOFError:
+                    return
+
+                if raw.lower() in self._EXIT_COMMANDS:
+                    print("Goodbye!")
+                    return
+
+                response = self._evaluate(raw)
+                if response.startswith("Result:"):
+                    print(response)
+                    break
+                print(response)
+            else:
+                print("Too many invalid attempts. Returning to main prompt.")
