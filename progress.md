@@ -350,4 +350,4 @@ Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
   - `artifacts/activity_diagram_mode_switching.puml` — Activity diagram for REPL mode-switch flow with validation and history preservation
   - `artifacts/sequence_diagram_scientific_calculation.puml` — Sequence diagram for sin(x) scientific calculation including domain-error alt scenario
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
