@@ -162,4 +162,4 @@ Duration: 391.3s | Cost: $1.035493 USD | Turns: 24
   - `artifacts/sequence_main.puml` — Replaced outdated basic diagram with accurate bash CLI sequence: parse_arguments, get_operation_arity, execute_operation, _to_number flow; includes three error paths
   - `artifacts/activity_main_cli.puml` — New activity diagram for main.py bash CLI flow: arg validation, arity inspection, operand conversion, Calculator dispatch, exit codes
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 302.9s | Cost: $0.753991 USD | Turns: 23
