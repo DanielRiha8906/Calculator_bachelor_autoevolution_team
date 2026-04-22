@@ -1,0 +1,39 @@
+@startuml sequence_calculator_operations
+
+actor Caller
+participant "Calculator" as Calc
+
+== Scenario A: factorial(5) valid path ==
+
+Caller ->> Calc : factorial(5)
+activate Calc
+note right : type check passes\nrange check passes
+Calc -> Calc : result=1; loop range(2,6)
+Calc -->> Caller : 120
+deactivate Calc
+
+== Scenario B: factorial(5.0) type error ==
+
+Caller ->> Calc : factorial(5.0)
+activate Calc
+note right : isinstance(5.0, int) is False
+Calc -->> Caller : TypeError("n must be an int")
+deactivate Calc
+
+== Scenario C: factorial(-5) value error ==
+
+Caller ->> Calc : factorial(-5)
+activate Calc
+note right : type check passes\n-5 < 0 fails range check
+Calc -->> Caller : ValueError("n must be >= 0")
+deactivate Calc
+
+== Scenario D: divide(10, 0) zero division ==
+
+Caller ->> Calc : divide(10, 0)
+activate Calc
+note right : Python raises ZeroDivisionError
+Calc -->> Caller : ZeroDivisionError
+deactivate Calc
+
+@enduml

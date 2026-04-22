@@ -79,3 +79,14 @@ N/A — no code changes.
 Duration: 196.6s | Cost: $0.471889 USD | Turns: 16
 
 Duration: 190.0s | Cost: $0.469532 USD | Turns: 9
+
+## Run: update-diagrams — Factorial Operation UML (2026-04-22)
+
+- **Branch:** task/issue-241-factorial-operation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — Class diagram updated with factorial method
+  - `artifacts/activity_factorial.puml` — New activity diagram for factorial validation and computation flow
+  - `artifacts/sequence_calculator_operations.puml` — New sequence diagram for key calculator operation scenarios
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

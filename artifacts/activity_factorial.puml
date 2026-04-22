@@ -1,0 +1,30 @@
+@startuml activity_factorial
+
+start
+
+:Caller invokes Calculator.factorial(n);
+
+if (isinstance(n, int) AND NOT isinstance(n, bool)?) then (yes)
+else (no)
+    :raise TypeError("n must be an int");
+    stop
+endif
+
+if (n >= 0?) then (yes)
+else (no)
+    :raise ValueError("n must be >= 0");
+    stop
+endif
+
+:result = 1;
+
+:for i in range(2, n+1);
+while (i <= n?) is (yes)
+    :result *= i;
+endwhile (no)
+
+:return result;
+
+stop
+
+@enduml
