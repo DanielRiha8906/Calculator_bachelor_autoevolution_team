@@ -101,8 +101,16 @@ jobs:
             - Do not modify workflow or governance files unless explicitly required by the issue
 
             Progress logging format (mandatory):
-            Write this line exactly as plain text, without markdown, bold, italics or any formatting:
+            Use this exact format:
+            ## Run: Issue #<N> — <title> (<date>)                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                          
+            - **Branch:** <branch>                                                                                                                                                                                                                                                                  
+            - **PR target:** <base branch>                                                                                                                                                                                                                                                          
+            - **Files changed:**                                                                                                                                                                                                                                                                    
+            - `path/to/file.py` — description of change       
             Duration: PENDING | Cost: PENDING | Turns: PENDING
+    
+            Write the last line exactly as plain text, without markdown, bold, italics or any formatting:
             Do not estimate or guess these values — Do not modify spacing, punctuation or add any symbols.
             The workflow will replace PENDING with real values after this run completes.
 
