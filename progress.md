@@ -11,7 +11,7 @@
 - **Risks:** None — Calculator core untouched; happy-path behavior unchanged; mode detection defaults to interactive for backward compatibility
 - **Tests passed:** 495 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 512.6s | Cost: $1.121016 USD | Turns: 17
 
 ## Run: update-diagrams — Interactive CLI UML diagrams (2026-04-22)
 
