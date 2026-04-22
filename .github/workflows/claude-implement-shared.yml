@@ -101,10 +101,22 @@ jobs:
             - Do not modify workflow or governance files unless explicitly required by the issue
 
             Progress logging format (mandatory):
-            Write this line exactly as plain text, without markdown, bold, italics or any formatting:
+            Append a new entry to progress.md using this exact format:
+
+            ## Run: Issue #<N> — <title> (<date>)
+
+            - **Branch:** <branch>
+            - **PR target:** <base branch>
+            - **Files changed:**
+              - `path/to/file.py` — description of change
+            - **Purpose:** <why this change was made>
+            - **Risks:** <risks or "None">
+            - **Tests passed:** <X passed, Y failed>
+
             Duration: PENDING | Cost: PENDING | Turns: PENDING
-            Do not estimate or guess these values — Do not modify spacing, punctuation or add any symbols.
-            The workflow will replace PENDING with real values after this run completes.
+
+            The last line must be written exactly as plain text, no markdown, no bold, no symbols.
+            Do not estimate or guess these values — the workflow will replace PENDING with real values after this run completes.
 
       - name: Log cost and turns
         if: always()
@@ -233,10 +245,19 @@ jobs:
             - Do not modify workflow or governance files
 
             Progress logging format (mandatory):
-            Write this line exactly as plain text, without markdown, bold, italics or any formatting:
+            Append a new entry to progress.md using this exact format:
+
+            ## Run: update-diagrams — <title> (<date>)
+
+            - **Branch:** <branch>
+            - **PR target:** <base branch>
+            - **Files changed:**
+              - `artifacts/file.puml` — description of change
+
             Duration: PENDING | Cost: PENDING | Turns: PENDING
-            Do not estimate or guess these values — Do not modify spacing, punctuation or add any symbols.
-            The workflow will replace PENDING with real values after this run completes.
+
+            The last line must be written exactly as plain text, no markdown, no bold, no symbols.
+            Do not estimate or guess these values — the workflow will replace PENDING with real values after this run completes.
 
       - name: Patch progress.md with diagram run cost
         if: always()
