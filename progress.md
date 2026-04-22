@@ -17,4 +17,4 @@ None. Change is test-only and additive; no production code modified.
 23 passed, 0 failed, 0 errors
 
 ### Tokens / cost / turns
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 167.6s | Cost: $0.371821 USD | Turns: 15
