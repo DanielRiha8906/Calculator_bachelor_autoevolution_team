@@ -173,3 +173,46 @@ class TestMultiplication:
     def test_multiply_with_strings_and_lists(self, calculator, a, b, expected):
         """Test that multiply with strings/lists works due to Python's * operator behavior."""
         assert calculator.multiply(a, b) == expected
+
+
+class TestFactorial:
+    """Tests for the factorial method with valid and invalid inputs."""
+
+    @pytest.mark.parametrize("n,expected", [
+        (0, 1),
+        (1, 1),
+        (2, 2),
+        (3, 6),
+        (5, 120),
+        (10, 3628800),
+        (20, 2432902008176640000),
+        (100, 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000),
+    ])
+    def test_factorial_valid_integers(self, calculator, n, expected):
+        """Test factorial with valid non-negative integers."""
+        assert calculator.factorial(n) == expected
+
+    @pytest.mark.parametrize("n", [
+        -1,
+        -5,
+        -100,
+    ])
+    def test_factorial_negative_integers_raise_valueerror(self, calculator, n):
+        """Test that negative integers raise ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(n)
+
+    @pytest.mark.parametrize("n", [
+        3.0,
+        2.5,
+        "5",
+        None,
+        [],
+        {},
+        True,
+        False,
+    ])
+    def test_factorial_non_integer_types_raise_typeerror(self, calculator, n):
+        """Test that non-integer types raise TypeError."""
+        with pytest.raises(TypeError):
+            calculator.factorial(n)

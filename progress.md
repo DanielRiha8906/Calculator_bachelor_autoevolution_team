@@ -46,3 +46,16 @@ Duration: 214.9s | Cost: $0.488829 USD | Turns: 15
 - **Date:** 2026-04-22
 
 Duration: 231.9s | Cost: $0.505006 USD | Turns: 17
+
+## Run: Issue #239 — V2 Task 3 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-239-add-factorial
+- **PR target:** exp2/naive-team
+- **Files changed:**
+- `src/calculator.py` — added `factorial(self, n: int) -> int` method with type/value validation
+- `tests/test_calculator.py` — added `TestFactorial` class with 19 parametrized test cases
+- **Purpose:** Implement factorial operation for the Calculator class, handling non-negative integers, rejecting booleans, floats, and other non-integer types with TypeError, and negative integers with ValueError.
+- **Risks:** None — isolated method addition, no existing code modified.
+- **Tests passed:** 89/89 (70 pre-existing + 19 new)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
