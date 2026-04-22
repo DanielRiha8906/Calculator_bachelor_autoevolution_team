@@ -1,3 +1,24 @@
+## Run: Issue #241 — V2 Task 3 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-241-factorial-operation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+- `src/calculator.py` — added factorial() instance method with type/value validation
+- `tests/test_factorial.py` — created 26 tests covering happy path, boundary cases, and error cases
+
+### Purpose
+Add factorial operation to the Calculator class. Handles non-negative integers (0! = 1, 1! = 1, n!), rejects negative integers with ValueError, and rejects non-integer types (bool, float, str, None, collections) with TypeError.
+
+### Risks
+None identified. New method is isolated; no existing methods modified.
+
+### Test results
+134 passed, 0 failed (108 pre-existing + 26 new factorial tests)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
+---
+
 ## Run: Issue #238 — V2 Task 2 Expert/team unit test suite
 
 - **Branch:** task/issue-238-unit-test-suite
