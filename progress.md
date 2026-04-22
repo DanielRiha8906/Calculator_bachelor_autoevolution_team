@@ -214,4 +214,4 @@ Duration: 224.1s | Cost: $0.543512 USD | Turns: 6
   - `artifacts/activity_interactive_session.puml` — new activity diagram for interactive session with history command flow
   - `artifacts/sequence_calculator_session.puml` — new sequence diagram for complete calculator session with history
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 242.4s | Cost: $0.685754 USD | Turns: 5
