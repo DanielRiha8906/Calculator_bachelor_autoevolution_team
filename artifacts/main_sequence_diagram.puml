@@ -1,0 +1,25 @@
+@startuml main_sequence_diagram
+
+participant "main" as main
+participant "Calculator" as calc
+
+main -> calc : <<create>>
+activate calc
+
+main ->> calc : add(10, 5)
+calc -->> main : 15
+
+main ->> calc : subtract(10, 5)
+calc -->> main : 5
+
+main ->> calc : multiply(10, 5)
+calc -->> main : 50
+
+main ->> calc : divide(10, 5)
+calc -->> main : 2.0
+
+deactivate calc
+
+main -> main : print results
+
+@enduml
