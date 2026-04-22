@@ -158,3 +158,24 @@ Duration: 297.1s | Cost: $0.812856 USD | Turns: 15
   - `artifacts/sequence_diagram_cli_execution.puml` — new sequence diagram tracing __main__ → cli_main → parse_args → execute_cli → OperationRegistry → Calculator → stdout
 
 Duration: 196.9s | Cost: $0.514913 USD | Turns: 12
+
+## Run: Issue #255 — V2 Task 8 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-255-input-validation
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/validation.py` — new module with OperandValidationError, OperationValidationError, validate_operand(), validate_operation(), get_validation_error_message()
+  - `src/io_handler.py` — added MAX_RETRIES=3 constant, InputRetryExhaustedError exception, retry loops in get_operand() and get_operation_choice()
+  - `src/__main__.py` — imports InputRetryExhaustedError, wraps input calls to catch retry exhaustion and break the main loop
+  - `src/cli.py` — uses validate_operand() for operand parsing, prints descriptive errors to stderr, sys.exit(1) on invalid input
+  - `tests/test_io_handler.py` — updated test_get_operation_choice_multiple_invalid_inputs to use 2 invalid inputs (not 3) to stay under MAX_RETRIES
+  - `tests/test_interactive_session.py` — updated test_handles_invalid_operand_input side_effect to supply both operands after retry
+  - `tests/test_input_validation.py` — new file: 58 tests for validation module (validate_operand, validate_operation, get_validation_error_message)
+  - `tests/test_io_handler_guided_mode.py` — new file: 25 tests for retry behavior in get_operand() and get_operation_choice()
+  - `tests/test_cli_mode_validation.py` — new file: 53 tests for CLI error handling, exit codes, stderr output
+  - `tests/test_guided_mode_integration.py` — new file: 23 tests for guided mode integration with retries and session termination
+- **Purpose:** Add input validation with bounded retries to guided interactive mode; fail-fast error handling to CLI mode
+- **Risks:** None
+- **Tests passed:** 437 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,7 +1,7 @@
 """Entry point for the interactive calculator session."""
 
 from .calculator import Calculator
-from .io_handler import InputHandler
+from .io_handler import InputHandler, InputRetryExhaustedError
 from .operations import OperationRegistry
 
 
@@ -11,7 +11,8 @@ def main() -> None:
     Initialises Calculator, InputHandler, and OperationRegistry, then enters
     an infinite loop that prompts the user for an operation and operands,
     invokes the operation, and displays the result.  The loop exits cleanly
-    on KeyboardInterrupt or when the user types "exit" / "quit".
+    on KeyboardInterrupt, when the user types "exit" / "quit", or when the
+    user exhausts all retry attempts for any input prompt.
     """
     calc = Calculator()
     handler = InputHandler()
@@ -21,7 +22,10 @@ def main() -> None:
 
     while True:
         try:
-            choice = handler.get_operation_choice(registry.list_operations())
+            try:
+                choice = handler.get_operation_choice(registry.list_operations())
+            except InputRetryExhaustedError:
+                break
 
             if choice in ("exit", "quit"):
                 print("Goodbye!")
@@ -30,14 +34,17 @@ def main() -> None:
             method, arity, description = registry.get_operation(choice)
 
             operands: list[float] = []
-            if arity == 1:
-                value = handler.get_operand("Enter value: ")
-                if choice == "factorial":
-                    value = int(value)
-                operands.append(value)
-            else:
-                operands.append(handler.get_operand("Enter first operand: "))
-                operands.append(handler.get_operand("Enter second operand: "))
+            try:
+                if arity == 1:
+                    value = handler.get_operand("Enter value: ")
+                    if choice == "factorial":
+                        value = int(value)
+                    operands.append(value)
+                else:
+                    operands.append(handler.get_operand("Enter first operand: "))
+                    operands.append(handler.get_operand("Enter second operand: "))
+            except InputRetryExhaustedError:
+                break
 
             result = method(*operands)
             handler.display_result(description, operands, result)
