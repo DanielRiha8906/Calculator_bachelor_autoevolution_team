@@ -11,7 +11,7 @@
 - **Risks:** None — changes are purely additive; no existing method signatures or behaviors were altered
 - **Tests passed:** 772 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 281.5s | Cost: $0.694182 USD | Turns: 14
 
 ## Run: Issue #234 — Division-by-zero unit tests
 
