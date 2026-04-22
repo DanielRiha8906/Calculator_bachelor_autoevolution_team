@@ -22,7 +22,7 @@
 - **Risks:** Low — backward compatibility preserved via shim at src/calculator.py; all existing tests updated to new canonical import path
 - **Tests passed:** 947 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 440.3s | Cost: $1.037619 USD | Turns: 16
 
 ## Run: update-diagrams — CalculatorSession Refactor Diagrams (2026-04-22)
 
