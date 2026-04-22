@@ -1,0 +1,17 @@
+@startuml activity_divide
+
+start
+
+:Caller invokes Calculator.divide(a, b);
+
+if (b == 0 or b == 0.0?) then (yes)
+    :Python raises ZeroDivisionError;
+    :Exception propagates to caller;
+    stop
+else (no)
+    :Python evaluates a / b;
+    :Return numeric result to caller;
+    stop
+endif
+
+@enduml

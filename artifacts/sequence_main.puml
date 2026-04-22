@@ -1,0 +1,27 @@
+@startuml sequence_main
+
+participant "main()" as Main
+participant "Calculator" as Calc
+
+Main -> Calc : <<create>>
+activate Calc
+
+Main ->> Calc : add(a, b)
+Calc -->> Main : result
+
+Main ->> Calc : subtract(a, b)
+Calc -->> Main : result
+
+Main ->> Calc : multiply(a, b)
+Calc -->> Main : result
+
+Main ->> Calc : divide(a, b)
+alt b != 0
+    Calc -->> Main : result
+else b == 0
+    Calc -->> Main : ZeroDivisionError (propagates)
+end
+
+deactivate Calc
+
+@enduml
