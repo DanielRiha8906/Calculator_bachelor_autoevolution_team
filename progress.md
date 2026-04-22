@@ -1,3 +1,26 @@
+## Run: Issue #271 — V2 Task 13 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-271-documentation
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `docs/ARCHITECTURE.md` — new developer-facing architecture overview covering all modules, dependency graph, and public APIs
+  - `docs/OPERATION_REFERENCE.md` — new complete operation catalog with signatures, constraints, and error behavior for all 12 operations
+  - `docs/SESSION_BEHAVIOR.md` — new session lifecycle, history management, error logging categories, retry semantics, and data isolation documentation
+  - `docs/USER_GUIDE.md` — new end-user guide covering installation, running modes, all operations, examples, and session behavior
+  - `docs/CLI_REFERENCE.md` — new CLI/bash guide covering invocation, mode detection, retry vs. fast-fail behavior, and bash examples
+  - `README.md` — added Documentation section linking to all five new docs files
+  - `tests/test_documentation_links.py` — 9 tests verifying all docs files exist and README links are valid
+  - `tests/test_formatter_consistency.py` — 17 tests validating formatter output matches documented format
+  - `tests/test_session_isolation.py` — 11 tests ensuring session independence and state isolation
+  - `tests/test_cli_mode_behavior.py` — 20 tests verifying CLI vs. interactive mode behavior
+  - `tests/test_error_logging_documented.py` — 17 tests validating all 5 error logging categories
+  - `tests/test_user_guide_examples.py` — 27 tests verifying all documented calculator operations and features
+- **Purpose:** Add comprehensive written documentation for users and developers covering all calculator functionality, session behavior, architecture, and CLI usage; add tests to keep documentation aligned with implementation
+- **Risks:** None — documentation only; no src/ changes; all 1048 tests pass (101 new + 947 existing)
+- **Tests passed:** 1048 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #268 — V2 Task 12 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-268-expert-team-refactor
