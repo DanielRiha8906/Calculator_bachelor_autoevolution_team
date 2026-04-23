@@ -43,7 +43,12 @@ def _is_calculator_expression(arg: str) -> bool:
 
 
 def main() -> None:
-    """Start the calculator in REPL or CLI mode depending on arguments.
+    """Start the calculator in GUI, REPL, or CLI mode depending on arguments.
+
+    If ``--gui`` or ``-g`` is present in the arguments, launches the
+    Tkinter-based :class:`~src.gui.CalculatorGUI`.  ``CalculatorGUI`` is
+    imported lazily inside this branch so that the module remains usable
+    in environments where ``tkinter`` is not available (e.g. headless CI).
 
     If a command-line argument is present (beyond the script name) **and**
     that argument looks like a calculator expression (not a file path or a
@@ -57,6 +62,14 @@ def main() -> None:
     A ``KeyboardInterrupt`` is handled gracefully inside
     ``CalculatorREPL.run``; this function itself will not propagate it.
     """
+    if "--gui" in sys.argv or "-g" in sys.argv:
+        # Lazy import so that missing tkinter does not break CLI/REPL usage.
+        from .gui import CalculatorGUI  # noqa: PLC0415
+        calculator = Calculator()
+        app = CalculatorGUI(calculator)
+        app.mainloop()
+        return
+
     if len(sys.argv) > 1 and _is_calculator_expression(sys.argv[1]):
         handler = CLIHandler(sys.argv[1])
         sys.exit(handler.run())

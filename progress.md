@@ -1,4 +1,18 @@
 
+## Run: Issue #275 — V2 Task 15 - Naive/team (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/gui.py` — new tkinter-based CalculatorGUI class wrapping existing Calculator API
+  - `src/main.py` — added --gui/-g flag to launch GUI mode; all existing CLI/REPL paths unchanged
+  - `tests/test_gui.py` — 100 tests covering instantiation, expression management, evaluation, mode switching, button handlers, and main() GUI flag
+- **Purpose:** Add a tkinter GUI for the calculator app while preserving all existing functionality
+- **Risks:** None — GUI is a peer interface layer; zero changes to Calculator, engine, or business logic
+- **Tests passed:** 1606 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #353 — Add scientific mode with interactive mode switching (2026-04-23)
 
 - **Branch:** task/issue-272-scientific-mode
