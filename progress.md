@@ -432,4 +432,4 @@ Duration: 338.8s | Cost: $0.949443 USD | Turns: 25
   - `artifacts/sequence-diagram-mode-selection-startup.puml` — new diagram: startup mode selection message sequence
   - `artifacts/sequence-diagram-mode-switch-runtime.puml` — new diagram: mid-session mode switching message sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 276.4s | Cost: $0.642867 USD | Turns: 5
