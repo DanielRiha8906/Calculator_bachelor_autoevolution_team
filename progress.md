@@ -467,3 +467,14 @@ Duration: 276.4s | Cost: $0.642867 USD | Turns: 5
 - **Tests passed:** 1216 passed, 0 failed
 
 Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
+
+## Run: update-diagrams — tkinter GUI UML diagrams (2026-04-23)
+
+- **Branch:** task/issue-277-tkinter-gui
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_gui_architecture.puml` — class diagram of GUI layer, adapter, session, and calculator classes
+  - `artifacts/activity_calculator_execution.puml` — activity diagram of the execute operation flow
+  - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

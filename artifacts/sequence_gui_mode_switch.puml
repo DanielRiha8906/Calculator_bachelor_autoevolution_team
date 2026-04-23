@@ -1,0 +1,38 @@
+@startuml sequence_gui_mode_switch
+
+participant User
+participant CalculatorWindow
+participant GUISessionAdapter
+participant CalculatorSession
+participant ModeConfig
+
+== User switches to Scientific mode ==
+
+User -> CalculatorWindow : clicks "Scientific" button
+activate CalculatorWindow
+
+CalculatorWindow -> GUISessionAdapter : set_mode("scientific")
+activate GUISessionAdapter
+
+GUISessionAdapter -> CalculatorSession : set_mode("scientific")
+activate CalculatorSession
+
+CalculatorSession -> ModeConfig : get_mode_config("scientific")
+activate ModeConfig
+ModeConfig --> CalculatorSession : ModeConfig(SCIENTIFIC, [ops...])
+deactivate ModeConfig
+
+CalculatorSession -> CalculatorSession : _current_mode = "scientific"\n_operation_list = scientific_ops
+CalculatorSession --> GUISessionAdapter : True
+deactivate CalculatorSession
+
+GUISessionAdapter --> CalculatorWindow : (returns)
+deactivate GUISessionAdapter
+
+CalculatorWindow -> CalculatorWindow : update_operation_buttons()
+note right: Destroys old buttons,\ncreates new buttons\nfor scientific ops
+
+CalculatorWindow --> User : Operation buttons refreshed
+deactivate CalculatorWindow
+
+@enduml

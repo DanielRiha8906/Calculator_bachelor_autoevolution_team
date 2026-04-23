@@ -1,0 +1,91 @@
+@startuml class_gui_architecture
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src.gui" {
+
+    class CalculatorWindow {
+        -_adapter: GUISessionAdapter
+        -_selected_op: str | None
+        -_ops_canvas: tk.Canvas
+        -_operand1_entry: ttk.Entry
+        -_operand2_entry: ttk.Entry
+        -_result_var: tk.StringVar
+        -_history_text: tk.Text
+        --
+        +on_mode_changed(mode_name: str) : None
+        +on_operation_selected(op_name: str) : None
+        +on_execute_clicked() : None
+        +on_clear_history_clicked() : None
+        ..
+        -update_operation_buttons() : None
+        -update_history_display() : None
+        -_set_result(text: str, is_error: bool) : None
+    }
+
+    class GUISessionAdapter {
+        -_session: CalculatorSession
+        --
+        +execute_operation_safe(op_name: str, operands: list) : tuple[str, str]
+        +set_mode(mode_name: str) : None
+        +get_operations() : list[str]
+        +get_history() : list[str]
+        +clear_history() : None
+        +get_arity(op_name: str) : int
+    }
+
+    note bottom of CalculatorWindow
+      Constructed by run_gui().
+      Calls .mainloop() to start event loop.
+    end note
+}
+
+package "src" {
+
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        -_error_logger: ErrorLogger
+        -_current_mode: str | None
+        -_operation_list: list[str]
+        --
+        +set_mode(mode_name: str) : bool
+        +get_current_mode() : str | None
+        +execute_operation(op_name: str, operands: list) : tuple
+        +get_arity(op_name: str) : int
+        +get_history() : list[str]
+        +get_operation_list() : list[str]
+    }
+
+    class OperationHistory {
+        -_entries: list[str]
+        --
+        +record_operation(op_name: str, args: list, result: object) : None
+        +get_history() : list[str]
+        +clear() : None
+    }
+}
+
+package "src.core" {
+
+    class Calculator {
+        +add(a, b)
+        +subtract(a, b)
+        +multiply(a, b)
+        +divide(a, b)
+        +factorial(n)
+        +square(x) / cube(x)
+        +square_root(x) / cube_root(x)
+        +sin(x) / cos(x) / tan(x) ...
+    }
+}
+
+"tk.Tk" <|-- CalculatorWindow : extends
+
+CalculatorWindow *--> GUISessionAdapter : delegates to
+GUISessionAdapter *--> CalculatorSession : wraps
+CalculatorSession --> Calculator : executes via getattr
+CalculatorSession *--> OperationHistory : owns
+
+@enduml

@@ -1,0 +1,40 @@
+@startuml activity_calculator_execution
+
+start
+
+:User clicks "Execute";
+
+if (Operation selected?) then (no)
+    :Show error: "No operation selected";
+    stop
+else (yes)
+endif
+
+:Parse operand inputs from entry fields;
+
+if (Operands valid floats?) then (no)
+    :Show error in red;
+    stop
+else (yes)
+endif
+
+:adapter.execute_operation_safe(op_name, operands);
+
+:session.execute_operation(op_name, operands);
+
+:calculator.<op_name>(*operands) via getattr;
+
+if (Calculation succeeds?) then (yes)
+    :session records result to OperationHistory;
+    :Return (result_str, "");
+    :Display result in green;
+    :update_history_display();
+else (no)
+    :session logs error via ErrorLogger;
+    :Return ("", error_msg);
+    :Display error message in red;
+endif
+
+stop
+
+@enduml
