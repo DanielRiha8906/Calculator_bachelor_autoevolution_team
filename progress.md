@@ -478,3 +478,17 @@ Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
   - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
 
 Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
+
+## Run: Issue #363 — V2 Task 16 - Expert/team (2026-04-23)
+
+- **Branch:** task/issue-363-ios-calculator-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/ios_theme.py` — new file with `_THEME` dict (17 colour/font constants) and `OPERATION_SYMBOLS` dict (24 operation-to-glyph mappings)
+  - `src/gui/window.py` — iOS-style redesign of CalculatorWindow: `_build_ios_layout()`, `_rebuild_button_grid()`, `_on_mode_toggle()`, `_get_current_operations()`, `_on_operation_clicked()`; legacy stubs preserved for backward compatibility
+  - `tests/test_gui_window_ios.py` — 85 new tests covering theme constants, widget creation, button grid, mode toggle, operation clicks, hover effects, and backward compatibility
+- **Purpose:** Rebuild GuiCalculator layout as modern iOS-style calculator: full-width result display, single mode-toggle button, 4-column symbol-labelled button grid with orange/dark/grey colour scheme and hover effects; all styling centralised in _THEME
+- **Risks:** Execution flow changed — no operand entry fields in new layout; legacy on_execute_clicked preserved but not wired to UI
+- **Tests passed:** 1416 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
