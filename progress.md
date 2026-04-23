@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — Add tkinter GUI for calculator app (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for CalculatorGUI and its relationships to Calculator, ExpressionParser, InputValidator, and peer entry points
+  - `artifacts/activity_diagram_gui_evaluation.puml` — activity diagram for GUI button-press and expression evaluation flow
+  - `artifacts/sequence_diagram_gui_evaluation.puml` — sequence diagram for GUI expression evaluation showing parse/validate/dispatch/display chain
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #275 — V2 Task 15 - Naive/team (2026-04-23)
 
 - **Branch:** task/issue-275-tkinter-gui

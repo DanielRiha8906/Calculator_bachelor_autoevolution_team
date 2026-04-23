@@ -1,0 +1,61 @@
+@startuml activity_diagram_gui_evaluation
+
+skinparam ActivityDiamondBackgroundColor lightyellow
+skinparam ActivityBackgroundColor lightblue
+skinparam ActivityBorderColor navy
+
+start
+
+:User presses a button;
+
+if (label == "C"?) then (yes)
+  :_clear()\nReset expression and display;
+  stop
+else (no)
+  if (label == "←"?) then (yes)
+    :_backspace()\nRemove last character;
+    :Update display;
+    stop
+  else (no)
+    if (label is operator\n(+, -, *, /)?) then (yes)
+      :_append_operator()\nTranslate symbol to word\nprepend to expression;
+      :Update display;
+      stop
+    else (no)
+      if (label is digit\nor decimal?) then (yes)
+        :_append(label)\nConcatenate to expression;
+        :Update display;
+        stop
+      else (label == "=")
+        :_evaluate();
+
+        :Phase 1 — Parse\nExpressionParser.parse(raw);
+        if (ValueError raised?) then (yes)
+          :_show_error(message)\nDisplay error;
+          stop
+        else (no)
+          :(operation, operands) ready;
+
+          :Phase 2 — Validate\nInputValidator.validate(op, operands);
+          if (ValueError raised?) then (yes)
+            :_show_error(message)\nDisplay error;
+            stop
+          else (no)
+            :Operands valid;
+
+            :Phase 3 — Dispatch\ngetattr(calculator, operation)(*operands);
+            if (Exception raised\n(ZeroDivisionError,\nValueError, etc.)?) then (yes)
+              :_show_error(message)\nDisplay error;
+              stop
+            else (no)
+              :_set_display(str(result))\nStore result as new expression;
+              stop
+            endif
+          endif
+        endif
+      endif
+    endif
+  endif
+endif
+
+@enduml
