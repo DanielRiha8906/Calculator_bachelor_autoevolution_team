@@ -1,0 +1,46 @@
+@startuml gui_core_integration
+
+skinparam componentStyle rectangle
+
+package "Entry Points" {
+    component [gui_main.main()] as GUIMain
+    component [__main__.main() (CLI)] as CLIMain
+}
+
+package "GUI Layer" {
+    component [CalculatorGUI] as GUI
+    component [SessionHistory] as SessionHist
+}
+
+package "Core Layer" {
+    component [Calculator] as Calc
+    component [OperationRegistry] as Registry
+    component [ModeManager] as Mode
+    component [validation\n(validate_operand)] as Validation
+}
+
+package "CLI History" {
+    component [OperationHistory] as CLIHist
+}
+
+' GUI entry path
+GUIMain --> GUI : creates and starts
+GUIMain --> SessionHist : creates, passes to GUI
+GUI --> Calc : creates
+GUI --> Registry : creates (with Calc)
+GUI --> Mode : creates
+GUI ..> Validation : calls validate_operand
+
+' CLI entry path
+CLIMain --> Calc : creates
+CLIMain --> Registry : creates (with Calc)
+CLIMain --> Mode : creates
+CLIMain --> CLIHist : creates
+
+' Both paths share Core Layer
+note bottom of Calc
+  Stateless — shared by both
+  GUI and CLI entry points
+end note
+
+@enduml

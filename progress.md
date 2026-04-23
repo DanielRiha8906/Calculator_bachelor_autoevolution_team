@@ -1,3 +1,46 @@
+## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (#276) (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/gui.py` — added operand entry count guard and TypeError to exception handler in `_execute_operation()`
+  - `tests/test_gui.py` — replaced `event_generate("<<ListboxSelect>>")` with direct handler calls to fix test reliability in headless environment
+- **Purpose:** Fix 5 failing GUI tests caused by unreliable tkinter event generation in test context and unguarded missing-operand execution path
+- **Risks:** None
+- **Tests passed:** 923 passed, 58 skipped, 0 failed
+
+Duration: 450.1s | Cost: $0.901835 USD | Turns: 21
+
+## Run: update-diagrams — Tkinter GUI layer diagrams (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui_layer.puml` — new class diagram for CalculatorGUI and its engine dependencies
+  - `artifacts/sequence_diagram_gui_execution.puml` — new sequence diagram for GUI calculation flow with error paths
+  - `artifacts/activity_diagram_gui_mode_switch.puml` — new activity diagram for mode switch and operation filtering
+
+Duration: 210.4s | Cost: $0.577896 USD | Turns: 14
+
+## Run: Issue #276 — V2 Task 15 - Structured/team (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/session_history.py` — new in-memory session-scoped operation history class (SessionHistory)
+  - `src/gui.py` — new tkinter-based GUI class (CalculatorGUI) with operation selection, operand input, result display, mode switching, and session history view
+  - `src/gui_main.py` — new entry point for launching the GUI application
+  - `src/__init__.py` — added SessionHistory and guarded CalculatorGUI exports
+  - `src/__main__.py` — added --gui flag to launch GUI; existing CLI behavior unchanged
+  - `tests/test_session_history.py` — 22 unit tests for SessionHistory
+  - `tests/test_gui.py` — 38 integration tests for CalculatorGUI (skipped in headless CI; designed for display environments)
+  - `tests/test_gui_main.py` — 6 tests for gui_main entry point (skipped in headless CI)
+- **Purpose:** Add tkinter GUI that exposes simple and scientific mode operations, operand input, result display, and session history, without breaking existing CLI/programmatic access
+- **Risks:** GUI tests skip gracefully in headless CI; tkinter must be available for GUI execution
+- **Tests passed:** 946 passed, 44 skipped, 0 failed
+
+Duration: 487.7s | Cost: $1.133556 USD | Turns: 16
+
 ## Run: Issue #273 — V2 Task 14 - Structured/team (2026-04-22)
 
 - **Branch:** task/issue-273-scientific-mode
@@ -363,3 +406,29 @@ Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
   - `artifacts/activity_diagram_interactive_session.puml` — updated to show mode-aware loop with get_available_operations, get_mode_display_name, and mode-switch branch
 
 Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
+
+## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `tests/conftest.py` — new autouse fixture to skip test_gui* files when no DISPLAY/WAYLAND_DISPLAY is set
+  - `tests/test_gui.py` — added `pytestmark = pytest.mark.gui` marker
+  - `tests/test_gui_main.py` — added `pytestmark = pytest.mark.gui` marker
+- **Purpose:** Fix 28 GUI test failures in headless CI; `pytest.importorskip("tkinter")` only guards against missing installation, not missing display server — added conftest fixture that skips GUI tests before tk.Tk() is ever instantiated
+- **Risks:** None — change is additive; GUI tests still run normally when DISPLAY is available
+- **Tests passed:** 923 passed, 58 skipped, 0 failed
+
+Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
+
+## Run: update-diagrams — GUI Layer Diagrams for PR #359 (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — Class diagram showing CalculatorGUI composition and dependencies on Calculator, OperationRegistry, ModeManager, SessionHistory, and validation
+  - `artifacts/gui_operation_execution_flow.puml` — Activity diagram for the full operation execution flow from listbox selection through validation, calculation, and history recording
+  - `artifacts/gui_startup_sequence.puml` — Sequence diagram of GUI startup: object construction order from gui_main.main() through CalculatorGUI initialization
+  - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
+
+Duration: 250.8s | Cost: $0.544021 USD | Turns: 5

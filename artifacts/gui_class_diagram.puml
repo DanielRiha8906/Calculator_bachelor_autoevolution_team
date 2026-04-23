@@ -1,0 +1,121 @@
+@startuml gui_class_diagram
+
+skinparam classAttributeIconSize 0
+
+package "GUI Layer" {
+    class CalculatorGUI {
+        +root: tk.Tk
+        -_history: SessionHistory
+        -_calc: Calculator
+        -_registry: OperationRegistry
+        -_mode_manager: ModeManager
+        -_operand_entries: list
+        -_ops_listbox: tk.Listbox
+        -_ops_keys: list
+        -_mode_label: tk.Label
+        -_mode_button: tk.Button
+        -_inputs_frame: tk.LabelFrame
+        -_execute_button: tk.Button
+        -_result_label: tk.Label
+        -_history_text: ScrolledText
+        --
+        +__init__(root: tk.Tk, history: SessionHistory)
+        +run()
+        -_build_widgets()
+        -_populate_operations()
+        -_on_operation_selected(event)
+        -_rebuild_operand_inputs(arity: int)
+        -_execute_operation()
+        -_on_mode_switch()
+        -_on_clear_history()
+        -_refresh_history_display()
+        -_display_result()
+        -_display_error(msg: str)
+        -_clear_error()
+    }
+
+    class SessionHistory {
+        -_entries: list[dict]
+        --
+        +__init__()
+        +record_operation(operation: str, operands: list, result)
+        +get_history() : list[dict]
+        +display_history() : str
+        +clear()
+        +is_empty() : bool
+    }
+}
+
+package "Core Layer" {
+    class Calculator {
+        +add(a: float, b: float) : float
+        +subtract(a: float, b: float) : float
+        +multiply(a: float, b: float) : float
+        +divide(a: float, b: float) : float
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +power(x: float, y: float) : float
+        +log(x: float) : float
+        +ln(x: float) : float
+    }
+
+    class OperationRegistry {
+        -_registry: dict[str, tuple[callable, int, str]]
+        -_scientific_operations: set[str]
+        --
+        +__init__(calculator: Calculator)
+        +get_operation(key: str) : tuple
+        +list_operations() : list
+        +get_available_operations(mode_manager: ModeManager) : dict
+        +register_operation(key: str, method, arity: int, description: str)
+        +register_scientific(key: str, method, arity: int, description: str)
+        +get_scientific_operations() : set[str]
+    }
+
+    class ModeManager {
+        -_current_mode: CalculatorMode
+        --
+        +get_current_mode() : CalculatorMode
+        +switch_mode()
+        +set_mode(mode: CalculatorMode)
+        +get_mode_display_name() : str
+        +is_operation_available(op_name: str, scientific_ops: set) : bool
+    }
+
+    enum CalculatorMode {
+        NORMAL
+        SCIENTIFIC
+    }
+}
+
+package "Validation" {
+    class validation <<module>> {
+        +validate_operand(raw: str) : float
+    }
+
+    class OperandValidationError {
+    }
+
+    ValueError <|-- OperandValidationError
+    validation ..> OperandValidationError : raises
+}
+
+' Composition: CalculatorGUI owns these instances internally
+CalculatorGUI *-- Calculator       : creates internally
+CalculatorGUI *-- OperationRegistry : creates internally
+CalculatorGUI *-- ModeManager      : creates internally
+
+' Aggregation: SessionHistory is passed in via constructor
+CalculatorGUI o-- SessionHistory   : receives via constructor
+
+' Internal dependencies
+OperationRegistry --> Calculator   : holds bound methods
+ModeManager --> CalculatorMode     : uses
+
+' CalculatorGUI uses validate_operand in _execute_operation
+CalculatorGUI ..> validation       : calls validate_operand
+
+@enduml

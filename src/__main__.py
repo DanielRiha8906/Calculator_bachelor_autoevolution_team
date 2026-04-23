@@ -86,7 +86,10 @@ def main() -> None:
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and sys.argv[1] == "--gui":
+        from .gui_main import main as gui_main
+        gui_main()
+    elif len(sys.argv) > 1:
         from .cli import cli_main
         cli_main(sys.argv[1:])
     else:

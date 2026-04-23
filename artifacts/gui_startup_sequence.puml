@@ -1,0 +1,58 @@
+@startuml gui_startup_sequence
+
+participant "gui_main.main()" as Main
+participant "tk.Tk" as TkRoot
+participant "SessionHistory" as History
+participant "CalculatorGUI" as GUI
+participant "Calculator" as Calc
+participant "OperationRegistry" as Registry
+participant "ModeManager" as Mode
+
+Main -> TkRoot : tk.Tk()
+activate TkRoot
+TkRoot --> Main : root
+
+Main -> History : SessionHistory()
+activate History
+History --> Main : history
+
+Main -> GUI : CalculatorGUI(root, history)
+activate GUI
+
+GUI -> Calc : Calculator()
+activate Calc
+Calc --> GUI : calc
+deactivate Calc
+
+GUI -> Registry : OperationRegistry(calc)
+activate Registry
+Registry -> Registry : register all operations\n(add, subtract, multiply, divide,\nfactorial, square, cube,\nsquare_root, cube_root, power, log, ln)
+Registry --> GUI : registry
+deactivate Registry
+
+GUI -> Mode : ModeManager()
+activate Mode
+Mode --> GUI : mode_manager (default: NORMAL)
+deactivate Mode
+
+GUI -> GUI : _build_widgets()
+note right: Creates all tk widgets:\nmode label, mode button,\nops listbox, inputs frame,\nexecute button, result label,\nhistory ScrolledText
+
+GUI -> Registry : get_available_operations(mode_manager)
+activate Registry
+Registry --> GUI : filtered operation dict
+deactivate Registry
+
+GUI -> GUI : _populate_operations()
+note right: Fills ops_listbox\nwith operation names
+
+GUI --> Main : gui instance
+deactivate GUI
+
+Main -> GUI : gui.run()
+activate GUI
+GUI -> TkRoot : root.mainloop()
+note right: Blocks — event loop starts;\napplication is now interactive
+deactivate GUI
+
+@enduml

@@ -1,0 +1,60 @@
+@startuml gui_operation_execution_flow
+
+start
+
+:User clicks operation in listbox;
+:_on_operation_selected(event) fires;
+:Query registry for operation arity;
+:_rebuild_operand_inputs(arity);
+
+:User types operands;
+:User clicks Calculate;
+:_execute_operation() fires;
+
+if (Operation selected in listbox?) then (no)
+    :_display_error("No operation selected");
+    stop
+else (yes)
+    :get_operation(key) → (method, arity, description);
+endif
+
+:index = 0;
+
+while (index < arity?) is (yes)
+    :Read raw string from operand entry[index];
+    :validate_operand(raw_string);
+    if (Valid float?) then (no)
+        :_display_error(OperandValidationError message);
+        stop
+    else (yes)
+        :Store float value;
+    endif
+    :index = index + 1;
+endwhile (no)
+
+if (Operation is factorial?) then (yes)
+    :Convert operand to int;
+    if (Value is integer?) then (no)
+        :_display_error("Factorial requires integer");
+        stop
+    else (yes)
+    endif
+else (no)
+endif
+
+:Call method(*operands);
+
+if (Arithmetic error raised?) then (yes)
+    :_display_error(ZeroDivisionError\nor ValueError message);
+    stop
+else (no)
+    :result returned;
+endif
+
+:_display_result() — update result label;
+:_history.record_operation(key, operands, result);
+:_refresh_history_display() — update ScrolledText;
+
+stop
+
+@enduml
