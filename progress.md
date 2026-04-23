@@ -10,7 +10,7 @@
 - **Risks:** None — styling-only change, zero logic modifications, no new dependencies
 - **Tests passed:** 1808 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 307.2s | Cost: $0.819906 USD | Turns: 15
 
 ## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (PR #358) (2026-04-23)
 
