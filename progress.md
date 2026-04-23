@@ -1,15 +1,15 @@
-## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (2026-04-23)
+## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (#276) (2026-04-23)
 
 - **Branch:** task/issue-276-tkinter-gui
 - **PR target:** exp2/structured-team
 - **Files changed:**
-  - `src/gui.py` — added `_selected_operation_key` and `_selected_arity` instance variables; added operand count validation in `_execute_operation()` to display error instead of raising TypeError
-  - `tests/test_gui.py` — replaced `pytest.importorskip` with `_has_display()` function and module-level `pytestmark` for proper headless skip; fixed `test_two_operand_operation_add` to call `_on_operation_selected` directly; fixed three history tests to properly select operations before accessing entries; fixed `test_operation_with_zero_operands` to verify error display behavior
-- **Purpose:** Fix 28 headless CI test failures (TclError instead of skip) and 5 local test failures (wrong assertions, IndexError, TypeError) in the tkinter GUI PR
-- **Risks:** None — changes are confined to GUI source validation logic and test infrastructure
+  - `src/gui.py` — added operand entry count guard and TypeError to exception handler in `_execute_operation()`
+  - `tests/test_gui.py` — replaced `event_generate("<<ListboxSelect>>")` with direct handler calls to fix test reliability in headless environment
+- **Purpose:** Fix 5 failing GUI tests caused by unreliable tkinter event generation in test context and unguarded missing-operand execution path
+- **Risks:** None
 - **Tests passed:** 923 passed, 58 skipped, 0 failed
 
-Duration: 350.3s | Cost: $0.771609 USD | Turns: 17
+Duration: PENDING | Cost: PENDING | Turns: PENDING
 
 ## Run: update-diagrams — Tkinter GUI layer diagrams (2026-04-23)
 

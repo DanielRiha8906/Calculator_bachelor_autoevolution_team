@@ -273,6 +273,13 @@ class CalculatorGUI:
         key = self._ops_keys[selection[0]]
         method, arity, description = self._registry.get_operation(key)
 
+        # Guard: ensure the required entry widgets exist (e.g. if selection handler did not fire).
+        if len(self._operand_entries) < arity:
+            self._display_error(
+                f"Please select an operation and fill in {arity} operand(s)."
+            )
+            return
+
         # Validate and parse operands.
         operands: list[float] = []
         for idx, entry in enumerate(self._operand_entries[:arity]):
@@ -304,7 +311,7 @@ class CalculatorGUI:
         # Execute.
         try:
             result: float = method(*operands)
-        except (ValueError, ZeroDivisionError, ArithmeticError) as exc:
+        except (ValueError, ZeroDivisionError, ArithmeticError, TypeError) as exc:
             self._display_error(str(exc))
             return
 
