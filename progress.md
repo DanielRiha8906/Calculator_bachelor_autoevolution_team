@@ -15,7 +15,7 @@
 - **Risks:** GUI tests skip gracefully in headless CI; tkinter must be available for GUI execution
 - **Tests passed:** 946 passed, 44 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 487.7s | Cost: $1.133556 USD | Turns: 16
 
 ## Run: Issue #273 — V2 Task 14 - Structured/team (2026-04-22)
 
