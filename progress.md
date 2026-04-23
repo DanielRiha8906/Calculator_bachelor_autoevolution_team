@@ -1,3 +1,19 @@
+## Run: Fix PR #370 — Redesign GuiCalculator with iOS-style flat layout (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/session_adapter.py` — added pending operand tracking methods (store_first_operand, get_pending_operand, clear_pending_operand, use_pending flag in execute_operation_safe)
+  - `src/gui/window.py` — refactored display from dual-operand entry boxes to single accumulator display; added on_number_clicked, on_equals_clicked, on_history_toggle_clicked; binary ops now deferred until =; unary ops execute immediately; history hidden by default
+  - `tests/test_gui_window.py` — added 23 new tests for new event handlers and display behavior
+  - `tests/test_gui_session_adapter.py` — added 23 new tests for pending operand adapter methods
+  - `tests/test_gui_input_flow.py` — new file with 26 integration tests for button-driven iOS input flow
+- **Purpose:** Address unresolved maintainer feedback on PR #370: implement button-driven input model (not text-box entry), hide history by default with toggle button, execute binary ops on = press, execute unary ops immediately
+- **Risks:** Interaction model is fundamentally different from text-box entry; existing on_execute_clicked preserved as legacy path for interface compatibility
+- **Tests passed:** 1432 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — iOS GUI Redesign Diagrams (2026-04-23)
 
 - **Branch:** task/issue-363-ios-gui-redesign

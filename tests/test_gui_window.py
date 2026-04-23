@@ -139,6 +139,9 @@ class TestCalculatorWindowImportAndBasics:
             "on_clear_history_clicked",
             "update_history_display",
             "update_operation_buttons",
+            "on_number_clicked",
+            "on_equals_clicked",
+            "on_history_toggle_clicked",
         ]
 
         for method_name in required_methods:
@@ -722,3 +725,251 @@ class TestOperationSelectionWithModeChange:
 
         # After mode change, _set_result("") is called, which sets to "0"
         assert window._result_var.get() == "0"
+
+
+class TestNumberClickedHandler:
+    """Test suite for on_number_clicked event handler."""
+
+    def test_on_number_clicked_first_digit_replaces_zero(self, mock_tkinter, mock_adapter):
+        """Test that first digit replaces initial '0' display."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._display_value == "0"
+
+        window.on_number_clicked("5")
+
+        assert window._display_value == "5"
+        assert window._display_var.get() == "5"
+
+    def test_on_number_clicked_subsequent_digits_append(self, mock_tkinter, mock_adapter):
+        """Test that subsequent digits append to display."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window.on_number_clicked("5")
+        assert window._display_value == "5"
+
+        window.on_number_clicked("3")
+
+        assert window._display_value == "53"
+        assert window._display_var.get() == "53"
+
+    @pytest.mark.parametrize("digits", [
+        ("5", "3"),
+        ("1", "2", "3"),
+        ("9", "8", "7", "6"),
+    ])
+    def test_on_number_clicked_multiple_digits_accumulate(self, mock_tkinter, mock_adapter, digits):
+        """Test that multiple digit clicks accumulate correctly."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        for digit in digits:
+            window.on_number_clicked(digit)
+
+        expected = "".join(digits)
+        assert window._display_value == expected
+        assert window._display_var.get() == expected
+
+    def test_on_number_clicked_zero_after_nonzero(self, mock_tkinter, mock_adapter):
+        """Test that '0' appends normally after a non-zero digit."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window.on_number_clicked("5")
+        window.on_number_clicked("0")
+
+        assert window._display_value == "50"
+        assert window._display_var.get() == "50"
+
+    def test_on_number_clicked_updates_display_var(self, mock_tkinter, mock_adapter):
+        """Test that on_number_clicked updates _display_var."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window.on_number_clicked("7")
+
+        assert window._display_var.get() == "7"
+
+
+class TestEqualsClickedHandler:
+    """Test suite for on_equals_clicked event handler."""
+
+    def test_on_equals_clicked_is_callable(self, mock_tkinter, mock_adapter):
+        """Test that on_equals_clicked can be called."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        # Should not raise
+        window.on_equals_clicked()
+
+    def test_on_equals_clicked_with_no_pending_op(self, mock_tkinter, mock_adapter):
+        """Test on_equals_clicked when no binary operation is pending."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window._pending_binary_op = None
+        window._selected_op = None
+
+        # Should fall back to on_execute_clicked without error
+        window.on_equals_clicked()
+
+        mock_adapter.execute_operation_safe.assert_not_called()
+
+
+class TestHistoryToggleClickedHandler:
+    """Test suite for on_history_toggle_clicked event handler."""
+
+    def test_on_history_toggle_clicked_is_callable(self, mock_tkinter, mock_adapter):
+        """Test that on_history_toggle_clicked can be called."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        # Should not raise
+        window.on_history_toggle_clicked()
+
+    def test_on_history_toggle_clicked_toggles_visibility_true(self, mock_tkinter, mock_adapter):
+        """Test on_history_toggle_clicked makes history visible."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._history_visible is False
+
+        window.on_history_toggle_clicked()
+
+        assert window._history_visible is True
+
+    def test_on_history_toggle_clicked_toggles_visibility_false(self, mock_tkinter, mock_adapter):
+        """Test on_history_toggle_clicked hides history when visible."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window._history_visible = True
+
+        window.on_history_toggle_clicked()
+
+        assert window._history_visible is False
+
+    def test_on_history_toggle_clicked_updates_button_label_show(self, mock_tkinter, mock_adapter):
+        """Test on_history_toggle_clicked updates button label to 'Hide History'."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        # Initial state: hidden, button shows "Show History"
+        window._history_visible = False
+
+        window.on_history_toggle_clicked()
+
+        # Now visible, button should show "Hide History"
+        window._history_toggle_btn.configure.assert_called()
+
+    def test_on_history_toggle_clicked_updates_button_label_hide(self, mock_tkinter, mock_adapter):
+        """Test on_history_toggle_clicked updates button label to 'Show History'."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window._history_visible = True
+
+        window.on_history_toggle_clicked()
+
+        # Now hidden again, button should show "Show History"
+        window._history_toggle_btn.configure.assert_called()
+
+    def test_on_history_toggle_clicked_multiple_times(self, mock_tkinter, mock_adapter):
+        """Test on_history_toggle_clicked can be toggled multiple times."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        initial = window._history_visible
+
+        window.on_history_toggle_clicked()
+        assert window._history_visible == (not initial)
+
+        window.on_history_toggle_clicked()
+        assert window._history_visible == initial
+
+
+class TestNewDisplayAttributes:
+    """Test suite for new display-related attributes."""
+
+    def test_display_value_initialized_to_zero(self, mock_tkinter, mock_adapter):
+        """Test that _display_value is initialized to '0'."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._display_value == "0"
+
+    def test_display_var_initialized_to_zero(self, mock_tkinter, mock_adapter):
+        """Test that _display_var is initialized to '0'."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._display_var.get() == "0"
+
+    def test_pending_binary_op_initialized_to_none(self, mock_tkinter, mock_adapter):
+        """Test that _pending_binary_op is initialized to None."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._pending_binary_op is None
+
+    def test_history_visible_initialized_to_false(self, mock_tkinter, mock_adapter):
+        """Test that _history_visible is initialized to False."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        assert window._history_visible is False
+
+    def test_history_frame_hidden_on_startup(self, mock_tkinter, mock_adapter):
+        """Test that history frame is hidden on startup."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        # grid_remove() should have been called on the history frame
+        assert window._history_frame.grid_remove.called or window._history_frame.grid_remove == MagicMock
+
+    def test_clear_history_button_hidden_on_startup(self, mock_tkinter, mock_adapter):
+        """Test that clear history button is hidden on startup."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        # grid_remove() should have been called on the clear button
+        assert window._clear_history_btn.grid_remove.called or window._clear_history_btn.grid_remove == MagicMock
+
+
+class TestModeChangedClearsState:
+    """Test suite for mode change clearing pending state."""
+
+    def test_mode_changed_clears_pending_binary_op(self, mock_tkinter, mock_adapter):
+        """Test that on_mode_changed clears _pending_binary_op."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window._pending_binary_op = "add"
+
+        window.on_mode_changed("scientific")
+
+        assert window._pending_binary_op is None
+
+    def test_mode_changed_calls_adapter_clear_pending_operand(self, mock_tkinter, mock_adapter):
+        """Test that on_mode_changed calls adapter.clear_pending_operand."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        mock_adapter.clear_pending_operand.reset_mock()
+
+        window.on_mode_changed("normal")
+
+        mock_adapter.clear_pending_operand.assert_called()
+
+    def test_mode_changed_resets_display_value(self, mock_tkinter, mock_adapter):
+        """Test that on_mode_changed resets _display_value to '0'."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window._display_value = "123"
+
+        window.on_mode_changed("scientific")
+
+        assert window._display_value == "0"

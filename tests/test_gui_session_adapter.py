@@ -338,3 +338,193 @@ class TestGetArity:
         session.set_mode("normal")
         assert adapter.get_arity("square") == 1
         assert adapter.get_arity("square_root") == 1
+
+
+class TestPendingOperandStorage:
+    """Test suite for GUISessionAdapter pending operand methods."""
+
+    def test_get_pending_operand_returns_none_initially(self, adapter):
+        """Test get_pending_operand returns None when nothing has been stored."""
+        result = adapter.get_pending_operand()
+        assert result is None
+
+    def test_store_first_operand_saves_value(self, adapter):
+        """Test store_first_operand saves a numeric value."""
+        adapter.store_first_operand(42.5)
+        result = adapter.get_pending_operand()
+        assert result == 42.5
+
+    def test_get_pending_operand_returns_stored_value(self, adapter):
+        """Test get_pending_operand returns the stored value."""
+        adapter.store_first_operand(17.0)
+        result = adapter.get_pending_operand()
+        assert result == 17.0
+
+    @pytest.mark.parametrize("value", [0.0, 1.5, -42.0, 999999.999, 0.00001])
+    def test_store_first_operand_with_various_values(self, adapter, value):
+        """Test store_first_operand with various numeric values."""
+        adapter.store_first_operand(value)
+        assert adapter.get_pending_operand() == value
+
+    def test_clear_pending_operand_sets_to_none(self, adapter):
+        """Test clear_pending_operand clears the stored operand."""
+        adapter.store_first_operand(100.0)
+        assert adapter.get_pending_operand() == 100.0
+
+        adapter.clear_pending_operand()
+
+        assert adapter.get_pending_operand() is None
+
+    def test_clear_pending_operand_on_already_none(self, adapter):
+        """Test clear_pending_operand when operand is already None."""
+        assert adapter.get_pending_operand() is None
+        # Should not raise an error
+        adapter.clear_pending_operand()
+        assert adapter.get_pending_operand() is None
+
+    def test_store_overwrites_previous_value(self, adapter):
+        """Test that storing a new value overwrites the previous one."""
+        adapter.store_first_operand(10.0)
+        assert adapter.get_pending_operand() == 10.0
+
+        adapter.store_first_operand(20.0)
+        assert adapter.get_pending_operand() == 20.0
+
+    def test_clear_and_store_sequence(self, adapter):
+        """Test sequence of clear and store operations."""
+        adapter.store_first_operand(5.0)
+        adapter.clear_pending_operand()
+        assert adapter.get_pending_operand() is None
+
+        adapter.store_first_operand(15.0)
+        assert adapter.get_pending_operand() == 15.0
+
+
+class TestExecuteOperationWithPendingOperand:
+    """Test suite for execute_operation_safe with use_pending flag."""
+
+    def test_execute_with_use_pending_false_uses_only_passed_operands(self, adapter, session):
+        """Test execute_operation_safe with use_pending=False ignores stored operand."""
+        session.set_mode("normal")
+        adapter.store_first_operand(10.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0], use_pending=False
+        )
+
+        # With use_pending=False and only 1 operand, should fail
+        assert error_msg != ""
+        assert result_str == ""
+
+    def test_execute_with_use_pending_true_prepends_stored_operand(self, adapter, session):
+        """Test execute_operation_safe with use_pending=True prepends stored operand."""
+        session.set_mode("normal")
+        adapter.store_first_operand(3.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0], use_pending=True
+        )
+
+        # Should compute 3 + 5 = 8
+        assert error_msg == ""
+        assert result_str == "8.0"
+
+    def test_execute_with_use_pending_when_no_pending_operand_uses_only_passed(self, adapter, session):
+        """Test execute_operation_safe with use_pending=True but no stored operand."""
+        session.set_mode("normal")
+        # Do not store an operand
+        assert adapter.get_pending_operand() is None
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0], use_pending=True
+        )
+
+        # Should fail because only 1 operand passed and none stored
+        assert error_msg != ""
+        assert result_str == ""
+
+    def test_execute_with_use_pending_wrong_operand_count_ignores_flag(self, adapter, session):
+        """Test execute_operation_safe with use_pending when operands != 1 element."""
+        session.set_mode("normal")
+        adapter.store_first_operand(3.0)
+
+        # Pass 2 operands; use_pending only applies when len(operands) == 1
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0, 2.0], use_pending=True
+        )
+
+        # Should compute 5 + 2 = 7 (stored operand ignored)
+        assert error_msg == ""
+        assert result_str == "7.0"
+
+    @pytest.mark.parametrize("op1,op2,expected", [
+        (3.0, 5.0, "8.0"),
+        (10.0, 2.0, "12.0"),
+        (7.0, 7.0, "14.0"),
+    ])
+    def test_execute_with_use_pending_various_additions(self, adapter, session, op1, op2, expected):
+        """Test execute_operation_safe with use_pending for various additions."""
+        session.set_mode("normal")
+        adapter.store_first_operand(op1)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [op2], use_pending=True
+        )
+
+        assert error_msg == ""
+        assert result_str == expected
+
+    def test_execute_with_use_pending_binary_operation(self, adapter, session):
+        """Test execute_operation_safe with use_pending for multiplication."""
+        session.set_mode("normal")
+        adapter.store_first_operand(4.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "multiply", [5.0], use_pending=True
+        )
+
+        # Should compute 4 * 5 = 20
+        assert error_msg == ""
+        assert result_str == "20.0"
+
+    def test_execute_with_use_pending_records_history(self, adapter, session):
+        """Test execute_operation_safe with use_pending records history."""
+        session.set_mode("normal")
+        initial_history_len = len(adapter.get_history())
+        adapter.store_first_operand(6.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "subtract", [2.0], use_pending=True
+        )
+
+        # Should compute 6 - 2 = 4
+        assert error_msg == ""
+        assert result_str == "4.0"
+        # History should have grown
+        assert len(adapter.get_history()) == initial_history_len + 1
+
+    def test_execute_with_use_pending_zero_operand(self, adapter, session):
+        """Test execute_operation_safe with use_pending when stored operand is 0."""
+        session.set_mode("normal")
+        adapter.store_first_operand(0.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0], use_pending=True
+        )
+
+        # Should compute 0 + 5 = 5
+        assert error_msg == ""
+        assert result_str == "5.0"
+
+    def test_execute_with_use_pending_negative_operand(self, adapter, session):
+        """Test execute_operation_safe with use_pending and negative operand."""
+        session.set_mode("normal")
+        adapter.store_first_operand(-3.0)
+
+        result_str, error_msg = adapter.execute_operation_safe(
+            "add", [5.0], use_pending=True
+        )
+
+        # Should compute -3 + 5 = 2
+        assert error_msg == ""
+        assert result_str == "2.0"
