@@ -26,7 +26,7 @@ class TestMainErrorLogging:
     def run_cli_with_log(self):
         """Fixture to run main.py as subprocess and capture error log."""
         def _run(*args):
-            log_file = Path("/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/error.log")
+            log_file = Path(__file__).parent.parent / "error.log"
             # Remove existing log file to get clean state for this test
             if log_file.exists():
                 log_file.unlink()
@@ -36,7 +36,7 @@ class TestMainErrorLogging:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode, log_file
         return _run

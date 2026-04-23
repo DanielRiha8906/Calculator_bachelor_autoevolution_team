@@ -8,6 +8,7 @@ import subprocess
 import sys
 import math
 import pytest
+from pathlib import Path
 
 from src.calculator import Calculator
 from main import (
@@ -34,7 +35,7 @@ class TestCLIBasicTwoOperandOperations:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -112,7 +113,7 @@ class TestCLIBasicOneOperandOperations:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -202,7 +203,7 @@ class TestCLIMissingOperands:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -264,7 +265,7 @@ class TestCLIInvalidOperationName:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -304,7 +305,7 @@ class TestCLIExcessOperands:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -350,7 +351,7 @@ class TestCLIInvalidOperandTypes:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -395,7 +396,7 @@ class TestCLICalculatorErrors:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -462,7 +463,7 @@ class TestCLIOutputFormat:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run
@@ -504,7 +505,7 @@ class TestCLIConsistencyWithCalculator:
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd="/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team",
+                cwd=str(Path(__file__).parent.parent),
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         return _run

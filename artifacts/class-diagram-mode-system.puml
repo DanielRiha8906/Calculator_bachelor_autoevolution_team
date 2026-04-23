@@ -1,0 +1,44 @@
+@startuml class-diagram-mode-system
+skinparam backgroundColor #FEFEFE
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam arrowColor #343A40
+skinparam noteBorderColor #868E96
+
+title Mode System — Class Structure
+
+enum CalculatorMode {
+  NORMAL = "normal"
+  SCIENTIFIC = "scientific"
+}
+
+class ModeConfig <<dataclass>> {
+  + mode: CalculatorMode
+  + operations: list[str]
+}
+
+note "Module constants:\nNORMAL_MODE_OPERATIONS: 6 ops\nSCIENTIFIC_MODE_OPERATIONS: 18 ops" as N1
+
+class CalculatorSession {
+  - _calculator: Calculator
+  - _history: OperationHistory
+  - _error_logger: ErrorLogger
+  - _current_mode: str | None
+  - _operation_list: list[str]
+  --
+  + set_mode(mode_name: str) -> bool
+  + get_current_mode() -> str | None
+  - _get_operation_list() -> list[str]
+}
+
+class "get_mode_config()" as F1 <<function>> {
+  mode_name: str
+  returns: ModeConfig | None
+}
+
+CalculatorSession --> F1 : uses
+F1 --> ModeConfig : returns
+ModeConfig --> CalculatorMode : references
+N1 .. ModeConfig
+
+@enduml

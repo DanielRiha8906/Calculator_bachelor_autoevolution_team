@@ -27,7 +27,8 @@ class TestSelectOperation:
     @pytest.mark.parametrize("op_name", [
         "add", "subtract", "multiply", "divide", "square", "cube",
         "square_root", "cube_root", "factorial", "logarithm",
-        "natural_logarithm", "power"
+        "natural_logarithm", "power", "sin", "cos", "tan", "cot",
+        "asin", "acos"
     ])
     def test_select_operation_all_valid_operations(self, session, op_name):
         """Should resolve all valid operation names."""

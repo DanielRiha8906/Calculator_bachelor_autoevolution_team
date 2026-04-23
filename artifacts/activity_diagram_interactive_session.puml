@@ -12,6 +12,16 @@ start
 :session.get_operation_list() -> operations;
 :OperationValidationSession(mode, operations) -> op_session;
 
+:get_mode_selection() -> selected_mode;
+note right: up to 3 retries; returns "normal", "scientific", or None
+if (selected_mode is not None?) then (yes)
+  :session.set_mode(selected_mode);
+  :format_current_mode(selected_mode);
+  :print mode confirmation;
+else (no)
+  note right: all operations available (no filter)
+endif
+
 repeat
 
   :format_menu_header(operations);
@@ -33,6 +43,18 @@ repeat
     endif
     note right: continues loop
   else (no)
+
+    if (raw_choice in {mode, m}?) then (yes)
+      :get_mode_selection() -> new_mode;
+      if (new_mode is not None?) then (yes)
+        :session.set_mode(new_mode);
+        :format_current_mode(new_mode);
+        :print mode confirmation;
+      else (no)
+        :print "Mode selection failed. Keeping current mode.";
+      endif
+      note right: continues loop
+    else (no)
 
     |CalculatorSession|
     :select_operation(raw_choice, mode) -> (op_name, exit_code);
@@ -87,6 +109,8 @@ repeat
         :format_result(op_name, operands, result);
         :print result;
       endif
+
+    endif
 
     endif
 

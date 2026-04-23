@@ -6,7 +6,7 @@ from unittest.mock import patch
 from pathlib import Path
 
 from src.calculator import Calculator
-from src.cli import interactive_session, get_operation_menu
+from src.cli import interactive_session
 
 
 class TestInteractiveSessionHistoryRecording:
@@ -22,9 +22,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_records_operation_on_success(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should record operation in history after successful execution."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "2", "3", "q"]
+        mock_input.side_effect = ["1", "add", "2", "3", "q"]
         interactive_session(calculator)
         # Check that history.txt was created and contains the operation
         history_file = tmp_path / "history.txt"
@@ -37,9 +35,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_displays_history_on_request(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should display history when user types 'history' command."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "2", "3", "h", "q"]
+        mock_input.side_effect = ["1", "add", "2", "3", "h", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -51,9 +47,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_displays_history_with_full_command(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should display history when user types 'history' (full word)."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "2", "3", "history", "q"]
+        mock_input.side_effect = ["1", "add", "2", "3", "history", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -65,9 +59,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_persists_history_on_quit(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should save history to file when session exits."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "2", "3", "q"]
+        mock_input.side_effect = ["1", "add", "2", "3", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         assert history_file.exists()
@@ -79,7 +71,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_empty_history_message(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should print 'No history yet.' when history is requested before any operations."""
         monkeypatch.chdir(tmp_path)
-        mock_input.side_effect = ["h", "q"]
+        mock_input.side_effect = ["1", "h", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -90,15 +82,13 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_new_session_fresh_history(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should start with fresh (empty) history for each session."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
         # First session: perform operation
-        mock_input.side_effect = [str(add_idx), "2", "3", "q"]
+        mock_input.side_effect = ["1", "add", "2", "3", "q"]
         interactive_session(calculator)
 
         # Second session: perform different operation
         mock_input.reset_mock()
-        mock_input.side_effect = [str(add_idx), "5", "5", "q"]
+        mock_input.side_effect = ["1", "add", "5", "5", "q"]
         interactive_session(calculator)
 
         # Check history file - should only have the second session's operation
@@ -119,10 +109,8 @@ class TestInteractiveSessionHistoryRecording:
     def test_no_history_recorded_on_operation_error(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should not record operation in history if it raises an error."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        divide_idx = menu.index("divide") + 1
         # Attempt division by zero (which will error)
-        mock_input.side_effect = [str(divide_idx), "10", "0", "q"]
+        mock_input.side_effect = ["1", "divide", "10", "0", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         if history_file.exists():
@@ -135,12 +123,10 @@ class TestInteractiveSessionHistoryRecording:
     def test_interactive_session_multiple_successful_operations(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should record multiple successful operations in order."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        multiply_idx = menu.index("multiply") + 1
         mock_input.side_effect = [
-            str(add_idx), "2", "3",          # add(2, 3) = 5
-            str(multiply_idx), "5", "2",     # multiply(5, 2) = 10
+            "1",                             # mode selection
+            "add", "2", "3",                 # add(2, 3) = 5
+            "multiply", "5", "2",            # multiply(5, 2) = 10
             "q"
         ]
         interactive_session(calculator)
@@ -156,9 +142,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_command_case_insensitive_h(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should accept 'h' as history command (case-insensitive)."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "1", "1", "H", "q"]
+        mock_input.side_effect = ["1", "add", "1", "1", "H", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         # Should not crash and should display something
@@ -169,12 +153,10 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_display_shows_all_entries(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should display all history entries when requested."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        multiply_idx = menu.index("multiply") + 1
         mock_input.side_effect = [
-            str(add_idx), "1", "2",          # add(1, 2) = 3
-            str(multiply_idx), "3", "4",     # multiply(3, 4) = 12
+            "1",                             # mode selection
+            "add", "1", "2",                 # add(1, 2) = 3
+            "multiply", "3", "4",            # multiply(3, 4) = 12
             "history",
             "q"
         ]
@@ -190,10 +172,9 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_saved_before_exit_on_max_retries(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should save history to file before exiting due to max operation retries."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
         mock_input.side_effect = [
-            str(add_idx), "1", "2",          # add(1, 2) = 3 (success)
+            "1",                             # mode selection
+            "add", "1", "2",                 # add(1, 2) = 3 (success)
             "invalid1", "invalid2", "invalid3", "invalid4", "invalid5"  # 5 retries then exit
         ]
         interactive_session(calculator)
@@ -209,11 +190,10 @@ class TestInteractiveSessionHistoryRecording:
         """Should save history before exiting due to operand input limit."""
         mock_detect_mode.return_value = "interactive"  # Force interactive mode for this test
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
         mock_input.side_effect = [
-            str(add_idx), "1", "2",          # add(1, 2) = 3 (success)
-            str(add_idx), "a", "b", "c", "d", "e"  # 5 invalid operands then exit
+            "1",                             # mode selection
+            "add", "1", "2",                 # add(1, 2) = 3 (success)
+            "add", "a", "b", "c", "d", "e"  # 5 invalid operands then exit
         ]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
@@ -226,7 +206,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_empty_file_when_no_operations(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should create empty history.txt when no successful operations occurred."""
         monkeypatch.chdir(tmp_path)
-        mock_input.side_effect = ["q"]
+        mock_input.side_effect = ["1", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         assert history_file.exists()
@@ -237,9 +217,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_formatting_preserved_in_file(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should preserve operation formatting (whole-number floats collapsed) in file."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        square_idx = menu.index("square") + 1
-        mock_input.side_effect = [str(square_idx), "3", "q"]
+        mock_input.side_effect = ["1", "square", "3", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         content = history_file.read_text()
@@ -251,9 +229,7 @@ class TestInteractiveSessionHistoryRecording:
     def test_history_command_with_spacing(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should handle history command with extra whitespace."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "1", "1", "  history  ", "q"]
+        mock_input.side_effect = ["1", "add", "1", "1", "  history  ", "q"]
         # Note: input().strip() is called in cli.py, so "  history  " becomes "history"
         interactive_session(calculator)
         # Should not crash
@@ -265,9 +241,8 @@ class TestInteractiveSessionHistoryRecording:
     def test_operation_by_name_case_insensitive_with_history(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should record operation when operation name is case-insensitive."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
         # Try operation name in different case
-        mock_input.side_effect = ["ADD", "2", "2", "q"]
+        mock_input.side_effect = ["1", "ADD", "2", "2", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         if history_file.exists():
@@ -289,7 +264,7 @@ class TestHistoryCommandPrecedence:
     def test_history_not_treated_as_invalid_operation(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should recognize 'history' as a command, not an invalid operation."""
         monkeypatch.chdir(tmp_path)
-        mock_input.side_effect = ["history", "q"]
+        mock_input.side_effect = ["1", "history", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -303,7 +278,7 @@ class TestHistoryCommandPrecedence:
     def test_h_not_treated_as_invalid_operation(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should recognize 'h' as history command, not invalid operation."""
         monkeypatch.chdir(tmp_path)
-        mock_input.side_effect = ["h", "q"]
+        mock_input.side_effect = ["1", "h", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -324,9 +299,7 @@ class TestHistoryFileBehavior:
     def test_history_file_location_uses_cwd(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should save history.txt in the current working directory."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "1", "1", "q"]
+        mock_input.side_effect = ["1", "add", "1", "1", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         assert history_file.exists()
@@ -336,9 +309,7 @@ class TestHistoryFileBehavior:
     def test_history_file_is_text_file(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should create a plain text file, readable as text."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        mock_input.side_effect = [str(add_idx), "1", "2", "q"]
+        mock_input.side_effect = ["1", "add", "1", "2", "q"]
         interactive_session(calculator)
         history_file = tmp_path / "history.txt"
         content = history_file.read_text(encoding="utf-8")
@@ -350,17 +321,13 @@ class TestHistoryFileBehavior:
     def test_history_overwrites_previous_session(self, mock_print, mock_input, calculator, tmp_path, monkeypatch):
         """Should overwrite history.txt on each new session (not append)."""
         monkeypatch.chdir(tmp_path)
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1
-        multiply_idx = menu.index("multiply") + 1
-
         # First session
-        mock_input.side_effect = [str(add_idx), "1", "1", "q"]
+        mock_input.side_effect = ["1", "add", "1", "1", "q"]
         interactive_session(calculator)
 
         # Second session
         mock_input.reset_mock()
-        mock_input.side_effect = [str(multiply_idx), "2", "2", "q"]
+        mock_input.side_effect = ["1", "multiply", "2", "2", "q"]
         interactive_session(calculator)
 
         history_file = tmp_path / "history.txt"

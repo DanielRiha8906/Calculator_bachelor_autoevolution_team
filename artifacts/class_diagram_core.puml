@@ -17,6 +17,12 @@ package "src.core" {
         + logarithm(x: float)
         + natural_logarithm(x: float)
         + power(base: float, exponent: float)
+        + sin(x: float)
+        + cos(x: float)
+        + tan(x: float)
+        + cot(x: float)
+        + asin(x: float)
+        + acos(x: float)
     }
 
     package "src.core.operations" {
@@ -26,17 +32,23 @@ package "src.core" {
             {static} + subtract(a, b)
             {static} + multiply(a, b)
             {static} + divide(a, b)
+            {static} + square(x: float)
+            {static} + square_root(x: float)
         }
 
         class ScientificOperations {
             {static} + factorial(n: int)
-            {static} + square(x: float)
             {static} + cube(x: float)
-            {static} + square_root(x: float)
             {static} + cube_root(x: float)
             {static} + logarithm(x: float)
             {static} + natural_logarithm(x: float)
             {static} + power(base: float, exponent: float)
+            {static} + sin(x: float)
+            {static} + cos(x: float)
+            {static} + tan(x: float)
+            {static} + cot(x: float)
+            {static} + asin(x: float)
+            {static} + acos(x: float)
         }
     }
 }

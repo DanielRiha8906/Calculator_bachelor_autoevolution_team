@@ -1,3 +1,50 @@
+## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `tests/test_cli.py` — updated expected operation set to include 6 trig ops; prepended mode selection input to all interactive_session() test mocks
+  - `tests/test_session.py` — added 6 trig operations to parametrized operation validity test
+  - `tests/test_cli_history_integration.py` — prepended mode selection input to all interactive_session() test mocks; switched to operation-name inputs for robustness
+- **Purpose:** Fix 30 failing tests caused by (1) new trig operations not reflected in operation-list assertions, and (2) new mode selection prompt at interactive_session() startup not reflected in mocked input sequences
+- **Risks:** None — test-only changes, no source code modified
+- **Tests passed:** 1216 passed, 0 failed
+
+Duration: 1156.2s | Cost: $2.621514 USD | Turns: 19
+
+## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_architecture.puml` — added src.mode package (CalculatorMode enum, ModeConfig dataclass); added 6 trig methods to ScientificOperations and Calculator; added _current_mode, set_mode(), get_current_mode() to CalculatorSession
+  - `artifacts/class_diagram_session.puml` — added src/mode.py package (CalculatorMode, ModeConfig); added 6 trig methods to Calculator; added mode state fields/methods to CalculatorSession
+  - `artifacts/activity_diagram_interactive_session.puml` — added mode selection step at session start; added mode/m command handler for mid-session switching
+
+Duration: 300.2s | Cost: $1.018745 USD | Turns: 21
+
+## Run: Issue #274 — V2 Task 14 - Expert/team (2026-04-22)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/core/operations/scientific.py` — added sin, cos, tan, cot, asin, acos static methods with input validation and domain error handling
+  - `src/core/calculator.py` — added delegation methods for all 6 new trig operations
+  - `src/mode.py` — new module: CalculatorMode enum, NORMAL/SCIENTIFIC operation lists, ModeConfig dataclass, get_mode_config factory
+  - `src/session.py` — added _current_mode state, set_mode(), get_current_mode(), mode-aware operation list filtering
+  - `src/formatter.py` — added format_mode_menu(), format_current_mode(), extended format_menu_header() with optional mode param
+  - `src/cli.py` — added get_mode_selection() with retry logic, extended interactive_session() for mode selection at start and mid-session switching
+  - `tests/test_scientific_trig.py` — 80 tests for trig operations in ScientificOperations and Calculator
+  - `tests/test_mode.py` — 32 tests for mode.py module (enum, operation lists, factory function)
+  - `tests/test_session_mode.py` — 19 tests for CalculatorSession mode awareness and filtering
+  - `tests/test_formatter_mode.py` — 25 tests for formatter mode display functions
+  - `tests/test_cli_mode_selection.py` — 16 tests for get_mode_selection() with mocked I/O
+- **Purpose:** Add normal/scientific mode switching to guided interactive use; users can select mode at session start and switch mid-session, seeing only mode-appropriate operations
+- **Risks:** Interactive session now requires mode selection before operation selection; existing tests may need mode to be set explicitly
+- **Tests passed:** 162 passed, 0 failed
+
+Duration: 523.0s | Cost: $1.252148 USD | Turns: 15
+
 ## Run: Issue #271 — V2 Task 13 - Expert/team (2026-04-22)
 
 - **Branch:** task/issue-271-documentation
@@ -373,3 +420,29 @@ Duration: 217.7s | Cost: $0.540420 USD | Turns: 4
   - `artifacts/sequence_diagram_operation_execution.puml` — updated sequence diagram with mode param fix, error scenarios (division by zero, invalid domain), and ErrorLogger calls
 
 Duration: 338.8s | Cost: $0.949443 USD | Turns: 25
+
+## Run: update-diagrams — Add mode system and trig operation diagrams (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class-diagram-mode-system.puml` — new diagram: CalculatorMode enum, ModeConfig dataclass, CalculatorSession mode integration
+  - `artifacts/class-diagram-operations-trig.puml` — new diagram: ScientificOperations with six new trig methods, Calculator delegation
+  - `artifacts/activity-diagram-mode-selection-flow.puml` — new diagram: startup mode selection and mid-session mode switching activity flow
+  - `artifacts/sequence-diagram-mode-selection-startup.puml` — new diagram: startup mode selection message sequence
+  - `artifacts/sequence-diagram-mode-switch-runtime.puml` — new diagram: mid-session mode switching message sequence
+
+Duration: 276.4s | Cost: $0.642867 USD | Turns: 5
+
+## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (#274) (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `tests/test_main_cli.py` — replaced 9 hardcoded absolute cwd paths with dynamic `str(Path(__file__).parent.parent)`; added `from pathlib import Path` import
+  - `tests/test_error_logging_integration.py` — replaced hardcoded log_file path and cwd with dynamic `Path(__file__).parent.parent`-based resolution
+- **Purpose:** Fix PR review feedback: hardcoded GitHub Actions runner paths caused 89+ tests to fail with FileNotFoundError when run locally; replaced with portable path resolution relative to the test file
+- **Risks:** None — path logic is standard Python pathlib; tested in CI and confirmed working
+- **Tests passed:** 1216 passed, 0 failed
+
+Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
