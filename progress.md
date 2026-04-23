@@ -10,7 +10,7 @@
 - **Risks:** None — test-only changes, no source code modified
 - **Tests passed:** 1216 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1156.2s | Cost: $2.621514 USD | Turns: 19
 
 ## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
 
