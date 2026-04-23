@@ -31,7 +31,7 @@ Duration: 1156.2s | Cost: $2.621514 USD | Turns: 19
 - **Risks:** tkinter requires python3-tk OS package in GUI environments; clear_history() accesses session._history directly as no public API exists
 - **Tests passed:** 1331 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 565.4s | Cost: $1.283569 USD | Turns: 15
 
 ## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
 
