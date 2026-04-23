@@ -8,7 +8,7 @@
   - `artifacts/activity_diagram_gui_evaluation.puml` — activity diagram for GUI button-press and expression evaluation flow
   - `artifacts/sequence_diagram_gui_evaluation.puml` — sequence diagram for GUI expression evaluation showing parse/validate/dispatch/display chain
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 225.7s | Cost: $0.572646 USD | Turns: 7
 
 ## Run: Issue #275 — V2 Task 15 - Naive/team (2026-04-23)
 
