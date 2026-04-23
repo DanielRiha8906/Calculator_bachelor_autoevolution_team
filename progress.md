@@ -7,7 +7,7 @@
   - `artifacts/gui_activity_diagram.puml` — activity diagram for button press flow including number, operator, equals, and mode toggle branches
   - `artifacts/gui_sequence_diagram.puml` — sequence diagram for "3 + 5 =" operation through GuiCalculator to CalculatorSession, Calculator, NormalOperations, and OperationHistory
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 262.5s | Cost: $0.579979 USD | Turns: 4
 
 ## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (2026-04-23)
 
