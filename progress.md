@@ -406,4 +406,4 @@ Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
 - **Risks:** None — change is additive; GUI tests still run normally when DISPLAY is available
 - **Tests passed:** 923 passed, 58 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
