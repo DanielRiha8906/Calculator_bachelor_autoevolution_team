@@ -11,7 +11,7 @@
 - **Risks:** None — GUI is a peer interface layer; zero changes to Calculator, engine, or business logic
 - **Tests passed:** 1606 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 471.5s | Cost: $1.127348 USD | Turns: 13
 
 ## Run: Fix PR #353 — Add scientific mode with interactive mode switching (2026-04-23)
 
