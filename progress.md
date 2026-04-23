@@ -8,7 +8,7 @@
   - `artifacts/activity_gui_button_to_result.puml` — new activity diagram for GUI button-click-to-result flow including all error paths
   - `artifacts/sequence_three_ui_paths.puml` — new sequence diagram comparing CLI, REPL, and GUI execution paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 214.5s | Cost: $0.492545 USD | Turns: 5
 
 ## Run: update-diagrams — Add tkinter GUI for calculator app (2026-04-23)
 
