@@ -3,67 +3,57 @@
 actor User
 participant "CalculatorGUI" as GUI
 participant "OperationRegistry" as Registry
-participant "validate_operand" as Validation
 participant "Calculator" as Calc
 participant "SessionHistory" as History
 
-User -> GUI : click Calculate
+User ->> GUI : press digit "5"\n_on_digit("5")
 activate GUI
+GUI ->> GUI : _display_value = "5"\n_is_new_number = False
+GUI ->> GUI : _update_display() -> shows "5"
+deactivate GUI
 
-GUI -> GUI : check listbox selection
-alt no operation selected
-    GUI -> GUI : _display_error("No operation selected")
-    GUI --> User : error label shown
-    deactivate GUI
-else operation selected
-    GUI -> Registry : get_operation(key)
-    activate Registry
-    Registry --> GUI : (method, arity, description)
-    deactivate Registry
+User ->> GUI : press "+"\n_on_operator("+")
+activate GUI
+GUI ->> GUI : float(_display_value) = 5.0\n_accumulated_value = 5.0\n_pending_operator = "+"\n_is_new_number = True
+deactivate GUI
 
-    loop for each operand entry (0..arity-1)
-        GUI -> Validation : validate_operand(raw_string)
-        activate Validation
-        alt invalid input
-            Validation --> GUI : raises OperandValidationError
-            deactivate Validation
-            GUI -> GUI : _display_error(msg)
-            GUI --> User : error label shown
-            deactivate GUI
-        else valid input
-            Validation --> GUI : float value
-            deactivate Validation
-        end
-    end
+User ->> GUI : press digit "3"\n_on_digit("3")
+activate GUI
+GUI ->> GUI : _is_new_number true\n_display_value = "3"\n_is_new_number = False
+GUI ->> GUI : _update_display() -> shows "3"
+deactivate GUI
 
-    alt operation is factorial
-        GUI -> GUI : convert operand to int\n(error if non-integer)
-    end
+User ->> GUI : press "="\n_on_equals()
+activate GUI
+GUI ->> GUI : _execute_pending()
 
-    GUI -> Calc : method(*operands)
-    activate Calc
-    alt arithmetic error (ZeroDivisionError / ValueError)
-        Calc --> GUI : raises exception
-        deactivate Calc
-        GUI -> GUI : _display_error(msg)
-        GUI --> User : error label shown
-        deactivate GUI
-    else success
-        Calc --> GUI : result
-        deactivate Calc
+GUI ->> Registry : get_operation("add")
+activate Registry
+Registry -->> GUI : (Calculator.add, 2, "desc")
+deactivate Registry
 
-        GUI -> GUI : _display_result(op, operands, result)
-        GUI --> User : result label updated
+GUI ->> Calc : add(5.0, 3.0)
+activate Calc
 
-        GUI -> History : record_operation(key, operands, result)
-        activate History
-        History --> GUI : ok
-        deactivate History
+alt [Calculator raises ValueError / ZeroDivisionError / ArithmeticError]
+    Calc -->> GUI : raises exception
+    deactivate Calc
+    GUI ->> GUI : _display_value = str(exc)
+    GUI ->> GUI : _pending_operator = None\n_accumulated_value = None\n_is_new_number = True
+    GUI ->> GUI : _update_display() -> shows error message
+else success
+    Calc -->> GUI : 8.0
+    deactivate Calc
 
-        GUI -> GUI : _refresh_history_display()
-        GUI --> User : history pane updated
-        deactivate GUI
-    end
+    GUI ->> History : record_operation("add", [5.0, 3.0], 8.0)
+    activate History
+    History -->> GUI : ok
+    deactivate History
+
+    GUI ->> GUI : _format_result(8.0) = "8"\n_display_value = "8"\n_accumulated_value = 8.0\n_is_new_number = True
+    GUI ->> GUI : _update_display() -> shows "8"
 end
+
+deactivate GUI
 
 @enduml

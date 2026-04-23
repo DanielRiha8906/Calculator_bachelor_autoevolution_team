@@ -445,3 +445,14 @@ Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
   - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
 
 Duration: 250.8s | Cost: $0.544021 USD | Turns: 5
+
+## Run: update-diagrams — iOS Calculator GUI Diagrams (2026-04-23)
+
+- **Branch:** task/issue-362-ios-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui_layer.puml` — updated CalculatorGUI class to iOS keypad architecture: new state fields, button-handler methods, widget fields; removed all old listbox/operand-entry methods
+  - `artifacts/activity_diagram_gui_mode_switch.puml` — updated mode-switch flow to match _on_mode_switch() implementation: ModeManager.switch_mode(), get_current_mode(), conditional pack/pack_forget of _scientific_frame
+  - `artifacts/sequence_diagram_gui_execution.puml` — replaced old listbox-based execution sequence with new button-press state machine sequence: digit → operator → digit → equals → _execute_pending → OperationRegistry → Calculator → SessionHistory
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
