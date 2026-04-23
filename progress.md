@@ -490,4 +490,4 @@ Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
 - **Risks:** Visual-only change; calculation logic untouched. ttk removal means any ttk-specific styling in tests had to be updated.
 - **Tests passed:** 52 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 452.5s | Cost: $1.034286 USD | Turns: 14
