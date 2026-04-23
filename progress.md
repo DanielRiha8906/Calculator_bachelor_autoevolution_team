@@ -9,7 +9,7 @@
 - **Risks:** None — visual-only changes; calculation logic untouched
 - **Tests passed:** 1446 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 387.7s | Cost: $1.013140 USD | Turns: 12
 
 ## Run: Fix PR #370 — Redesign GuiCalculator with iOS-style flat layout (2026-04-23)
 
