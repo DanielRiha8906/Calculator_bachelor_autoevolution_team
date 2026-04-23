@@ -1,3 +1,22 @@
+## Run: Issue #276 — V2 Task 15 - Structured/team (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/session_history.py` — new in-memory session-scoped operation history class (SessionHistory)
+  - `src/gui.py` — new tkinter-based GUI class (CalculatorGUI) with operation selection, operand input, result display, mode switching, and session history view
+  - `src/gui_main.py` — new entry point for launching the GUI application
+  - `src/__init__.py` — added SessionHistory and guarded CalculatorGUI exports
+  - `src/__main__.py` — added --gui flag to launch GUI; existing CLI behavior unchanged
+  - `tests/test_session_history.py` — 22 unit tests for SessionHistory
+  - `tests/test_gui.py` — 38 integration tests for CalculatorGUI (skipped in headless CI; designed for display environments)
+  - `tests/test_gui_main.py` — 6 tests for gui_main entry point (skipped in headless CI)
+- **Purpose:** Add tkinter GUI that exposes simple and scientific mode operations, operand input, result display, and session history, without breaking existing CLI/programmatic access
+- **Risks:** GUI tests skip gracefully in headless CI; tkinter must be available for GUI execution
+- **Tests passed:** 946 passed, 44 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #273 — V2 Task 14 - Structured/team (2026-04-22)
 
 - **Branch:** task/issue-273-scientific-mode
