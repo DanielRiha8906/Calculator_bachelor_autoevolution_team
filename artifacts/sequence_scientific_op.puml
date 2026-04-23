@@ -1,0 +1,60 @@
+@startuml sequence_scientific_op
+title Scientific Operation Execution — sin(1.5708) (PR #353)
+
+skinparam backgroundColor white
+skinparam sequenceArrowThickness 1.5
+
+actor User
+participant "CalculatorREPL" as REPL
+participant "ExpressionParser" as Parser
+participant "InputValidator" as Validator
+participant "Calculator" as Calc
+participant "CalculatorEngine" as Engine
+participant "ScientificOperations" as SciOps
+
+User ->> REPL : "sin 1.5708"
+activate REPL
+
+REPL ->> Parser : parse("sin 1.5708")
+Parser --> REPL : ("sin", [1.5708])
+
+REPL ->> Validator : validate("sin", [1.5708])
+note right: "sin" in SUPPORTED_OPERATIONS
+Validator --> REPL : valid
+
+REPL ->> Calc : sin(1.5708)
+activate Calc
+
+Calc ->> Engine : sin(1.5708)
+activate Engine
+
+note right of Engine : _scientific is not None\n(mode == "scientific")
+
+Engine ->> SciOps : sin(1.5708)
+activate SciOps
+SciOps -> SciOps : math.sin(1.5708) → ≈ 1.0
+SciOps -> SciOps : _record(≈ 1.0)
+SciOps --> Engine : ≈ 1.0
+deactivate SciOps
+
+Engine -> Engine : _record_history("sin", 1.5708, ≈ 1.0)
+Engine --> Calc : ≈ 1.0
+deactivate Engine
+
+Calc --> REPL : ≈ 1.0
+deactivate Calc
+
+REPL ->> User : "Result: 1.0"
+deactivate REPL
+
+== Alt: mode is "basic" — operation not available ==
+
+alt _scientific is None
+  Engine --> Calc : raises ValueError
+  Calc --> REPL : raises ValueError
+  REPL ->> Engine : get_available_modes_for_operation("sin")
+  Engine --> REPL : ["scientific"]
+  REPL ->> User : "sin not available in basic mode.\nTo switch: type 'mode scientific'"
+end
+
+@enduml

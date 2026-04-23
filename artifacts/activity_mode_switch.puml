@@ -1,0 +1,40 @@
+@startuml activity_mode_switch
+title REPL Mode Switch — "mode scientific" (PR #353)
+
+skinparam backgroundColor white
+
+start
+
+:User types "mode scientific";
+
+:REPL detects "mode " prefix;
+:_handle_mode_command("scientific");
+
+if (argument empty?) then (yes)
+  :Print current mode\nand available modes;
+  stop
+else (no)
+  if (argument in _VALID_MODES?) then (no)
+    :Print error:\n"Unknown mode, available:\nbasic, advanced, scientific";
+    stop
+  else (yes)
+    :calculator.set_mode("scientific");
+    :engine.set_mode("scientific");
+    :_activate_mode("scientific");
+
+    fork
+      :Instantiate BasicOperations;
+    fork again
+      :Instantiate AdvancedOperations;
+    fork again
+      :Instantiate ScientificOperations;
+    end fork
+
+    :Set engine._mode = "scientific";
+    :Set calculator._mode = "scientific";
+    :Print "Mode switched to 'scientific'.";
+    stop
+  endif
+endif
+
+@enduml

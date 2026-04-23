@@ -370,4 +370,16 @@ Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
   - `artifacts/activity_diagram_mode_switching.puml` — Activity diagram for REPL mode-switch flow with validation and history preservation
   - `artifacts/sequence_diagram_scientific_calculation.puml` — Sequence diagram for sin(x) scientific calculation including domain-error alt scenario
 
+## Run: update-diagrams — Scientific Mode PlantUML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_modes_scientific.puml` — Class diagram of operation set hierarchy with ScientificOperations
+  - `artifacts/class_engine_mode_dispatch.puml` — Class diagram of CalculatorEngine/Calculator mode dispatch and composition
+  - `artifacts/activity_mode_switch.puml` — Activity diagram for REPL mode switching flow
+  - `artifacts/sequence_scientific_op.puml` — Sequence diagram for scientific operation execution
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 Duration: 233.1s | Cost: $0.594438 USD | Turns: 6

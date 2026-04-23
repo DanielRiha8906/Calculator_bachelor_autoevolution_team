@@ -1,0 +1,43 @@
+@startuml class_modes_scientific
+title Operation Set Hierarchy — Scientific Mode (PR #353)
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor white
+
+abstract class BaseOperationSet {
+  # _record_callback : Optional[Callable]
+  # _record(result)
+  + {abstract} get_operations() : dict[str, Callable]
+}
+
+class BasicOperations {
+  + get_operations() : dict
+}
+
+class AdvancedOperations {
+  + get_operations() : dict
+}
+
+class ScientificOperations << NEW >> {
+  + __init__(record_callback: Optional[Callable])
+  + get_operations() : dict
+  + sin(x)   + cos(x)   + tan(x)
+  + asin(x)  + acos(x)  + atan(x)
+  + sinh(x)  + cosh(x)  + tanh(x)
+  + exp(x)   + ln(x)
+  + degrees(x) + radians(x)
+}
+
+note right of ScientificOperations
+  13 trig/hyperbolic/exponential ops.
+  Each method calls _record(result)
+  before returning.
+  SCIENTIFIC_OPERATIONS frozenset
+  defined in src/modes/operations.py
+end note
+
+BaseOperationSet <|-- BasicOperations
+BaseOperationSet <|-- AdvancedOperations
+BaseOperationSet <|-- ScientificOperations
+
+@enduml
