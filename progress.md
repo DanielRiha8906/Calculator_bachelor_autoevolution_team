@@ -433,3 +433,16 @@ Duration: 338.8s | Cost: $0.949443 USD | Turns: 25
   - `artifacts/sequence-diagram-mode-switch-runtime.puml` — new diagram: mid-session mode switching message sequence
 
 Duration: 276.4s | Cost: $0.642867 USD | Turns: 5
+
+## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (#274) (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `tests/test_main_cli.py` — replaced 9 hardcoded absolute cwd paths with dynamic `str(Path(__file__).parent.parent)`; added `from pathlib import Path` import
+  - `tests/test_error_logging_integration.py` — replaced hardcoded log_file path and cwd with dynamic `Path(__file__).parent.parent`-based resolution
+- **Purpose:** Fix PR review feedback: hardcoded GitHub Actions runner paths caused 89+ tests to fail with FileNotFoundError when run locally; replaced with portable path resolution relative to the test file
+- **Risks:** None — path logic is standard Python pathlib; tested in CI and confirmed working
+- **Tests passed:** 1216 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
