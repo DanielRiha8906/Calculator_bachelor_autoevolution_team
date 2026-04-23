@@ -1,3 +1,16 @@
+## Run: Fix PR #370 — Address expert-team review feedback (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — removed operand entry widgets; extended _SYMBOL_MAP with all canonical scientific op names; added _ARITHMETIC_OPS constant; pinned base arithmetic ops to top of operations grid; removed entry widget references from on_operation_selected and on_execute_clicked
+  - `tests/test_gui_window.py` — removed/fixed broken tests referencing deleted entry widgets; added TestNoOperandEntryWidgets, TestSymbolMapCompleteness, TestBaseOperationPinning, TestButtonOnlyBinaryFlow test classes
+- **Purpose:** Satisfy unresolved maintainer feedback: remove Operand 1/2 input boxes, use number buttons exclusively for input, use math symbols for all op buttons, pin base arithmetic ops to top of grid regardless of mode
+- **Risks:** None — visual-only changes; calculation logic untouched
+- **Tests passed:** 1446 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #370 — Redesign GuiCalculator with iOS-style flat layout (2026-04-23)
 
 - **Branch:** task/issue-363-ios-gui-redesign

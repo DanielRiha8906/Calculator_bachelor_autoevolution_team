@@ -43,22 +43,26 @@ _SYMBOL_MAP: dict[str, str] = {
     "subtract": "−",
     "multiply": "×",
     "divide": "÷",
-    "sqrt": "√",
     "square": "x²",
+    "square_root": "√",
     "cube": "x³",
+    "cube_root": "∛",
     "power": "xʸ",
     "factorial": "n!",
-    "log": "log",
-    "ln": "ln",
+    "logarithm": "log",
+    "natural_logarithm": "ln",
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
+    "cot": "cot",
+    "asin": "sin⁻¹",
+    "acos": "cos⁻¹",
     "pi": "π",
     "e": "e",
 }
 
-# Operations that use the orange operator colour.
-_ARITHMETIC_OPS: frozenset[str] = frozenset({"add", "subtract", "multiply", "divide"})
+# Base arithmetic operations — always displayed first in the operations grid.
+_ARITHMETIC_OPS: tuple[str, ...] = ("add", "subtract", "multiply", "divide")
 
 
 class CalculatorWindow(tk.Tk):
@@ -68,15 +72,14 @@ class CalculatorWindow(tk.Tk):
     - Result display: large right-aligned label showing accumulated expression.
     - Mode toggle button: switches between normal and scientific modes.
     - Numbers grid: 3×4 grid of digit buttons (0-9), wired to :meth:`on_number_clicked`.
-    - Operations grid: dynamically built from the current mode's operations.
-    - Input section: two Entry widgets labelled "Operand 1" / "Operand 2"
-      (retained for direct keyboard input and backwards-compatible execute flow).
+    - Operations grid: dynamically built from the current mode's operations,
+      with base arithmetic operations always pinned to the top.
     - Execute / Equals button.
     - History toggle button: shows/hides the history panel.
     - History section: scrollable read-only Text widget (hidden by default).
     - Clear History button.
 
-    New interaction model (iOS-style):
+    Interaction model (iOS-style, button-only):
     - Digit buttons append to :attr:`_display_value`.
     - Binary operator buttons store operand1 and pend the operator.
     - The ``=`` button executes the pending binary operation.
@@ -230,51 +233,7 @@ class CalculatorWindow(tk.Tk):
         self._ops_frame.grid(row=3, column=0, sticky="ew", padx=4, pady=4)
 
         # ----------------------------------------------------------------
-        # Row 4: Input section
-        # ----------------------------------------------------------------
-        input_frame = tk.Frame(self, bg=_THEME["bg"])
-        input_frame.grid(row=4, column=0, sticky="ew", padx=8, pady=4)
-        input_frame.columnconfigure(1, weight=1)
-
-        tk.Label(
-            input_frame,
-            text="Operand 1:",
-            bg=_THEME["bg"],
-            fg=_THEME["fg"],
-            font=_THEME["label_font"],
-        ).grid(row=0, column=0, sticky="w", padx=4, pady=2)
-
-        self._operand1_entry = tk.Entry(
-            input_frame,
-            bg=_THEME["std_bg"],
-            fg=_THEME["fg"],
-            insertbackground=_THEME["fg"],
-            font=_THEME["entry_font"],
-            relief=tk.FLAT,
-        )
-        self._operand1_entry.grid(row=0, column=1, sticky="ew", padx=4, pady=2)
-
-        self._operand2_label = tk.Label(
-            input_frame,
-            text="Operand 2:",
-            bg=_THEME["bg"],
-            fg=_THEME["fg"],
-            font=_THEME["label_font"],
-        )
-        self._operand2_label.grid(row=1, column=0, sticky="w", padx=4, pady=2)
-
-        self._operand2_entry = tk.Entry(
-            input_frame,
-            bg=_THEME["std_bg"],
-            fg=_THEME["fg"],
-            insertbackground=_THEME["fg"],
-            font=_THEME["entry_font"],
-            relief=tk.FLAT,
-        )
-        self._operand2_entry.grid(row=1, column=1, sticky="ew", padx=4, pady=2)
-
-        # ----------------------------------------------------------------
-        # Row 5: Execute / Equals button
+        # Row 4: Execute / Equals button
         # ----------------------------------------------------------------
         execute_btn = tk.Button(
             self,
@@ -290,11 +249,11 @@ class CalculatorWindow(tk.Tk):
             pady=8,
             command=self.on_equals_clicked,
         )
-        execute_btn.grid(row=5, column=0, sticky="ew", padx=8, pady=4)
+        execute_btn.grid(row=4, column=0, sticky="ew", padx=8, pady=4)
         self._bind_hover(execute_btn, _THEME["operator_bg"], _THEME["operator_active"])
 
         # ----------------------------------------------------------------
-        # Row 6: History toggle button
+        # Row 5: History toggle button
         # ----------------------------------------------------------------
         self._history_toggle_btn = tk.Button(
             self,
@@ -310,7 +269,7 @@ class CalculatorWindow(tk.Tk):
             pady=6,
             command=self.on_history_toggle_clicked,
         )
-        self._history_toggle_btn.grid(row=6, column=0, sticky="ew", padx=4, pady=4)
+        self._history_toggle_btn.grid(row=5, column=0, sticky="ew", padx=4, pady=4)
         self._bind_hover(
             self._history_toggle_btn,
             _THEME["mode_toggle_bg"],
@@ -318,13 +277,13 @@ class CalculatorWindow(tk.Tk):
         )
 
         # ----------------------------------------------------------------
-        # Row 7: History section (hidden by default)
+        # Row 6: History section (hidden by default)
         # ----------------------------------------------------------------
         self._history_frame = tk.Frame(self, bg=_THEME["bg"])
-        self._history_frame.grid(row=7, column=0, sticky="nsew", padx=8, pady=4)
+        self._history_frame.grid(row=6, column=0, sticky="nsew", padx=8, pady=4)
         self._history_frame.columnconfigure(0, weight=1)
         self._history_frame.rowconfigure(0, weight=1)
-        self.rowconfigure(7, weight=2)
+        self.rowconfigure(6, weight=2)
 
         self._history_text = tk.Text(
             self._history_frame,
@@ -351,7 +310,7 @@ class CalculatorWindow(tk.Tk):
         self._history_frame.grid_remove()
 
         # ----------------------------------------------------------------
-        # Row 8: Clear History button (hidden by default alongside history)
+        # Row 7: Clear History button (hidden by default alongside history)
         # ----------------------------------------------------------------
         self._clear_history_btn = tk.Button(
             self,
@@ -367,7 +326,7 @@ class CalculatorWindow(tk.Tk):
             pady=6,
             command=self.on_clear_history_clicked,
         )
-        self._clear_history_btn.grid(row=8, column=0, sticky="ew", padx=8, pady=(0, 8))
+        self._clear_history_btn.grid(row=7, column=0, sticky="ew", padx=8, pady=(0, 8))
         self._bind_hover(self._clear_history_btn, _THEME["sci_bg"], _THEME["sci_active"])
 
         # Hide the clear-history button on startup to match hidden history panel.
@@ -477,8 +436,7 @@ class CalculatorWindow(tk.Tk):
         For **binary** operations (arity=2): stores the current display value
         as operand1, records the pending operator, and appends the operator
         symbol to the display expression so the user can see what they have
-        typed so far.  The Operand 2 entry field is also kept in sync with
-        the legacy entry-based flow.
+        typed so far.
 
         Args:
             op_name: The canonical operation name chosen by the user.
@@ -488,14 +446,9 @@ class CalculatorWindow(tk.Tk):
 
         if arity == 1:
             # Execute immediately on the current display value.
-            self._operand2_entry.delete(0, tk.END)
-            self._operand2_entry.configure(state="disabled")
-            self._operand2_label.configure(fg="grey")
             self._execute_unary_from_display(op_name)
         else:
             # Store first operand and arm the pending operator.
-            self._operand2_entry.configure(state="normal")
-            self._operand2_label.configure(fg=_THEME["fg"])
             try:
                 op1_value = float(self._display_value)
             except ValueError:
@@ -602,53 +555,14 @@ class CalculatorWindow(tk.Tk):
             self.on_execute_clicked()
 
     def on_execute_clicked(self) -> None:
-        """Read Entry widget inputs, execute the selected operation, show result.
+        """Execute the pending binary operation via the accumulator-based flow.
 
-        This is the legacy keyboard-input execution path.  It reads operands
-        from the ``_operand1_entry`` / ``_operand2_entry`` widgets and
-        executes ``_selected_op``.
-
-        Shows an inline error message (without a popup dialog) when:
-        - No operation has been selected.
-        - An operand field contains a non-numeric value.
-        - The calculator raises an exception (e.g. division by zero).
+        Delegates to :meth:`_execute_binary_operation` when a binary operator
+        is pending.  When no operation is pending this is a no-op; the caller
+        (:meth:`on_equals_clicked`) already handles this branch.
         """
-        if self._selected_op is None:
-            self._set_result("Please select an operation first.", is_error=True)
-            return
-
-        raw1 = self._operand1_entry.get().strip()
-        try:
-            op1 = float(raw1)
-        except ValueError:
-            self._set_result(
-                f"Operand 1 is not a valid number: {raw1!r}", is_error=True
-            )
-            return
-
-        arity = self._adapter.get_arity(self._selected_op)
-        operands: list[float] = [op1]
-
-        if arity > 1:
-            raw2 = self._operand2_entry.get().strip()
-            try:
-                op2 = float(raw2)
-            except ValueError:
-                self._set_result(
-                    f"Operand 2 is not a valid number: {raw2!r}", is_error=True
-                )
-                return
-            operands.append(op2)
-
-        result_str, error_msg = self._adapter.execute_operation_safe(
-            self._selected_op, operands
-        )
-
-        if error_msg:
-            self._set_result(f"Error: {error_msg}", is_error=True)
-        else:
-            self._set_result(f"Result: {result_str}")
-            self.update_history_display()
+        if self._pending_binary_op is not None:
+            self._execute_binary_operation()
 
     def on_history_toggle_clicked(self) -> None:
         """Toggle the visibility of the history panel.
@@ -688,11 +602,19 @@ class CalculatorWindow(tk.Tk):
         Destroys all existing widgets in the operations frame and creates
         one :class:`tk.Button` per operation returned by the adapter, laid
         out in a 4-column grid with hover effects applied.
+
+        Base arithmetic operations (defined in :data:`_ARITHMETIC_OPS`) are
+        always pinned to the top of the grid; all other operations follow in
+        the order returned by the adapter.
         """
         for widget in self._ops_frame.winfo_children():
             widget.destroy()
 
-        operations = self._adapter.get_operations()
+        all_operations: list[str] = self._adapter.get_operations()
+        base_ops: list[str] = [op for op in _ARITHMETIC_OPS if op in all_operations]
+        other_ops: list[str] = [op for op in all_operations if op not in set(_ARITHMETIC_OPS)]
+        operations: list[str] = base_ops + other_ops
+
         columns = 4
 
         for col in range(columns):
