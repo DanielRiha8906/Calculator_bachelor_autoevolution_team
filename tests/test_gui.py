@@ -11,12 +11,32 @@ import pytest
 
 pytestmark = pytest.mark.gui
 
-# Skip all tests in this module if tkinter is unavailable
+# Import tkinter; skip module if unavailable
 tk = pytest.importorskip("tkinter")
 
 from src.gui import CalculatorGUI
 from src.session_history import SessionHistory
 from src.validation import OperandValidationError
+
+
+def _has_display() -> bool:
+    """Check if a display is available by attempting to create a Tk instance.
+
+    Returns True if Tk can be instantiated, False if running headless.
+    """
+    try:
+        root = tk.Tk()
+        root.destroy()
+        return True
+    except (tk.TclError, Exception):
+        return False
+
+
+# Skip all tests in this module if no display is available
+pytestmark = [pytestmark, pytest.mark.skipif(
+    not _has_display(),
+    reason="No display available (headless environment)"
+)]
 
 
 class TestCalculatorGUIInitialization:
@@ -89,7 +109,10 @@ class TestCalculatorGUIOperations:
         gui = gui_setup
         # Select the "add" operation (first in normal mode)
         gui._ops_listbox.selection_set(0)
-        gui._ops_listbox.event_generate("<<ListboxSelect>>")
+        # Directly call the selection callback since event_generate may not work in non-running mainloop
+        event = tk.Event()
+        event.widget = gui._ops_listbox
+        gui._on_operation_selected(event)
 
         # Verify operand fields were created
         assert len(gui._operand_entries) == 2
@@ -350,17 +373,22 @@ class TestCalculatorGUIHistory:
         """Verify multiple operations are recorded in order."""
         gui = gui_setup
         # First operation: add
+        gui._ops_listbox.selection_clear(0, tk.END)
         gui._ops_listbox.selection_set(0)
-        gui._ops_listbox.event_generate("<<ListboxSelect>>")
+        event = tk.Event()
+        event.widget = gui._ops_listbox
+        gui._on_operation_selected(event)
         gui._operand_entries[0].insert(0, "2")
         gui._operand_entries[1].insert(0, "3")
         gui._execute_operation()
 
         # Second operation: multiply (should be at index 2)
+        # Clear selection before selecting new operation
+        gui._ops_listbox.selection_clear(0, tk.END)
         for i in range(gui._ops_listbox.size()):
             if "multiply" in gui._ops_listbox.get(i).lower():
                 gui._ops_listbox.selection_set(i)
-                gui._ops_listbox.event_generate("<<ListboxSelect>>")
+                gui._on_operation_selected(event)
                 break
 
         # Clear previous entries
@@ -381,7 +409,9 @@ class TestCalculatorGUIHistory:
         gui = gui_setup
         # Record an operation
         gui._ops_listbox.selection_set(0)
-        gui._ops_listbox.event_generate("<<ListboxSelect>>")
+        event = tk.Event()
+        event.widget = gui._ops_listbox
+        gui._on_operation_selected(event)
         gui._operand_entries[0].insert(0, "5")
         gui._operand_entries[1].insert(0, "3")
         gui._execute_operation()
@@ -398,7 +428,9 @@ class TestCalculatorGUIHistory:
         gui = gui_setup
         # Record an operation
         gui._ops_listbox.selection_set(0)
-        gui._ops_listbox.event_generate("<<ListboxSelect>>")
+        event = tk.Event()
+        event.widget = gui._ops_listbox
+        gui._on_operation_selected(event)
         gui._operand_entries[0].insert(0, "5")
         gui._operand_entries[1].insert(0, "3")
         gui._execute_operation()

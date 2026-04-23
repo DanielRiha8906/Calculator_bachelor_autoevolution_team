@@ -63,6 +63,10 @@ class CalculatorGUI:
         self._operand_entries: list[tk.Entry] = []
         self._operand_labels: list[tk.Label] = []
 
+        # Metadata for the currently selected operation.
+        self._selected_operation_key: str | None = None
+        self._selected_arity: int = 0
+
         self._build_widgets()
         self._populate_operations()
 
@@ -212,6 +216,8 @@ class CalculatorGUI:
 
         key = self._ops_keys[selection[0]]
         _method, arity, _description = self._registry.get_operation(key)
+        self._selected_operation_key = key
+        self._selected_arity = arity
         self._rebuild_operand_inputs(arity)
         self._clear_error()
 
@@ -287,6 +293,13 @@ class CalculatorGUI:
                 operands.append(int(value))
             else:
                 operands.append(value)
+
+        # Guard against operand count mismatch before calling the method.
+        if len(operands) != arity:
+            self._display_error(
+                f"Expected {arity} operand(s), got {len(operands)}"
+            )
+            return
 
         # Execute.
         try:
