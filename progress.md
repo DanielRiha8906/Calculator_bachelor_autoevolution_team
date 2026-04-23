@@ -9,7 +9,7 @@
 - **Risks:** Complete GUI rewrite; calculation logic and all other src/ modules unchanged
 - **Tests passed:** 94 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 483.1s | Cost: $1.079365 USD | Turns: 16
 
 ## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (#276) (2026-04-23)
 
