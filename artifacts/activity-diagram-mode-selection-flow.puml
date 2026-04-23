@@ -1,0 +1,42 @@
+@startuml activity-diagram-mode-selection-flow
+skinparam backgroundColor #FEFEFE
+skinparam activityBackgroundColor #F8F9FA
+skinparam activityBorderColor #495057
+skinparam arrowColor #343A40
+
+title Interactive Session — Mode Selection Flow
+
+start
+:Detect execution mode (TTY/CLI);
+:Create CalculatorSession with Calculator;
+:Call get_mode_selection();
+if (Valid mode selected?) then (yes)
+  :session.set_mode(mode_name);
+  :Operation list filtered by mode;
+  :Display current mode name;
+else (no / timeout)
+  :Use all available operations;
+endif
+
+:Enter REPL loop;
+repeat
+  :Refresh operation list from session;
+  :Display menu header with current mode;
+  :Accept operation choice from user;
+  if (Command is 'mode' or 'm'?) then (yes)
+    :Call get_mode_selection();
+    if (Valid new mode?) then (yes)
+      :session.set_mode(new_mode);
+      :Operation list refreshed;
+    else (cancelled)
+    endif
+  else (operation selected)
+    :Resolve and execute operation;
+    :Log result to history;
+  endif
+repeat while (User quit?) is (no)
+->yes;
+:Save history and exit;
+stop
+
+@enduml

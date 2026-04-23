@@ -420,3 +420,16 @@ Duration: 217.7s | Cost: $0.540420 USD | Turns: 4
   - `artifacts/sequence_diagram_operation_execution.puml` — updated sequence diagram with mode param fix, error scenarios (division by zero, invalid domain), and ErrorLogger calls
 
 Duration: 338.8s | Cost: $0.949443 USD | Turns: 25
+
+## Run: update-diagrams — Add mode system and trig operation diagrams (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class-diagram-mode-system.puml` — new diagram: CalculatorMode enum, ModeConfig dataclass, CalculatorSession mode integration
+  - `artifacts/class-diagram-operations-trig.puml` — new diagram: ScientificOperations with six new trig methods, Calculator delegation
+  - `artifacts/activity-diagram-mode-selection-flow.puml` — new diagram: startup mode selection and mid-session mode switching activity flow
+  - `artifacts/sequence-diagram-mode-selection-startup.puml` — new diagram: startup mode selection message sequence
+  - `artifacts/sequence-diagram-mode-switch-runtime.puml` — new diagram: mid-session mode switching message sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

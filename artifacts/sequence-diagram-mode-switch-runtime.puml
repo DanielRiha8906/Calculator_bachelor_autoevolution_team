@@ -1,0 +1,39 @@
+@startuml sequence-diagram-mode-switch-runtime
+skinparam backgroundColor #FEFEFE
+skinparam sequenceArrowColor #343A40
+skinparam sequenceParticipantBackgroundColor #F8F9FA
+skinparam sequenceParticipantBorderColor #495057
+
+title Mid-Session Mode Switch — Message Flow
+
+actor User
+participant "interactive_session()" as IS
+participant "get_mode_selection()" as GMS
+participant "CalculatorSession" as CS
+participant "format_menu_header()" as FMH
+
+IS -> FMH : format_menu_header(operations, mode)
+FMH --> IS : header with current mode name
+IS -> User : display menu + "type 'm' to switch mode"
+User -> IS : enter "mode" or "m"
+
+IS -> GMS : get_mode_selection()
+GMS -> User : display mode menu
+User -> GMS : enter new mode choice
+
+alt Valid mode selected
+  GMS --> IS : return new_mode_name
+  IS -> CS : set_mode(new_mode_name)
+  CS -> CS : _get_operation_list() (re-filtered)
+  CS --> IS : mode updated
+  IS -> User : display format_current_mode(new_mode_name)
+else No valid input
+  GMS --> IS : return None
+  note right: Mode unchanged, loop continues
+end
+
+IS -> FMH : format_menu_header(refreshed_operations, new_mode)
+FMH --> IS : updated header
+IS -> User : display refreshed menu
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml sequence-diagram-mode-selection-startup
+skinparam backgroundColor #FEFEFE
+skinparam sequenceArrowColor #343A40
+skinparam sequenceParticipantBackgroundColor #F8F9FA
+skinparam sequenceParticipantBorderColor #495057
+
+title Startup Mode Selection — Message Flow
+
+actor User
+participant "interactive_session()" as IS
+participant "get_mode_selection()" as GMS
+participant "format_mode_menu()" as FMM
+participant "CalculatorSession" as CS
+participant "get_mode_config()" as GMC
+
+User -> IS : invoke
+IS -> CS : create session(calculator)
+IS -> GMS : get_mode_selection()
+GMS -> FMM : format_mode_menu()
+FMM --> GMS : menu text
+GMS -> User : display menu (1. Normal, 2. Scientific)
+User -> GMS : enter "1" or "2"
+
+alt Valid selection
+  GMS --> IS : return "normal" or "scientific"
+  IS -> CS : set_mode(mode_name)
+  CS -> GMC : get_mode_config(mode_name)
+  GMC --> CS : ModeConfig with operations list
+  CS -> CS : _get_operation_list() (filtered)
+  CS --> IS : mode set confirmed
+  IS -> User : display format_current_mode(mode_name)
+else No valid input (3 retries exhausted)
+  GMS --> IS : return None
+  note right: All operations available (backward compat)
+end
+
+IS -> IS : enter REPL loop
+
+@enduml
