@@ -17,7 +17,7 @@
 - **Risks:** None — backward-compatible changes; `ValueError` is the appropriate exception type for invalid operations
 - **Tests passed:** 1506 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 706.5s | Cost: $1.801913 USD | Turns: 15
 
 ## Run: Issue #272 — V2 Task 14 - Naive/team (2026-04-22)
 
