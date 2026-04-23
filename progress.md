@@ -1,4 +1,17 @@
 
+## Run: Issue #361 — V2 Task 16 - Naive/team (2026-04-23)
+
+- **Branch:** task/issue-361-modern-calculator-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/gui.py` — added iOS-style color constants, `_get_button_style()` helper, dark background for window/display/mode selector, orange operator buttons, flat relief for all buttons
+  - `tests/test_gui.py` — added `TestGUIColorConstants`, `TestGetButtonStyleOperators`, `TestGetButtonStyleNumeric`, `TestGetButtonStyleFunction`, `TestGetButtonStyleCommonAttributes`, `TestGetButtonStyleReturnsDictWithRequiredKeys`, `TestGetButtonStyleEdgeCases`, `TestGUIDisplayStyling`, `TestGUIWindowStyling` (132 new tests)
+- **Purpose:** Redesign calculator GUI with modern iOS-inspired dark theme: black background, orange operator buttons, large display, flat buttons
+- **Risks:** None — styling-only change, zero logic modifications, no new dependencies
+- **Tests passed:** 1808 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (PR #358) (2026-04-23)
 
 - **Branch:** task/issue-275-tkinter-gui
