@@ -445,4 +445,4 @@ Duration: 276.4s | Cost: $0.642867 USD | Turns: 5
 - **Risks:** None — path logic is standard Python pathlib; tested in CI and confirmed working
 - **Tests passed:** 1216 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
