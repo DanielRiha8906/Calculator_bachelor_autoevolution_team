@@ -1,3 +1,16 @@
+## Run: Issue #363 — V2 Task 16 - Expert/team (2026-04-23)
+
+- **Branch:** task/issue-363-ios-calculator-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — complete iOS-style redesign of CalculatorWindow: _THEME dict, _OP_SYMBOLS mapping, numbers grid (3×4 with 0 spanning full width), operations grid (4 columns, dynamic rows), hover effects, mode toggle button
+  - `tests/test_gui_window_ios.py` — 65 new tests covering initialization, styling, mode toggle, number grid, operations grid, hover effects, operation selection, digit input, result display, execute behavior, and edge cases
+- **Purpose:** Rebuild GuiCalculator layout from scratch to match iOS-style dark calculator design per issue #363
+- **Risks:** Breaking change to UI layout (intentional); binary operation UX simplified with informational message pending follow-on work
+- **Tests passed:** 65 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (2026-04-23)
 
 - **Branch:** task/issue-274-expert-team
