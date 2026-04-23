@@ -393,3 +393,17 @@ Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
   - `artifacts/activity_diagram_interactive_session.puml` — updated to show mode-aware loop with get_available_operations, get_mode_display_name, and mode-switch branch
 
 Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
+
+## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `tests/conftest.py` — new autouse fixture to skip test_gui* files when no DISPLAY/WAYLAND_DISPLAY is set
+  - `tests/test_gui.py` — added `pytestmark = pytest.mark.gui` marker
+  - `tests/test_gui_main.py` — added `pytestmark = pytest.mark.gui` marker
+- **Purpose:** Fix 28 GUI test failures in headless CI; `pytest.importorskip("tkinter")` only guards against missing installation, not missing display server — added conftest fixture that skips GUI tests before tk.Tk() is ever instantiated
+- **Risks:** None — change is additive; GUI tests still run normally when DISPLAY is available
+- **Tests passed:** 923 passed, 58 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
