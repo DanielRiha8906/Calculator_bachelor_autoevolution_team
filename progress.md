@@ -557,4 +557,4 @@ Duration: 314.7s | Cost: $0.636171 USD | Turns: 4
   - `artifacts/activity_mode_toggle.puml` — activity diagram for mode toggle and grid rebuild
   - `artifacts/sequence_gui_session.puml` — sequence diagram for CalculatorWindow → GUISessionAdapter → CalculatorSession → Calculator
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 271.5s | Cost: $0.688031 USD | Turns: 4
