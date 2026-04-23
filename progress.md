@@ -7,7 +7,7 @@
   - `artifacts/sequence_diagram_gui_execution.puml` — new sequence diagram for GUI calculation flow with error paths
   - `artifacts/activity_diagram_gui_mode_switch.puml` — new activity diagram for mode switch and operation filtering
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 210.4s | Cost: $0.577896 USD | Turns: 14
 
 ## Run: Issue #276 — V2 Task 15 - Structured/team (2026-04-23)
 
