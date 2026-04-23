@@ -492,3 +492,14 @@ Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
 - **Tests passed:** 92 passed, 0 failed
 
 Duration: 578.6s | Cost: $1.357357 USD | Turns: 17
+
+## Run: update-diagrams — iOS Calculator GUI Diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-calculator-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_gui_architecture.puml` — updated class diagram to reflect iOS redesign: GuiCalculator with _THEME/_SYMBOL_MAP/_OPERATOR_OPS constants and GUISessionAdapter composition
+  - `artifacts/activity-diagram-mode-selection-flow.puml` — updated activity diagram with mode toggle and operation button click flows
+  - `artifacts/sequence_gui_mode_switch.puml` — updated sequence diagram showing button click → adapter → session interaction
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -5,39 +5,40 @@ skinparam packageStyle rectangle
 
 package "src.gui" {
 
-    class CalculatorWindow {
+    class GuiCalculator {
         -_adapter: GUISessionAdapter
+        -_mode: str
         -_selected_op: str | None
-        -_ops_canvas: tk.Canvas
-        -_operand1_entry: ttk.Entry
-        -_operand2_entry: ttk.Entry
-        -_result_var: tk.StringVar
-        -_history_text: tk.Text
+        -_result_label: tk.Label
+        -_toggle_btn: tk.Button
+        -_grid_frame: tk.Frame
         --
-        +on_mode_changed(mode_name: str) : None
-        +on_operation_selected(op_name: str) : None
-        +on_execute_clicked() : None
-        +on_clear_history_clicked() : None
-        ..
-        -update_operation_buttons() : None
-        -update_history_display() : None
-        -_set_result(text: str, is_error: bool) : None
+        +__init__(adapter: GUISessionAdapter | None) : void
+        -_build_ui() : void
+        -_build_button_grid(frame: tk.Frame) : void
+        -_get_button_colors(op_name: str) : tuple
+        -_on_mode_toggle() : void
+        -_on_operation_click(op_name: str) : void
+        +update_result(text: str) : void
     }
 
     class GUISessionAdapter {
         -_session: CalculatorSession
         --
-        +execute_operation_safe(op_name: str, operands: list) : tuple[str, str]
-        +set_mode(mode_name: str) : None
-        +get_operations() : list[str]
-        +get_history() : list[str]
-        +clear_history() : None
+        +__init__(session: CalculatorSession) : void
+        +execute_operation_safe(op_name: str, operands: list) : tuple
+        +set_mode(mode_name: str) : void
+        +get_operations() : list
+        +get_history() : list
+        +clear_history() : void
         +get_arity(op_name: str) : int
     }
 
-    note bottom of CalculatorWindow
-      Constructed by run_gui().
-      Calls .mainloop() to start event loop.
+    note top of GuiCalculator
+      Module-level constants:
+      _THEME: dict (18 visual constants)
+      _SYMBOL_MAP: dict (20+ op-name → symbol)
+      _OPERATOR_OPS: set {"add","subtract","multiply","divide"}
     end note
 }
 
@@ -53,39 +54,20 @@ package "src" {
         +set_mode(mode_name: str) : bool
         +get_current_mode() : str | None
         +execute_operation(op_name: str, operands: list) : tuple
+        +record_history(op_name: str, operands: list, result) : void
         +get_arity(op_name: str) : int
         +get_history() : list[str]
         +get_operation_list() : list[str]
     }
-
-    class OperationHistory {
-        -_entries: list[str]
-        --
-        +record_operation(op_name: str, args: list, result: object) : None
-        +get_history() : list[str]
-        +clear() : None
-    }
 }
 
-package "src.core" {
+"tk.Tk" <|-- GuiCalculator : extends
 
-    class Calculator {
-        +add(a, b)
-        +subtract(a, b)
-        +multiply(a, b)
-        +divide(a, b)
-        +factorial(n)
-        +square(x) / cube(x)
-        +square_root(x) / cube_root(x)
-        +sin(x) / cos(x) / tan(x) ...
-    }
-}
-
-"tk.Tk" <|-- CalculatorWindow : extends
-
-CalculatorWindow *--> GUISessionAdapter : delegates to
+GuiCalculator *--> GUISessionAdapter : uses
 GUISessionAdapter *--> CalculatorSession : wraps
-CalculatorSession --> Calculator : executes via getattr
-CalculatorSession *--> OperationHistory : owns
+
+GuiCalculator ..> "_THEME" : references
+GuiCalculator ..> "_SYMBOL_MAP" : references
+GuiCalculator ..> "_OPERATOR_OPS" : references
 
 @enduml
