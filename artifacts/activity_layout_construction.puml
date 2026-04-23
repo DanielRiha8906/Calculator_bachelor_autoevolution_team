@@ -1,0 +1,67 @@
+@startuml activity_layout_construction
+
+start
+
+:__init__ called;
+
+:Initialize state variables\n(_display_value="0", _current_mode="normal",\n_pending_binary_op=None, _history_visible=False);
+
+:Configure window\n(title, bg, minsize);
+
+:Call _build_ui();
+
+partition "_build_ui()" {
+    :Row 0: Create result label (_result_label_widget);
+
+    :Row 1: Create mode toggle button\n+ bind hover effect;
+
+    :Row 2: Create numbers frame\n→ 3×4 grid of digit buttons\n(7-8-9, 4-5-6, 1-2-3)\n+ 0 spanning full row;
+
+    :Row 3: Create _ops_frame container (empty);
+
+    :Row 4: Create equals/execute button\n+ bind hover effect;
+
+    :Row 5: Create history toggle button\n+ bind hover effect;
+
+    :Row 6: Create history frame\n(Text widget + scrollbar)\nthen grid_remove() to hide;
+
+    :Row 7: Create clear history button\nthen grid_remove() to hide;
+}
+
+:Call on_mode_changed("normal");
+
+partition "on_mode_changed(mode_name)" {
+    :Set _current_mode = mode_name;
+
+    :Call adapter.set_mode(mode_name);
+
+    :Clear pending state\n(_pending_binary_op=None, _selected_op=None);
+
+    :Reset display\n(_display_value="0");
+
+    :Update mode toggle button label;
+
+    :Call update_operation_buttons();
+
+    partition "update_operation_buttons()" {
+        :Destroy all children of _ops_frame;
+
+        :Get operations from adapter;
+
+        :Sort: arithmetic ops first\nthen remaining ops alphabetically;
+
+        fork
+            :For each op:;
+            :Create button with op symbol;
+            :Apply _op_colors() for bg/active-bg;
+            :Bind hover effect via _bind_hover();
+            :Grid into 4-column layout;
+        fork again
+            note right: All ops processed\nin sorted order
+        end fork
+    }
+}
+
+stop
+
+@enduml

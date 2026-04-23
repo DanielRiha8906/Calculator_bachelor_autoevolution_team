@@ -3,15 +3,9 @@
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 
-note as N1
-  Module-level constants (src/gui/window.py):
-  _THEME: dict — iOS color palette (black bg, #FF9500 orange ops, gray buttons,
-    white text, red #FF453A errors, green #30D158 success), Courier font family
-  _SYMBOL_MAP: dict — op name → display symbol
-    ("add" → "+", "subtract" → "−", "multiply" → "×", "divide" → "÷",
-     "sin" → "sin", "asin" → "sin⁻¹", "square_root" → "√", etc.)
-  _ARITHMETIC_OPS: tuple — ("add", "subtract", "multiply", "divide")
-end note
+rectangle "_THEME: dict\nCentralized color and font config\n(bg, orange ops, gray buttons, fonts)" as THEME <<constant>>
+rectangle "_SYMBOL_MAP: dict\nMaps op names to display symbols\n(add→+, subtract→−, multiply→×, etc.)" as SYMBOL_MAP <<constant>>
+rectangle "_ARITHMETIC_OPS: tuple\nBase arithmetic ops, always shown first\n(add, subtract, multiply, divide)" as ARITHMETIC_OPS <<constant>>
 
 package "src.gui" {
 
@@ -19,62 +13,64 @@ package "src.gui" {
 
     class CalculatorWindow {
         -_adapter: GUISessionAdapter
-        -_selected_op: str | None
-        -_current_mode: str
         -_display_value: str
         -_display_var: tk.StringVar
+        -_result_var: tk.StringVar
+        -_selected_op: str | None
+        -_current_mode: str
         -_pending_binary_op: str | None
         -_history_visible: bool
-        -_result_var: tk.StringVar
         -_result_label_widget: tk.Label
         -_mode_toggle_btn: tk.Button
         -_ops_frame: tk.Frame
+        -_history_toggle_btn: tk.Button
         -_history_frame: tk.Frame
         -_history_text: tk.Text
-        -_history_toggle_btn: tk.Button
         -_clear_history_btn: tk.Button
         --
-        +__init__()
-        +on_number_clicked(digit: str)
-        +on_mode_changed(mode_name: str)
-        +on_operation_selected(op_name: str)
-        +on_equals_clicked()
-        +on_execute_clicked()
-        +on_history_toggle_clicked()
-        +on_clear_history_clicked()
-        +update_history_display()
-        +update_operation_buttons()
+        +__init__(session_adapter: GUISessionAdapter): None
+        +on_number_clicked(digit: str): None
+        +on_mode_changed(mode_name: str): None
+        +on_operation_selected(op_name: str): None
+        +on_equals_clicked(): None
+        +on_execute_clicked(): None
+        +on_history_toggle_clicked(): None
+        +on_clear_history_clicked(): None
+        +update_history_display(): None
+        +update_operation_buttons(): None
         --
-        -_build_ui()
-        -_bind_hover(btn, default_bg, active_bg)
-        -_op_colors(op_name: str) : tuple
-        -_on_mode_toggle_clicked()
-        -_set_result(text: str, is_error: bool = False)
-        -_execute_unary_from_display(op_name: str)
-        -_execute_binary_operation()
+        {abstract} -_build_ui(): None
+        {abstract} -_bind_hover(btn: tk.Button, default_bg: str, active_bg: str): None
+        {abstract} -_op_colors(op_name: str): tuple
+        {abstract} -_on_mode_toggle_clicked(): None
+        {abstract} -_set_result(text: str, is_error: bool): None
+        {abstract} -_execute_unary_from_display(op_name: str): None
+        {abstract} -_execute_binary_operation(): None
     }
 
     class GUISessionAdapter {
         -_session: CalculatorSession
         -_pending_operand1: float | None
         --
-        +__init__()
-        +store_first_operand(value: float)
-        +get_pending_operand() : float | None
-        +clear_pending_operand()
-        +execute_operation_safe(op_name, operands, use_pending: bool) : tuple[str, str]
-        +set_mode(mode_name: str)
-        +get_operations() : list[str]
-        +get_history() : list[str]
-        +clear_history()
-        +get_arity(op_name: str) : int
+        +store_first_operand(value: float): None
+        +get_pending_operand(): float | None
+        +clear_pending_operand(): None
+        +execute_operation_safe(op_name: str, operands: list, use_pending: bool): tuple
+        +set_mode(mode_name: str): None
+        +get_operations(): list
+        +get_history(): list
+        +clear_history(): None
+        +get_arity(op_name: str): int
+    }
+
+    class CalculatorSession <<external>> {
     }
 }
 
-TkTk <|-- CalculatorWindow : extends
-
-CalculatorWindow *-- GUISessionAdapter : owns
-
-N1 .. CalculatorWindow
+CalculatorWindow --|> TkTk
+CalculatorWindow "1" *-- "1" GUISessionAdapter : _adapter
+GUISessionAdapter "1" *-- "1" CalculatorSession : _session
+CalculatorWindow ..> THEME : uses
+CalculatorWindow ..> SYMBOL_MAP : uses
 
 @enduml

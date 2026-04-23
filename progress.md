@@ -571,3 +571,15 @@ Duration: 314.7s | Cost: $0.636171 USD | Turns: 4
   - `artifacts/sequence_gui_session.puml` — sequence diagram for CalculatorWindow → GUISessionAdapter → CalculatorSession → Calculator
 
 Duration: 271.5s | Cost: $0.688031 USD | Turns: 4
+
+## Run: update-diagrams — iOS GUI redesign diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** task/issue-363-ios-gui-redesign
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — class diagram for CalculatorWindow, GUISessionAdapter, and module constants
+  - `artifacts/activity_layout_construction.puml` — activity diagram for widget construction and initialization flow
+  - `artifacts/sequence_button_press_flow.puml` — sequence diagram for number, unary, and binary operation button press flows
+  - `artifacts/sequence_mode_switch_flow.puml` — sequence diagram for mode toggle cascade and operation grid rebuild
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
