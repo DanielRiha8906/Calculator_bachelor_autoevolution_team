@@ -1,0 +1,64 @@
+@startuml class_gui_layer
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+note as N1
+  Module-level constants (src/gui/window.py):
+  _THEME: dict — iOS color palette (black bg, orange ops, gray buttons)
+  _SYMBOL_MAP: dict — op name → display symbol ("add" → "+", "multiply" → "×")
+  _ARITHMETIC_OPS: frozenset — {"add", "subtract", "multiply", "divide"}
+end note
+
+package "src.gui" {
+
+    class "tk.Tk" as TkTk <<external>>
+
+    class CalculatorWindow {
+        -_adapter: GUISessionAdapter
+        -_display_value: str
+        -_display_var: tk.StringVar
+        -_current_mode: str
+        -_selected_op: str | None
+        -_pending_binary_op: str | None
+        -_history_visible: bool
+        -_ops_frame: tk.Frame
+        -_history_frame: tk.Frame
+        -_history_text: tk.Text
+        --
+        +on_number_clicked(digit: str)
+        +on_operation_selected(op_name: str)
+        +on_equals_clicked()
+        +on_mode_changed(mode_name: str)
+        +update_operation_buttons()
+        --
+        -_build_ui()
+        -_bind_hover(btn, default_bg, active_bg)
+        -_op_colors(op_name: str) : tuple
+        -_on_mode_toggle_clicked()
+        -_set_result(text: str, is_error: bool)
+        -_execute_unary_from_display(op_name: str)
+        -_execute_binary_operation()
+    }
+
+    class GUISessionAdapter {
+        -_session: CalculatorSession
+        -_pending_operand1: float | None
+        --
+        +store_first_operand(value: float)
+        +get_pending_operand() : float | None
+        +clear_pending_operand()
+        +execute_operation_safe(op_name, operands, use_pending) : tuple[str, str]
+        +set_mode(mode_name: str)
+        +get_operations() : list[str]
+        +get_history() : list[str]
+        +clear_history()
+        +get_arity(op_name: str) : int
+    }
+}
+
+TkTk <|-- CalculatorWindow : extends
+
+CalculatorWindow --> GUISessionAdapter : uses (injected)
+
+@enduml

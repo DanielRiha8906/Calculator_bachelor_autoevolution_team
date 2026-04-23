@@ -1,0 +1,41 @@
+@startuml activity_mode_toggle
+
+|User|
+|CalculatorWindow|
+|GUISessionAdapter|
+
+|User|
+start
+:Click mode toggle button;
+
+|CalculatorWindow|
+:_on_mode_toggle_clicked()
+Determine new_mode:
+  if _current_mode == "normal"
+    new_mode = "scientific"
+  else
+    new_mode = "normal";
+
+:on_mode_changed(new_mode)
+Clear _pending_binary_op = None
+Clear _display_value = "";
+
+|GUISessionAdapter|
+:set_mode(new_mode)
+→ CalculatorSession.set_mode(new_mode)
+Reload _operation_list for new mode;
+
+|CalculatorWindow|
+:_current_mode = new_mode
+update_operation_buttons();
+
+:Destroy existing _ops_frame children
+Re-create 4-column operations grid
+with ops for new_mode
+Re-bind hover effects on each button;
+
+:Update mode toggle button label;
+
+stop
+
+@enduml

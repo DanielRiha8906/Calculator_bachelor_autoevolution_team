@@ -1,0 +1,74 @@
+@startuml activity_binary_op
+
+|User|
+|CalculatorWindow|
+|GUISessionAdapter|
+
+|User|
+start
+:Click digit;
+
+|CalculatorWindow|
+:on_number_clicked(digit)
+Append to _display_value
+Update _display_var;
+
+|User|
+:Click operator (e.g. "+");
+
+|CalculatorWindow|
+:on_operation_selected("add")
+Parse _display_value → operand1_float;
+
+|GUISessionAdapter|
+:store_first_operand(operand1_float)
+_pending_operand1 = operand1_float;
+
+|CalculatorWindow|
+:_pending_binary_op = "add"
+Reset _display_value to "";
+
+|User|
+:Click digit;
+
+|CalculatorWindow|
+:on_number_clicked(digit)
+Append to _display_value
+Update _display_var;
+
+|User|
+:Click "=";
+
+|CalculatorWindow|
+:on_equals_clicked()
+→ _execute_binary_operation()
+Parse _display_value → operand2_float;
+
+|GUISessionAdapter|
+:execute_operation_safe(
+  "add", [operand2_float],
+  use_pending=True
+)
+operands = [_pending_operand1, operand2_float];
+
+|GUISessionAdapter|
+if (execution error?) then (yes)
+  :return ("", error_msg);
+else (no)
+  :clear_pending_operand()
+  return (result_str, "");
+endif
+
+|CalculatorWindow|
+if (is_error?) then (yes)
+  :_set_result(error_msg, is_error=True)
+  Display in red;
+else (no)
+  :_set_result(result_str, is_error=False)
+  _pending_binary_op = None
+  _display_value = result_str;
+endif
+
+stop
+
+@enduml

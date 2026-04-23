@@ -518,3 +518,17 @@ Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
 - **Tests passed:** 52 passed, 0 failed
 
 Duration: 452.5s | Cost: $1.034286 USD | Turns: 14
+
+## Run: update-diagrams — iOS GUI Redesign UML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — New class diagram for GUI layer (CalculatorWindow, GUISessionAdapter)
+  - `artifacts/class_core_layers.puml` — New class diagram for Session/Core layers
+  - `artifacts/activity_binary_op.puml` — New activity diagram for iOS-style binary operation flow
+  - `artifacts/activity_mode_toggle.puml` — New activity diagram for mode toggle flow
+  - `artifacts/sequence_startup.puml` — New sequence diagram for application startup
+  - `artifacts/sequence_binary_op.puml` — New sequence diagram for binary operation execution
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,0 +1,64 @@
+@startuml sequence_binary_op
+
+actor User
+participant CalculatorWindow
+participant GUISessionAdapter
+participant CalculatorSession
+participant Calculator
+
+== Enter first operand ==
+
+User ->> CalculatorWindow : click "3"
+activate CalculatorWindow
+CalculatorWindow -> CalculatorWindow : on_number_clicked("3")\n_display_value = "3"
+deactivate CalculatorWindow
+
+== Select binary operator ==
+
+User ->> CalculatorWindow : click "+" button
+activate CalculatorWindow
+CalculatorWindow -> CalculatorWindow : on_operation_selected("add")\nparse "3" → 3.0
+
+CalculatorWindow -> GUISessionAdapter : store_first_operand(3.0)
+activate GUISessionAdapter
+GUISessionAdapter -> GUISessionAdapter : _pending_operand1 = 3.0
+GUISessionAdapter --> CalculatorWindow : ok
+deactivate GUISessionAdapter
+
+CalculatorWindow -> CalculatorWindow : _pending_binary_op = "add"\n_display_value = ""
+deactivate CalculatorWindow
+
+== Enter second operand ==
+
+User ->> CalculatorWindow : click "5"
+activate CalculatorWindow
+CalculatorWindow -> CalculatorWindow : on_number_clicked("5")\n_display_value = "5"
+deactivate CalculatorWindow
+
+== Press equals ==
+
+User ->> CalculatorWindow : click "="
+activate CalculatorWindow
+CalculatorWindow -> CalculatorWindow : on_equals_clicked()\n→ _execute_binary_operation()\nparse "5" → 5.0
+
+CalculatorWindow -> GUISessionAdapter : execute_operation_safe("add", [5.0], use_pending=True)
+activate GUISessionAdapter
+GUISessionAdapter -> GUISessionAdapter : operands = [3.0, 5.0]
+
+GUISessionAdapter -> CalculatorSession : execute_operation("add", [3.0, 5.0])
+activate CalculatorSession
+CalculatorSession -> Calculator : add(3.0, 5.0)
+activate Calculator
+Calculator --> CalculatorSession : 8.0
+deactivate Calculator
+CalculatorSession --> GUISessionAdapter : (8.0, None)
+deactivate CalculatorSession
+
+GUISessionAdapter -> GUISessionAdapter : clear_pending_operand()
+GUISessionAdapter --> CalculatorWindow : ("8.0", "")
+deactivate GUISessionAdapter
+
+CalculatorWindow -> CalculatorWindow : _set_result("8.0", is_error=False)\n_pending_binary_op = None\n_display_value = "8.0"
+deactivate CalculatorWindow
+
+@enduml
