@@ -9,7 +9,7 @@
 - **Risks:** None — changes confined to display synchronization; no calculation logic modified
 - **Tests passed:** 95 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 391.4s | Cost: $1.045057 USD | Turns: 13
 
 ## Run: Fix PR #370 — Address expert-team review feedback (2026-04-23)
 
