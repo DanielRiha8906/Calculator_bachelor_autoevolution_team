@@ -9,6 +9,8 @@ from unittest import mock
 
 import pytest
 
+pytestmark = pytest.mark.gui
+
 # Skip all tests in this module if tkinter is unavailable
 tk = pytest.importorskip("tkinter")
 
