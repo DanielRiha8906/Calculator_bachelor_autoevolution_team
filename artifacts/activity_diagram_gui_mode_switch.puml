@@ -1,0 +1,43 @@
+@startuml activity_diagram_gui_mode_switch
+
+start
+
+:User clicks "Switch Mode" button;
+:_on_mode_switch() called;
+
+:mode_manager.switch_mode();
+
+note right
+  Toggles internal state:
+  NORMAL -> SCIENTIFIC
+  SCIENTIFIC -> NORMAL
+end note
+
+:Update mode label\nget_mode_display_name();
+
+:_populate_operations();
+
+:registry.get_available_operations(mode_manager);
+
+if (Current mode is SCIENTIFIC?) then (yes)
+    :Return ALL registered operations\n(normal + scientific);
+else (no — NORMAL mode)
+    :For each key in registry:;
+    :mode_manager.is_operation_available\n(key, _scientific_operations);
+    if (key in _scientific_operations?) then (yes)
+        :Exclude operation;
+    else (no)
+        :Include operation;
+    endif
+    :Return normal-only operations;
+endif
+
+:Rebuild operation listbox\nwith filtered operations;
+
+:_rebuild_operand_inputs(0);
+
+:Clear all operand input fields;
+
+stop
+
+@enduml

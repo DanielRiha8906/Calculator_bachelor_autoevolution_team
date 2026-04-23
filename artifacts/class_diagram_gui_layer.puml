@@ -1,0 +1,102 @@
+@startuml class_diagram_gui_layer
+
+skinparam classAttributeIconSize 0
+
+package "GUI Layer" {
+    class CalculatorGUI {
+        -_calc: Calculator
+        -_registry: OperationRegistry
+        -_mode_manager: ModeManager
+        -_history: SessionHistory
+        --
+        +__init__(root: tk.Tk, history: SessionHistory)
+        +run()
+        -_build_widgets()
+        -_populate_operations()
+        -_on_operation_selected(event)
+        -_rebuild_operand_inputs(arity: int)
+        -_execute_operation()
+        -_on_mode_switch()
+        -_on_clear_history()
+        -_refresh_history_display()
+        -_display_result(op: str, operands: list, result: float)
+        -_display_error(msg: str)
+        -_clear_error()
+    }
+}
+
+package "Engine" {
+    class Calculator {
+        +add(a: float, b: float) : float
+        +subtract(a: float, b: float) : float
+        +multiply(a: float, b: float) : float
+        +divide(a: float, b: float) : float
+        +power(x: float, y: float) : float
+        +factorial(n: int) : int
+        +square(x: float) : float
+        +cube(x: float) : float
+        +square_root(x: float) : float
+        +cube_root(x: float) : float
+        +log(x: float) : float
+        +ln(x: float) : float
+    }
+
+    class OperationRegistry {
+        -_registry: dict[str, tuple]
+        -_scientific_operations: set[str]
+        --
+        +__init__(calculator: Calculator)
+        +get_operation(key: str) : tuple
+        +get_available_operations(mode_manager: ModeManager) : dict
+        +register_operation(key: str, method, arity: int, description: str)
+        +register_scientific(key: str, method, arity: int, description: str)
+    }
+
+    class ModeManager {
+        -_current_mode: CalculatorMode
+        --
+        +switch_mode()
+        +get_mode_display_name() : str
+        +is_operation_available(op_name: str, scientific_ops: set) : bool
+    }
+
+    enum CalculatorMode {
+        NORMAL
+        SCIENTIFIC
+    }
+}
+
+package "Session" {
+    class SessionHistory {
+        -_entries: list[dict]
+        --
+        +record_operation(key: str, operands: list, result: float)
+        +display_history() : str
+        +clear()
+        +is_empty() : bool
+    }
+}
+
+package "Validation" {
+    class validation <<module>> {
+        +validate_operand(raw: str) : float
+    }
+
+    class OperandValidationError {
+    }
+
+    ValueError <|-- OperandValidationError
+    validation ..> OperandValidationError : raises
+}
+
+CalculatorGUI *-- Calculator       : owns
+CalculatorGUI *-- OperationRegistry : owns
+CalculatorGUI *-- ModeManager      : owns
+CalculatorGUI o-- SessionHistory   : receives via constructor
+
+OperationRegistry --> Calculator   : holds bound methods
+ModeManager --> CalculatorMode     : uses
+
+CalculatorGUI ..> validation       : calls validate_operand\nin _execute_operation
+
+@enduml

@@ -1,3 +1,14 @@
+## Run: update-diagrams — Tkinter GUI layer diagrams (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui_layer.puml` — new class diagram for CalculatorGUI and its engine dependencies
+  - `artifacts/sequence_diagram_gui_execution.puml` — new sequence diagram for GUI calculation flow with error paths
+  - `artifacts/activity_diagram_gui_mode_switch.puml` — new activity diagram for mode switch and operation filtering
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #276 — V2 Task 15 - Structured/team (2026-04-23)
 
 - **Branch:** task/issue-276-tkinter-gui
