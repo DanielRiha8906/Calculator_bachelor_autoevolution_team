@@ -420,4 +420,4 @@ Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
 - **Risks:** None — changes confined to `src/gui.py` and `tests/test_gui.py`; no existing logic modified
 - **Tests passed:** 1676 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 457.9s | Cost: $1.112558 USD | Turns: 14
