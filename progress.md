@@ -582,4 +582,4 @@ Duration: 271.5s | Cost: $0.688031 USD | Turns: 4
   - `artifacts/sequence_button_press_flow.puml` — sequence diagram for number, unary, and binary operation button press flows
   - `artifacts/sequence_mode_switch_flow.puml` — sequence diagram for mode toggle cascade and operation grid rebuild
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 245.4s | Cost: $0.588137 USD | Turns: 4
