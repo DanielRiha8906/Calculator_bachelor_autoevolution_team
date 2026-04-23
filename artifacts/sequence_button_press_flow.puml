@@ -1,0 +1,115 @@
+@startuml sequence_button_press_flow
+
+participant User
+participant CalculatorWindow
+participant GUISessionAdapter
+participant CalculatorSession
+
+== Scenario A: Number button press ("5") ==
+
+User ->> CalculatorWindow: on_number_clicked("5")
+activate CalculatorWindow
+
+if (_display_value == "0"?) then (yes)
+    CalculatorWindow -> CalculatorWindow: _display_value = "5"\n(replace)
+else (no)
+    CalculatorWindow -> CalculatorWindow: _display_value += "5"\n(append)
+end
+
+CalculatorWindow -> CalculatorWindow: _display_var.set(_display_value)
+CalculatorWindow -> CalculatorWindow: _result_var.set(_display_value)
+
+note over CalculatorWindow: No backend call for digit input
+
+deactivate CalculatorWindow
+
+== Scenario B: Unary operation ("square_root") ==
+
+User ->> CalculatorWindow: on_operation_selected("square_root")
+activate CalculatorWindow
+
+CalculatorWindow ->> GUISessionAdapter: get_arity("square_root")
+activate GUISessionAdapter
+GUISessionAdapter -> CalculatorSession: inspect operation signature
+GUISessionAdapter -->> CalculatorWindow: 1
+deactivate GUISessionAdapter
+
+note over CalculatorWindow: Arity == 1, execute immediately
+
+CalculatorWindow -> CalculatorWindow: _execute_unary_from_display("square_root")
+CalculatorWindow ->> GUISessionAdapter: execute_operation_safe("square_root", [operand], use_pending=False)
+activate GUISessionAdapter
+
+GUISessionAdapter ->> CalculatorSession: execute_operation("square_root", [operand])
+activate CalculatorSession
+CalculatorSession -->> GUISessionAdapter: result value
+deactivate CalculatorSession
+
+GUISessionAdapter -->> CalculatorWindow: (result_str, "")
+deactivate GUISessionAdapter
+
+CalculatorWindow -> CalculatorWindow: _set_result(result_str, is_error=False)
+CalculatorWindow -> CalculatorWindow: update_history_display()
+
+deactivate CalculatorWindow
+
+== Scenario C: Binary operation flow ("3 + 4 =") ==
+
+group Step 1 — Operator selection
+    User ->> CalculatorWindow: on_operation_selected("add")
+    activate CalculatorWindow
+
+    CalculatorWindow ->> GUISessionAdapter: get_arity("add")
+    activate GUISessionAdapter
+    GUISessionAdapter -->> CalculatorWindow: 2
+    deactivate GUISessionAdapter
+
+    note over CalculatorWindow: Arity == 2, store first operand
+
+    CalculatorWindow ->> GUISessionAdapter: store_first_operand(3.0)
+    activate GUISessionAdapter
+    GUISessionAdapter -> GUISessionAdapter: _pending_operand1 = 3.0
+    deactivate GUISessionAdapter
+
+    CalculatorWindow -> CalculatorWindow: _pending_binary_op = "add"
+    CalculatorWindow -> CalculatorWindow: append "+" symbol to display
+
+    deactivate CalculatorWindow
+end
+
+group Step 2 — Second operand
+    User ->> CalculatorWindow: on_number_clicked("4")
+    activate CalculatorWindow
+    CalculatorWindow -> CalculatorWindow: append "4" to display\n(no backend call)
+    deactivate CalculatorWindow
+end
+
+group Step 3 — Execute
+    User ->> CalculatorWindow: on_equals_clicked()
+    activate CalculatorWindow
+
+    note over CalculatorWindow: _pending_binary_op is not None
+
+    CalculatorWindow -> CalculatorWindow: _execute_binary_operation()
+
+    CalculatorWindow ->> GUISessionAdapter: execute_operation_safe("add", [4.0], use_pending=True)
+    activate GUISessionAdapter
+
+    GUISessionAdapter -> GUISessionAdapter: prepend stored operand1\n→ operands = [3.0, 4.0]
+
+    GUISessionAdapter ->> CalculatorSession: execute_operation("add", [3.0, 4.0])
+    activate CalculatorSession
+    CalculatorSession -->> GUISessionAdapter: "7.0"
+    deactivate CalculatorSession
+
+    GUISessionAdapter -->> CalculatorWindow: ("7.0", "")
+    deactivate GUISessionAdapter
+
+    CalculatorWindow -> CalculatorWindow: clear pending state\n(_pending_binary_op=None)
+    CalculatorWindow -> CalculatorWindow: _set_result("7.0", is_error=False)
+    CalculatorWindow -> CalculatorWindow: update_history_display()
+
+    deactivate CalculatorWindow
+end
+
+@enduml

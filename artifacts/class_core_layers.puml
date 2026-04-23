@@ -1,0 +1,88 @@
+@startuml class_core_layers
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src.gui" {
+
+    class GUISessionAdapter {
+        -_session: CalculatorSession
+        -_pending_operand1: float | None
+        --
+        +store_first_operand(value: float)
+        +get_pending_operand() : float | None
+        +clear_pending_operand()
+        +execute_operation_safe(op_name, operands, use_pending) : tuple[str, str]
+        +set_mode(mode_name: str)
+        +get_operations() : list[str]
+        +get_history() : list[str]
+        +clear_history()
+        +get_arity(op_name: str) : int
+    }
+}
+
+package "src" {
+
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        -_current_mode: str | None
+        -_operation_list: list[str]
+        --
+        +set_mode(mode_name: str)
+        +execute_operation(op_name: str, operands: list) : tuple
+        +get_history() : list[str]
+        +get_arity(op_name: str) : int
+    }
+
+    class OperationHistory {
+        -_entries: list[str]
+        --
+        +record_operation(op_name, args, result)
+        +get_history() : list[str]
+        +clear()
+        +save_to_file(filepath: str)
+    }
+
+    enum CalculatorMode {
+        NORMAL = "normal"
+        SCIENTIFIC = "scientific"
+    }
+}
+
+package "src.core" {
+
+    class Calculator {
+        +add(a, b)
+        +subtract(a, b)
+        +multiply(a, b)
+        +divide(a, b)
+        +sin(x) / cos(x)
+        +square_root(x)
+        +factorial(n)
+    }
+
+    class NormalOperations <<utility>> {
+        {static} +add(a, b)
+        {static} +subtract(a, b)
+        {static} +multiply(a, b)
+        {static} +divide(a, b)
+    }
+
+    class ScientificOperations <<utility>> {
+        {static} +sin(x) / cos(x)
+        {static} +square_root(x)
+        {static} +factorial(n)
+    }
+}
+
+GUISessionAdapter --> CalculatorSession : adapts
+
+CalculatorSession *-- Calculator : composes
+CalculatorSession *-- OperationHistory : composes
+CalculatorSession --> CalculatorMode : uses
+
+Calculator --> NormalOperations : delegates
+Calculator --> ScientificOperations : delegates
+
+@enduml

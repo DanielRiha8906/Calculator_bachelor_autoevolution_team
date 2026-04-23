@@ -1,0 +1,48 @@
+@startuml activity_mode_toggle
+
+title Mode Toggle and Operations Grid Rebuild
+
+start
+
+:User clicks mode toggle button;
+note right: _mode_toggle_btn shows\nopposite mode name
+
+:_on_mode_toggle_clicked()
+Determine new_mode:
+  if _current_mode == "normal"
+    new_mode = "scientific"
+  else
+    new_mode = "normal";
+
+:on_mode_changed(new_mode)
+_pending_binary_op = None
+_display_value = ""
+_display_var updated;
+
+:adapter.set_mode(new_mode)
+→ session.set_mode(new_mode)
+Reload _operation_list from get_mode_config(new_mode);
+
+:_current_mode = new_mode
+Update mode toggle button label;
+
+:update_operation_buttons();
+
+:Destroy all child widgets in _ops_frame;
+
+:adapter.get_operations()
+Sort: _ARITHMETIC_OPS first (4 orange buttons),
+then mode-specific ops (dark gray or standard gray);
+
+:For each op:
+  symbol = _SYMBOL_MAP.get(op_name, op_name)
+  (bg, active_bg) = _op_colors(op_name)
+  Create tk.Button(relief=FLAT, bd=0)
+  _bind_hover(btn, bg, active_bg);
+
+:Lay out buttons in 4-column grid
+in _ops_frame;
+
+stop
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml sequence_mode_switch_flow
+
+participant User
+participant CalculatorWindow
+participant GUISessionAdapter
+participant CalculatorSession
+
+User ->> CalculatorWindow: _on_mode_toggle_clicked()
+activate CalculatorWindow
+
+CalculatorWindow -> CalculatorWindow: determine new_mode\n(toggle "normal" ↔ "scientific")
+
+CalculatorWindow -> CalculatorWindow: on_mode_changed(new_mode)
+
+CalculatorWindow ->> GUISessionAdapter: set_mode(new_mode)
+activate GUISessionAdapter
+GUISessionAdapter ->> CalculatorSession: set_mode(new_mode)
+activate CalculatorSession
+CalculatorSession -->> GUISessionAdapter: ok
+deactivate CalculatorSession
+deactivate GUISessionAdapter
+
+note over CalculatorWindow: State reset:\n_selected_op = None\n_pending_binary_op = None
+
+CalculatorWindow ->> GUISessionAdapter: clear_pending_operand()
+activate GUISessionAdapter
+GUISessionAdapter -> GUISessionAdapter: _pending_operand1 = None
+deactivate GUISessionAdapter
+
+CalculatorWindow -> CalculatorWindow: _display_value = "0"
+CalculatorWindow -> CalculatorWindow: _result_var.set("")
+
+CalculatorWindow -> CalculatorWindow: update mode_toggle_btn label\n("Scientific" or "Normal")
+
+CalculatorWindow -> CalculatorWindow: update_operation_buttons()
+
+CalculatorWindow ->> GUISessionAdapter: get_operations()
+activate GUISessionAdapter
+GUISessionAdapter ->> CalculatorSession: get filtered ops list
+activate CalculatorSession
+CalculatorSession -->> GUISessionAdapter: ops for new_mode
+deactivate CalculatorSession
+GUISessionAdapter -->> CalculatorWindow: ops list
+deactivate GUISessionAdapter
+
+note over CalculatorWindow: Destroy old buttons\nbuild new buttons in 4-column grid
+
+CalculatorWindow -> CalculatorWindow: for each op:\n  create button + _bind_hover()
+
+note over CalculatorWindow: Mode switch complete
+
+deactivate CalculatorWindow
+
+@enduml

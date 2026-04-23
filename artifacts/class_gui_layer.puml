@@ -1,0 +1,76 @@
+@startuml class_gui_layer
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+rectangle "_THEME: dict\nCentralized color and font config\n(bg, orange ops, gray buttons, fonts)" as THEME <<constant>>
+rectangle "_SYMBOL_MAP: dict\nMaps op names to display symbols\n(add→+, subtract→−, multiply→×, etc.)" as SYMBOL_MAP <<constant>>
+rectangle "_ARITHMETIC_OPS: tuple\nBase arithmetic ops, always shown first\n(add, subtract, multiply, divide)" as ARITHMETIC_OPS <<constant>>
+
+package "src.gui" {
+
+    class "tk.Tk" as TkTk <<external>>
+
+    class CalculatorWindow {
+        -_adapter: GUISessionAdapter
+        -_display_value: str
+        -_display_var: tk.StringVar
+        -_result_var: tk.StringVar
+        -_selected_op: str | None
+        -_current_mode: str
+        -_pending_binary_op: str | None
+        -_history_visible: bool
+        -_result_label_widget: tk.Label
+        -_mode_toggle_btn: tk.Button
+        -_ops_frame: tk.Frame
+        -_history_toggle_btn: tk.Button
+        -_history_frame: tk.Frame
+        -_history_text: tk.Text
+        -_clear_history_btn: tk.Button
+        --
+        +__init__(session_adapter: GUISessionAdapter): None
+        +on_number_clicked(digit: str): None
+        +on_mode_changed(mode_name: str): None
+        +on_operation_selected(op_name: str): None
+        +on_equals_clicked(): None
+        +on_execute_clicked(): None
+        +on_history_toggle_clicked(): None
+        +on_clear_history_clicked(): None
+        +update_history_display(): None
+        +update_operation_buttons(): None
+        --
+        {abstract} -_build_ui(): None
+        {abstract} -_bind_hover(btn: tk.Button, default_bg: str, active_bg: str): None
+        {abstract} -_op_colors(op_name: str): tuple
+        {abstract} -_on_mode_toggle_clicked(): None
+        {abstract} -_set_result(text: str, is_error: bool): None
+        {abstract} -_execute_unary_from_display(op_name: str): None
+        {abstract} -_execute_binary_operation(): None
+    }
+
+    class GUISessionAdapter {
+        -_session: CalculatorSession
+        -_pending_operand1: float | None
+        --
+        +store_first_operand(value: float): None
+        +get_pending_operand(): float | None
+        +clear_pending_operand(): None
+        +execute_operation_safe(op_name: str, operands: list, use_pending: bool): tuple
+        +set_mode(mode_name: str): None
+        +get_operations(): list
+        +get_history(): list
+        +clear_history(): None
+        +get_arity(op_name: str): int
+    }
+
+    class CalculatorSession <<external>> {
+    }
+}
+
+CalculatorWindow --|> TkTk
+CalculatorWindow "1" *-- "1" GUISessionAdapter : _adapter
+GUISessionAdapter "1" *-- "1" CalculatorSession : _session
+CalculatorWindow ..> THEME : uses
+CalculatorWindow ..> SYMBOL_MAP : uses
+
+@enduml

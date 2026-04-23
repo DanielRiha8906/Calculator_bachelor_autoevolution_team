@@ -1,3 +1,56 @@
+## Run: Fix PR #370 — Wire number/operator buttons to result display (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — added `_result_var.set(_display_value)` in `on_number_clicked()` and `on_operation_selected()`; removed `_set_result("")` that overwrote the operator display
+  - `tests/test_gui_window.py` — added 5 new tests: `TestNumberClickedHandler` digit sync tests, new `TestOperationDisplaySync` class, `TestButtonOnlyBinaryFlow.test_full_button_flow_display_visible_at_each_step`
+- **Purpose:** Fix unresponsive number/operator buttons — clicking digits and operators now updates the result label in real time so users see their input
+- **Risks:** None — changes confined to display synchronization; no calculation logic modified
+- **Tests passed:** 95 passed, 0 failed
+
+Duration: 391.4s | Cost: $1.045057 USD | Turns: 13
+
+## Run: Fix PR #370 — Address expert-team review feedback (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — removed operand entry widgets; extended _SYMBOL_MAP with all canonical scientific op names; added _ARITHMETIC_OPS constant; pinned base arithmetic ops to top of operations grid; removed entry widget references from on_operation_selected and on_execute_clicked
+  - `tests/test_gui_window.py` — removed/fixed broken tests referencing deleted entry widgets; added TestNoOperandEntryWidgets, TestSymbolMapCompleteness, TestBaseOperationPinning, TestButtonOnlyBinaryFlow test classes
+- **Purpose:** Satisfy unresolved maintainer feedback: remove Operand 1/2 input boxes, use number buttons exclusively for input, use math symbols for all op buttons, pin base arithmetic ops to top of grid regardless of mode
+- **Risks:** None — visual-only changes; calculation logic untouched
+- **Tests passed:** 1446 passed, 0 failed
+
+Duration: 387.7s | Cost: $1.013140 USD | Turns: 12
+
+## Run: Fix PR #370 — Redesign GuiCalculator with iOS-style flat layout (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/session_adapter.py` — added pending operand tracking methods (store_first_operand, get_pending_operand, clear_pending_operand, use_pending flag in execute_operation_safe)
+  - `src/gui/window.py` — refactored display from dual-operand entry boxes to single accumulator display; added on_number_clicked, on_equals_clicked, on_history_toggle_clicked; binary ops now deferred until =; unary ops execute immediately; history hidden by default
+  - `tests/test_gui_window.py` — added 23 new tests for new event handlers and display behavior
+  - `tests/test_gui_session_adapter.py` — added 23 new tests for pending operand adapter methods
+  - `tests/test_gui_input_flow.py` — new file with 26 integration tests for button-driven iOS input flow
+- **Purpose:** Address unresolved maintainer feedback on PR #370: implement button-driven input model (not text-box entry), hide history by default with toggle button, execute binary ops on = press, execute unary ops immediately
+- **Risks:** Interaction model is fundamentally different from text-box entry; existing on_execute_clicked preserved as legacy path for interface compatibility
+- **Tests passed:** 1432 passed, 0 failed
+
+Duration: 524.5s | Cost: $1.370220 USD | Turns: 12
+
+## Run: update-diagrams — iOS GUI Redesign Diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — class diagram showing GuiCalculator, CalculatorSession, Calculator, and supporting classes with new iOS-style GUI structure
+  - `artifacts/gui_activity_diagram.puml` — activity diagram for button press flow including number, operator, equals, and mode toggle branches
+  - `artifacts/gui_sequence_diagram.puml` — sequence diagram for "3 + 5 =" operation through GuiCalculator to CalculatorSession, Calculator, NormalOperations, and OperationHistory
+
+Duration: 262.5s | Cost: $0.579979 USD | Turns: 4
+
 ## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (2026-04-23)
 
 - **Branch:** task/issue-274-expert-team
@@ -478,3 +531,55 @@ Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
   - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
 
 Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
+
+## Run: Issue #363 — V2 Task 16 - Expert/team (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — complete rewrite of GuiCalculator layout to iOS-style flat design; added _THEME dict, _SYMBOL_MAP, _ARITHMETIC_OPS constants; replaced scrollable canvas with 4-column operations grid; added numbers grid (3×4); added mode toggle button; added hover effects on all buttons; replaced ttk with tk widgets for full color control
+  - `tests/test_gui_window.py` — updated broken assertions for removed attributes (_ops_canvas/_ops_inner_frame → _ops_frame); added 28 new test functions covering theme constants, symbol mapping, result display, mode toggle, numbers grid, operations grid, hover effects, and frame backgrounds
+- **Purpose:** Redesign GuiCalculator to modern iOS-style calculator with black/orange/gray flat design, mode-responsive operation grid, symbol-mapped buttons, and centralized theming
+- **Risks:** Visual-only change; calculation logic untouched. ttk removal means any ttk-specific styling in tests had to be updated.
+- **Tests passed:** 52 passed, 0 failed
+
+Duration: 452.5s | Cost: $1.034286 USD | Turns: 14
+
+## Run: update-diagrams — iOS GUI Redesign UML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — New class diagram for GUI layer (CalculatorWindow, GUISessionAdapter)
+  - `artifacts/class_core_layers.puml` — New class diagram for Session/Core layers
+  - `artifacts/activity_binary_op.puml` — New activity diagram for iOS-style binary operation flow
+  - `artifacts/activity_mode_toggle.puml` — New activity diagram for mode toggle flow
+  - `artifacts/sequence_startup.puml` — New sequence diagram for application startup
+  - `artifacts/sequence_binary_op.puml` — New sequence diagram for binary operation execution
+
+Duration: 314.7s | Cost: $0.636171 USD | Turns: 4
+
+## Run: update-diagrams — iOS GUI Redesign (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** task/issue-363-ios-gui-redesign
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — class diagram for CalculatorWindow and GUISessionAdapter
+  - `artifacts/class_core_layer.puml` — class diagram for CalculatorSession, Calculator, OperationHistory, mode system
+  - `artifacts/activity_binary_operation.puml` — activity diagram for binary operation flow
+  - `artifacts/activity_mode_toggle.puml` — activity diagram for mode toggle and grid rebuild
+  - `artifacts/sequence_gui_session.puml` — sequence diagram for CalculatorWindow → GUISessionAdapter → CalculatorSession → Calculator
+
+Duration: 271.5s | Cost: $0.688031 USD | Turns: 4
+
+## Run: update-diagrams — iOS GUI redesign diagrams (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** task/issue-363-ios-gui-redesign
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — class diagram for CalculatorWindow, GUISessionAdapter, and module constants
+  - `artifacts/activity_layout_construction.puml` — activity diagram for widget construction and initialization flow
+  - `artifacts/sequence_button_press_flow.puml` — sequence diagram for number, unary, and binary operation button press flows
+  - `artifacts/sequence_mode_switch_flow.puml` — sequence diagram for mode toggle cascade and operation grid rebuild
+
+Duration: 245.4s | Cost: $0.588137 USD | Turns: 4

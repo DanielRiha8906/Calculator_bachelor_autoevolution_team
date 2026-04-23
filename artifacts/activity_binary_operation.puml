@@ -1,0 +1,57 @@
+@startuml activity_binary_operation
+
+title Binary Operation Flow (iOS-style button input)
+
+start
+
+:User clicks digit button(s);
+note right: on_number_clicked(digit)\nappends to _display_value\nupdates _display_var
+
+:User clicks binary operator (e.g. "+");
+
+:on_operation_selected("add")
+Parse _display_value → operand1_float;
+
+fork
+  :GUISessionAdapter.store_first_operand(operand1_float)
+  _pending_operand1 = operand1_float;
+fork again
+  :CalculatorWindow:
+  _pending_binary_op = "add"
+  Reset _display_value = "";
+end fork
+
+:User clicks digit button(s) for second operand;
+note right: on_number_clicked(digit)\nappends to _display_value\nupdates _display_var
+
+:User clicks "=" button;
+note right: on_equals_clicked()\n→ _execute_binary_operation()
+
+:Parse _display_value → operand2_float;
+
+:adapter.execute_operation_safe(
+  op_name="add",
+  operands=[operand2_float],
+  use_pending=True
+)
+prepend operand1: operands = [op1, op2];
+
+:session.execute_operation("add", [op1, op2])
+→ Calculator.add(op1, op2);
+
+if (execution error?) then (yes)
+  :_set_result(error_msg, is_error=True)
+  Display in red (#FF453A);
+  note right: _pending_binary_op\nand _display_value\nare NOT cleared
+else (no)
+  :clear_pending_operand()
+  _set_result(result_str, is_error=False)
+  _pending_binary_op = None
+  _display_value = result_str
+  update_history_display();
+  note right: result shown in green\n(#30D158) then white
+endif
+
+stop
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml sequence_startup
+
+participant "main()" as main
+participant "run_gui()" as run_gui
+participant Calculator
+participant CalculatorSession
+participant GUISessionAdapter
+participant CalculatorWindow
+
+main -> run_gui : call
+activate run_gui
+
+run_gui -> Calculator : Calculator()
+activate Calculator
+Calculator --> run_gui : calculator
+deactivate Calculator
+
+run_gui -> CalculatorSession : CalculatorSession(calculator)
+activate CalculatorSession
+CalculatorSession --> run_gui : session
+deactivate CalculatorSession
+
+run_gui -> GUISessionAdapter : GUISessionAdapter(session)
+activate GUISessionAdapter
+GUISessionAdapter --> run_gui : adapter
+deactivate GUISessionAdapter
+
+run_gui -> CalculatorWindow : CalculatorWindow(adapter)
+activate CalculatorWindow
+CalculatorWindow -> CalculatorWindow : _build_ui()
+note right: Creates display label,\nnumbers grid (3x4),\nops grid (4-col),\nmode toggle button,\nhistory frame
+CalculatorWindow --> run_gui : window
+deactivate CalculatorWindow
+
+run_gui -> CalculatorWindow : window.mainloop()
+activate CalculatorWindow
+note right: Blocks until window closed
+deactivate CalculatorWindow
+
+deactivate run_gui
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml gui_sequence_diagram
+
+actor User
+participant GuiCalculator
+participant CalculatorSession
+participant Calculator
+participant NormalOperations
+participant OperationHistory
+
+== Enter first operand ==
+
+User -> GuiCalculator : click "3"
+activate GuiCalculator
+GuiCalculator -> GuiCalculator : _on_number_click("3")
+GuiCalculator -> GuiCalculator : _update_display("3")
+deactivate GuiCalculator
+
+== Select operator ==
+
+User -> GuiCalculator : click "+"
+activate GuiCalculator
+GuiCalculator -> GuiCalculator : _on_operation_click("add")
+note right: no pending op yet;\nstore "add" as _pending_operation
+GuiCalculator -> GuiCalculator : _update_display("0")
+deactivate GuiCalculator
+
+== Enter second operand ==
+
+User -> GuiCalculator : click "5"
+activate GuiCalculator
+GuiCalculator -> GuiCalculator : _on_number_click("5")
+GuiCalculator -> GuiCalculator : _update_display("5")
+deactivate GuiCalculator
+
+== Press equals ==
+
+User -> GuiCalculator : click "="
+activate GuiCalculator
+GuiCalculator -> GuiCalculator : _on_equals_click()
+
+GuiCalculator -> CalculatorSession : execute_operation("add", [3, 5])
+activate CalculatorSession
+CalculatorSession -> Calculator : add(3, 5)
+activate Calculator
+Calculator -> NormalOperations : add(3, 5)
+activate NormalOperations
+NormalOperations --> Calculator : return 8
+deactivate NormalOperations
+Calculator --> CalculatorSession : return 8
+deactivate Calculator
+CalculatorSession --> GuiCalculator : return (8, None)
+deactivate CalculatorSession
+
+GuiCalculator -> CalculatorSession : record_history("add", [3, 5], 8)
+activate CalculatorSession
+CalculatorSession -> OperationHistory : record_operation("add", [3, 5], 8)
+activate OperationHistory
+OperationHistory --> CalculatorSession : ok
+deactivate OperationHistory
+CalculatorSession --> GuiCalculator : ok
+deactivate CalculatorSession
+
+GuiCalculator -> GuiCalculator : _update_display("8")
+note right: result "8" shown;\n_pending_operation cleared
+deactivate GuiCalculator
+
+@enduml

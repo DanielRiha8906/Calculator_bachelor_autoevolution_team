@@ -21,9 +21,33 @@ class GUISessionAdapter:
 
     def __init__(self, session: CalculatorSession) -> None:
         self._session: CalculatorSession = session
+        self._pending_operand1: float | None = None
+
+    def store_first_operand(self, value: float) -> None:
+        """Save *value* as the first operand for a pending binary operation.
+
+        Args:
+            value: The numeric value to store.
+        """
+        self._pending_operand1 = value
+
+    def get_pending_operand(self) -> float | None:
+        """Retrieve the stored first operand, or ``None`` if none is pending.
+
+        Returns:
+            The stored operand value, or ``None`` if no operand has been saved.
+        """
+        return self._pending_operand1
+
+    def clear_pending_operand(self) -> None:
+        """Clear the stored first operand.
+
+        Should be called on mode switch or error to reset pending state.
+        """
+        self._pending_operand1 = None
 
     def execute_operation_safe(
-        self, op_name: str, operands: list
+        self, op_name: str, operands: list, use_pending: bool = False
     ) -> tuple[str, str]:
         """Execute *op_name* with *operands* and return a display-ready result pair.
 
@@ -36,15 +60,24 @@ class GUISessionAdapter:
         Args:
             op_name: The canonical operation name (e.g. ``"add"``).
             operands: A list of numeric values (``int`` or ``float``).
+            use_pending: When ``True`` and *operands* has exactly one element,
+                the stored ``_pending_operand1`` is prepended to produce a
+                two-element list before execution.  If ``_pending_operand1``
+                is ``None`` the call proceeds without prepending, and the
+                underlying session will return an arity error as normal.
 
         Returns:
             A 2-tuple ``(result_str, error_msg)`` where exactly one of the
             two strings is non-empty.
         """
-        result, error_msg = self._session.execute_operation(op_name, operands)
+        resolved_operands: list = operands
+        if use_pending and len(operands) == 1 and self._pending_operand1 is not None:
+            resolved_operands = [self._pending_operand1] + list(operands)
+
+        result, error_msg = self._session.execute_operation(op_name, resolved_operands)
         if error_msg is not None:
             return "", error_msg
-        self._session.record_history(op_name, operands, result)
+        self._session.record_history(op_name, resolved_operands, result)
         return str(result), ""
 
     def set_mode(self, mode_name: str) -> None:
