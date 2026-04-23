@@ -477,4 +477,4 @@ Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
   - `artifacts/activity_calculator_execution.puml` — activity diagram of the execute operation flow
   - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
