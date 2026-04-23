@@ -1,0 +1,54 @@
+@startuml sequence_diagram_mode_switch
+
+actor User
+participant "__main__" as Main
+participant "InputHandler" as IO
+participant "OperationRegistry" as Reg
+participant "ModeManager" as MM
+
+Main -> Reg: OperationRegistry(calculator)
+Reg -> Reg: _register_scientific_defaults()
+Main -> MM: ModeManager()
+MM -> MM: _current_mode = CalculatorMode.NORMAL
+
+Main -> Reg: get_available_operations(mode_manager)
+activate Reg
+Reg -> MM: is_operation_available(key, _scientific_operations)
+return available ops (Normal only)
+Main -> MM: get_mode_display_name()
+MM -> Main: "Normal"
+
+Main -> IO: get_operation_choice(available, current_mode="Normal")
+activate IO
+IO -> IO: print "Current mode: Normal"
+IO -> IO: print available operations
+deactivate IO
+
+User -> IO: type "mode"
+IO -> Main: return "mode"
+
+Main -> MM: switch_mode()
+activate MM
+MM -> MM: _current_mode = CalculatorMode.SCIENTIFIC
+deactivate MM
+Main -> Main: print "Switched to Scientific mode."
+
+Main -> Reg: get_available_operations(mode_manager)
+activate Reg
+Reg -> MM: is_operation_available("sin", _scientific_operations)
+note right of MM: Returns True in SCIENTIFIC mode
+return available ops (all including sin, cos, tan)
+deactivate Reg
+Main -> MM: get_mode_display_name()
+MM -> Main: "Scientific"
+
+Main -> IO: get_operation_choice(available, current_mode="Scientific")
+activate IO
+IO -> IO: print "Current mode: Scientific"
+IO -> IO: print all operations including sin, cos, tan
+deactivate IO
+
+User -> IO: type "sin"
+IO -> Main: return "sin"
+
+@enduml

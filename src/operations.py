@@ -22,6 +22,8 @@ operations can be added at runtime without modifying this module or
     # The engine will now resolve "sin" like any built-in operation.
 """
 
+import math
+
 from . import error_logger
 from .calculator import Calculator
 
@@ -53,6 +55,10 @@ class OperationRegistry:
     def __init__(self, calculator: Calculator) -> None:
         """Build the registry from a Calculator instance.
 
+        Registers built-in operations from the Calculator, then registers
+        additional scientific-only operations (sin, cos, tan) that are only
+        visible when the calculator is in SCIENTIFIC mode.
+
         Args:
             calculator: The Calculator whose methods are registered.
         """
@@ -70,6 +76,8 @@ class OperationRegistry:
             "log":         (calculator.log,         1, "Base-10 logarithm (log₁₀ x)"),
             "ln":          (calculator.ln,          1, "Natural logarithm (ln x)"),
         }
+        self._scientific_operations: set[str] = set()
+        self._register_scientific_defaults()
 
     def get_operation(self, key: str) -> tuple:
         """Return the (method, arity, description) tuple for the given key.
@@ -90,12 +98,21 @@ class OperationRegistry:
         return self._registry[key]
 
     def list_operations(self) -> dict:
-        """Return a mapping of operation keys to their display strings.
+        """Return a mapping of normal-mode operation keys to their display strings.
+
+        Scientific operations (those registered via :meth:`register_scientific`)
+        are excluded from this listing.  To include scientific operations, use
+        :meth:`get_available_operations` with a :class:`~mode_manager.ModeManager`
+        in SCIENTIFIC mode.
 
         Returns:
-            Dict mapping each key to its human-readable description.
+            Dict mapping each normal-mode key to its human-readable description.
         """
-        return {key: entry[2] for key, entry in self._registry.items()}
+        return {
+            key: entry[2]
+            for key, entry in self._registry.items()
+            if key not in self._scientific_operations
+        }
 
     def register_operation(
         self,
@@ -139,3 +156,96 @@ class OperationRegistry:
                 f"'arity' must be a positive integer, got {arity!r}."
             )
         self._registry[key] = (method, arity, description)
+
+    def register_scientific(
+        self,
+        key: str,
+        method: callable,
+        arity: int,
+        description: str,
+    ) -> None:
+        """Register an operation and tag it as scientific.
+
+        Scientific operations are hidden when the calculator is in NORMAL mode
+        and shown when it is in SCIENTIFIC mode.  Delegates to
+        :meth:`register_operation` for validation and storage, then adds
+        ``key`` to the internal scientific-operations set.
+
+        Args:
+            key: Unique string identifier for the operation (e.g. ``"sin"``).
+            method: A callable that accepts exactly ``arity`` positional
+                numeric arguments and returns a numeric result.
+            arity: The number of operands the operation expects (>= 1).
+            description: A short human-readable description.
+
+        Raises:
+            ValueError: If ``key`` is already registered, or ``arity`` is not
+                a positive integer.
+            TypeError: If ``method`` is not callable.
+        """
+        self.register_operation(key=key, method=method, arity=arity, description=description)
+        self._scientific_operations.add(key)
+
+    def get_scientific_operations(self) -> set:
+        """Return the set of operation keys tagged as scientific.
+
+        Returns:
+            A copy of the set of scientific operation key strings.
+        """
+        return set(self._scientific_operations)
+
+    def get_available_operations(self, mode_manager=None) -> dict:
+        """Return operations available in the given mode.
+
+        When ``mode_manager`` is ``None``, all registered operations are
+        returned (backward-compatible behaviour).  Otherwise the result is
+        filtered by the mode: NORMAL mode excludes scientific operations,
+        SCIENTIFIC mode includes everything.
+
+        Args:
+            mode_manager: A :class:`~mode_manager.ModeManager` instance, or
+                ``None`` to return all operations.
+
+        Returns:
+            Dict mapping each available operation key to its description.
+        """
+        if mode_manager is None:
+            return self.list_operations()
+        return {
+            key: entry[2]
+            for key, entry in self._registry.items()
+            if mode_manager.is_operation_available(key, self._scientific_operations)
+        }
+
+    def _register_scientific_defaults(self) -> None:
+        """Register the built-in scientific operations (sin, cos, tan).
+
+        Uses degree-based input: values are converted from degrees to radians
+        before being passed to the underlying ``math`` functions.  These
+        operations are tagged as scientific via :meth:`register_scientific` so
+        they are only visible in SCIENTIFIC mode.
+
+        Note:
+            ``log``, ``ln``, ``square_root``, and ``factorial`` are already
+            registered in ``__init__`` as standard calculator methods.  They
+            are intentionally left as normal (non-scientific) operations to
+            avoid duplicate-key conflicts and preserve backward compatibility.
+        """
+        self.register_scientific(
+            key="sin",
+            method=lambda x: math.sin(math.radians(x)),
+            arity=1,
+            description="Sine of x in degrees (sin x°)",
+        )
+        self.register_scientific(
+            key="cos",
+            method=lambda x: math.cos(math.radians(x)),
+            arity=1,
+            description="Cosine of x in degrees (cos x°)",
+        )
+        self.register_scientific(
+            key="tan",
+            method=lambda x: math.tan(math.radians(x)),
+            arity=1,
+            description="Tangent of x in degrees (tan x°)",
+        )

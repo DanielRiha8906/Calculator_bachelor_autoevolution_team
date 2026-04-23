@@ -1,3 +1,23 @@
+## Run: Issue #273 — V2 Task 14 - Structured/team (2026-04-22)
+
+- **Branch:** task/issue-273-scientific-mode
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/mode_manager.py` — new module with CalculatorMode enum and ModeManager class for tracking/switching modes
+  - `src/operations.py` — added scientific operation registration (sin, cos, tan), mode-aware filtering, and get_available_operations()
+  - `src/io_handler.py` — added mode display and "mode"/"switch"/"m" sentinel recognition to input handler
+  - `src/__main__.py` — integrated ModeManager into interactive session loop with mode-switch handling
+  - `artifacts/class_diagram_mode_system.puml` — PlantUML class diagram for mode system
+  - `artifacts/sequence_diagram_mode_switch.puml` — PlantUML sequence diagram for mode switching
+  - `tests/test_mode_manager.py` — 45 unit tests for ModeManager
+  - `tests/test_mode_operations.py` — 35 tests for registry mode filtering
+  - `tests/test_io_handler_modes.py` — 30 tests for IO handler mode display and sentinel recognition
+- **Purpose:** Add scientific mode with sin/cos/tan; allow user to switch between Normal and Scientific modes in interactive session
+- **Risks:** None — sin/cos/tan are new ops; all 12 existing normal operations unchanged
+- **Tests passed:** 924 passed, 0 failed
+
+Duration: 485.1s | Cost: $1.122613 USD | Turns: 15
+
 ## Run: Issue #270 — V2 Task 13 - Structured/team (2026-04-22)
 
 - **Branch:** task/issue-270-add-documentation
@@ -332,3 +352,14 @@ Duration: 328.6s | Cost: $0.912429 USD | Turns: 18
   - `artifacts/sequence_diagram_operation_execution.puml` — updated operation execution sequence
 
 Duration: 217.9s | Cost: $0.547974 USD | Turns: 6
+
+## Run: update-diagrams — Scientific Mode Diagrams (2026-04-22)
+
+- **Branch:** task/issue-273-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_mode_system.puml` — updated ModeManager, CalculatorMode, OperationRegistry with complete signatures and mode-filtering relationships
+  - `artifacts/sequence_diagram_mode_switch.puml` — updated to show full mode-toggle flow including initialization, is_operation_available filtering, and SCIENTIFIC mode second iteration
+  - `artifacts/activity_diagram_interactive_session.puml` — updated to show mode-aware loop with get_available_operations, get_mode_display_name, and mode-switch branch
+
+Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
