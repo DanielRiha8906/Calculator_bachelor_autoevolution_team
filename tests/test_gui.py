@@ -1,8 +1,8 @@
-"""Integration tests for CalculatorGUI.
+"""Integration tests for CalculatorGUI iOS-style button-grid calculator.
 
 These tests run in a headless environment without a display server.
-Tests use tk.Tk() with withdraw() to avoid window rendering, and mock
-operations to prevent mainloop() from being called.
+Tests use tk.Tk() with withdraw() to avoid window rendering, and directly
+test internal state and button click handlers.
 """
 
 from unittest import mock
@@ -16,11 +16,11 @@ tk = pytest.importorskip("tkinter")
 
 from src.gui import CalculatorGUI
 from src.session_history import SessionHistory
-from src.validation import OperandValidationError
+from src.mode_manager import CalculatorMode
 
 
 class TestCalculatorGUIInitialization:
-    """Test suite for CalculatorGUI initialization."""
+    """Test suite for CalculatorGUI initialization and widget creation."""
 
     @pytest.fixture
     def gui_setup(self):
@@ -32,216 +32,68 @@ class TestCalculatorGUIInitialization:
         yield gui
         root.destroy()
 
-    def test_gui_window_created(self, gui_setup):
-        """Verify that the Tk root window is created and configured."""
+    def test_gui_window_created_with_correct_title(self, gui_setup):
+        """Verify that the Tk root window is created and titled 'Calculator'."""
         gui = gui_setup
         assert isinstance(gui.root, tk.Tk)
         assert gui.root.title() == "Calculator"
 
-    def test_gui_widgets_exist(self, gui_setup):
-        """Verify that key widget attributes are present."""
+    def test_gui_background_color_is_black(self, gui_setup):
+        """Verify that the GUI background is black (#000000)."""
         gui = gui_setup
-        assert hasattr(gui, "_mode_label")
-        assert hasattr(gui, "_mode_button")
-        assert hasattr(gui, "_ops_listbox")
-        assert hasattr(gui, "_inputs_frame")
-        assert hasattr(gui, "_execute_button")
-        assert hasattr(gui, "_result_label")
-        assert hasattr(gui, "_error_label")
-        assert hasattr(gui, "_history_text")
-        assert hasattr(gui, "_clear_history_button")
+        bg_color = gui.root.cget("bg")
+        assert bg_color == "#000000"
 
-    def test_gui_initial_mode_is_normal(self, gui_setup):
-        """Verify that the initial mode is Normal/Simple."""
+    def test_display_label_exists_and_right_aligned(self, gui_setup):
+        """Verify display label exists with correct font and right alignment."""
         gui = gui_setup
-        mode_label_text = gui._mode_label.cget("text")
-        assert mode_label_text == "Normal"
+        assert hasattr(gui, "_display_label")
+        assert isinstance(gui._display_label, tk.Label)
+        anchor = gui._display_label.cget("anchor")
+        assert anchor == "e"  # 'e' means east/right-aligned
+        # Verify font is present and is Helvetica
+        font_info = gui._display_label.cget("font")
+        assert "Helvetica" in str(font_info)
 
-    def test_gui_engine_components_initialized(self, gui_setup):
-        """Verify that calculator engine components are created."""
+    def test_standard_frame_exists(self, gui_setup):
+        """Verify standard grid frame exists."""
+        gui = gui_setup
+        assert hasattr(gui, "_standard_frame")
+        assert isinstance(gui._standard_frame, tk.Frame)
+
+    def test_scientific_frame_exists_but_hidden_initially(self, gui_setup):
+        """Verify scientific frame exists and is hidden in standard mode."""
+        gui = gui_setup
+        assert hasattr(gui, "_scientific_frame")
+        assert isinstance(gui._scientific_frame, tk.Frame)
+        # Check if it's packed (visible) or not
+        try:
+            packing_info = gui._scientific_frame.pack_info()
+            is_visible = bool(packing_info)
+        except tk.TclError:
+            # If pack_info() raises, the widget is not packed
+            is_visible = False
+        assert not is_visible, "Scientific frame should be hidden initially"
+
+    def test_initial_calculator_state(self, gui_setup):
+        """Verify initial internal state is correct."""
+        gui = gui_setup
+        assert gui._display_value == "0"
+        assert gui._accumulated_value is None
+        assert gui._pending_operator is None
+        assert gui._is_new_number is True
+
+    def test_engine_components_initialized(self, gui_setup):
+        """Verify calculator engine components are created."""
         gui = gui_setup
         assert gui._calc is not None
         assert gui._registry is not None
         assert gui._mode_manager is not None
-
-    def test_gui_history_initialized(self, gui_setup):
-        """Verify that session history is properly set."""
-        gui = gui_setup
         assert isinstance(gui._history, SessionHistory)
-        assert gui._history.is_empty() is True
 
 
-class TestCalculatorGUIOperations:
-    """Test suite for CalculatorGUI operation execution."""
-
-    @pytest.fixture
-    def gui_setup(self):
-        """Create a test GUI with withdrawn window."""
-        root = tk.Tk()
-        root.withdraw()
-        history = SessionHistory()
-        gui = CalculatorGUI(root, history)
-        yield gui
-        root.destroy()
-
-    def test_two_operand_operation_add(self, gui_setup):
-        """Verify addition with two operands executes and displays result."""
-        gui = gui_setup
-        # Select the "add" operation (first in normal mode)
-        gui._ops_listbox.selection_set(0)
-        # Call the handler directly since event_generate does not trigger callbacks in test context
-        gui._on_operation_selected(None)
-
-        # Verify operand fields were created
-        assert len(gui._operand_entries) == 2
-
-        # Set operands
-        gui._operand_entries[0].insert(0, "5")
-        gui._operand_entries[1].insert(0, "3")
-
-        # Execute
-        gui._execute_operation()
-
-        # Verify result is displayed
-        result_text = gui._result_label.cget("text")
-        assert "8" in result_text or "8.0" in result_text
-
-    def test_two_operand_operation_multiply(self, gui_setup):
-        """Verify multiplication operation."""
-        gui = gui_setup
-        # Find and select the "multiply" operation
-        for i in range(gui._ops_listbox.size()):
-            item = gui._ops_listbox.get(i)
-            if "multiply" in item.lower() or "multiplication" in item.lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
-
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "6")
-            gui._operand_entries[1].insert(0, "7")
-            gui._execute_operation()
-            result_text = gui._result_label.cget("text")
-            assert "42" in result_text
-
-    def test_single_operand_operation_square(self, gui_setup):
-        """Verify unary operation like square."""
-        gui = gui_setup
-        # Find and select the "square" operation
-        for i in range(gui._ops_listbox.size()):
-            item = gui._ops_listbox.get(i)
-            if "square" in item.lower() and "root" not in item.lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
-
-        if len(gui._operand_entries) == 1:
-            gui._operand_entries[0].insert(0, "5")
-            gui._execute_operation()
-            result_text = gui._result_label.cget("text")
-            assert "25" in result_text
-
-    def test_division_by_zero_error(self, gui_setup):
-        """Verify that division by zero displays error (not crash)."""
-        gui = gui_setup
-        # Select divide operation
-        for i in range(gui._ops_listbox.size()):
-            item = gui._ops_listbox.get(i)
-            if "division" in item.lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
-
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "10")
-            gui._operand_entries[1].insert(0, "0")
-            gui._execute_operation()
-
-            # Error should be displayed (not result)
-            error_text = gui._error_label.cget("text")
-            assert error_text != ""
-            assert "Error" in error_text
-
-    def test_invalid_operand_input_non_numeric(self, gui_setup):
-        """Verify validation rejects non-numeric string."""
-        gui = gui_setup
-        # Select the "add" operation
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
-
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "abc")
-            gui._operand_entries[1].insert(0, "5")
-            gui._execute_operation()
-
-            # Error should be displayed
-            error_text = gui._error_label.cget("text")
-            assert "Error" in error_text
-            assert "not a valid number" in error_text
-
-    def test_invalid_operand_input_empty_field(self, gui_setup):
-        """Verify validation rejects empty operand fields."""
-        gui = gui_setup
-        # Select the "add" operation
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
-
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "5")
-            # Leave second field empty
-            gui._execute_operation()
-
-            # Error should be displayed
-            error_text = gui._error_label.cget("text")
-            assert "Error" in error_text
-
-    def test_execute_without_operation_selected(self, gui_setup):
-        """Verify error when trying to execute without selecting an operation."""
-        gui = gui_setup
-        gui._execute_operation()
-
-        error_text = gui._error_label.cget("text")
-        assert "Error" in error_text
-        assert "select" in error_text.lower()
-
-    def test_factorial_with_integer(self, gui_setup):
-        """Verify factorial operation with valid integer."""
-        gui = gui_setup
-        # Find and select the "factorial" operation
-        for i in range(gui._ops_listbox.size()):
-            item = gui._ops_listbox.get(i)
-            if "factorial" in item.lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
-
-        if len(gui._operand_entries) == 1:
-            gui._operand_entries[0].insert(0, "5")
-            gui._execute_operation()
-            result_text = gui._result_label.cget("text")
-            assert "120" in result_text
-
-    def test_factorial_with_non_integer(self, gui_setup):
-        """Verify factorial rejects non-integer input."""
-        gui = gui_setup
-        # Find and select the "factorial" operation
-        for i in range(gui._ops_listbox.size()):
-            item = gui._ops_listbox.get(i)
-            if "factorial" in item.lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
-
-        if len(gui._operand_entries) == 1:
-            gui._operand_entries[0].insert(0, "5.5")
-            gui._execute_operation()
-            error_text = gui._error_label.cget("text")
-            assert "Error" in error_text
-            assert "integer" in error_text.lower()
-
-
-class TestCalculatorGUIMode:
-    """Test suite for CalculatorGUI mode switching."""
+class TestDigitInput:
+    """Test suite for digit button handling and accumulation."""
 
     @pytest.fixture
     def gui_setup(self):
@@ -253,71 +105,43 @@ class TestCalculatorGUIMode:
         yield gui
         root.destroy()
 
-    def test_mode_switch_changes_label(self, gui_setup):
-        """Verify mode label changes after toggle."""
+    def test_digit_accumulation(self, gui_setup):
+        """Verify clicking digits 1, 2, 3 produces '123' in display_value."""
         gui = gui_setup
-        initial_mode = gui._mode_label.cget("text")
-        assert initial_mode == "Normal"
+        gui._on_digit("1")
+        gui._on_digit("2")
+        gui._on_digit("3")
+        assert gui._display_value == "123"
 
-        gui._on_mode_switch()
-
-        new_mode = gui._mode_label.cget("text")
-        assert new_mode == "Scientific" or new_mode == "Sci"  # accommodate different display names
-
-    def test_mode_switch_toggles_back(self, gui_setup):
-        """Verify mode switch is bidirectional."""
+    def test_leading_zero_prevention(self, gui_setup):
+        """Verify digit replaces '0', not appends to it."""
         gui = gui_setup
-        gui._on_mode_switch()
-        gui._on_mode_switch()
+        assert gui._display_value == "0"
+        gui._on_digit("5")
+        assert gui._display_value == "5", "Digit should replace initial '0'"
+        gui._on_digit("7")
+        assert gui._display_value == "57", "Subsequent digit should append"
 
-        mode = gui._mode_label.cget("text")
-        assert mode == "Normal"
-
-    def test_scientific_operations_in_scientific_mode(self, gui_setup):
-        """Verify scientific operations appear in Scientific mode."""
+    def test_is_new_number_flag_after_clear(self, gui_setup):
+        """Verify _is_new_number is True after clear, next digit replaces '0'."""
         gui = gui_setup
-        # Collect operations in normal mode
-        normal_ops = [gui._ops_listbox.get(i) for i in range(gui._ops_listbox.size())]
+        gui._on_digit("5")
+        assert gui._is_new_number is False
+        gui._on_clear()
+        assert gui._is_new_number is True
+        gui._on_digit("9")
+        assert gui._display_value == "9"
 
-        # Switch to scientific
-        gui._on_mode_switch()
-
-        # Collect operations in scientific mode
-        scientific_ops = [gui._ops_listbox.get(i) for i in range(gui._ops_listbox.size())]
-
-        # Scientific mode should have more or same operations
-        assert len(scientific_ops) >= len(normal_ops)
-
-        # Check that scientific operations like sin, cos, tan are available
-        scientific_names = " ".join(scientific_ops).lower()
-        # At least one of sin/cos/tan should be present
-        has_trig = "sin" in scientific_names or "cos" in scientific_names or "tan" in scientific_names
-        assert has_trig
-
-    def test_mode_switch_clears_result(self, gui_setup):
-        """Verify that mode switch clears the result display."""
+    @pytest.mark.parametrize("digit", ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+    def test_all_digits_accepted(self, gui_setup, digit):
+        """Verify all digit buttons 0-9 are accepted."""
         gui = gui_setup
-        gui._result_label.config(text="Previous result")
-
-        gui._on_mode_switch()
-
-        result = gui._result_label.cget("text")
-        assert result == ""
-
-    def test_mode_switch_clears_error(self, gui_setup):
-        """Verify that mode switch clears any error message."""
-        gui = gui_setup
-        gui._error_label.config(text="Error: something")
-        gui._error_label.grid()
-
-        gui._on_mode_switch()
-
-        error = gui._error_label.cget("text")
-        assert error == ""
+        gui._on_digit(digit)
+        assert gui._display_value == digit
 
 
-class TestCalculatorGUIHistory:
-    """Test suite for CalculatorGUI history integration."""
+class TestDecimalInput:
+    """Test suite for decimal point handling."""
 
     @pytest.fixture
     def gui_setup(self):
@@ -329,97 +153,557 @@ class TestCalculatorGUIHistory:
         yield gui
         root.destroy()
 
-    def test_operation_recorded_in_history(self, gui_setup):
-        """Verify that SessionHistory records op after execution."""
+    def test_decimal_added_to_display(self, gui_setup):
+        """Verify clicking '.' adds decimal point to current display."""
         gui = gui_setup
-        # Select the "add" operation
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
+        gui._on_digit("5")
+        gui._on_decimal()
+        assert gui._display_value == "5."
 
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "5")
-            gui._operand_entries[1].insert(0, "3")
-            gui._execute_operation()
+    def test_decimal_only_once(self, gui_setup):
+        """Verify second decimal press does nothing when one already exists."""
+        gui = gui_setup
+        gui._on_digit("3")
+        gui._on_decimal()
+        assert gui._display_value == "3."
+        gui._on_decimal()
+        assert gui._display_value == "3.", "Second decimal should not be added"
 
-            # Verify history was updated
-            assert not gui._history.is_empty()
-            entries = gui._history.get_history()
-            assert len(entries) == 1
-            assert entries[0]["result"] == 8.0
+    def test_decimal_starts_with_zero(self, gui_setup):
+        """Verify decimal on new number produces '0.' not just '.'."""
+        gui = gui_setup
+        gui._on_clear()
+        assert gui._is_new_number is True
+        gui._on_decimal()
+        assert gui._display_value == "0."
 
-    def test_multiple_operations_in_history(self, gui_setup):
+
+class TestOperatorInput:
+    """Test suite for binary operator button handling."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_binary_operator_stores_accumulator(self, gui_setup):
+        """Verify pressing operator after digit stores accumulated value."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        assert gui._accumulated_value == 5.0
+        assert gui._pending_operator == "+"
+        assert gui._is_new_number is True
+
+    def test_full_addition(self, gui_setup):
+        """Verify 5 + 3 = displays '8'."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        gui._on_equals()
+        assert gui._display_value == "8"
+        assert gui._accumulated_value == 8.0
+
+    def test_full_subtraction(self, gui_setup):
+        """Verify 9 − 4 = displays '5'."""
+        gui = gui_setup
+        gui._on_digit("9")
+        gui._on_operator("−")
+        gui._on_digit("4")
+        gui._on_equals()
+        assert gui._display_value == "5"
+
+    def test_full_multiplication(self, gui_setup):
+        """Verify 6 × 7 = displays '42'."""
+        gui = gui_setup
+        gui._on_digit("6")
+        gui._on_operator("×")
+        gui._on_digit("7")
+        gui._on_equals()
+        assert gui._display_value == "42"
+
+    def test_full_division(self, gui_setup):
+        """Verify 8 ÷ 2 = displays '4'."""
+        gui = gui_setup
+        gui._on_digit("8")
+        gui._on_operator("÷")
+        gui._on_digit("2")
+        gui._on_equals()
+        assert gui._display_value == "4"
+
+    def test_binary_operator_chaining(self, gui_setup):
+        """Verify 5 + 3 × executes 5+3=8, stores 8 as accumulator."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        gui._on_operator("×")
+        # After second operator, 5+3 should be executed
+        assert gui._display_value == "8"
+        assert gui._accumulated_value == 8.0
+        assert gui._pending_operator == "×"
+
+    def test_equals_with_no_pending_operator_is_noop(self, gui_setup):
+        """Verify pressing '=' with no pending operator is a no-op."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_equals()
+        # Should not crash, display should remain "5"
+        assert gui._display_value == "5"
+
+    def test_division_by_zero_shows_error(self, gui_setup):
+        """Verify 5 ÷ 0 = shows an error string (not crash)."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("÷")
+        gui._on_digit("0")
+        gui._on_equals()
+        # Should show error, not crash
+        assert "Error" in gui._display_value or "division" in gui._display_value.lower()
+
+    @pytest.mark.parametrize("op", ["+", "−", "×", "÷"])
+    def test_all_binary_operators_accepted(self, gui_setup, op):
+        """Verify all binary operator symbols are accepted."""
+        gui = gui_setup
+        gui._on_digit("2")
+        gui._on_operator(op)
+        assert gui._pending_operator == op
+
+
+class TestUnaryOperators:
+    """Test suite for unary operator handling."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_square_root_unary_operator(self, gui_setup):
+        """Verify √ operator executes immediately on display value."""
+        gui = gui_setup
+        gui._on_digit("9")
+        gui._on_operator("√")
+        # sqrt(9) = 3
+        assert gui._display_value == "3"
+        assert gui._is_new_number is True
+
+    def test_square_unary_operator(self, gui_setup):
+        """Verify x² operator executes immediately."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("x²")
+        # 5^2 = 25
+        assert gui._display_value == "25"
+
+    def test_factorial_unary_operator(self, gui_setup):
+        """Verify n! operator executes immediately."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("n!")
+        # 5! = 120
+        assert gui._display_value == "120"
+
+    @pytest.mark.parametrize("op", ["√", "x²", "n!", "ln", "log", "sin", "cos", "tan"])
+    def test_all_unary_operators_accepted(self, gui_setup, op):
+        """Verify all unary operator symbols are accepted without crashing."""
+        gui = gui_setup
+        gui._on_digit("2")
+        # Should not crash, might show error for ln(2) etc but that's ok
+        gui._on_operator(op)
+        assert isinstance(gui._display_value, str)
+
+
+class TestDeleteButton:
+    """Test suite for delete/backspace button."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_delete_removes_last_char(self, gui_setup):
+        """Verify '123' → delete → '12'."""
+        gui = gui_setup
+        gui._on_digit("1")
+        gui._on_digit("2")
+        gui._on_digit("3")
+        assert gui._display_value == "123"
+        gui._on_delete()
+        assert gui._display_value == "12"
+
+    def test_delete_single_char_becomes_zero(self, gui_setup):
+        """Verify '5' → delete → '0'."""
+        gui = gui_setup
+        gui._on_digit("5")
+        assert gui._display_value == "5"
+        gui._on_delete()
+        assert gui._display_value == "0"
+
+    def test_delete_when_is_new_number(self, gui_setup):
+        """Verify delete after computation (is_new_number=True) resets to '0'."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        gui._on_equals()
+        # Now is_new_number should be True
+        assert gui._is_new_number is True
+        gui._on_delete()
+        assert gui._display_value == "0"
+
+    def test_delete_decimal_point(self, gui_setup):
+        """Verify delete works on decimal numbers '3.5' → '3.'."""
+        gui = gui_setup
+        gui._on_digit("3")
+        gui._on_decimal()
+        gui._on_digit("5")
+        assert gui._display_value == "3.5"
+        gui._on_delete()
+        assert gui._display_value == "3."
+
+
+class TestClearButton:
+    """Test suite for clear button."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_clear_resets_all_state(self, gui_setup):
+        """Verify clear resets all internal state to initial values."""
+        gui = gui_setup
+        # Set up some state
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        # Verify state is modified
+        assert gui._display_value != "0"
+        assert gui._accumulated_value == 5.0
+        assert gui._pending_operator == "+"
+        # After operator, is_new_number is True; after digit, it's False
+        assert gui._is_new_number is False
+
+        # Clear
+        gui._on_clear()
+
+        # Verify reset
+        assert gui._display_value == "0"
+        assert gui._accumulated_value is None
+        assert gui._pending_operator is None
+        assert gui._is_new_number is True
+
+    def test_clear_after_calculation(self, gui_setup):
+        """Verify clear works after a full calculation."""
+        gui = gui_setup
+        gui._on_digit("7")
+        gui._on_operator("×")
+        gui._on_digit("6")
+        gui._on_equals()
+        assert gui._display_value == "42"
+        gui._on_clear()
+        assert gui._display_value == "0"
+        assert gui._accumulated_value is None
+
+
+class TestModeSwitch:
+    """Test suite for mode switching between Standard and Scientific."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_mode_switch_calls_mode_manager(self, gui_setup):
+        """Verify _on_mode_switch() calls mode_manager.switch_mode()."""
+        gui = gui_setup
+        initial_mode = gui._mode_manager.get_current_mode()
+        gui._on_mode_switch()
+        new_mode = gui._mode_manager.get_current_mode()
+        assert initial_mode != new_mode
+
+    def test_scientific_frame_hidden_initially(self, gui_setup):
+        """Verify scientific frame is not packed initially."""
+        gui = gui_setup
+        try:
+            packing_info = gui._scientific_frame.pack_info()
+            is_packed = bool(packing_info)
+        except tk.TclError:
+            # If pack_info() raises, the widget is not packed
+            is_packed = False
+        assert not is_packed, "Scientific frame should not be packed initially"
+
+    def test_scientific_frame_visible_after_first_toggle(self, gui_setup):
+        """Verify scientific frame is visible after first mode toggle."""
+        gui = gui_setup
+        gui._on_mode_switch()
+        packing_info = gui._scientific_frame.pack_info()
+        assert bool(packing_info), "Scientific frame should be packed after toggle to Scientific"
+        assert gui._mode_manager.get_current_mode() is CalculatorMode.SCIENTIFIC
+
+    def test_scientific_frame_hidden_after_second_toggle(self, gui_setup):
+        """Verify scientific frame is hidden after toggle back to Standard."""
+        gui = gui_setup
+        gui._on_mode_switch()
+        gui._on_mode_switch()
+        try:
+            packing_info = gui._scientific_frame.pack_info()
+            is_packed = bool(packing_info)
+        except tk.TclError:
+            # If pack_info() raises, the widget is not packed
+            is_packed = False
+        assert not is_packed, "Scientific frame should not be packed after toggle back to NORMAL"
+        assert gui._mode_manager.get_current_mode() is CalculatorMode.NORMAL
+
+    def test_mode_toggle_multiple_times(self, gui_setup):
+        """Verify mode can be toggled multiple times."""
+        gui = gui_setup
+        for _ in range(4):
+            gui._on_mode_switch()
+        # After even number of toggles, should be back to NORMAL
+        assert gui._mode_manager.get_current_mode() is CalculatorMode.NORMAL
+
+
+class TestSymbolMapping:
+    """Test suite for symbol-to-operation key mapping."""
+
+    def test_symbol_to_operation_add(self):
+        """Verify '+' maps to 'add'."""
+        result = CalculatorGUI._symbol_to_operation("+")
+        assert result == "add"
+
+    def test_symbol_to_operation_subtract(self):
+        """Verify '−' maps to 'subtract'."""
+        result = CalculatorGUI._symbol_to_operation("−")
+        assert result == "subtract"
+
+    def test_symbol_to_operation_multiply(self):
+        """Verify '×' maps to 'multiply'."""
+        result = CalculatorGUI._symbol_to_operation("×")
+        assert result == "multiply"
+
+    def test_symbol_to_operation_divide(self):
+        """Verify '÷' maps to 'divide'."""
+        result = CalculatorGUI._symbol_to_operation("÷")
+        assert result == "divide"
+
+    def test_symbol_to_operation_sqrt(self):
+        """Verify '√' maps to 'square_root'."""
+        result = CalculatorGUI._symbol_to_operation("√")
+        assert result == "square_root"
+
+    def test_symbol_to_operation_square(self):
+        """Verify 'x²' maps to 'square'."""
+        result = CalculatorGUI._symbol_to_operation("x²")
+        assert result == "square"
+
+    def test_symbol_to_operation_power(self):
+        """Verify 'xʸ' maps to 'power'."""
+        result = CalculatorGUI._symbol_to_operation("xʸ")
+        assert result == "power"
+
+    def test_symbol_to_operation_factorial(self):
+        """Verify 'n!' maps to 'factorial'."""
+        result = CalculatorGUI._symbol_to_operation("n!")
+        assert result == "factorial"
+
+    def test_symbol_to_operation_ln(self):
+        """Verify 'ln' maps to 'ln'."""
+        result = CalculatorGUI._symbol_to_operation("ln")
+        assert result == "ln"
+
+    def test_symbol_to_operation_log(self):
+        """Verify 'log' maps to 'log'."""
+        result = CalculatorGUI._symbol_to_operation("log")
+        assert result == "log"
+
+    def test_symbol_to_operation_sin(self):
+        """Verify 'sin' maps to 'sin'."""
+        result = CalculatorGUI._symbol_to_operation("sin")
+        assert result == "sin"
+
+    def test_symbol_to_operation_cos(self):
+        """Verify 'cos' maps to 'cos'."""
+        result = CalculatorGUI._symbol_to_operation("cos")
+        assert result == "cos"
+
+    def test_symbol_to_operation_tan(self):
+        """Verify 'tan' maps to 'tan'."""
+        result = CalculatorGUI._symbol_to_operation("tan")
+        assert result == "tan"
+
+    def test_symbol_to_operation_invalid_raises_keyerror(self):
+        """Verify invalid symbol raises KeyError."""
+        with pytest.raises(KeyError):
+            CalculatorGUI._symbol_to_operation("invalid")
+
+
+class TestFormatResult:
+    """Test suite for result formatting."""
+
+    def test_format_whole_number(self):
+        """Verify _format_result(3.0) returns '3' not '3.0'."""
+        result = CalculatorGUI._format_result(3.0)
+        assert result == "3"
+
+    def test_format_decimal(self):
+        """Verify _format_result(3.5) returns '3.5'."""
+        result = CalculatorGUI._format_result(3.5)
+        assert result == "3.5"
+
+    def test_format_zero(self):
+        """Verify _format_result(0.0) returns '0'."""
+        result = CalculatorGUI._format_result(0.0)
+        assert result == "0"
+
+    def test_format_large_whole_number(self):
+        """Verify large whole numbers are formatted without decimal."""
+        result = CalculatorGUI._format_result(1000.0)
+        assert result == "1000"
+
+    def test_format_small_decimal(self):
+        """Verify small decimal numbers are preserved."""
+        result = CalculatorGUI._format_result(0.1)
+        assert result == "0.1"
+
+    def test_format_negative_whole(self):
+        """Verify negative whole numbers are formatted correctly."""
+        result = CalculatorGUI._format_result(-5.0)
+        assert result == "-5"
+
+    def test_format_negative_decimal(self):
+        """Verify negative decimals are preserved."""
+        result = CalculatorGUI._format_result(-3.14)
+        assert result == "-3.14"
+
+
+class TestUpdateDisplay:
+    """Test suite for display label updates."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_display_label_updated_on_digit(self, gui_setup):
+        """Verify display label shows current _display_value after digit."""
+        gui = gui_setup
+        gui._on_digit("7")
+        label_text = gui._display_label.cget("text")
+        assert label_text == "7"
+
+    def test_display_label_updated_on_clear(self, gui_setup):
+        """Verify display label shows '0' after clear."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_clear()
+        label_text = gui._display_label.cget("text")
+        assert label_text == "0"
+
+    def test_display_label_updated_on_operation(self, gui_setup):
+        """Verify display label updated after operation execution."""
+        gui = gui_setup
+        gui._on_digit("4")
+        gui._on_operator("+")
+        gui._on_digit("2")
+        gui._on_equals()
+        label_text = gui._display_label.cget("text")
+        assert label_text == "6"
+
+
+class TestHistoryIntegration:
+    """Test suite for SessionHistory integration with GUI."""
+
+    @pytest.fixture
+    def gui_setup(self):
+        """Create a test GUI with withdrawn window."""
+        root = tk.Tk()
+        root.withdraw()
+        history = SessionHistory()
+        gui = CalculatorGUI(root, history)
+        yield gui
+        root.destroy()
+
+    def test_operation_recorded_in_history_after_equals(self, gui_setup):
+        """Verify operation is recorded in SessionHistory after equals."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        gui._on_equals()
+
+        # Check history
+        history_entries = gui._history.get_history()
+        assert len(history_entries) == 1
+        assert history_entries[0]["operation"] == "add"
+        assert history_entries[0]["operands"] == [5.0, 3.0]
+        assert history_entries[0]["result"] == 8.0
+
+    def test_multiple_operations_recorded(self, gui_setup):
         """Verify multiple operations are recorded in order."""
         gui = gui_setup
-        # First operation: add
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
-        gui._operand_entries[0].insert(0, "2")
-        gui._operand_entries[1].insert(0, "3")
-        gui._execute_operation()
+        # First: 5 + 3 = 8
+        gui._on_digit("5")
+        gui._on_operator("+")
+        gui._on_digit("3")
+        gui._on_equals()
 
-        # Second operation: multiply (should be at index 2)
-        for i in range(gui._ops_listbox.size()):
-            if "multiply" in gui._ops_listbox.get(i).lower():
-                # Clear previous selection before selecting new one
-                gui._ops_listbox.selection_clear(0, tk.END)
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
+        # Second: 8 × 2 = 16
+        gui._on_digit("2")
+        gui._on_operator("×")
+        gui._on_equals()
 
-        # Clear previous entries
-        for entry in gui._operand_entries:
-            entry.delete(0, tk.END)
+        history_entries = gui._history.get_history()
+        assert len(history_entries) == 2
+        assert history_entries[0]["operation"] == "add"
+        assert history_entries[1]["operation"] == "multiply"
 
-        gui._operand_entries[0].insert(0, "5")
-        gui._operand_entries[1].insert(0, "4")
-        gui._execute_operation()
-
-        entries = gui._history.get_history()
-        assert len(entries) == 2
-        assert entries[0]["operation"] == "add"
-        assert entries[1]["operation"] == "multiply"
-
-    def test_clear_history_clears_session(self, gui_setup):
-        """Verify that clear history button empties the session."""
+    def test_unary_operation_recorded_in_history(self, gui_setup):
+        """Verify unary operations are recorded in history."""
         gui = gui_setup
-        # Record an operation
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
-        gui._operand_entries[0].insert(0, "5")
-        gui._operand_entries[1].insert(0, "3")
-        gui._execute_operation()
+        gui._on_digit("9")
+        gui._on_operator("√")
 
-        assert not gui._history.is_empty()
-
-        # Clear history
-        gui._on_clear_history()
-
-        assert gui._history.is_empty()
-
-    def test_history_display_in_widget(self, gui_setup):
-        """Verify history text widget displays operations."""
-        gui = gui_setup
-        # Record an operation
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
-        gui._operand_entries[0].insert(0, "5")
-        gui._operand_entries[1].insert(0, "3")
-        gui._execute_operation()
-
-        # Get text from history widget
-        history_text = gui._history_text.get("1.0", tk.END).strip()
-        assert "add" in history_text or "addition" in history_text.lower()
-        assert "8" in history_text or "8.0" in history_text
-
-    def test_history_text_widget_read_only(self, gui_setup):
-        """Verify history text widget is read-only."""
-        gui = gui_setup
-        widget_state = gui._history_text.cget("state")
-        assert widget_state == tk.DISABLED
+        history_entries = gui._history.get_history()
+        assert len(history_entries) == 1
+        assert history_entries[0]["operation"] == "square_root"
+        assert history_entries[0]["operands"] == [9.0]
+        assert history_entries[0]["result"] == 3.0
 
 
-class TestCalculatorGUIEdgeCases:
-    """Test suite for edge cases and error handling."""
+class TestEdgeCases:
+    """Test suite for edge cases and error conditions."""
 
     @pytest.fixture
     def gui_setup(self):
@@ -431,62 +715,93 @@ class TestCalculatorGUIEdgeCases:
         yield gui
         root.destroy()
 
-    def test_operation_with_zero_operands(self, gui_setup):
-        """Verify handling when no valid operands are provided."""
+    def test_multiple_decimal_points_prevented(self, gui_setup):
+        """Verify only one decimal point can be added to a number."""
         gui = gui_setup
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
+        gui._on_digit("3")
+        gui._on_decimal()
+        gui._on_decimal()
+        gui._on_decimal()
+        assert gui._display_value == "3."
+        assert gui._display_value.count(".") == 1
 
-        # Don't set any operands, just execute
-        gui._execute_operation()
-
-        # Should show error
-        error_text = gui._error_label.cget("text")
-        assert "Error" in error_text
-
-    def test_negative_operands(self, gui_setup):
-        """Verify operations work with negative operands."""
+    def test_operation_chain_complex(self, gui_setup):
+        """Verify complex operation chain: 10 + 5 - 3 = 12."""
         gui = gui_setup
-        # Select subtract
-        for i in range(gui._ops_listbox.size()):
-            if "subtract" in gui._ops_listbox.get(i).lower():
-                gui._ops_listbox.selection_set(i)
-                gui._on_operation_selected(None)
-                break
+        gui._on_digit("1")
+        gui._on_digit("0")
+        gui._on_operator("+")
+        gui._on_digit("5")
+        gui._on_operator("−")
+        # 10 + 5 should execute first, result is 15
+        assert gui._display_value == "15"
+        gui._on_digit("3")
+        gui._on_equals()
+        assert gui._display_value == "12"
 
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "-5")
-            gui._operand_entries[1].insert(0, "3")
-            gui._execute_operation()
-
-            result_text = gui._result_label.cget("text")
-            assert "Error" not in result_text
-
-    def test_very_large_operands(self, gui_setup):
-        """Verify operations with very large numbers."""
+    def test_invalid_input_in_operator_handler(self, gui_setup):
+        """Verify non-numeric display doesn't crash operator handler."""
         gui = gui_setup
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
+        gui._display_value = "abc"
+        gui._on_operator("+")
+        # Should show error instead of crashing
+        assert gui._display_value == "Error"
 
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "1e100")
-            gui._operand_entries[1].insert(0, "1e100")
-            gui._execute_operation()
-
-            # Should complete without crashing
-            result_text = gui._result_label.cget("text")
-            assert isinstance(result_text, str)
-
-    def test_fractional_operands(self, gui_setup):
-        """Verify operations with fractional operands."""
+    def test_delete_on_already_zero(self, gui_setup):
+        """Verify delete on '0' stays at '0'."""
         gui = gui_setup
-        gui._ops_listbox.selection_set(0)
-        gui._on_operation_selected(None)
+        assert gui._display_value == "0"
+        gui._on_delete()
+        assert gui._display_value == "0"
 
-        if len(gui._operand_entries) == 2:
-            gui._operand_entries[0].insert(0, "2.5")
-            gui._operand_entries[1].insert(0, "1.5")
-            gui._execute_operation()
+    def test_operations_with_negative_results(self, gui_setup):
+        """Verify operations that produce negative results."""
+        gui = gui_setup
+        gui._on_digit("3")
+        gui._on_operator("−")
+        gui._on_digit("5")
+        gui._on_equals()
+        assert gui._display_value == "-2"
 
-            result_text = gui._result_label.cget("text")
-            assert "4" in result_text or "4.0" in result_text
+    def test_very_long_number_accumulation(self, gui_setup):
+        """Verify long numbers can be entered."""
+        gui = gui_setup
+        for digit in "123456789":
+            gui._on_digit(digit)
+        assert gui._display_value == "123456789"
+
+    def test_decimal_at_start_of_new_number(self, gui_setup):
+        """Verify decimal at start of new number produces '0.'."""
+        gui = gui_setup
+        gui._on_digit("5")
+        gui._on_operator("+")
+        # Now is_new_number is True
+        gui._on_decimal()
+        assert gui._display_value == "0."
+
+    def test_equals_without_first_operand(self, gui_setup):
+        """Verify pressing equals immediately is safe."""
+        gui = gui_setup
+        gui._on_equals()
+        # Should not crash, display should remain "0"
+        assert gui._display_value == "0"
+
+    def test_accumulated_value_preserved_during_chaining(self, gui_setup):
+        """Verify accumulated value is updated during operator chaining."""
+        gui = gui_setup
+        gui._on_digit("7")
+        gui._on_operator("+")
+        assert gui._accumulated_value == 7.0
+        gui._on_digit("2")
+        gui._on_operator("×")
+        # After chaining, accumulated should be 7 + 2 = 9
+        assert gui._accumulated_value == 9.0
+
+    def test_display_shows_error_on_invalid_display_parse(self, gui_setup):
+        """Verify error display when display_value is non-numeric during execution."""
+        gui = gui_setup
+        gui._display_value = "NotANumber"
+        gui._pending_operator = "+"
+        gui._accumulated_value = 5.0
+        gui._execute_pending()
+        assert gui._display_value == "Error"

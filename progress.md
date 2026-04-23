@@ -1,3 +1,16 @@
+## Run: Issue #362 — V2 Task 16 - Structured/team (2026-04-23)
+
+- **Branch:** task/issue-362-ios-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/gui.py` — complete redesign of CalculatorGUI class to iOS-style dark button-grid interface; new state management, button handlers, symbol mapping, and grid layout
+  - `tests/test_gui.py` — full rewrite of GUI tests to match new button-grid interface; 94 tests covering digit input, operators, delete/clear, mode switch, symbol mapping, format result, history integration, and edge cases
+- **Purpose:** Redesign the calculator GUI to a modern iOS-inspired dark interface with 4×5 standard grid, orange operator buttons, flat styling, right-aligned display
+- **Risks:** Complete GUI rewrite; calculation logic and all other src/ modules unchanged
+- **Tests passed:** 94 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (#276) (2026-04-23)
 
 - **Branch:** task/issue-276-tkinter-gui
