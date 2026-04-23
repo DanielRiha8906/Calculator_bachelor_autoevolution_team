@@ -1,0 +1,68 @@
+@startuml activity_gui_button_to_result
+
+skinparam ActivityDiamondBackgroundColor lightyellow
+skinparam ActivityBackgroundColor lightblue
+skinparam ActivityBorderColor navy
+
+start
+
+:Waiting for user input;
+
+:User presses button;
+:_on_button(label) called;
+
+if (label == "C"?) then (yes)
+  :_clear()\nReset expression and display;
+else (no)
+  if (label == "←"?) then (yes)
+    :_backspace()\nRemove last character from expression;
+    :_set_display(expression);
+  else (no)
+    if (label is digit or decimal?) then (yes)
+      :Append label to _expression;
+      :_set_display(expression);
+    else (no)
+      if (label is operator\n(+, -, *, /)?) then (yes)
+        :Translate symbol to word token\nAppend to _expression;
+        :_set_display(expression);
+      else (no)
+        if (label is function\n(sin, cos, sqrt, ...)?) then (yes)
+          :Append function token\nto _expression;
+          :_set_display(expression);
+        else (label == "=")
+          :_evaluate();
+
+          :ExpressionParser.parse(_expression);
+          if (ValueError raised?) then (yes)
+            :_show_error(parse error message);
+          else (no)
+            :(operation, operands) extracted;
+
+            :InputValidator.validate(operation, operands);
+            if (OperationNotAvailableInModeError\nor ValueError raised?) then (yes)
+              :_show_error(validation error message);
+            else (no)
+              :Dispatch: getattr(calculator, operation)(*operands);
+              if (ZeroDivisionError raised?) then (yes)
+                :_show_error("Division by zero");
+              else (no)
+                if (ValueError raised?) then (yes)
+                  :_show_error(value error message);
+                else (no)
+                  :_set_display(str(result));
+                  :_expression = str(result);
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+    endif
+  endif
+endif
+
+:Return to waiting state;
+
+stop
+
+@enduml

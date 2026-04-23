@@ -1,0 +1,117 @@
+@startuml class_diagram_gui
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+' --- External base class ---
+class "tk.Tk" as TkTk <<external>>
+
+' --- Error type ---
+class ValueError <<stdlib>>
+class OperationNotAvailableInModeError {
+  + operation: str
+  + current_mode: str
+  + available_modes: list
+}
+ValueError <|-- OperationNotAvailableInModeError
+
+' --- Core computation ---
+class CalculatorEngine {
+  - _history: list[dict]
+  - _mode: str
+  --
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+  + factorial(n)
+  + power(base, exp)
+  + sin(x) / cos(x) / tan(x)
+  + square_root(x) / cube_root(x)
+  + natural_log(x) / log_base_10(x)
+  + set_mode(mode)
+  + get_history()
+}
+
+' --- Facade ---
+class Calculator {
+  - _engine: CalculatorEngine
+  - _mode: str
+  --
+  + (delegates all operations\nto CalculatorEngine)
+}
+Calculator *-- CalculatorEngine
+
+' --- Input processing ---
+class ExpressionParser {
+  + parse(raw_input: str): tuple[str, list]
+}
+
+class InputValidator {
+  + validate(operation, operands): None
+}
+
+' --- GUI entry point (NEW) ---
+class CalculatorGUI {
+  - _calculator: Calculator
+  - _parser: ExpressionParser
+  - _validator: InputValidator
+  - _expression: str
+  - _display_var: tk.StringVar
+  - _mode_var: tk.StringVar
+  --
+  - _build_ui()
+  - _build_display()
+  - _build_mode_selector()
+  - _build_button_grid()
+  - _on_button(label)
+  - _on_mode_change(selected_mode)
+  - _evaluate()
+  - _clear()
+  - _backspace()
+  - _append(text)
+  - _append_operator(operator)
+  - _set_display(text)
+  - _show_error(message)
+}
+TkTk <|-- CalculatorGUI
+CalculatorGUI *-- Calculator
+CalculatorGUI *-- ExpressionParser
+CalculatorGUI *-- InputValidator
+
+' --- Peer entry points (simplified) ---
+class CLIHandler <<entry point>> {
+  - _calculator: Calculator
+  - _parser: ExpressionParser
+  - _validator: InputValidator
+  --
+  + run(): int
+}
+CLIHandler *-- Calculator
+CLIHandler *-- ExpressionParser
+CLIHandler *-- InputValidator
+
+class CalculatorREPL <<entry point>> {
+  - _calculator: Calculator
+  - _parser: ExpressionParser
+  - _validator: InputValidator
+  --
+  + run(): None
+}
+CalculatorREPL *-- Calculator
+CalculatorREPL *-- ExpressionParser
+CalculatorREPL *-- InputValidator
+
+note bottom of CalculatorGUI
+  Launched via: main.py --gui / -g
+end note
+
+note bottom of CLIHandler
+  Launched via: main.py <expression>
+end note
+
+note bottom of CalculatorREPL
+  Launched via: main.py (default)
+end note
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml sequence_diagram_gui_evaluation
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor navy
+
+actor User
+participant "CalculatorGUI" as GUI
+participant "ExpressionParser" as Parser
+participant "InputValidator" as Validator
+participant "Calculator" as Calc
+participant "CalculatorEngine" as Engine
+
+== Digit Input ==
+
+User -> GUI : clicks "5"
+activate GUI
+GUI -> GUI : _on_button("5")
+GUI -> GUI : _append("5")\nupdate _expression
+GUI -> GUI : _set_display(_expression)
+deactivate GUI
+
+== Successful Evaluation (e.g. "add 5 3") ==
+
+User -> GUI : clicks "="
+activate GUI
+GUI -> GUI : _on_button("=")
+GUI -> GUI : _evaluate()
+
+GUI -> Parser : parse(raw_expression)
+activate Parser
+Parser --> GUI : ("add", [5.0, 3.0])
+deactivate Parser
+
+GUI -> Validator : validate("add", [5.0, 3.0])
+activate Validator
+Validator --> GUI : ok (no exception)
+deactivate Validator
+
+GUI -> Calc : add(5.0, 3.0)
+activate Calc
+Calc -> Engine : add(5.0, 3.0)
+activate Engine
+Engine --> Calc : 8.0
+deactivate Engine
+Calc --> GUI : 8.0
+deactivate Calc
+
+GUI -> GUI : _set_display("8.0")
+GUI -> GUI : _expression = "8.0"
+deactivate GUI
+
+== Error Case: Parse Failure ==
+
+User -> GUI : clicks "=" (malformed expression)
+activate GUI
+GUI -> GUI : _on_button("=")
+GUI -> GUI : _evaluate()
+
+GUI -> Parser : parse(raw_expression)
+activate Parser
+Parser --> GUI : raises ValueError("Invalid input")
+deactivate Parser
+
+GUI -> GUI : _show_error("Invalid input")
+GUI -> GUI : _set_display("Error: Invalid input")
+deactivate GUI
+
+@enduml

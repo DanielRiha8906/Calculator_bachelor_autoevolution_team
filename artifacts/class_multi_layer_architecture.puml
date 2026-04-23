@@ -1,0 +1,132 @@
+@startuml class_multi_layer_architecture
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "Entry Point" {
+  class main <<function>> {
+    + main()
+  }
+}
+
+package "UI Layer" {
+  class CLIHandler {
+    - _calculator: Calculator
+    - _parser: ExpressionParser
+    - _validator: InputValidator
+    --
+    + run(): int
+  }
+
+  class CalculatorREPL {
+    - _calculator: Calculator
+    - _parser: ExpressionParser
+    - _validator: InputValidator
+    - _retry_config: RetryConfig
+    --
+    + run(): None
+  }
+
+  class CalculatorGUI {
+    - _calculator: Calculator
+    - _parser: ExpressionParser
+    - _validator: InputValidator
+    - _expression: str
+    - _display_var: tk.StringVar
+    - _mode_var: tk.StringVar
+    --
+    + _build_ui()
+    + _on_button(label)
+    + _evaluate()
+    + _on_mode_change()
+  }
+
+  class "tk.Tk" as TkTk <<external>>
+}
+
+package "Input Layer" {
+  class ExpressionParser {
+    + parse(raw_input: str): tuple[str, list]
+  }
+
+  class InputValidator {
+    + validate(operation, operands): None
+  }
+
+  class RetryConfig <<dataclass>> {
+    + max_retries: int
+    + retry_delay: float
+  }
+
+  class OperationNotAvailableInModeError {
+    + operation: str
+    + current_mode: str
+  }
+}
+
+package "Core Layer" {
+  class Calculator {
+    - _engine: CalculatorEngine
+    --
+    + set_mode(mode): None
+    + get_history(): list
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+  }
+
+  class CalculatorEngine {
+    - _mode: str
+    - _history: list[dict]
+    --
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + factorial(n)
+    + sin(x) / cos(x) / tan(x)
+    + set_mode(mode): None
+    + get_history(): list
+  }
+
+  class BasicOperations
+  class AdvancedOperations
+  class ScientificOperations
+}
+
+' Entry point dispatches to UI handlers
+main --> CLIHandler
+main --> CalculatorREPL
+main --> CalculatorGUI
+
+' GUI inherits tk.Tk
+TkTk <|-- CalculatorGUI
+
+' All UI handlers compose shared delegates
+CLIHandler *-- Calculator
+CLIHandler *-- ExpressionParser
+CLIHandler *-- InputValidator
+
+CalculatorREPL *-- Calculator
+CalculatorREPL *-- ExpressionParser
+CalculatorREPL *-- InputValidator
+CalculatorREPL *-- RetryConfig
+
+CalculatorGUI *-- Calculator
+CalculatorGUI *-- ExpressionParser
+CalculatorGUI *-- InputValidator
+
+' Core composition
+Calculator *-- CalculatorEngine
+CalculatorEngine *-- BasicOperations
+CalculatorEngine *-- AdvancedOperations
+CalculatorEngine *-- ScientificOperations
+
+' Error raised by validator, caught by UI handlers
+InputValidator ..> OperationNotAvailableInModeError : raises
+CLIHandler ..> OperationNotAvailableInModeError : catches
+CalculatorREPL ..> OperationNotAvailableInModeError : catches
+CalculatorGUI ..> OperationNotAvailableInModeError : catches
+
+@enduml

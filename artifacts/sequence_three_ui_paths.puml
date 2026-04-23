@@ -1,0 +1,99 @@
+@startuml sequence_three_ui_paths
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor navy
+skinparam sequenceGroupBorderColor darkblue
+
+actor User
+participant "main()" as Main
+participant "CLIHandler" as CLI
+participant "CalculatorREPL" as REPL
+participant "CalculatorGUI" as GUI
+participant "ExpressionParser" as Parser
+participant "InputValidator" as Validator
+participant "Calculator" as Calc
+
+== CLI Path ==
+
+User -> Main : python main.py "add 5 3"
+activate Main
+Main -> CLI : CLIHandler(calculator, parser, validator)
+Main -> CLI : run()
+activate CLI
+CLI -> Parser : parse("add 5 3")
+activate Parser
+Parser --> CLI : ("add", [5.0, 3.0])
+deactivate Parser
+CLI -> Validator : validate("add", [5.0, 3.0])
+activate Validator
+Validator --> CLI : ok
+deactivate Validator
+CLI -> Calc : add(5.0, 3.0)
+activate Calc
+Calc --> CLI : 8.0
+deactivate Calc
+CLI --> Main : print("8.0"), return 0
+deactivate CLI
+deactivate Main
+
+== REPL Path ==
+
+User -> Main : python main.py
+activate Main
+Main -> REPL : CalculatorREPL(calculator, parser, validator, retry_config)
+Main -> REPL : run()
+activate REPL
+
+loop until "quit"
+  REPL -> User : prompt "> "
+  User -> REPL : "multiply 4 7"
+  REPL -> Parser : parse("multiply 4 7")
+  activate Parser
+  Parser --> REPL : ("multiply", [4.0, 7.0])
+  deactivate Parser
+  REPL -> Validator : validate("multiply", [4.0, 7.0])
+  activate Validator
+  Validator --> REPL : ok
+  deactivate Validator
+  REPL -> Calc : multiply(4.0, 7.0)
+  activate Calc
+  Calc --> REPL : 28.0
+  deactivate Calc
+  REPL -> User : print("28.0")
+end
+
+REPL --> Main : return
+deactivate REPL
+deactivate Main
+
+== GUI Path ==
+
+User -> Main : python main.py --gui
+activate Main
+Main -> GUI : CalculatorGUI()\n__init__() + _build_ui()
+activate GUI
+Main -> GUI : mainloop()
+
+User -> GUI : clicks buttons to build expression
+GUI -> GUI : _on_button(label) → update _expression
+
+User -> GUI : clicks "="
+GUI -> GUI : _evaluate()
+GUI -> Parser : parse(_expression)
+activate Parser
+Parser --> GUI : ("add", [5.0, 3.0])
+deactivate Parser
+GUI -> Validator : validate("add", [5.0, 3.0])
+activate Validator
+Validator --> GUI : ok
+deactivate Validator
+GUI -> Calc : add(5.0, 3.0)
+activate Calc
+Calc --> GUI : 8.0
+deactivate Calc
+GUI -> GUI : _set_display("8.0")
+
+deactivate GUI
+deactivate Main
+
+@enduml

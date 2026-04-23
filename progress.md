@@ -1,4 +1,40 @@
 
+## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (PR #358) (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** task/issue-275-tkinter-gui
+- **Files changed:**
+  - `artifacts/class_multi_layer_architecture.puml` — new class diagram showing CLI, REPL, and GUI as peer UI layers over shared computation core
+  - `artifacts/activity_gui_button_to_result.puml` — new activity diagram for GUI button-click-to-result flow including all error paths
+  - `artifacts/sequence_three_ui_paths.puml` — new sequence diagram comparing CLI, REPL, and GUI execution paths
+
+Duration: 214.5s | Cost: $0.492545 USD | Turns: 5
+
+## Run: update-diagrams — Add tkinter GUI for calculator app (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for CalculatorGUI and its relationships to Calculator, ExpressionParser, InputValidator, and peer entry points
+  - `artifacts/activity_diagram_gui_evaluation.puml` — activity diagram for GUI button-press and expression evaluation flow
+  - `artifacts/sequence_diagram_gui_evaluation.puml` — sequence diagram for GUI expression evaluation showing parse/validate/dispatch/display chain
+
+Duration: 225.7s | Cost: $0.572646 USD | Turns: 7
+
+## Run: Issue #275 — V2 Task 15 - Naive/team (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/gui.py` — new tkinter-based CalculatorGUI class wrapping existing Calculator API
+  - `src/main.py` — added --gui/-g flag to launch GUI mode; all existing CLI/REPL paths unchanged
+  - `tests/test_gui.py` — 100 tests covering instantiation, expression management, evaluation, mode switching, button handlers, and main() GUI flag
+- **Purpose:** Add a tkinter GUI for the calculator app while preserving all existing functionality
+- **Risks:** None — GUI is a peer interface layer; zero changes to Calculator, engine, or business logic
+- **Tests passed:** 1606 passed, 0 failed
+
+Duration: 471.5s | Cost: $1.127348 USD | Turns: 13
+
 ## Run: Fix PR #353 — Add scientific mode with interactive mode switching (2026-04-23)
 
 - **Branch:** task/issue-272-scientific-mode
@@ -383,3 +419,16 @@ Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
 Duration: 238.6s | Cost: $0.542820 USD | Turns: 4
 
 Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
+
+## Run: Fix PR #358 — Add tkinter GUI for calculator app (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/gui.py` — Added `_MODE_BUTTON_LAYOUTS`, `_BASIC_LABELS`, `_ADVANCED_LABELS`, `_SCIENTIFIC_LABELS`, `_LABEL_TO_OPERATION` constants; added `_button_widgets` and `_button_grid_kwargs` instance vars; refactored `_build_button_grid()` to store widget refs and support all mode layouts; added `_rebuild_button_grid_for_mode()` for dynamic button show/hide; modified `_on_mode_change()` to call rebuild; added `_append_function()` and updated `_on_button()` to dispatch function labels
+  - `tests/test_gui.py` — Rewrote tkinter mocking to fully prevent X11/display errors at module import time; added 70 new tests covering button widget storage, initial mode visibility, `_rebuild_button_grid_for_mode`, mode-change-triggered rebuild, `_append_function` for all 20 function labels, `_on_button` dispatch, unknown-mode fallback, and end-to-end button-press + evaluate sequences
+- **Purpose:** Address two unresolved review comments on PR #358: (1) 95 tests failing due to incomplete tkinter mocking in headless CI; (2) mode switching did not update visible button layout
+- **Risks:** None — changes confined to `src/gui.py` and `tests/test_gui.py`; no existing logic modified
+- **Tests passed:** 1676 passed, 0 failed
+
+Duration: 457.9s | Cost: $1.112558 USD | Turns: 14
