@@ -9,7 +9,7 @@
 - **Risks:** None
 - **Tests passed:** 923 passed, 58 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 450.1s | Cost: $0.901835 USD | Turns: 21
 
 ## Run: update-diagrams — Tkinter GUI layer diagrams (2026-04-23)
 
