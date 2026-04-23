@@ -531,4 +531,4 @@ Duration: 452.5s | Cost: $1.034286 USD | Turns: 14
   - `artifacts/sequence_startup.puml` — New sequence diagram for application startup
   - `artifacts/sequence_binary_op.puml` — New sequence diagram for binary operation execution
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 314.7s | Cost: $0.636171 USD | Turns: 4
