@@ -491,4 +491,4 @@ Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
 - **Risks:** None — calculation logic and all core classes untouched; only gui.py and app.py modified
 - **Tests passed:** 92 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 578.6s | Cost: $1.357357 USD | Turns: 17
