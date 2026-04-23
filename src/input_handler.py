@@ -40,6 +40,54 @@ class RetryConfig:
     max_retries: int = field(default=3)
 
 # ---------------------------------------------------------------------------
+# Exceptions
+# ---------------------------------------------------------------------------
+
+
+class OperationNotAvailableInModeError(ValueError):
+    """Raised when an operation is invoked in a mode that does not support it.
+
+    Attributes:
+        operation: The operation name that was attempted.
+        current_mode: The mode the calculator was in when the error occurred.
+        available_modes: Sorted list of modes that do support the operation.
+    """
+
+    def __init__(
+        self,
+        operation: str,
+        current_mode: str,
+        available_modes: list[str],
+    ) -> None:
+        """Initialise with details about the unsupported operation.
+
+        Args:
+            operation: The operation name that was attempted.
+            current_mode: The mode the calculator was in.
+            available_modes: Sorted list of modes that do support the operation.
+        """
+        self.operation = operation
+        self.current_mode = current_mode
+        self.available_modes = available_modes
+        super().__init__(str(self))
+
+    def __str__(self) -> str:
+        if not self.available_modes:
+            return (
+                f"Operation '{self.operation}' is not available in "
+                f"'{self.current_mode}' mode."
+            )
+        switch_hint = f"Type 'mode {self.available_modes[0]}' to switch."
+        modes_str = ", ".join(self.available_modes)
+        return (
+            f"Operation '{self.operation}' is not available in "
+            f"'{self.current_mode}' mode. "
+            f"Available in: {modes_str}. "
+            f"{switch_hint}"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
@@ -269,6 +317,19 @@ class CalculatorREPL:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def _get_available_modes_for_operation(self, operation: str) -> list[str]:
+        """Return which modes support a given operation.
+
+        Delegates to :meth:`~src.calculator.Calculator.get_available_modes_for_operation`.
+
+        Args:
+            operation: The operation name to look up.
+
+        Returns:
+            A sorted list of mode name strings that support the operation.
+        """
+        return self._calculator.get_available_modes_for_operation(operation)
+
     def _dispatch(self, operation: str, operands: list[Numeric]) -> Numeric:
         """Call the appropriate Calculator method.
 
@@ -280,14 +341,25 @@ class CalculatorREPL:
             The numeric result from the Calculator.
 
         Raises:
-            AttributeError: Should not happen for validated operations, but
-                propagated if it does.
+            OperationNotAvailableInModeError: If the operation is not
+                supported in the current calculator mode.
             ZeroDivisionError: Propagated from Calculator.divide.
-            ValueError: Propagated from Calculator methods.
+            ValueError: Propagated from Calculator methods for non-mode errors.
             TypeError: Propagated from Calculator methods.
         """
-        method = getattr(self._calculator, operation)
-        return method(*operands)
+        try:
+            method = getattr(self._calculator, operation)
+            return method(*operands)
+        except ValueError as exc:
+            # Re-raise as OperationNotAvailableInModeError when the engine
+            # signals that the current mode does not support this operation.
+            if "not available in" in str(exc):
+                current_mode = self._calculator._engine._mode
+                available = self._get_available_modes_for_operation(operation)
+                raise OperationNotAvailableInModeError(
+                    operation, current_mode, available
+                ) from exc
+            raise
 
     def _evaluate(self, raw_input: str) -> str:
         """Parse, validate, execute one expression, and format the result.
@@ -311,6 +383,26 @@ class CalculatorREPL:
 
         try:
             result = self._dispatch(operation, operands)
+        except OperationNotAvailableInModeError as exc:
+            logger.warning(
+                "_evaluate() mode error: raw_input=%r operation=%r current_mode=%r"
+                " available_modes=%r",
+                raw_input,
+                operation,
+                exc.current_mode,
+                exc.available_modes,
+            )
+            if exc.available_modes:
+                modes_str = ", ".join(exc.available_modes)
+                switch_cmd = f"mode {exc.available_modes[0]}"
+                return (
+                    f"'{exc.operation}' is not available in {exc.current_mode} mode.\n"
+                    f"Available in: {modes_str}.\n"
+                    f"To switch: type '{switch_cmd}'"
+                )
+            return (
+                f"'{exc.operation}' is not available in {exc.current_mode} mode."
+            )
         except ZeroDivisionError as exc:
             logger.error(
                 "_evaluate() dispatch error: raw_input=%r operation=%r operands=%r"
@@ -396,9 +488,13 @@ class CalculatorREPL:
         The loop never raises; all errors are printed as messages so the
         session continues until the user explicitly exits.
         """
-        print("Calculator REPL — type an expression (e.g. 'add 5 3') or 'exit' to quit.")
-        print("Type 'mode' to see or change calculator mode.")
-        print(f"Supported operations: {', '.join(sorted(SUPPORTED_OPERATIONS))}")
+        print("Calculator — type 'exit' to quit.")
+        print("Switch modes with: mode basic | mode advanced | mode scientific")
+        print("  basic: +, -, *, /")
+        print("  advanced: + factorial, power, square, cube, roots, natural_log, log_base_10")
+        print("  scientific: + sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, ln, ...")
+        print("Type 'history' to view past operations.")
+        print("Type 'mode' to see current mode.")
 
         while True:
             try:
@@ -444,6 +540,11 @@ class CalculatorREPL:
 
             response = self._evaluate(raw)
             if response.startswith("Result:"):
+                print(response)
+                continue
+
+            # Mode-not-available messages are informational; do not retry.
+            if "is not available in" in response and "To switch:" in response:
                 print(response)
                 continue
 

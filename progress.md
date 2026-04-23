@@ -1,4 +1,24 @@
 
+## Run: Fix PR #353 — Add scientific mode with interactive mode switching (2026-04-23)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/logic.py` — added `get_available_modes_for_operation()` method and `None`-guard clauses on all 21 advanced/scientific operation methods (raise `ValueError` instead of `AttributeError`)
+  - `src/calculator.py` — added `get_available_modes_for_operation()` pass-through method
+  - `src/input_handler.py` — added `OperationNotAvailableInModeError` exception, `_get_available_modes_for_operation()` helper, updated `_dispatch()` and `_evaluate()` for graceful out-of-mode error handling, updated welcome message to 7-line informative banner
+  - `tests/test_mode_availability.py` — new file: 117 tests for mode availability, guard clauses, new exception, REPL UX
+  - `tests/test_calculator.py` — updated 3 assertions from `AttributeError` to `ValueError`
+  - `tests/test_input_handler.py` — updated welcome message assertions to match new banner
+  - `tests/test_logic.py` — updated 5 assertions from `AttributeError` to `ValueError`
+  - `tests/test_main.py` — updated welcome message assertions to match new banner
+  - `tests/test_mode_switching.py` — updated 8 assertions from `AttributeError` to `ValueError`
+- **Purpose:** Address maintainer review feedback: clarify mode switching UX, add graceful out-of-mode error handling, improve welcome message
+- **Risks:** None — backward-compatible changes; `ValueError` is the appropriate exception type for invalid operations
+- **Tests passed:** 1506 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #272 — V2 Task 14 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-272-scientific-mode

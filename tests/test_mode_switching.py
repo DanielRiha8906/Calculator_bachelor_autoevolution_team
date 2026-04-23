@@ -38,20 +38,20 @@ class TestCalculatorEngineModeEnforcement:
         """Test that basic mode does not have advanced operations."""
         engine = CalculatorEngine(mode="basic")
         # Should NOT have advanced ops
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.factorial(5)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.square(3)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.natural_log(1)
 
     def test_basic_mode_no_scientific_ops(self):
         """Test that basic mode does not have scientific operations."""
         engine = CalculatorEngine(mode="basic")
         # Should NOT have scientific ops
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.ln(1)
 
     def test_advanced_mode_exposes_basic_and_advanced_ops(self):
@@ -67,9 +67,9 @@ class TestCalculatorEngineModeEnforcement:
         """Test that advanced mode does not have scientific operations."""
         engine = CalculatorEngine(mode="advanced")
         # Should NOT have scientific ops
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.ln(1)
 
     def test_scientific_mode_exposes_all_ops(self):
@@ -270,19 +270,19 @@ class TestCalculatorScientificProxy:
         assert history[1]["operator"] == "ln"
 
     def test_scientific_ops_not_available_in_basic_mode(self):
-        """Test that scientific operations raise AttributeError in basic mode."""
+        """Test that scientific operations raise ValueError in basic mode."""
         calc = Calculator(mode="basic")
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.ln(1)
 
     def test_scientific_ops_not_available_in_advanced_mode(self):
-        """Test that scientific operations raise AttributeError in advanced mode."""
+        """Test that scientific operations raise ValueError in advanced mode."""
         calc = Calculator(mode="advanced")
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.ln(1)
 
 
@@ -393,7 +393,7 @@ class TestModeSwitchingIntegration:
         calc = Calculator(mode="basic")
 
         # These should fail in basic mode
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.factorial(3)
 
         # Switch to advanced
@@ -408,7 +408,7 @@ class TestModeSwitchingIntegration:
         calc = Calculator(mode="advanced")
 
         # These should fail in advanced mode
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc.sin(0)
 
         # Switch to scientific

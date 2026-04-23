@@ -560,9 +560,10 @@ class TestCalculatorREPL:
             repl.run()
 
         captured = capsys.readouterr()
-        assert "Calculator REPL" in captured.out
-        assert "Supported operations" in captured.out
-        assert "add" in captured.out
+        assert "Calculator" in captured.out
+        assert "mode basic" in captured.out
+        assert "mode advanced" in captured.out
+        assert "mode scientific" in captured.out
         assert "factorial" in captured.out
 
     # -------------------------------------------------------------------------

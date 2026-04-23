@@ -28,6 +28,7 @@ from .logger import get_logger
 from .modes.basic import BasicOperations
 from .modes.advanced import AdvancedOperations
 from .modes.scientific import ScientificOperations
+from .modes.operations import BASIC_OPERATIONS, ADVANCED_OPERATIONS, SCIENTIFIC_OPERATIONS
 
 logger = get_logger(__name__)
 
@@ -162,6 +163,32 @@ class CalculatorEngine:
             ops.update(self._scientific.get_operations())
         return ops
 
+    def get_available_modes_for_operation(self, operation: str) -> list[str]:
+        """Return which modes support a given operation.
+
+        Cross-references *operation* against the canonical operation-name
+        frozensets and returns all mode names whose set contains it.
+
+        Args:
+            operation: The operation name to look up (e.g. ``"factorial"``).
+
+        Returns:
+            A sorted list of mode name strings (e.g. ``["advanced",
+            "scientific"]``).  Returns an empty list if the operation is
+            not recognised in any mode.
+        """
+        available: list[str] = []
+        if operation in BASIC_OPERATIONS:
+            # Basic operations are available in all three modes.
+            available.extend(["basic", "advanced", "scientific"])
+        elif operation in ADVANCED_OPERATIONS:
+            # Advanced operations are available in "advanced" and "scientific".
+            available.extend(["advanced", "scientific"])
+        elif operation in SCIENTIFIC_OPERATIONS:
+            # Scientific operations are available only in "scientific".
+            available.append("scientific")
+        return sorted(available)
+
     # ------------------------------------------------------------------
     # Public interface — history
     # ------------------------------------------------------------------
@@ -217,8 +244,15 @@ class CalculatorEngine:
 
         Raises:
             TypeError: If n is not an integer (e.g. float, str, list, None).
-            ValueError: If n is a negative integer.
+            ValueError: If n is a negative integer, or if the current mode
+                does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("factorial")
+            raise ValueError(
+                f"Operation 'factorial' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.factorial(n)
         self._record_history(n, "factorial", None, result)
         return result
@@ -231,7 +265,16 @@ class CalculatorEngine:
 
         Returns:
             x multiplied by itself.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("square")
+            raise ValueError(
+                f"Operation 'square' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.square(x)
         self._record_history(x, "square", None, result)
         return result
@@ -244,7 +287,16 @@ class CalculatorEngine:
 
         Returns:
             x multiplied by itself twice.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("cube")
+            raise ValueError(
+                f"Operation 'cube' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.cube(x)
         self._record_history(x, "cube", None, result)
         return result
@@ -259,8 +311,15 @@ class CalculatorEngine:
             The non-negative square root of x.
 
         Raises:
-            ValueError: If x is negative.
+            ValueError: If x is negative, or if the current mode does not
+                support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("square_root")
+            raise ValueError(
+                f"Operation 'square_root' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.square_root(x)
         self._record_history(x, "square_root", None, result)
         return result
@@ -275,7 +334,16 @@ class CalculatorEngine:
 
         Returns:
             The real cube root of x.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("cube_root")
+            raise ValueError(
+                f"Operation 'cube_root' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.cube_root(x)
         self._record_history(x, "cube_root", None, result)
         return result
@@ -289,7 +357,16 @@ class CalculatorEngine:
 
         Returns:
             base raised to the power of exponent.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("power")
+            raise ValueError(
+                f"Operation 'power' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.power(base, exponent)
         self._record_history(base, "power", exponent, result)
         return result
@@ -304,8 +381,15 @@ class CalculatorEngine:
             The natural logarithm of x.
 
         Raises:
-            ValueError: If x is less than or equal to 0.
+            ValueError: If x is less than or equal to 0, or if the current
+                mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("natural_log")
+            raise ValueError(
+                f"Operation 'natural_log' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.natural_log(x)
         self._record_history(x, "natural_log", None, result)
         return result
@@ -320,8 +404,15 @@ class CalculatorEngine:
             The base-10 logarithm of x.
 
         Raises:
-            ValueError: If x is less than or equal to 0.
+            ValueError: If x is less than or equal to 0, or if the current
+                mode does not support this operation.
         """
+        if self._advanced is None:
+            available = self.get_available_modes_for_operation("log_base_10")
+            raise ValueError(
+                f"Operation 'log_base_10' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._advanced.log_base_10(x)
         self._record_history(x, "log_base_10", None, result)
         return result
@@ -338,7 +429,16 @@ class CalculatorEngine:
 
         Returns:
             The sine of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("sin")
+            raise ValueError(
+                f"Operation 'sin' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.sin(x)
         self._record_history(x, "sin", None, result)
         return result
@@ -351,7 +451,16 @@ class CalculatorEngine:
 
         Returns:
             The cosine of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("cos")
+            raise ValueError(
+                f"Operation 'cos' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.cos(x)
         self._record_history(x, "cos", None, result)
         return result
@@ -364,7 +473,16 @@ class CalculatorEngine:
 
         Returns:
             The tangent of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("tan")
+            raise ValueError(
+                f"Operation 'tan' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.tan(x)
         self._record_history(x, "tan", None, result)
         return result
@@ -379,8 +497,15 @@ class CalculatorEngine:
             The arc sine of *x* in radians.
 
         Raises:
-            ValueError: If *x* is outside [-1, 1].
+            ValueError: If *x* is outside [-1, 1], or if the current mode
+                does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("asin")
+            raise ValueError(
+                f"Operation 'asin' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.asin(x)
         self._record_history(x, "asin", None, result)
         return result
@@ -395,8 +520,15 @@ class CalculatorEngine:
             The arc cosine of *x* in radians.
 
         Raises:
-            ValueError: If *x* is outside [-1, 1].
+            ValueError: If *x* is outside [-1, 1], or if the current mode
+                does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("acos")
+            raise ValueError(
+                f"Operation 'acos' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.acos(x)
         self._record_history(x, "acos", None, result)
         return result
@@ -409,7 +541,16 @@ class CalculatorEngine:
 
         Returns:
             The arc tangent of *x* in radians.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("atan")
+            raise ValueError(
+                f"Operation 'atan' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.atan(x)
         self._record_history(x, "atan", None, result)
         return result
@@ -422,7 +563,16 @@ class CalculatorEngine:
 
         Returns:
             The hyperbolic sine of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("sinh")
+            raise ValueError(
+                f"Operation 'sinh' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.sinh(x)
         self._record_history(x, "sinh", None, result)
         return result
@@ -435,7 +585,16 @@ class CalculatorEngine:
 
         Returns:
             The hyperbolic cosine of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("cosh")
+            raise ValueError(
+                f"Operation 'cosh' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.cosh(x)
         self._record_history(x, "cosh", None, result)
         return result
@@ -448,7 +607,16 @@ class CalculatorEngine:
 
         Returns:
             The hyperbolic tangent of *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("tanh")
+            raise ValueError(
+                f"Operation 'tanh' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.tanh(x)
         self._record_history(x, "tanh", None, result)
         return result
@@ -461,7 +629,16 @@ class CalculatorEngine:
 
         Returns:
             The equivalent angle in degrees.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("degrees")
+            raise ValueError(
+                f"Operation 'degrees' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.degrees(x)
         self._record_history(x, "degrees", None, result)
         return result
@@ -474,7 +651,16 @@ class CalculatorEngine:
 
         Returns:
             The equivalent angle in radians.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("radians")
+            raise ValueError(
+                f"Operation 'radians' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.radians(x)
         self._record_history(x, "radians", None, result)
         return result
@@ -487,7 +673,16 @@ class CalculatorEngine:
 
         Returns:
             e raised to the power *x*.
+
+        Raises:
+            ValueError: If the current mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("exp")
+            raise ValueError(
+                f"Operation 'exp' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.exp(x)
         self._record_history(x, "exp", None, result)
         return result
@@ -502,8 +697,15 @@ class CalculatorEngine:
             The natural logarithm of *x*.
 
         Raises:
-            ValueError: If *x* is less than or equal to 0.
+            ValueError: If *x* is less than or equal to 0, or if the current
+                mode does not support this operation.
         """
+        if self._scientific is None:
+            available = self.get_available_modes_for_operation("ln")
+            raise ValueError(
+                f"Operation 'ln' is not available in '{self._mode}' mode. "
+                f"Available in: {', '.join(available)}."
+            )
         result = self._scientific.ln(x)
         self._record_history(x, "ln", None, result)
         return result

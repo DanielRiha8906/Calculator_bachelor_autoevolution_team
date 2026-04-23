@@ -636,14 +636,14 @@ class TestModeParameter:
         # Only advanced and scientific have factorial
         assert calc_advanced.factorial(4) == 24
         assert calc_scientific.factorial(4) == 24
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc_basic.factorial(4)
 
         # Only scientific has sin
         assert calc_scientific.sin(0) == 0.0
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc_basic.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             calc_advanced.sin(0)
 
     def test_set_mode_to_same_mode(self):

@@ -780,10 +780,10 @@ class TestModeParameter:
     def test_advanced_operations_not_available_in_basic_mode(self):
         """Test that advanced operations are NOT available in basic mode."""
         engine = CalculatorEngine(mode="basic")
-        # Advanced operations should raise AttributeError when accessed
-        with pytest.raises(AttributeError):
+        # Advanced operations should raise ValueError when accessed
+        with pytest.raises(ValueError):
             engine.factorial(5)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine.square(3)
 
     def test_history_recorded_with_mode_parameter(self):
@@ -808,12 +808,12 @@ class TestModeParameter:
         # Only advanced and scientific have factorial
         assert engine_advanced.factorial(4) == 24
         assert engine_scientific.factorial(4) == 24
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine_basic.factorial(4)
 
         # Only scientific has sin
         assert engine_scientific.sin(0) == 0.0
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine_basic.sin(0)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             engine_advanced.sin(0)

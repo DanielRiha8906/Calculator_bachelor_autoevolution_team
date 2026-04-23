@@ -50,6 +50,21 @@ class Calculator:
     # Mode management
     # ------------------------------------------------------------------
 
+    def get_available_modes_for_operation(self, operation: str) -> list[str]:
+        """Return which modes support a given operation.
+
+        Pass-through to :meth:`~src.logic.CalculatorEngine.get_available_modes_for_operation`.
+
+        Args:
+            operation: The operation name to look up (e.g. ``"factorial"``).
+
+        Returns:
+            A sorted list of mode name strings (e.g. ``["advanced",
+            "scientific"]``).  Returns an empty list if the operation is
+            not recognised in any mode.
+        """
+        return self._engine.get_available_modes_for_operation(operation)
+
     def set_mode(self, mode: str) -> None:
         """Switch the calculator to a different operation mode at runtime.
 
