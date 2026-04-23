@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (PR #358) (2026-04-23)
+
+- **Branch:** task/issue-275-tkinter-gui
+- **PR target:** task/issue-275-tkinter-gui
+- **Files changed:**
+  - `artifacts/class_multi_layer_architecture.puml` — new class diagram showing CLI, REPL, and GUI as peer UI layers over shared computation core
+  - `artifacts/activity_gui_button_to_result.puml` — new activity diagram for GUI button-click-to-result flow including all error paths
+  - `artifacts/sequence_three_ui_paths.puml` — new sequence diagram comparing CLI, REPL, and GUI execution paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Add tkinter GUI for calculator app (2026-04-23)
 
 - **Branch:** task/issue-275-tkinter-gui
