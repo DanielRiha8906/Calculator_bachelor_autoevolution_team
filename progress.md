@@ -12,6 +12,27 @@
 
 Duration: 1156.2s | Cost: $2.621514 USD | Turns: 19
 
+## Run: Issue #277 — V2 Task 15 - Expert/team (2026-04-23)
+
+- **Branch:** task/issue-277-tkinter-gui
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/core/mode_abstraction.py` — new OO mode abstraction with BaseCalculatorMode ABC, NormalMode, ScientificMode, and get_mode_instance factory
+  - `src/gui/__init__.py` — new GUI package marker
+  - `src/gui/session_adapter.py` — new GUISessionAdapter bridging CalculatorSession to GUI event callbacks
+  - `src/gui/window.py` — new CalculatorWindow(tk.Tk) with full tkinter layout (mode selector, operation buttons, operand inputs, result label, history panel)
+  - `src/gui/app.py` — new run_gui() entry function wiring all components
+  - `src/__main__.py` — added --gui flag support with lazy import; CLI default preserved
+  - `tests/test_core_mode_abstraction.py` — 28 tests for mode abstraction layer
+  - `tests/test_gui_session_adapter.py` — 44 tests for session adapter
+  - `tests/test_gui_window.py` — 24 tests for window (mocked tkinter)
+  - `tests/test_gui_app.py` — 19 tests for app entry point
+- **Purpose:** Add tkinter-based GUI allowing users to access all calculator operations, switch modes, view history, and use the calculator without terminal prompts; existing CLI modes fully preserved
+- **Risks:** tkinter requires python3-tk OS package in GUI environments; clear_history() accesses session._history directly as no public API exists
+- **Tests passed:** 1331 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
 
 - **Branch:** task/issue-274-expert-team
