@@ -407,3 +407,15 @@ Duration: 245.9s | Cost: $0.660306 USD | Turns: 19
 - **Tests passed:** 923 passed, 58 skipped, 0 failed
 
 Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
+
+## Run: update-diagrams — GUI Layer Diagrams for PR #359 (2026-04-23)
+
+- **Branch:** task/issue-276-tkinter-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — Class diagram showing CalculatorGUI composition and dependencies on Calculator, OperationRegistry, ModeManager, SessionHistory, and validation
+  - `artifacts/gui_operation_execution_flow.puml` — Activity diagram for the full operation execution flow from listbox selection through validation, calculation, and history recording
+  - `artifacts/gui_startup_sequence.puml` — Sequence diagram of GUI startup: object construction order from gui_main.main() through CalculatorGUI initialization
+  - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
