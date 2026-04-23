@@ -418,4 +418,4 @@ Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
   - `artifacts/gui_startup_sequence.puml` — Sequence diagram of GUI startup: object construction order from gui_main.main() through CalculatorGUI initialization
   - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 250.8s | Cost: $0.544021 USD | Turns: 5
