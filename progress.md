@@ -455,4 +455,4 @@ Duration: 250.8s | Cost: $0.544021 USD | Turns: 5
   - `artifacts/activity_diagram_gui_mode_switch.puml` — updated mode-switch flow to match _on_mode_switch() implementation: ModeManager.switch_mode(), get_current_mode(), conditional pack/pack_forget of _scientific_frame
   - `artifacts/sequence_diagram_gui_execution.puml` — replaced old listbox-based execution sequence with new button-press state machine sequence: digit → operator → digit → equals → _execute_pending → OperationRegistry → Calculator → SessionHistory
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 274.3s | Cost: $0.730239 USD | Turns: 12
