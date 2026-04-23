@@ -478,3 +478,17 @@ Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
   - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
 
 Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
+
+## Run: Issue #363 — V2 Task 16 - Expert/team iOS-style Calculator GUI (2026-04-23)
+
+- **Branch:** task/issue-363-ios-calculator-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/gui.py` — new file: iOS-style GuiCalculator with _THEME dict, _SYMBOL_MAP, _OPERATOR_OPS, and GuiCalculator(tk.Tk) class with 4-column button grid, mode toggle, hover effects, and symbol labels
+  - `src/gui/app.py` — modified run_gui() to instantiate GuiCalculator instead of CalculatorWindow
+  - `tests/test_gui_ios_style.py` — new test file with 92 tests covering theme, symbols, colors, mode toggle, hover bindings, and integration
+- **Purpose:** Rebuild GuiCalculator layout from scratch to implement a modern iOS-style dark calculator UI with centralized theming, symbol button labels, color-coded operator/utility/normal buttons, hover effects, and dynamic mode toggling
+- **Risks:** None — calculation logic and all core classes untouched; only gui.py and app.py modified
+- **Tests passed:** 92 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
