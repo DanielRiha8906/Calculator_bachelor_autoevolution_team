@@ -5,9 +5,12 @@ skinparam packageStyle rectangle
 
 note as N1
   Module-level constants (src/gui/window.py):
-  _THEME: dict — iOS color palette (black bg, orange ops, gray buttons)
-  _SYMBOL_MAP: dict — op name → display symbol ("add" → "+", "multiply" → "×")
-  _ARITHMETIC_OPS: frozenset — {"add", "subtract", "multiply", "divide"}
+  _THEME: dict — iOS color palette (black bg, #FF9500 orange ops, gray buttons,
+    white text, red #FF453A errors, green #30D158 success), Courier font family
+  _SYMBOL_MAP: dict — op name → display symbol
+    ("add" → "+", "subtract" → "−", "multiply" → "×", "divide" → "÷",
+     "sin" → "sin", "asin" → "sin⁻¹", "square_root" → "√", etc.)
+  _ARITHMETIC_OPS: tuple — ("add", "subtract", "multiply", "divide")
 end note
 
 package "src.gui" {
@@ -16,27 +19,37 @@ package "src.gui" {
 
     class CalculatorWindow {
         -_adapter: GUISessionAdapter
+        -_selected_op: str | None
+        -_current_mode: str
         -_display_value: str
         -_display_var: tk.StringVar
-        -_current_mode: str
-        -_selected_op: str | None
         -_pending_binary_op: str | None
         -_history_visible: bool
+        -_result_var: tk.StringVar
+        -_result_label_widget: tk.Label
+        -_mode_toggle_btn: tk.Button
         -_ops_frame: tk.Frame
         -_history_frame: tk.Frame
         -_history_text: tk.Text
+        -_history_toggle_btn: tk.Button
+        -_clear_history_btn: tk.Button
         --
+        +__init__()
         +on_number_clicked(digit: str)
+        +on_mode_changed(mode_name: str)
         +on_operation_selected(op_name: str)
         +on_equals_clicked()
-        +on_mode_changed(mode_name: str)
+        +on_execute_clicked()
+        +on_history_toggle_clicked()
+        +on_clear_history_clicked()
+        +update_history_display()
         +update_operation_buttons()
         --
         -_build_ui()
         -_bind_hover(btn, default_bg, active_bg)
         -_op_colors(op_name: str) : tuple
         -_on_mode_toggle_clicked()
-        -_set_result(text: str, is_error: bool)
+        -_set_result(text: str, is_error: bool = False)
         -_execute_unary_from_display(op_name: str)
         -_execute_binary_operation()
     }
@@ -45,10 +58,11 @@ package "src.gui" {
         -_session: CalculatorSession
         -_pending_operand1: float | None
         --
+        +__init__()
         +store_first_operand(value: float)
         +get_pending_operand() : float | None
         +clear_pending_operand()
-        +execute_operation_safe(op_name, operands, use_pending) : tuple[str, str]
+        +execute_operation_safe(op_name, operands, use_pending: bool) : tuple[str, str]
         +set_mode(mode_name: str)
         +get_operations() : list[str]
         +get_history() : list[str]
@@ -59,6 +73,8 @@ package "src.gui" {
 
 TkTk <|-- CalculatorWindow : extends
 
-CalculatorWindow --> GUISessionAdapter : uses (injected)
+CalculatorWindow *-- GUISessionAdapter : owns
+
+N1 .. CalculatorWindow
 
 @enduml

@@ -1,14 +1,12 @@
 @startuml activity_mode_toggle
 
-|User|
-|CalculatorWindow|
-|GUISessionAdapter|
+title Mode Toggle and Operations Grid Rebuild
 
-|User|
 start
-:Click mode toggle button;
 
-|CalculatorWindow|
+:User clicks mode toggle button;
+note right: _mode_toggle_btn shows\nopposite mode name
+
 :_on_mode_toggle_clicked()
 Determine new_mode:
   if _current_mode == "normal"
@@ -17,24 +15,33 @@ Determine new_mode:
     new_mode = "normal";
 
 :on_mode_changed(new_mode)
-Clear _pending_binary_op = None
-Clear _display_value = "";
+_pending_binary_op = None
+_display_value = ""
+_display_var updated;
 
-|GUISessionAdapter|
-:set_mode(new_mode)
-→ CalculatorSession.set_mode(new_mode)
-Reload _operation_list for new mode;
+:adapter.set_mode(new_mode)
+→ session.set_mode(new_mode)
+Reload _operation_list from get_mode_config(new_mode);
 
-|CalculatorWindow|
 :_current_mode = new_mode
-update_operation_buttons();
+Update mode toggle button label;
 
-:Destroy existing _ops_frame children
-Re-create 4-column operations grid
-with ops for new_mode
-Re-bind hover effects on each button;
+:update_operation_buttons();
 
-:Update mode toggle button label;
+:Destroy all child widgets in _ops_frame;
+
+:adapter.get_operations()
+Sort: _ARITHMETIC_OPS first (4 orange buttons),
+then mode-specific ops (dark gray or standard gray);
+
+:For each op:
+  symbol = _SYMBOL_MAP.get(op_name, op_name)
+  (bg, active_bg) = _op_colors(op_name)
+  Create tk.Button(relief=FLAT, bd=0)
+  _bind_hover(btn, bg, active_bg);
+
+:Lay out buttons in 4-column grid
+in _ops_frame;
 
 stop
 

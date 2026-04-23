@@ -545,3 +545,16 @@ Duration: 452.5s | Cost: $1.034286 USD | Turns: 14
   - `artifacts/sequence_binary_op.puml` — New sequence diagram for binary operation execution
 
 Duration: 314.7s | Cost: $0.636171 USD | Turns: 4
+
+## Run: update-diagrams — iOS GUI Redesign (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** task/issue-363-ios-gui-redesign
+- **Files changed:**
+  - `artifacts/class_gui_layer.puml` — class diagram for CalculatorWindow and GUISessionAdapter
+  - `artifacts/class_core_layer.puml` — class diagram for CalculatorSession, Calculator, OperationHistory, mode system
+  - `artifacts/activity_binary_operation.puml` — activity diagram for binary operation flow
+  - `artifacts/activity_mode_toggle.puml` — activity diagram for mode toggle and grid rebuild
+  - `artifacts/sequence_gui_session.puml` — sequence diagram for CalculatorWindow → GUISessionAdapter → CalculatorSession → Calculator
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

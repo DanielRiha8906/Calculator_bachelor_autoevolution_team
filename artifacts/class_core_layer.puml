@@ -1,0 +1,121 @@
+@startuml class_core_layer
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src.gui" {
+
+    class GUISessionAdapter {
+        -_session: CalculatorSession
+        -_pending_operand1: float | None
+        --
+        +execute_operation_safe(op_name, operands, use_pending: bool) : tuple[str, str]
+        +set_mode(mode_name: str)
+        +get_operations() : list[str]
+        +get_history() : list[str]
+        +clear_history()
+        +get_arity(op_name: str) : int
+    }
+}
+
+package "src" {
+
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        -_error_logger: ErrorLogger
+        -_current_mode: str | None
+        -_operation_list: list[str]
+        --
+        +__init__()
+        +set_mode(mode_name: str)
+        +get_current_mode() : str | None
+        +select_operation(raw_choice, mode) : str
+        +execute_operation(op_name: str, operands: list) : tuple
+        +get_arity(op_name: str) : int
+        +record_history(op_name, operands, result)
+        +get_history() : list[str]
+        +save_history(filepath: str)
+        +get_operation_list() : list[str]
+    }
+
+    class OperationHistory {
+        -_entries: list[str]
+        --
+        +__init__()
+        +record_operation(operation_name, args, result)
+        +get_history() : list[str]
+        +clear()
+        +save_to_file(filepath: str)
+        --
+        -_format_entry(operation_name, args, result) : str
+    }
+
+    class ErrorLogger <<service>> {
+    }
+
+    enum CalculatorMode {
+        NORMAL = "normal"
+        SCIENTIFIC = "scientific"
+    }
+
+    class ModeConfig <<dataclass>> {
+        +mode: CalculatorMode
+        +operations: list[str]
+    }
+
+    note "get_mode_config(mode_name) -> ModeConfig | None\nModule-level factory in src/mode.py" as NMode
+}
+
+package "src.core" {
+
+    class Calculator {
+        +add(a, b)
+        +subtract(a, b)
+        +multiply(a, b)
+        +divide(a, b)
+        +square(x)
+        +cube(x)
+        +square_root(x)
+        +cube_root(x)
+        +power(base, exponent)
+        +factorial(n)
+        +logarithm(x)
+        +natural_logarithm(x)
+        +sin(x) / cos(x) / tan(x) / cot(x)
+        +asin(x) / acos(x)
+    }
+
+    class NormalOperations <<utility>> {
+        {static} +add(a, b)
+        {static} +subtract(a, b)
+        {static} +multiply(a, b)
+        {static} +divide(a, b)
+    }
+
+    class ScientificOperations <<utility>> {
+        {static} +square(x) / cube(x)
+        {static} +square_root(x) / cube_root(x)
+        {static} +power(base, exponent)
+        {static} +factorial(n)
+        {static} +logarithm(x) / natural_logarithm(x)
+        {static} +sin(x) / cos(x) / tan(x) / cot(x)
+        {static} +asin(x) / acos(x)
+    }
+}
+
+GUISessionAdapter *-- CalculatorSession : owns
+
+CalculatorSession *-- Calculator : owns
+CalculatorSession *-- OperationHistory : owns
+CalculatorSession *-- ErrorLogger : owns
+CalculatorSession --> CalculatorMode : uses
+CalculatorSession --> ModeConfig : uses via get_mode_config()
+
+ModeConfig --> CalculatorMode : references
+NMode .. ModeConfig
+
+Calculator --> NormalOperations : delegates
+Calculator --> ScientificOperations : delegates
+
+@enduml

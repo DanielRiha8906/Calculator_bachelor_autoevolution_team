@@ -1,0 +1,69 @@
+@startuml sequence_gui_session
+
+title Binary Operation: CalculatorWindow → GUISessionAdapter → CalculatorSession → Calculator
+
+actor User
+participant "CalculatorWindow" as CW
+participant "GUISessionAdapter" as GSA
+participant "CalculatorSession" as CS
+participant "Calculator" as Calc
+
+== Enter first operand ==
+
+User ->> CW : click digit "3"
+activate CW
+CW -> CW : on_number_clicked("3")\n_display_value = "3"\nupdate _display_var
+deactivate CW
+
+== Select binary operator ==
+
+User ->> CW : click "+" button
+activate CW
+CW -> CW : on_operation_selected("add")\nparse "3" → 3.0
+
+CW -> GSA : store_first_operand(3.0)
+activate GSA
+GSA -> GSA : _pending_operand1 = 3.0
+GSA --> CW : ok
+deactivate GSA
+
+CW -> CW : _pending_binary_op = "add"\n_display_value = ""
+deactivate CW
+
+== Enter second operand ==
+
+User ->> CW : click digit "5"
+activate CW
+CW -> CW : on_number_clicked("5")\n_display_value = "5"\nupdate _display_var
+deactivate CW
+
+== Press equals ==
+
+User ->> CW : click "=" button
+activate CW
+CW -> CW : on_equals_clicked()\n→ _execute_binary_operation()\nparse "5" → 5.0
+
+CW -> GSA : execute_operation_safe("add", [5.0], use_pending=True)
+activate GSA
+GSA -> GSA : prepend pending: operands = [3.0, 5.0]
+
+GSA -> CS : execute_operation("add", [3.0, 5.0])
+activate CS
+CS -> Calc : add(3.0, 5.0)
+activate Calc
+Calc --> CS : 8.0
+deactivate Calc
+
+CS -> CS : record_history("add", [3.0, 5.0], 8.0)
+CS --> GSA : (8.0, None)
+deactivate CS
+
+GSA -> GSA : clear_pending_operand()
+GSA --> CW : ("8.0", "")
+deactivate GSA
+
+CW -> CW : _set_result("8.0", is_error=False)\n_pending_binary_op = None\n_display_value = "8.0"
+CW -> CW : update_history_display()
+deactivate CW
+
+@enduml
