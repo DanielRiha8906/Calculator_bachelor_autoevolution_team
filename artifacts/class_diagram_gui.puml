@@ -6,39 +6,80 @@ skinparam classFontStyle bold
 ' --- External base class ---
 class "tk.Tk" as TkTk <<external>>
 
-' --- Error type ---
+' --- Error types ---
 class ValueError <<stdlib>>
 class OperationNotAvailableInModeError {
   + operation: str
   + current_mode: str
-  + available_modes: list
+  + available_modes: list[str]
 }
 ValueError <|-- OperationNotAvailableInModeError
 
-' --- Core computation ---
-class CalculatorEngine {
-  - _history: list[dict]
-  - _mode: str
-  --
+' --- Operation sets (abstract base + concrete) ---
+abstract class BaseOperationSet {
+  + {abstract} get_operations(): dict
+  # _record(result)
+}
+
+class BasicOperations {
   + add(a, b)
   + subtract(a, b)
   + multiply(a, b)
   + divide(a, b)
-  + factorial(n)
-  + power(base, exp)
-  + sin(x) / cos(x) / tan(x)
-  + square_root(x) / cube_root(x)
-  + natural_log(x) / log_base_10(x)
-  + set_mode(mode)
-  + get_history()
+  + get_operations(): dict
 }
 
-' --- Facade ---
-class Calculator {
-  - _engine: CalculatorEngine
+class AdvancedOperations {
+  + factorial(n)
+  + square(x)
+  + cube(x)
+  + square_root(x)
+  + cube_root(x)
+  + power(base, exp)
+  + natural_log(x)
+  + log_base_10(x)
+  + get_operations(): dict
+}
+
+class ScientificOperations {
+  + sin(x) / cos(x) / tan(x)
+  + asin(x) / acos(x) / atan(x)
+  + sinh(x) / cosh(x) / tanh(x)
+  + degrees(x) / radians(x)
+  + exp(x) / ln(x)
+  + get_operations(): dict
+}
+
+BaseOperationSet <|-- BasicOperations
+BaseOperationSet <|-- AdvancedOperations
+BaseOperationSet <|-- ScientificOperations
+
+' --- Core computation engine ---
+class CalculatorEngine {
+  - _history: list
   - _mode: str
+  - _basic: BasicOperations
+  - _advanced: AdvancedOperations
+  - _scientific: ScientificOperations
   --
-  + (delegates all operations\nto CalculatorEngine)
+  + set_mode(mode)
+  + get_history()
+  + add(a, b) / subtract(a, b)
+  + multiply(a, b) / divide(a, b)
+  + square_root(x) / sin(x) / cos(x)
+}
+
+CalculatorEngine *-- BasicOperations
+CalculatorEngine *-- AdvancedOperations
+CalculatorEngine *-- ScientificOperations
+
+' --- Calculator facade ---
+class Calculator {
+  --
+  + set_mode(mode)
+  + get_available_modes_for_operation(op)
+  + get_history()
+  + (delegates all operations to CalculatorEngine)
 }
 Calculator *-- CalculatorEngine
 
@@ -48,10 +89,16 @@ class ExpressionParser {
 }
 
 class InputValidator {
-  + validate(operation, operands): None
+  + validate(operation, operands)
+  + validate_operation(operation)
+  + validate_operand_count(operation, operands)
 }
 
-' --- GUI entry point (NEW) ---
+class RetryConfig {
+  + max_retries: int
+}
+
+' --- GUI entry point ---
 class CalculatorGUI {
   - _calculator: Calculator
   - _parser: ExpressionParser
@@ -59,59 +106,42 @@ class CalculatorGUI {
   - _expression: str
   - _display_var: tk.StringVar
   - _mode_var: tk.StringVar
+  - _button_widgets: dict[str, tk.Button]
   --
   - _build_ui()
-  - _build_display()
-  - _build_mode_selector()
-  - _build_button_grid()
   - _on_button(label)
-  - _on_mode_change(selected_mode)
+  - _on_mode_change(mode)
   - _evaluate()
-  - _clear()
-  - _backspace()
-  - _append(text)
-  - _append_operator(operator)
-  - _set_display(text)
-  - _show_error(message)
+  - _append(text) / _append_operator(op) / _append_function(label)
+  - _clear() / _backspace()
+  - _set_display(text) / _show_error(msg)
+  - _rebuild_button_grid_for_mode(mode)
 }
 TkTk <|-- CalculatorGUI
 CalculatorGUI *-- Calculator
 CalculatorGUI *-- ExpressionParser
 CalculatorGUI *-- InputValidator
 
-' --- Peer entry points (simplified) ---
-class CLIHandler <<entry point>> {
+' --- REPL entry point ---
+class CalculatorREPL {
   - _calculator: Calculator
   - _parser: ExpressionParser
   - _validator: InputValidator
+  - _retry_config: RetryConfig
   --
-  + run(): int
-}
-CLIHandler *-- Calculator
-CLIHandler *-- ExpressionParser
-CLIHandler *-- InputValidator
-
-class CalculatorREPL <<entry point>> {
-  - _calculator: Calculator
-  - _parser: ExpressionParser
-  - _validator: InputValidator
-  --
-  + run(): None
+  + run()
 }
 CalculatorREPL *-- Calculator
 CalculatorREPL *-- ExpressionParser
 CalculatorREPL *-- InputValidator
+CalculatorREPL *-- RetryConfig
 
 note bottom of CalculatorGUI
   Launched via: main.py --gui / -g
 end note
 
-note bottom of CLIHandler
-  Launched via: main.py <expression>
-end note
-
 note bottom of CalculatorREPL
-  Launched via: main.py (default)
+  Launched via: main.py (default REPL)
 end note
 
 @enduml

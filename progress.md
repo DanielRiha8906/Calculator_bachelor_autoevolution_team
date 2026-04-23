@@ -445,3 +445,14 @@ Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
 - **Tests passed:** 1676 passed, 0 failed
 
 Duration: 457.9s | Cost: $1.112558 USD | Turns: 14
+
+## Run: update-diagrams — Modern Calculator GUI UML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-361-modern-calculator-gui
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI layer and core calculator relationships
+  - `artifacts/activity_diagram_evaluation.puml` — activity diagram for button press to evaluation flow
+  - `artifacts/sequence_diagram_calculation.puml` — sequence diagram for sin calculation in scientific mode
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
