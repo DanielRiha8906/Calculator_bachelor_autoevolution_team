@@ -380,6 +380,6 @@ Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
   - `artifacts/activity_mode_switch.puml` — Activity diagram for REPL mode switching flow
   - `artifacts/sequence_scientific_op.puml` — Sequence diagram for scientific operation execution
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 238.6s | Cost: $0.542820 USD | Turns: 4
 
 Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
