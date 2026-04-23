@@ -85,7 +85,7 @@ jobs:
             A maintainer added the label `request-changes:${{ inputs.experiment_name }}`.
 
             The standard pipeline is:
-            1. github-task-analyst — pass the PR number, title, body, and repository. Instruct it to fetch the PR review comments and produce a requirements brief of what must be fixed.
+            1. github-task-analyst — pass the PR number, title, body, and repository. Instruct it to fetch the **ALL** PR comments (Review and issue thread comments) and produce a requirements brief of what must be fixed, based on the unresolved ones.
             2. system-architect — pass the analyst's requirements brief only. It will produce a file-level plan covering the source and test changes needed to address the review feedback.
             3. python-code-implementer — pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/ — do not summarize, paraphrase, or delegate those steps. The implementer must receive zero test-related instructions. Tests are exclusively the pytest-edge-tester's responsibility.
             4. pytest-edge-tester — pass the implementer's report (changed files) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
@@ -96,7 +96,7 @@ jobs:
             Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.
 
             When invoking each agent, pass ONLY what is listed here — nothing more:
-            - github-task-analyst: pass the PR number, title, body, and repository only. Instruct it to read the PR review comments. Do NOT tell it to read source files or explore the repo.
+            - github-task-analyst: pass the PR number, title, body, and repository only. Instruct it to read the **ALL** PR comments (Review and issue thread comments) and identify the unresolved ones. Do NOT tell it to read source files or explore the repo.
             - system-architect: pass the analyst's requirements brief only.
             - python-code-implementer: pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/. The implementer must receive zero test-related instructions.
             - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
