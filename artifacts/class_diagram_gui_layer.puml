@@ -4,25 +4,48 @@ skinparam classAttributeIconSize 0
 
 package "GUI Layer" {
     class CalculatorGUI {
+        +root: tk.Tk
+        --
+        -_history: SessionHistory
         -_calc: Calculator
         -_registry: OperationRegistry
         -_mode_manager: ModeManager
-        -_history: SessionHistory
+        -_display_value: str
+        -_accumulated_value: float | None
+        -_pending_operator: str | None
+        -_is_new_number: bool
+        -_main_frame: tk.Frame
+        -_display_label: tk.Label
+        -_buttons_frame: tk.Frame
+        -_standard_frame: tk.Frame
+        -_scientific_frame: tk.Frame
         --
         +__init__(root: tk.Tk, history: SessionHistory)
         +run()
         -_build_widgets()
-        -_populate_operations()
-        -_on_operation_selected(event)
-        -_rebuild_operand_inputs(arity: int)
-        -_execute_operation()
+        -_make_button(parent, text, bg, command, column_span) : tk.Button
+        -_build_standard_grid(parent)
+        -_build_scientific_grid(parent)
+        -_update_display()
+        -_on_digit(digit: str)
+        -_on_decimal()
+        -_on_operator(op_symbol: str)
+        -_on_equals()
+        -_execute_pending()
+        -_execute_unary(op_symbol: str)
+        -_on_clear()
+        -_on_delete()
         -_on_mode_switch()
-        -_on_clear_history()
-        -_refresh_history_display()
-        -_display_result(op: str, operands: list, result: float)
-        -_display_error(msg: str)
-        -_clear_error()
+        -{static} _symbol_to_operation(symbol: str) : str
+        -{static} _format_result(value: float) : str
     }
+
+    note right of CalculatorGUI
+        iOS-style keypad UI.
+        Does not import workflow or CLI components.
+        State machine: _accumulated_value +
+        _pending_operator manage binary operations.
+    end note
 }
 
 package "Engine" {
@@ -31,33 +54,25 @@ package "Engine" {
         +subtract(a: float, b: float) : float
         +multiply(a: float, b: float) : float
         +divide(a: float, b: float) : float
-        +power(x: float, y: float) : float
         +factorial(n: int) : int
         +square(x: float) : float
-        +cube(x: float) : float
         +square_root(x: float) : float
-        +cube_root(x: float) : float
+        +power(x: float, y: float) : float
         +log(x: float) : float
         +ln(x: float) : float
     }
 
     class OperationRegistry {
-        -_registry: dict[str, tuple]
-        -_scientific_operations: set[str]
-        --
         +__init__(calculator: Calculator)
         +get_operation(key: str) : tuple
         +get_available_operations(mode_manager: ModeManager) : dict
-        +register_operation(key: str, method, arity: int, description: str)
-        +register_scientific(key: str, method, arity: int, description: str)
+        +register_scientific()
     }
 
     class ModeManager {
-        -_current_mode: CalculatorMode
-        --
         +switch_mode()
-        +get_mode_display_name() : str
-        +is_operation_available(op_name: str, scientific_ops: set) : bool
+        +get_current_mode() : CalculatorMode
+        +is_operation_available() : bool
     }
 
     enum CalculatorMode {
@@ -68,35 +83,20 @@ package "Engine" {
 
 package "Session" {
     class SessionHistory {
-        -_entries: list[dict]
-        --
-        +record_operation(key: str, operands: list, result: float)
+        +record_operation()
         +display_history() : str
+        +get_history() : list
         +clear()
         +is_empty() : bool
     }
 }
 
-package "Validation" {
-    class validation <<module>> {
-        +validate_operand(raw: str) : float
-    }
+CalculatorGUI *-- Calculator         : owns
+CalculatorGUI *-- OperationRegistry  : owns
+CalculatorGUI *-- ModeManager        : owns
+CalculatorGUI o-- SessionHistory     : via constructor
 
-    class OperandValidationError {
-    }
-
-    ValueError <|-- OperandValidationError
-    validation ..> OperandValidationError : raises
-}
-
-CalculatorGUI *-- Calculator       : owns
-CalculatorGUI *-- OperationRegistry : owns
-CalculatorGUI *-- ModeManager      : owns
-CalculatorGUI o-- SessionHistory   : receives via constructor
-
-OperationRegistry --> Calculator   : holds bound methods
-ModeManager --> CalculatorMode     : uses
-
-CalculatorGUI ..> validation       : calls validate_operand\nin _execute_operation
+OperationRegistry --> Calculator     : holds bound methods
+ModeManager --> CalculatorMode       : uses
 
 @enduml

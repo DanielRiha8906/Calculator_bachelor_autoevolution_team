@@ -1,3 +1,16 @@
+## Run: Issue #362 — V2 Task 16 - Structured/team (2026-04-23)
+
+- **Branch:** task/issue-362-ios-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/gui.py` — complete redesign of CalculatorGUI class to iOS-style dark button-grid interface; new state management, button handlers, symbol mapping, and grid layout
+  - `tests/test_gui.py` — full rewrite of GUI tests to match new button-grid interface; 94 tests covering digit input, operators, delete/clear, mode switch, symbol mapping, format result, history integration, and edge cases
+- **Purpose:** Redesign the calculator GUI to a modern iOS-inspired dark interface with 4×5 standard grid, orange operator buttons, flat styling, right-aligned display
+- **Risks:** Complete GUI rewrite; calculation logic and all other src/ modules unchanged
+- **Tests passed:** 94 passed, 0 failed
+
+Duration: 483.1s | Cost: $1.079365 USD | Turns: 16
+
 ## Run: Fix PR #359 — Add tkinter GUI with simple/scientific mode and session history (#276) (2026-04-23)
 
 - **Branch:** task/issue-276-tkinter-gui
@@ -432,3 +445,14 @@ Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
   - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
 
 Duration: 250.8s | Cost: $0.544021 USD | Turns: 5
+
+## Run: update-diagrams — iOS Calculator GUI Diagrams (2026-04-23)
+
+- **Branch:** task/issue-362-ios-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui_layer.puml` — updated CalculatorGUI class to iOS keypad architecture: new state fields, button-handler methods, widget fields; removed all old listbox/operand-entry methods
+  - `artifacts/activity_diagram_gui_mode_switch.puml` — updated mode-switch flow to match _on_mode_switch() implementation: ModeManager.switch_mode(), get_current_mode(), conditional pack/pack_forget of _scientific_frame
+  - `artifacts/sequence_diagram_gui_execution.puml` — replaced old listbox-based execution sequence with new button-press state machine sequence: digit → operator → digit → equals → _execute_pending → OperationRegistry → Calculator → SessionHistory
+
+Duration: 274.3s | Cost: $0.730239 USD | Turns: 12

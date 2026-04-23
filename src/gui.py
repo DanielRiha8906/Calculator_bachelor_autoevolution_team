@@ -1,9 +1,9 @@
 """Tkinter-based GUI for the calculator application.
 
 This module provides :class:`CalculatorGUI`, a fully self-contained graphical
-interface that wires together :class:`~calculator.Calculator`,
-:class:`~operations.OperationRegistry`, :class:`~mode_manager.ModeManager`,
-:func:`~validation.validate_operand`, and :class:`~session_history.SessionHistory`.
+interface styled after an iOS calculator.  It wires together
+:class:`~calculator.Calculator`, :class:`~operations.OperationRegistry`,
+:class:`~mode_manager.ModeManager`, and :class:`~session_history.SessionHistory`.
 
 It intentionally avoids importing ``InputHandler``, ``OperationHistory``, or
 ``CalculatorWorkflow`` — those are CLI/workflow concerns that do not belong in
@@ -11,26 +11,64 @@ the GUI layer.
 """
 
 import tkinter as tk
-from tkinter import scrolledtext
 
 from .calculator import Calculator
 from .mode_manager import ModeManager
 from .operations import OperationRegistry
 from .session_history import SessionHistory
-from .validation import OperandValidationError, validate_operand
+
+# ---------------------------------------------------------------------------
+# Colour palette
+# ---------------------------------------------------------------------------
+_BG = "#000000"
+_BTN_DIGIT = "#333333"
+_BTN_OPERATOR = "#FF9500"
+_BTN_UTILITY = "#A5A5A5"
+_FG = "#FFFFFF"
+
+# Button dimensions (pixels)
+_BTN_WIDTH = 72
+_BTN_HEIGHT = 72
+_BTN_PAD = 4
+
+# Display font
+_DISPLAY_FONT = ("Helvetica", 28)
+
+# Map from display symbol to OperationRegistry key
+_SYMBOL_TO_KEY: dict[str, str] = {
+    "+": "add",
+    "−": "subtract",
+    "×": "multiply",
+    "÷": "divide",
+    "√": "square_root",
+    "x²": "square",
+    "xʸ": "power",
+    "n!": "factorial",
+    "ln": "ln",
+    "log": "log",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+}
+
+# Set of binary operator symbols (require two operands)
+_BINARY_OPERATORS: frozenset[str] = frozenset({"+", "−", "×", "÷", "xʸ"})
+
+# Set of unary operator symbols (require one operand)
+_UNARY_OPERATORS: frozenset[str] = frozenset({"√", "x²", "n!", "ln", "log", "sin", "cos", "tan"})
 
 
 class CalculatorGUI:
-    """Graphical calculator interface built with tkinter.
+    """iOS-inspired graphical calculator interface built with tkinter.
 
-    The GUI presents an operation list, operand input fields, an execute
-    button, a result display, and a scrollable history pane.  It supports
-    Normal and Scientific modes via :class:`~mode_manager.ModeManager`.
+    The GUI renders a numeric keypad with an optional scientific panel that
+    slides in when Mode is toggled.  All computation is delegated to the
+    :class:`~calculator.Calculator` instance via :class:`~operations.OperationRegistry`.
 
     Args:
         root: The top-level :class:`tk.Tk` window.
         history: A :class:`~session_history.SessionHistory` instance used to
-            record and display past calculations.
+            record past calculations.
 
     Example::
 
@@ -45,7 +83,7 @@ class CalculatorGUI:
     """
 
     def __init__(self, root: tk.Tk, history: SessionHistory) -> None:
-        """Initialise the GUI, engine components, and build all widgets.
+        """Initialise the GUI, engine components, internal state, and build widgets.
 
         Args:
             root: The top-level Tk window.
@@ -53,335 +91,494 @@ class CalculatorGUI:
         """
         self.root: tk.Tk = root
         self.root.title("Calculator")
+        self.root.configure(bg=_BG)
+        self.root.resizable(False, False)
 
         self._history: SessionHistory = history
         self._calc: Calculator = Calculator()
         self._registry: OperationRegistry = OperationRegistry(self._calc)
         self._mode_manager: ModeManager = ModeManager()
 
-        # Operand entry widgets are created dynamically based on arity.
-        self._operand_entries: list[tk.Entry] = []
-        self._operand_labels: list[tk.Label] = []
-
-        # Metadata for the currently selected operation.
-        self._selected_operation_key: str | None = None
-        self._selected_arity: int = 0
+        # --- Internal calculator state ---
+        self._display_value: str = "0"
+        self._accumulated_value: float | None = None
+        self._pending_operator: str | None = None
+        self._is_new_number: bool = True
 
         self._build_widgets()
-        self._populate_operations()
 
     # ------------------------------------------------------------------
     # Widget construction
     # ------------------------------------------------------------------
 
     def _build_widgets(self) -> None:
-        """Create and arrange all widgets in the root window."""
-        self.root.columnconfigure(0, weight=1)
+        """Create the display label and button frames and pack them into root."""
+        # Top-level container — fills the window
+        self._main_frame = tk.Frame(self.root, bg=_BG)
+        self._main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # ---- Header frame ----
-        header_frame = tk.Frame(self.root, pady=6)
-        header_frame.grid(row=0, column=0, sticky="ew")
-        header_frame.columnconfigure(0, weight=1)
+        # Display area
+        self._display_label = tk.Label(
+            self._main_frame,
+            text=self._display_value,
+            font=_DISPLAY_FONT,
+            bg=_BG,
+            fg=_FG,
+            anchor="e",
+            padx=12,
+            pady=8,
+        )
+        self._display_label.pack(fill=tk.X)
 
-        tk.Label(
-            header_frame,
-            text="Calculator",
+        # Separator line between display and buttons
+        tk.Frame(self._main_frame, bg="#222222", height=1).pack(fill=tk.X)
+
+        # Button area — horizontal layout: [optional scientific] [standard]
+        self._buttons_frame = tk.Frame(self._main_frame, bg=_BG)
+        self._buttons_frame.pack()
+
+        # Scientific panel (hidden by default)
+        self._scientific_frame = tk.Frame(self._buttons_frame, bg=_BG)
+        self._build_scientific_grid(self._scientific_frame)
+        # Do NOT pack _scientific_frame yet — it is shown on mode switch.
+
+        # Standard grid is always visible
+        self._standard_frame = tk.Frame(self._buttons_frame, bg=_BG)
+        self._standard_frame.pack(side=tk.LEFT)
+        self._build_standard_grid(self._standard_frame)
+
+    def _make_button(
+        self,
+        parent: tk.Frame,
+        text: str,
+        bg: str,
+        command,
+        column_span: int = 1,
+    ) -> tk.Button:
+        """Create and return a styled calculator button (without placing it).
+
+        Args:
+            parent: The parent frame to attach the button to.
+            text: The label shown on the button face.
+            bg: Background colour hex string.
+            command: Callable invoked on button press.
+            column_span: How many grid columns the button spans (for the
+                wide zero button).
+
+        Returns:
+            The configured but unplaced :class:`tk.Button` instance.
+        """
+        width_px = _BTN_WIDTH * column_span + _BTN_PAD * (column_span - 1)
+        btn = tk.Button(
+            parent,
+            text=text,
             font=("Helvetica", 16, "bold"),
-        ).grid(row=0, column=0)
-
-        # ---- Mode row ----
-        mode_frame = tk.Frame(self.root, pady=4)
-        mode_frame.grid(row=1, column=0, sticky="ew", padx=10)
-        mode_frame.columnconfigure(1, weight=1)
-
-        tk.Label(mode_frame, text="Mode:").grid(row=0, column=0, sticky="w")
-        self._mode_label = tk.Label(
-            mode_frame,
-            text=self._mode_manager.get_mode_display_name(),
-            width=12,
-            anchor="w",
+            bg=bg,
+            fg=_FG,
+            activebackground=bg,
+            activeforeground=_FG,
+            relief=tk.FLAT,
+            borderwidth=0,
+            highlightthickness=0,
+            width=1,
+            height=1,
+            command=command,
         )
-        self._mode_label.grid(row=0, column=1, sticky="w", padx=(4, 0))
+        # Override the size in pixels via the image trick — simpler: just use
+        # padx/pady to achieve uniform button faces without importing PIL.
+        btn.configure(padx=0, pady=0)
+        btn.config(width=width_px // 10, height=2)
+        return btn
 
-        self._mode_button = tk.Button(
-            mode_frame,
-            text="Switch Mode",
-            command=self._on_mode_switch,
-        )
-        self._mode_button.grid(row=0, column=2, sticky="e")
+    def _build_standard_grid(self, parent: tk.Frame) -> None:
+        """Create the 4-column by 5-row standard button grid.
 
-        # ---- Operation listbox with scrollbar ----
-        ops_frame = tk.LabelFrame(self.root, text="Operations", padx=6, pady=6)
-        ops_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(4, 0))
-        ops_frame.columnconfigure(0, weight=1)
+        Layout::
 
-        ops_scrollbar = tk.Scrollbar(ops_frame, orient=tk.VERTICAL)
-        self._ops_listbox = tk.Listbox(
-            ops_frame,
-            height=8,
-            yscrollcommand=ops_scrollbar.set,
-            exportselection=False,
-        )
-        ops_scrollbar.config(command=self._ops_listbox.yview)
-        self._ops_listbox.grid(row=0, column=0, sticky="ew")
-        ops_scrollbar.grid(row=0, column=1, sticky="ns")
-        self._ops_listbox.bind("<<ListboxSelect>>", self._on_operation_selected)
+            Row 0: [C]      [Del]   [Mode]  [÷]
+            Row 1: [7]      [8]     [9]     [×]
+            Row 2: [4]      [5]     [6]     [ ]   <- empty cell (−)
+            Row 3: [1]      [2]     [3]     [−]
+            Row 4: [0 ×2]          [.]     [=]
 
-        # ---- Operand inputs frame ----
-        self._inputs_frame = tk.LabelFrame(
-            self.root, text="Inputs", padx=6, pady=6
-        )
-        self._inputs_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=(4, 0))
-        self._inputs_frame.columnconfigure(1, weight=1)
-
-        # ---- Execute button ----
-        self._execute_button = tk.Button(
-            self.root,
-            text="Calculate",
-            command=self._execute_operation,
-        )
-        self._execute_button.grid(row=4, column=0, pady=6, padx=10, sticky="ew")
-
-        # ---- Result display ----
-        result_frame = tk.LabelFrame(self.root, text="Result", padx=6, pady=6)
-        result_frame.grid(row=5, column=0, sticky="ew", padx=10, pady=(0, 4))
-        result_frame.columnconfigure(0, weight=1)
-
-        self._result_label = tk.Label(
-            result_frame,
-            text="",
-            font=("Helvetica", 12),
-            anchor="w",
-        )
-        self._result_label.grid(row=0, column=0, sticky="ew")
-
-        # ---- Error message label (hidden until needed) ----
-        self._error_label = tk.Label(
-            self.root,
-            text="",
-            fg="red",
-            wraplength=380,
-            justify="left",
-        )
-        self._error_label.grid(row=6, column=0, sticky="ew", padx=10)
-        self._error_label.grid_remove()
-
-        # ---- History pane ----
-        history_frame = tk.LabelFrame(
-            self.root, text="History", padx=6, pady=6
-        )
-        history_frame.grid(row=7, column=0, sticky="ew", padx=10, pady=(0, 4))
-        history_frame.columnconfigure(0, weight=1)
-
-        self._history_text = scrolledtext.ScrolledText(
-            history_frame,
-            height=8,
-            state=tk.DISABLED,
-            wrap=tk.WORD,
-        )
-        self._history_text.grid(row=0, column=0, sticky="ew")
-
-        self._clear_history_button = tk.Button(
-            history_frame,
-            text="Clear History",
-            command=self._on_clear_history,
-        )
-        self._clear_history_button.grid(row=1, column=0, pady=(4, 0))
-
-    # ------------------------------------------------------------------
-    # Operations list management
-    # ------------------------------------------------------------------
-
-    def _populate_operations(self) -> None:
-        """Refresh the operations listbox to reflect the current mode."""
-        self._ops_listbox.delete(0, tk.END)
-        available = self._registry.get_available_operations(self._mode_manager)
-        self._ops_keys: list[str] = []
-        for key, description in available.items():
-            self._ops_listbox.insert(tk.END, f"{key}  —  {description}")
-            self._ops_keys.append(key)
-
-        # Reset operand fields when operations list changes.
-        self._rebuild_operand_inputs(arity=0)
-
-    def _on_operation_selected(self, event: tk.Event) -> None:  # type: ignore[type-arg]
-        """Handle a listbox selection change; rebuild operand fields for arity.
+        The minus key sits on the right of row 3 and the empty cell in row 2
+        keeps the grid symmetrical with the iOS layout (the − button is taller
+        on a real iOS calc; here we place it in row 3 right).
 
         Args:
-            event: The tkinter virtual event (not used directly).
+            parent: The frame in which to build the grid.
         """
-        selection = self._ops_listbox.curselection()
-        if not selection:
-            return
+        pad = _BTN_PAD
 
-        key = self._ops_keys[selection[0]]
-        _method, arity, _description = self._registry.get_operation(key)
-        self._selected_operation_key = key
-        self._selected_arity = arity
-        self._rebuild_operand_inputs(arity)
-        self._clear_error()
+        # Row 0 — utility row
+        row0: list[tuple[str, str, object, int]] = [
+            ("C",    _BTN_UTILITY,  self._on_clear,            1),
+            ("Del",  _BTN_UTILITY,  self._on_delete,           1),
+            ("Mode", _BTN_UTILITY,  self._on_mode_switch,      1),
+            ("÷",    _BTN_OPERATOR, lambda: self._on_operator("÷"), 1),
+        ]
+        # Row 1 — digits 7-9 + multiply
+        row1: list[tuple[str, str, object, int]] = [
+            ("7", _BTN_DIGIT, lambda: self._on_digit("7"), 1),
+            ("8", _BTN_DIGIT, lambda: self._on_digit("8"), 1),
+            ("9", _BTN_DIGIT, lambda: self._on_digit("9"), 1),
+            ("×", _BTN_OPERATOR, lambda: self._on_operator("×"), 1),
+        ]
+        # Row 2 — digits 4-6 + empty slot
+        row2: list[tuple[str, str, object, int]] = [
+            ("4", _BTN_DIGIT, lambda: self._on_digit("4"), 1),
+            ("5", _BTN_DIGIT, lambda: self._on_digit("5"), 1),
+            ("6", _BTN_DIGIT, lambda: self._on_digit("6"), 1),
+            ("",  _BG,        lambda: None,                  1),  # empty cell
+        ]
+        # Row 3 — digits 1-3 + subtract
+        row3: list[tuple[str, str, object, int]] = [
+            ("1", _BTN_DIGIT, lambda: self._on_digit("1"), 1),
+            ("2", _BTN_DIGIT, lambda: self._on_digit("2"), 1),
+            ("3", _BTN_DIGIT, lambda: self._on_digit("3"), 1),
+            ("−", _BTN_OPERATOR, lambda: self._on_operator("−"), 1),
+        ]
+        # Row 4 — zero (wide) + decimal + equals
+        row4: list[tuple[str, str, object, int]] = [
+            ("0", _BTN_DIGIT,    lambda: self._on_digit("0"), 2),
+            (".", _BTN_DIGIT,    self._on_decimal,            1),
+            ("=", _BTN_UTILITY,  self._on_equals,             1),
+        ]
 
-    def _rebuild_operand_inputs(self, arity: int) -> None:
-        """Recreate operand label/entry pairs to match the required arity.
+        rows = [row0, row1, row2, row3, row4]
+        for row_idx, row_def in enumerate(rows):
+            col_idx = 0
+            for text, bg, cmd, span in row_def:
+                btn = self._make_button(parent, text, bg, cmd, column_span=span)
+                btn.grid(
+                    row=row_idx,
+                    column=col_idx,
+                    columnspan=span,
+                    padx=pad,
+                    pady=pad,
+                    sticky="nsew",
+                )
+                col_idx += span
+
+    def _build_scientific_grid(self, parent: tk.Frame) -> None:
+        """Create the scientific functions button grid (shown in scientific mode).
+
+        Functions arranged in a 2-column grid to the left of the standard pad::
+
+            Row 0: [√]   [x²]
+            Row 1: [xʸ]  [n!]
+            Row 2: [ln]  [log]
+            Row 3: [sin] [cos]
+            Row 4: [tan] [ ]
 
         Args:
-            arity: Number of operand input fields to create (0 clears all).
+            parent: The frame in which to build the scientific grid.
         """
-        # Remove existing widgets.
-        for widget in self._inputs_frame.winfo_children():
-            widget.destroy()
-        self._operand_entries = []
-        self._operand_labels = []
-
-        if arity == 0:
-            tk.Label(
-                self._inputs_frame, text="Select an operation above.", fg="grey"
-            ).grid(row=0, column=0, columnspan=2, sticky="w")
-            return
-
-        labels = (
-            ["Value:"]
-            if arity == 1
-            else ["First operand:", "Second operand:"]
-        )
-        for idx, label_text in enumerate(labels[:arity]):
-            lbl = tk.Label(self._inputs_frame, text=label_text, anchor="w")
-            lbl.grid(row=idx, column=0, sticky="w", pady=2)
-            entry = tk.Entry(self._inputs_frame)
-            entry.grid(row=idx, column=1, sticky="ew", padx=(4, 0), pady=2)
-            self._operand_labels.append(lbl)
-            self._operand_entries.append(entry)
-
-    # ------------------------------------------------------------------
-    # Execution
-    # ------------------------------------------------------------------
-
-    def _execute_operation(self) -> None:
-        """Read operands, run the selected operation, and update the display.
-
-        Validates inputs using :func:`~validation.validate_operand`, calls the
-        operation method from the registry, and records the result in
-        :class:`~session_history.SessionHistory`.  Any error is shown via
-        :meth:`_display_error` without interrupting the event loop.
-        """
-        self._clear_error()
-        selection = self._ops_listbox.curselection()
-        if not selection:
-            self._display_error("Please select an operation.")
-            return
-
-        key = self._ops_keys[selection[0]]
-        method, arity, description = self._registry.get_operation(key)
-
-        # Guard: ensure the required entry widgets exist (e.g. if selection handler did not fire).
-        if len(self._operand_entries) < arity:
-            self._display_error(
-                f"Please select an operation and fill in {arity} operand(s)."
+        pad = _BTN_PAD
+        sci_buttons: list[tuple[str, object]] = [
+            ("√",   lambda: self._on_operator("√")),
+            ("x²",  lambda: self._on_operator("x²")),
+            ("xʸ",  lambda: self._on_operator("xʸ")),
+            ("n!",  lambda: self._on_operator("n!")),
+            ("ln",  lambda: self._on_operator("ln")),
+            ("log", lambda: self._on_operator("log")),
+            ("sin", lambda: self._on_operator("sin")),
+            ("cos", lambda: self._on_operator("cos")),
+            ("tan", lambda: self._on_operator("tan")),
+        ]
+        for idx, (text, cmd) in enumerate(sci_buttons):
+            row_idx = idx // 2
+            col_idx = idx % 2
+            btn = self._make_button(parent, text, _BTN_OPERATOR, cmd)
+            btn.grid(
+                row=row_idx,
+                column=col_idx,
+                padx=pad,
+                pady=pad,
+                sticky="nsew",
             )
-            return
 
-        # Validate and parse operands.
-        operands: list[float] = []
-        for idx, entry in enumerate(self._operand_entries[:arity]):
-            raw = entry.get().strip()
-            try:
-                value: float = validate_operand(raw)
-            except OperandValidationError as exc:
-                self._display_error(str(exc))
-                return
+    # ------------------------------------------------------------------
+    # Display update
+    # ------------------------------------------------------------------
 
-            # Factorial expects an integer operand.
-            if key == "factorial":
-                if value != int(value):
-                    self._display_error(
-                        "Factorial requires a non-negative integer."
-                    )
-                    return
-                operands.append(int(value))
+    def _update_display(self) -> None:
+        """Refresh the display label to show the current ``_display_value``."""
+        self._display_label.config(text=self._display_value)
+
+    # ------------------------------------------------------------------
+    # Button handlers — digits and decimal
+    # ------------------------------------------------------------------
+
+    def _on_digit(self, digit: str) -> None:
+        """Append a digit character to the current display value.
+
+        If ``_is_new_number`` is True the digit replaces the display entirely
+        (starting fresh), otherwise it is appended.
+
+        Args:
+            digit: Single-character digit string ("0"–"9").
+        """
+        if self._is_new_number:
+            self._display_value = digit
+            self._is_new_number = False
+        else:
+            # Prevent multiple leading zeros (e.g. "007")
+            if self._display_value == "0":
+                self._display_value = digit
             else:
-                operands.append(value)
+                self._display_value += digit
+        self._update_display()
 
-        # Guard against operand count mismatch before calling the method.
-        if len(operands) != arity:
-            self._display_error(
-                f"Expected {arity} operand(s), got {len(operands)}"
-            )
+    def _on_decimal(self) -> None:
+        """Add a decimal point to the current number if one is not already present."""
+        if self._is_new_number:
+            self._display_value = "0."
+            self._is_new_number = False
+        elif "." not in self._display_value:
+            self._display_value += "."
+        self._update_display()
+
+    # ------------------------------------------------------------------
+    # Button handlers — operators and equals
+    # ------------------------------------------------------------------
+
+    def _on_operator(self, op_symbol: str) -> None:
+        """Handle an operator button press.
+
+        For binary operators (+, −, ×, ÷, xʸ):
+          - If there is already a pending binary operator and a first operand,
+            execute the pending operation first (chaining).
+          - Store the current display value as the first operand.
+          - Store the operator symbol and set ``_is_new_number = True`` so the
+            next digit starts a new number.
+
+        For unary operators (√, x², n!, ln, log, sin, cos, tan):
+          - Execute immediately on the current display value.
+          - Record in history.
+          - Show the result.
+
+        Args:
+            op_symbol: The operator symbol string from the button label.
+        """
+        if op_symbol in _UNARY_OPERATORS:
+            self._execute_unary(op_symbol)
             return
 
-        # Execute.
+        # Binary operator path
+        current = self._display_value
+        try:
+            current_float = float(current)
+        except ValueError:
+            self._display_value = "Error"
+            self._update_display()
+            self._is_new_number = True
+            return
+
+        if self._pending_operator is not None and not self._is_new_number:
+            # Chain: execute the pending binary operation first
+            self._execute_pending()
+        else:
+            self._accumulated_value = current_float
+
+        self._pending_operator = op_symbol
+        self._is_new_number = True
+
+    def _on_equals(self) -> None:
+        """Execute the pending binary operation and display the result.
+
+        If no pending operator is set, the display is left unchanged.
+        The result is recorded in session history.
+        """
+        if self._pending_operator is None:
+            return
+
+        self._execute_pending()
+        self._pending_operator = None
+
+    def _execute_pending(self) -> None:
+        """Execute the currently pending binary operation and update internal state.
+
+        Reads ``_accumulated_value`` as the first operand and the current
+        ``_display_value`` as the second operand.  Calls the appropriate
+        :class:`~operations.OperationRegistry` method and stores the result
+        back into ``_accumulated_value`` and ``_display_value``.
+
+        If any arithmetic or validation error occurs the display shows "Error"
+        and state is reset.
+        """
+        if self._pending_operator is None or self._accumulated_value is None:
+            return
+
+        try:
+            second = float(self._display_value)
+        except ValueError:
+            self._display_value = "Error"
+            self._update_display()
+            self._is_new_number = True
+            self._pending_operator = None
+            self._accumulated_value = None
+            return
+
+        op_key = self._symbol_to_operation(self._pending_operator)
+        try:
+            method, _arity, _desc = self._registry.get_operation(op_key)
+        except KeyError:
+            self._display_value = "Error"
+            self._update_display()
+            self._is_new_number = True
+            self._pending_operator = None
+            self._accumulated_value = None
+            return
+
+        operands: list[float | int]
+        if op_key == "factorial":
+            first_int = int(self._accumulated_value)
+            operands = [first_int]
+        else:
+            operands = [self._accumulated_value, second]
+
         try:
             result: float = method(*operands)
         except (ValueError, ZeroDivisionError, ArithmeticError, TypeError) as exc:
-            self._display_error(str(exc))
+            self._display_value = str(exc)
+            self._update_display()
+            self._is_new_number = True
+            self._pending_operator = None
+            self._accumulated_value = None
             return
 
-        self._display_result(description, operands, result)
-        self._history.record_operation(key, operands, result)
-        self._refresh_history_display()
+        self._history.record_operation(op_key, operands, result)
+
+        # Format result: remove trailing ".0" for whole-number results
+        result_str = self._format_result(result)
+        self._display_value = result_str
+        self._accumulated_value = result
+        self._is_new_number = True
+        self._update_display()
+
+    def _execute_unary(self, op_symbol: str) -> None:
+        """Execute a unary operation on the current display value immediately.
+
+        Args:
+            op_symbol: Symbol string corresponding to a unary operator.
+        """
+        try:
+            value = float(self._display_value)
+        except ValueError:
+            self._display_value = "Error"
+            self._update_display()
+            self._is_new_number = True
+            return
+
+        op_key = self._symbol_to_operation(op_symbol)
+
+        try:
+            method, _arity, _desc = self._registry.get_operation(op_key)
+        except KeyError:
+            self._display_value = "Error"
+            self._update_display()
+            self._is_new_number = True
+            return
+
+        operand: int | float
+        if op_key == "factorial":
+            operand = int(value)
+        else:
+            operand = value
+
+        try:
+            result: float = method(operand)
+        except (ValueError, ZeroDivisionError, ArithmeticError, TypeError) as exc:
+            self._display_value = str(exc)
+            self._update_display()
+            self._is_new_number = True
+            return
+
+        self._history.record_operation(op_key, [operand], result)
+        self._display_value = self._format_result(result)
+        self._accumulated_value = result
+        self._is_new_number = True
+        self._update_display()
 
     # ------------------------------------------------------------------
-    # Mode switching
+    # Button handlers — clear, delete, mode
     # ------------------------------------------------------------------
+
+    def _on_clear(self) -> None:
+        """Reset the display and all internal calculator state to initial values."""
+        self._display_value = "0"
+        self._accumulated_value = None
+        self._pending_operator = None
+        self._is_new_number = True
+        self._update_display()
+
+    def _on_delete(self) -> None:
+        """Remove the last character from the current display value.
+
+        If only one character remains (or the display shows a result / error),
+        the display is reset to "0".
+        """
+        if self._is_new_number:
+            # After an operator press or completed computation, Del clears to 0
+            self._display_value = "0"
+            self._is_new_number = False
+            self._update_display()
+            return
+
+        if len(self._display_value) <= 1:
+            self._display_value = "0"
+        else:
+            self._display_value = self._display_value[:-1]
+        self._update_display()
 
     def _on_mode_switch(self) -> None:
-        """Toggle between Normal and Scientific modes and repopulate operations."""
+        """Toggle between Normal and Scientific modes.
+
+        Shows or hides the scientific panel frame and updates the ModeManager.
+        """
         self._mode_manager.switch_mode()
-        self._mode_label.config(text=self._mode_manager.get_mode_display_name())
-        self._populate_operations()
-        self._result_label.config(text="")
-        self._clear_error()
+        from .mode_manager import CalculatorMode
+        if self._mode_manager.get_current_mode() is CalculatorMode.SCIENTIFIC:
+            self._scientific_frame.pack(side=tk.LEFT, before=self._standard_frame)
+        else:
+            self._scientific_frame.pack_forget()
 
     # ------------------------------------------------------------------
-    # History management
+    # Helper utilities
     # ------------------------------------------------------------------
 
-    def _on_clear_history(self) -> None:
-        """Clear the session history and update the history display."""
-        self._history.clear()
-        self._refresh_history_display()
-
-    def _refresh_history_display(self) -> None:
-        """Sync the read-only history text widget with the current session history."""
-        self._history_text.config(state=tk.NORMAL)
-        self._history_text.delete("1.0", tk.END)
-        self._history_text.insert(tk.END, self._history.display_history())
-        self._history_text.config(state=tk.DISABLED)
-
-    # ------------------------------------------------------------------
-    # Result / error display helpers
-    # ------------------------------------------------------------------
-
-    def _display_result(
-        self, operation: str, operands: list, result: float
-    ) -> None:
-        """Update the result label with the formatted calculation output.
+    @staticmethod
+    def _symbol_to_operation(symbol: str) -> str:
+        """Map a button symbol string to the operation key used by OperationRegistry.
 
         Args:
-            operation: Human-readable operation description.
-            operands: Operand values used in the calculation.
-            result: The numeric result.
+            symbol: Display symbol such as "÷", "×", "√", etc.
+
+        Returns:
+            The string key understood by :class:`~operations.OperationRegistry`
+            (e.g. ``"divide"``, ``"multiply"``, ``"square_root"``).
+
+        Raises:
+            KeyError: If the symbol has no mapping (should not happen in normal
+                operation as the button set is fixed).
         """
-        operands_str = ", ".join(str(o) for o in operands)
-        self._result_label.config(
-            text=f"{operation}  ({operands_str})  =  {result}"
-        )
+        return _SYMBOL_TO_KEY[symbol]
 
-    def _display_error(self, message: str) -> None:
-        """Show an error message below the execute button.
-
-        The error label is hidden again by :meth:`_clear_error` before each
-        new calculation attempt.
+    @staticmethod
+    def _format_result(value: float) -> str:
+        """Format a numeric result for display, stripping unnecessary decimals.
 
         Args:
-            message: The error text to display.
-        """
-        self._error_label.config(text=f"Error: {message}")
-        self._error_label.grid()
+            value: The numeric result to format.
 
-    def _clear_error(self) -> None:
-        """Hide the error label and clear its text."""
-        self._error_label.config(text="")
-        self._error_label.grid_remove()
+        Returns:
+            A string representation: integer form if the value is a whole
+            number, otherwise the default float representation.
+        """
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value)
 
     # ------------------------------------------------------------------
     # Run
