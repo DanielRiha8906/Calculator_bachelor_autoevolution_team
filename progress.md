@@ -9,7 +9,7 @@
 - **Risks:** None — changes are confined to GUI source validation logic and test infrastructure
 - **Tests passed:** 923 passed, 58 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 350.3s | Cost: $0.771609 USD | Turns: 17
 
 ## Run: update-diagrams — Tkinter GUI layer diagrams (2026-04-23)
 
