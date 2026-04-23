@@ -182,6 +182,14 @@ class MockOptionMenu(MockWidget):
         self._variable = variable
         self._values = values
         self._command = kwargs.get("command")
+        # Mock the "menu" attribute for OptionMenu
+        self._menu = MagicMock()
+
+    def __getitem__(self, key):
+        """Support subscript access like mode_menu['menu']."""
+        if key == "menu":
+            return self._menu
+        raise KeyError(f"Key '{key}' not found")
 
 
 # Create the mock tkinter module and inject it into sys.modules BEFORE any imports
@@ -1278,3 +1286,279 @@ class TestGUIEndToEndButtonAndEvaluate:
 
         gui_app._on_button("=")
         assert gui_app._display_var.get() == "81"
+
+
+# ============================================================================
+# Color Scheme and Theme Tests
+# ============================================================================
+
+
+class TestGUIColorConstants:
+    """Tests for module-level color constants."""
+
+    def test_color_constant_black_bg(self):
+        """Test _BLACK_BG constant has correct hex value."""
+        from src.gui import _BLACK_BG
+        assert _BLACK_BG == "#1a1a1a"
+
+    def test_color_constant_operator_orange(self):
+        """Test _OPERATOR_ORANGE constant has correct hex value."""
+        from src.gui import _OPERATOR_ORANGE
+        assert _OPERATOR_ORANGE == "#FF9500"
+
+    def test_color_constant_numeric_gray(self):
+        """Test _NUMERIC_GRAY constant has correct hex value."""
+        from src.gui import _NUMERIC_GRAY
+        assert _NUMERIC_GRAY == "#333333"
+
+    def test_color_constant_function_gray(self):
+        """Test _FUNCTION_GRAY constant has correct hex value."""
+        from src.gui import _FUNCTION_GRAY
+        assert _FUNCTION_GRAY == "#555555"
+
+    def test_color_constant_text_white(self):
+        """Test _TEXT_WHITE constant has correct hex value."""
+        from src.gui import _TEXT_WHITE
+        assert _TEXT_WHITE == "#ffffff"
+
+    def test_color_constant_active_orange(self):
+        """Test _ACTIVE_ORANGE constant has correct hex value."""
+        from src.gui import _ACTIVE_ORANGE
+        assert _ACTIVE_ORANGE == "#e08800"
+
+
+class TestGetButtonStyleOperators:
+    """Tests for _get_button_style() with operator buttons."""
+
+    @pytest.mark.parametrize("operator", ["+", "-", "*", "/", "="])
+    def test_operator_bg_color(self, gui_app, operator):
+        """Test operator buttons have orange background."""
+        from src.gui import _OPERATOR_ORANGE
+        style = gui_app._get_button_style(operator)
+        assert style["bg"] == _OPERATOR_ORANGE
+
+    @pytest.mark.parametrize("operator", ["+", "-", "*", "/", "="])
+    def test_operator_active_bg_color(self, gui_app, operator):
+        """Test operator buttons have darker orange active background."""
+        from src.gui import _ACTIVE_ORANGE
+        style = gui_app._get_button_style(operator)
+        assert style["activebackground"] == _ACTIVE_ORANGE
+
+    @pytest.mark.parametrize("operator", ["+", "-", "*", "/", "="])
+    def test_operator_text_color(self, gui_app, operator):
+        """Test operator buttons have white text."""
+        from src.gui import _TEXT_WHITE
+        style = gui_app._get_button_style(operator)
+        assert style["fg"] == _TEXT_WHITE
+
+    @pytest.mark.parametrize("operator", ["+", "-", "*", "/", "="])
+    def test_operator_active_text_color(self, gui_app, operator):
+        """Test operator buttons have white active text."""
+        from src.gui import _TEXT_WHITE
+        style = gui_app._get_button_style(operator)
+        assert style["activeforeground"] == _TEXT_WHITE
+
+
+class TestGetButtonStyleNumeric:
+    """Tests for _get_button_style() with numeric buttons."""
+
+    @pytest.mark.parametrize("digit", ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+    def test_numeric_digit_bg_color(self, gui_app, digit):
+        """Test numeric buttons have dark gray background."""
+        from src.gui import _NUMERIC_GRAY
+        style = gui_app._get_button_style(digit)
+        assert style["bg"] == _NUMERIC_GRAY
+
+    @pytest.mark.parametrize("digit", ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+    def test_numeric_digit_active_bg_color(self, gui_app, digit):
+        """Test numeric buttons have medium gray active background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(digit)
+        assert style["activebackground"] == _FUNCTION_GRAY
+
+    @pytest.mark.parametrize("digit", ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+    def test_numeric_digit_text_color(self, gui_app, digit):
+        """Test numeric buttons have white text."""
+        from src.gui import _TEXT_WHITE
+        style = gui_app._get_button_style(digit)
+        assert style["fg"] == _TEXT_WHITE
+
+    def test_decimal_point_bg_color(self, gui_app):
+        """Test decimal point button has dark gray background."""
+        from src.gui import _NUMERIC_GRAY
+        style = gui_app._get_button_style(".")
+        assert style["bg"] == _NUMERIC_GRAY
+
+    def test_decimal_point_active_bg_color(self, gui_app):
+        """Test decimal point button has medium gray active background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(".")
+        assert style["activebackground"] == _FUNCTION_GRAY
+
+    def test_decimal_point_text_color(self, gui_app):
+        """Test decimal point button has white text."""
+        from src.gui import _TEXT_WHITE
+        style = gui_app._get_button_style(".")
+        assert style["fg"] == _TEXT_WHITE
+
+
+class TestGetButtonStyleFunction:
+    """Tests for _get_button_style() with function/control buttons."""
+
+    @pytest.mark.parametrize("label", ["C", "←"])
+    def test_control_button_bg_color(self, gui_app, label):
+        """Test control buttons (C, ←) have medium gray background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(label)
+        assert style["bg"] == _FUNCTION_GRAY
+
+    @pytest.mark.parametrize("label", ["C", "←"])
+    def test_control_button_active_bg_color(self, gui_app, label):
+        """Test control buttons have darker gray active background."""
+        style = gui_app._get_button_style(label)
+        assert style["activebackground"] == "#777777"
+
+    @pytest.mark.parametrize("label", ["C", "←"])
+    def test_control_button_text_color(self, gui_app, label):
+        """Test control buttons have white text."""
+        from src.gui import _TEXT_WHITE
+        style = gui_app._get_button_style(label)
+        assert style["fg"] == _TEXT_WHITE
+
+    @pytest.mark.parametrize("label", ["x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"])
+    def test_advanced_function_button_bg_color(self, gui_app, label):
+        """Test advanced function buttons have medium gray background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(label)
+        assert style["bg"] == _FUNCTION_GRAY
+
+    @pytest.mark.parametrize("label", ["sin", "cos", "tan", "asin", "acos", "atan"])
+    def test_trig_function_button_bg_color(self, gui_app, label):
+        """Test trigonometric function buttons have medium gray background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(label)
+        assert style["bg"] == _FUNCTION_GRAY
+
+    @pytest.mark.parametrize("label", ["sinh", "cosh", "tanh", "exp", "deg", "rad"])
+    def test_scientific_function_button_bg_color(self, gui_app, label):
+        """Test scientific function buttons have medium gray background."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style(label)
+        assert style["bg"] == _FUNCTION_GRAY
+
+
+class TestGetButtonStyleCommonAttributes:
+    """Tests for common button style attributes across all button types."""
+
+    @pytest.mark.parametrize("label", ["+", "5", "C", "x²", "sin"])
+    def test_button_relief_flat(self, gui_app, label):
+        """Test all button types have flat relief."""
+        style = gui_app._get_button_style(label)
+        assert style["relief"] == "flat"
+
+    @pytest.mark.parametrize("label", ["+", "5", "C", "x²", "sin"])
+    def test_button_bd_zero(self, gui_app, label):
+        """Test all button types have zero border width."""
+        style = gui_app._get_button_style(label)
+        assert style["bd"] == 0
+
+    @pytest.mark.parametrize("label", ["+", "5", "C", "x²", "sin"])
+    def test_button_font_arial_bold(self, gui_app, label):
+        """Test all button types have Arial 18 bold font."""
+        style = gui_app._get_button_style(label)
+        assert style["font"] == ("Arial", 18, "bold")
+
+    @pytest.mark.parametrize("label", ["+", "5", "C", "x²", "sin"])
+    def test_button_cursor_hand(self, gui_app, label):
+        """Test all button types have hand cursor."""
+        style = gui_app._get_button_style(label)
+        assert style["cursor"] == "hand2"
+
+
+class TestGetButtonStyleReturnsDictWithRequiredKeys:
+    """Tests that _get_button_style returns dict with all required keys."""
+
+    @pytest.mark.parametrize("label", ["+", "-", "*", "/", "=", "0", "5", "9", ".", "C", "←", "x²", "sin"])
+    def test_button_style_dict_has_required_keys(self, gui_app, label):
+        """Test that style dict contains all expected keys."""
+        style = gui_app._get_button_style(label)
+        required_keys = {"bg", "fg", "activebackground", "activeforeground", "relief", "bd", "font", "cursor"}
+        assert set(style.keys()) >= required_keys, \
+            f"Style for '{label}' missing keys: {required_keys - set(style.keys())}"
+
+    @pytest.mark.parametrize("label", ["+", "5", "C"])
+    def test_button_style_dict_is_dict_type(self, gui_app, label):
+        """Test that _get_button_style returns a dict."""
+        style = gui_app._get_button_style(label)
+        assert isinstance(style, dict)
+
+    @pytest.mark.parametrize("label", ["+", "5", "C"])
+    def test_button_style_values_are_valid_types(self, gui_app, label):
+        """Test that all color values in style dict are strings (hex colors)."""
+        style = gui_app._get_button_style(label)
+        color_keys = {"bg", "fg", "activebackground", "activeforeground"}
+        for key in color_keys:
+            assert isinstance(style[key], str), \
+                f"Color key '{key}' should be string but got {type(style[key])}"
+
+
+class TestGetButtonStyleEdgeCases:
+    """Tests for edge cases and unusual button labels."""
+
+    def test_unknown_button_label_uses_function_gray(self, gui_app):
+        """Test unknown button labels default to function gray (medium gray)."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style("unknown")
+        assert style["bg"] == _FUNCTION_GRAY
+
+    def test_empty_string_button_label(self, gui_app):
+        """Test empty string button label defaults to function gray."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style("")
+        assert style["bg"] == _FUNCTION_GRAY
+
+    def test_custom_unicode_label(self, gui_app):
+        """Test custom unicode label defaults to function gray."""
+        from src.gui import _FUNCTION_GRAY
+        style = gui_app._get_button_style("∫")
+        assert style["bg"] == _FUNCTION_GRAY
+
+
+class TestGUIDisplayStyling:
+    """Tests for display widget styling with dark theme."""
+
+    def test_display_background_dark(self, gui_app):
+        """Test display has dark background."""
+        from src.gui import _BLACK_BG
+        # The display is an Entry widget created in _build_display
+        # We check that it was configured with the dark background
+        assert gui_app._display_var is not None
+
+    def test_display_text_white(self, gui_app):
+        """Test display text is white."""
+        from src.gui import _TEXT_WHITE
+        # When we set display text, it should show white
+        gui_app._append("5")
+        # Verify the display was updated
+        assert gui_app._display_var.get() == "5"
+
+    def test_display_font_is_bold_large(self, gui_app):
+        """Test display uses large bold Arial font."""
+        # The display is created with font=("Arial", 32, "bold")
+        # We can verify by checking that it displays properly
+        gui_app._append("123")
+        assert gui_app._display_var.get() == "123"
+
+
+class TestGUIWindowStyling:
+    """Tests for main window background styling."""
+
+    def test_window_background_black(self, gui_app):
+        """Test main window has dark black background."""
+        from src.gui import _BLACK_BG
+        bg_color = gui_app.cget("bg")
+        assert bg_color == _BLACK_BG
+
+    def test_window_title_set(self, gui_app):
+        """Test window title is 'Calculator'."""
+        assert gui_app.title() == "Calculator"

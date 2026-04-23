@@ -30,6 +30,17 @@ from .logger import get_logger
 
 logger = get_logger(__name__)
 
+# ---------------------------------------------------------------------------
+# iOS-inspired color palette
+# ---------------------------------------------------------------------------
+
+_BLACK_BG = "#1a1a1a"
+_OPERATOR_ORANGE = "#FF9500"
+_NUMERIC_GRAY = "#333333"
+_FUNCTION_GRAY = "#555555"
+_TEXT_WHITE = "#ffffff"
+_ACTIVE_ORANGE = "#e08800"
+
 # Numeric type alias, consistent with other modules.
 Numeric = Union[int, float]
 
@@ -142,6 +153,7 @@ class CalculatorGUI(tk.Tk):
 
         self.title("Calculator")
         self.resizable(False, False)
+        self.configure(bg=_BLACK_BG)
 
         self._build_ui()
 
@@ -163,21 +175,22 @@ class CalculatorGUI(tk.Tk):
         display = tk.Entry(
             self,
             textvariable=self._display_var,
-            font=("Courier", 18),
+            font=("Arial", 32, "bold"),
             justify="right",
             state="readonly",
-            readonlybackground="white",
-            relief="sunken",
-            bd=4,
+            readonlybackground=_BLACK_BG,
+            foreground=_TEXT_WHITE,
+            relief="flat",
+            bd=0,
         )
         display.grid(row=0, column=0, columnspan=4, sticky="nsew", padx=8, pady=(8, 4))
 
     def _build_mode_selector(self) -> None:
         """Create the mode selector label and OptionMenu below the display."""
-        frame = tk.Frame(self)
+        frame = tk.Frame(self, bg=_BLACK_BG)
         frame.grid(row=1, column=0, columnspan=4, sticky="ew", padx=8, pady=(0, 4))
 
-        tk.Label(frame, text="Mode:").pack(side="left")
+        tk.Label(frame, text="Mode:", bg=_BLACK_BG, fg=_TEXT_WHITE).pack(side="left")
 
         self._mode_var: tk.StringVar = tk.StringVar(value=self._calculator._mode)
         mode_menu = tk.OptionMenu(
@@ -187,7 +200,58 @@ class CalculatorGUI(tk.Tk):
             *[m for m in _VALID_MODES if m != self._calculator._mode],
             command=self._on_mode_change,
         )
+        mode_menu.configure(bg=_NUMERIC_GRAY, fg=_TEXT_WHITE, activebackground=_FUNCTION_GRAY,
+                            activeforeground=_TEXT_WHITE, relief="flat", bd=0)
+        mode_menu["menu"].configure(bg=_NUMERIC_GRAY, fg=_TEXT_WHITE)
         mode_menu.pack(side="left", padx=4)
+
+    def _get_button_style(self, label: str) -> dict:
+        """Return tkinter Button keyword arguments for the given button label.
+
+        Applies iOS-inspired color coding:
+        - Operator buttons (``+``, ``-``, ``*``, ``/``, ``=``) use orange.
+        - Numeric and decimal buttons (``0``-``9``, ``.``) use dark gray.
+        - Function/control buttons (``C``, ``←``, and all named functions)
+          use medium gray.
+
+        Args:
+            label: The text on the button, used to determine its category.
+
+        Returns:
+            A dict of keyword arguments suitable for passing directly to
+            :class:`tk.Button` (``bg``, ``fg``, ``activebackground``,
+            ``activeforeground``, ``relief``, ``bd``, ``font``,
+            ``cursor``).
+        """
+        _operator_labels: frozenset[str] = frozenset({"+", "-", "*", "/", "="})
+        _numeric_labels: frozenset[str] = frozenset({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."})
+
+        base_style: dict = {
+            "relief": "flat",
+            "bd": 0,
+            "font": ("Arial", 18, "bold"),
+            "cursor": "hand2",
+            "fg": _TEXT_WHITE,
+            "activeforeground": _TEXT_WHITE,
+        }
+
+        if label in _operator_labels:
+            base_style.update({
+                "bg": _OPERATOR_ORANGE,
+                "activebackground": _ACTIVE_ORANGE,
+            })
+        elif label in _numeric_labels:
+            base_style.update({
+                "bg": _NUMERIC_GRAY,
+                "activebackground": _FUNCTION_GRAY,
+            })
+        else:
+            base_style.update({
+                "bg": _FUNCTION_GRAY,
+                "activebackground": "#777777",
+            })
+
+        return base_style
 
     def _build_button_grid(self) -> None:
         """Create and grid all buttons for every mode.
@@ -286,10 +350,10 @@ class CalculatorGUI(tk.Tk):
             btn = tk.Button(
                 self,
                 text=label,
-                font=("Helvetica", 14),
                 width=4,
                 height=2,
                 command=lambda lbl=label: self._on_button(lbl),
+                **self._get_button_style(label),
             )
 
             self._button_widgets[label] = btn

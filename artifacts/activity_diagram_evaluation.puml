@@ -1,0 +1,74 @@
+@startuml activity_diagram_evaluation
+
+skinparam activityFontSize 13
+
+start
+
+:User presses button (label);
+
+if (label == "C"?) then (yes)
+  :_clear()\nreset _expression and display;
+  stop
+endif
+
+if (label == "←"?) then (yes)
+  :_backspace()\nremove last char from _expression;
+  stop
+endif
+
+if (label == "="?) then (yes)
+
+  :_evaluate();
+
+  :ExpressionParser.parse(_expression)
+  → (operation, operands);
+
+  if (parse failed?) then (yes)
+    :_show_error("Invalid expression");
+    stop
+  endif
+
+  :InputValidator.validate(operation, operands);
+
+  if (validation failed?) then (yes)
+    :_show_error(validation error message);
+    stop
+  endif
+
+  :getattr(Calculator, operation)(*operands);
+
+  fork
+    :Calculator delegates → CalculatorEngine;
+    :CalculatorEngine delegates → active operation set;
+    :operation set executes and returns result;
+  fork again
+    :CalculatorEngine._history records entry;
+  end fork
+
+  if (math error raised?) then (yes)
+    :_show_error(error message);
+    stop
+  endif
+
+  :_set_display(str(result));
+  :_expression = str(result);
+  stop
+
+endif
+
+if (label is a function name\n(sin, cos, sqrt, ln…)?) then (yes)
+  :_append_function(label)\ntranslate label → operation token,\nappend to _expression;
+  stop
+endif
+
+if (label is an operator\n(+, −, ×, ÷)?) then (yes)
+  :_append_operator(label)\ntranslate symbol → operation name,\nappend to _expression;
+  stop
+endif
+
+' digit, decimal, or parenthesis
+:_append(label)\nadd character to _expression,\nupdate display;
+
+stop
+
+@enduml

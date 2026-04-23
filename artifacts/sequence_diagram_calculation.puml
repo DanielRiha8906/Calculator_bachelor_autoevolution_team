@@ -1,0 +1,75 @@
+@startuml sequence_diagram_calculation
+
+actor User
+participant CalculatorGUI
+participant ExpressionParser
+participant InputValidator
+participant Calculator
+participant CalculatorEngine
+participant ScientificOperations
+
+== Switch to Scientific Mode ==
+
+User -> CalculatorGUI : selects "scientific" from mode menu
+activate CalculatorGUI
+CalculatorGUI -> Calculator : set_mode("scientific")
+activate Calculator
+Calculator -> CalculatorEngine : set_mode("scientific")
+activate CalculatorEngine
+CalculatorEngine --> Calculator : ok
+deactivate CalculatorEngine
+Calculator --> CalculatorGUI : ok
+deactivate Calculator
+CalculatorGUI -> CalculatorGUI : _rebuild_button_grid_for_mode("scientific")
+note right: scientific buttons become visible
+deactivate CalculatorGUI
+
+== Enter expression: sin(1.5708) ==
+
+User -> CalculatorGUI : presses "sin"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _append_function("sin")\n_expression = "sin 1.5708"
+note right: function label mapped to operation token
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : presses "1", ".", "5", "7", "0", "8"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _append(digit) × 6\n_expression = "sin 1.5708"
+deactivate CalculatorGUI
+
+== Evaluate ==
+
+User -> CalculatorGUI : presses "="
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _evaluate()
+
+CalculatorGUI -> ExpressionParser : parse("sin 1.5708")
+activate ExpressionParser
+ExpressionParser --> CalculatorGUI : ("sin", [1.5708])
+deactivate ExpressionParser
+
+CalculatorGUI -> InputValidator : validate("sin", [1.5708])
+activate InputValidator
+InputValidator -> InputValidator : validate_operation("sin")
+InputValidator -> InputValidator : validate_operand_count("sin", [1.5708])
+InputValidator --> CalculatorGUI : ok
+deactivate InputValidator
+
+CalculatorGUI -> Calculator : sin(1.5708)
+activate Calculator
+Calculator -> CalculatorEngine : sin(1.5708)
+activate CalculatorEngine
+CalculatorEngine -> ScientificOperations : sin(1.5708)
+activate ScientificOperations
+ScientificOperations --> CalculatorEngine : 0.9999997
+CalculatorEngine -> CalculatorEngine : _history.append(entry)
+deactivate ScientificOperations
+CalculatorEngine --> Calculator : 0.9999997
+deactivate CalculatorEngine
+Calculator --> CalculatorGUI : 0.9999997
+deactivate Calculator
+
+CalculatorGUI -> CalculatorGUI : _set_display("0.9999997")
+deactivate CalculatorGUI
+
+@enduml

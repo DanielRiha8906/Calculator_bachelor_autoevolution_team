@@ -1,4 +1,17 @@
 
+## Run: Issue #361 — V2 Task 16 - Naive/team (2026-04-23)
+
+- **Branch:** task/issue-361-modern-calculator-gui
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/gui.py` — added iOS-style color constants, `_get_button_style()` helper, dark background for window/display/mode selector, orange operator buttons, flat relief for all buttons
+  - `tests/test_gui.py` — added `TestGUIColorConstants`, `TestGetButtonStyleOperators`, `TestGetButtonStyleNumeric`, `TestGetButtonStyleFunction`, `TestGetButtonStyleCommonAttributes`, `TestGetButtonStyleReturnsDictWithRequiredKeys`, `TestGetButtonStyleEdgeCases`, `TestGUIDisplayStyling`, `TestGUIWindowStyling` (132 new tests)
+- **Purpose:** Redesign calculator GUI with modern iOS-inspired dark theme: black background, orange operator buttons, large display, flat buttons
+- **Risks:** None — styling-only change, zero logic modifications, no new dependencies
+- **Tests passed:** 1808 passed, 0 failed
+
+Duration: 307.2s | Cost: $0.819906 USD | Turns: 15
+
 ## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (PR #358) (2026-04-23)
 
 - **Branch:** task/issue-275-tkinter-gui
@@ -432,3 +445,14 @@ Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
 - **Tests passed:** 1676 passed, 0 failed
 
 Duration: 457.9s | Cost: $1.112558 USD | Turns: 14
+
+## Run: update-diagrams — Modern Calculator GUI UML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-361-modern-calculator-gui
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI layer and core calculator relationships
+  - `artifacts/activity_diagram_evaluation.puml` — activity diagram for button press to evaluation flow
+  - `artifacts/sequence_diagram_calculation.puml` — sequence diagram for sin calculation in scientific mode
+
+Duration: 226.7s | Cost: $0.598220 USD | Turns: 5
