@@ -36,6 +36,67 @@ Numeric = Union[int, float]
 # Valid mode names — kept in sync with input_handler._VALID_MODES.
 _VALID_MODES: tuple[str, ...] = ("basic", "advanced", "scientific")
 
+# ---------------------------------------------------------------------------
+# Button layout per mode
+#
+# Each entry is the ordered list of button labels that should be *visible* in
+# that mode.  Labels that are present in a higher-capability mode but absent
+# in a lower one are hidden via grid_remove() rather than destroyed, so they
+# can be cheaply re-shown when the user switches back to a richer mode.
+#
+# "basic" buttons are the plain arithmetic set.
+# "advanced" adds square, cube, roots, power, factorial, and log buttons.
+# "scientific" further adds trigonometric and hyperbolic function buttons.
+# ---------------------------------------------------------------------------
+
+_BASIC_LABELS: list[str] = [
+    "C", "←", "=",
+    "7", "8", "9", "/",
+    "4", "5", "6", "*",
+    "1", "2", "3", "-",
+    "0", ".", "+",
+]
+
+_ADVANCED_LABELS: list[str] = _BASIC_LABELS + [
+    "x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log",
+]
+
+_SCIENTIFIC_LABELS: list[str] = _ADVANCED_LABELS + [
+    "sin", "cos", "tan", "asin", "acos", "atan",
+    "sinh", "cosh", "tanh", "exp", "deg", "rad",
+]
+
+_MODE_BUTTON_LAYOUTS: dict[str, list[str]] = {
+    "basic": _BASIC_LABELS,
+    "advanced": _ADVANCED_LABELS,
+    "scientific": _SCIENTIFIC_LABELS,
+}
+
+# Mapping from GUI button label to the operation name used by ExpressionParser.
+# Only entries that differ from the label itself are listed here.
+_LABEL_TO_OPERATION: dict[str, str] = {
+    "x²": "square",
+    "x³": "cube",
+    "√": "square_root",
+    "∛": "cube_root",
+    "xⁿ": "power",
+    "n!": "factorial",
+    "ln": "natural_log",
+    "log": "log_base_10",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "asin": "asin",
+    "acos": "acos",
+    "atan": "atan",
+    "sinh": "sinh",
+    "cosh": "cosh",
+    "tanh": "tanh",
+    "exp": "exp",
+    "deg": "degrees",
+    "rad": "radians",
+}
+
 
 class CalculatorGUI(tk.Tk):
     """Graphical front-end for the Calculator.
@@ -72,6 +133,12 @@ class CalculatorGUI(tk.Tk):
 
         # Current expression being built by button presses.
         self._expression: str = ""
+
+        # Stores label → tk.Button widget for all buttons created across all
+        # modes.  Populated by _build_button_grid(); used by
+        # _rebuild_button_grid_for_mode() to show/hide buttons without
+        # destroying and recreating them.
+        self._button_widgets: dict[str, tk.Button] = {}
 
         self.title("Calculator")
         self.resizable(False, False)
@@ -123,39 +190,99 @@ class CalculatorGUI(tk.Tk):
         mode_menu.pack(side="left", padx=4)
 
     def _build_button_grid(self) -> None:
-        """Create and grid the numeric, operator, and control buttons."""
-        # Button layout: (label, row, col, colspan, command)
-        buttons: list[tuple[str, int, int, int]] = [
-            # Row 0: control buttons
+        """Create and grid all buttons for every mode.
+
+        All buttons across *all* modes are created upfront and stored in
+        ``self._button_widgets``.  Only the buttons appropriate for the
+        current mode are made visible; the rest are hidden via
+        ``grid_remove()`` so they can be cheaply re-shown later without
+        widget re-creation.
+
+        Button layout definition
+        ------------------------
+        Each entry is a 4-tuple ``(label, row, col, colspan)``.  The grid
+        spans rows 2–9 with 4 columns (indices 0–3).  Rows 2–6 are the
+        basic layout; rows 7–8 hold the advanced function buttons; row 9
+        holds the scientific function buttons.
+        """
+        # ------------------------------------------------------------------
+        # Full button specification: (label, row, col, colspan)
+        # ------------------------------------------------------------------
+        all_buttons: list[tuple[str, int, int, int]] = [
+            # Row 2: control buttons
             ("C",   2, 0, 1),
             ("←",   2, 1, 1),
             ("",    2, 2, 1),   # placeholder kept for grid alignment
             ("=",   2, 3, 1),
-            # Row 1: top digit row
+            # Row 3: top digit row
             ("7",   3, 0, 1),
             ("8",   3, 1, 1),
             ("9",   3, 2, 1),
             ("/",   3, 3, 1),
-            # Row 2
+            # Row 4
             ("4",   4, 0, 1),
             ("5",   4, 1, 1),
             ("6",   4, 2, 1),
             ("*",   4, 3, 1),
-            # Row 3
+            # Row 5
             ("1",   5, 0, 1),
             ("2",   5, 1, 1),
             ("3",   5, 2, 1),
             ("-",   5, 3, 1),
-            # Row 4
+            # Row 6
             ("0",   6, 0, 2),
             (".",   6, 2, 1),
             ("+",   6, 3, 1),
+            # Row 7: advanced — unary operations
+            ("x²",  7, 0, 1),
+            ("x³",  7, 1, 1),
+            ("√",   7, 2, 1),
+            ("∛",   7, 3, 1),
+            # Row 8: advanced — binary / log operations
+            ("xⁿ",  8, 0, 1),
+            ("n!",  8, 1, 1),
+            ("ln",  8, 2, 1),
+            ("log", 8, 3, 1),
+            # Row 9: scientific — trig row 1
+            ("sin", 9, 0, 1),
+            ("cos", 9, 1, 1),
+            ("tan", 9, 2, 1),
+            ("asin",9, 3, 1),
+            # Row 10: scientific — trig row 2
+            ("acos",10, 0, 1),
+            ("atan",10, 1, 1),
+            ("sinh",10, 2, 1),
+            ("cosh",10, 3, 1),
+            # Row 11: scientific — misc
+            ("tanh",11, 0, 1),
+            ("exp", 11, 1, 1),
+            ("deg", 11, 2, 1),
+            ("rad", 11, 3, 1),
         ]
 
-        for label, row, col, colspan in buttons:
+        # Determine which labels should be visible for the initial mode.
+        initial_mode = self._calculator._mode
+        visible_labels: set[str] = set(_MODE_BUTTON_LAYOUTS.get(initial_mode, _BASIC_LABELS))
+
+        # Store per-button grid kwargs so _rebuild_button_grid_for_mode can
+        # re-grid them at their original position.
+        self._button_grid_kwargs: dict[str, dict] = {}
+
+        for label, row, col, colspan in all_buttons:
             if not label:
                 # Empty placeholder — skip widget creation.
                 continue
+
+            grid_kwargs: dict = {
+                "row": row,
+                "column": col,
+                "columnspan": colspan,
+                "sticky": "nsew",
+                "padx": 2,
+                "pady": 2,
+            }
+            self._button_grid_kwargs[label] = grid_kwargs
+
             btn = tk.Button(
                 self,
                 text=label,
@@ -164,20 +291,56 @@ class CalculatorGUI(tk.Tk):
                 height=2,
                 command=lambda lbl=label: self._on_button(lbl),
             )
-            btn.grid(
-                row=row,
-                column=col,
-                columnspan=colspan,
-                sticky="nsew",
-                padx=2,
-                pady=2,
-            )
+
+            self._button_widgets[label] = btn
+
+            if label in visible_labels:
+                btn.grid(**grid_kwargs)
+            else:
+                # Create the widget but keep it out of the grid until the
+                # user switches to a mode that requires it.
+                btn.grid(**grid_kwargs)
+                btn.grid_remove()
 
         # Configure grid weights so buttons resize predictably.
         for col in range(4):
             self.columnconfigure(col, weight=1)
-        for row in range(2, 7):
+        for row in range(2, 12):
             self.rowconfigure(row, weight=1)
+
+    # ------------------------------------------------------------------
+    # Mode-driven layout update
+    # ------------------------------------------------------------------
+
+    def _rebuild_button_grid_for_mode(self, mode: str) -> None:
+        """Show or hide buttons according to the given *mode*.
+
+        Buttons that belong to the requested mode are re-gridded at their
+        original position; buttons that do not belong are hidden via
+        ``grid_remove()``.  Widgets are *never* destroyed — this allows
+        switching back to a richer mode without recreating any widget.
+
+        Args:
+            mode: One of ``"basic"``, ``"advanced"``, or ``"scientific"``.
+                If an unrecognised mode is supplied, the method falls back
+                to the ``"basic"`` layout and logs a warning.
+        """
+        if mode not in _MODE_BUTTON_LAYOUTS:
+            logger.warning(
+                "_rebuild_button_grid_for_mode: unknown mode %r, falling back to 'basic'.",
+                mode,
+            )
+            mode = "basic"
+
+        visible_labels: set[str] = set(_MODE_BUTTON_LAYOUTS[mode])
+
+        for label, btn in self._button_widgets.items():
+            if label in visible_labels:
+                grid_kwargs = self._button_grid_kwargs.get(label)
+                if grid_kwargs is not None:
+                    btn.grid(**grid_kwargs)
+            else:
+                btn.grid_remove()
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -185,6 +348,9 @@ class CalculatorGUI(tk.Tk):
 
     def _on_mode_change(self, selected_mode: str) -> None:
         """Switch the calculator mode when the OptionMenu selection changes.
+
+        Updates both the underlying ``Calculator`` mode and the visible
+        button layout to match the selected mode.
 
         Args:
             selected_mode: The mode name chosen by the user.
@@ -194,12 +360,16 @@ class CalculatorGUI(tk.Tk):
             logger.debug("Mode switched to '%s'.", selected_mode)
         except ValueError as exc:
             self._show_error(f"Mode error: {exc}")
+            return
+
+        self._rebuild_button_grid_for_mode(selected_mode)
 
     def _on_button(self, label: str) -> None:
         """Handle a button press by label.
 
         Dispatches to the appropriate action: clear, backspace, evaluate,
-        or append the label to the current expression string.
+        arithmetic operator, function operation, or append the label to
+        the current expression string.
 
         Args:
             label: The text on the pressed button.
@@ -212,6 +382,8 @@ class CalculatorGUI(tk.Tk):
             self._evaluate()
         elif label in ("+", "-", "*", "/"):
             self._append_operator(label)
+        elif label in _LABEL_TO_OPERATION:
+            self._append_function(label)
         else:
             self._append(label)
 
@@ -301,6 +473,33 @@ class CalculatorGUI(tk.Tk):
             # Already have op + at least one operand; append a space to
             # separate the next token.
             self._expression = stripped + " "
+
+        self._set_display(self._expression)
+
+    def _append_function(self, label: str) -> None:
+        """Set the expression to invoke the function associated with *label*.
+
+        Function buttons (e.g. ``"x²"``, ``"√"``, ``"sin"``) always set
+        the operation prefix in the expression, preserving any number that
+        was already typed as the first operand.
+
+        Args:
+            label: The GUI button label (e.g. ``"x²"``, ``"sin"``).
+        """
+        operation = _LABEL_TO_OPERATION[label]
+        stripped = self._expression.strip()
+        parts = stripped.split()
+
+        if not stripped:
+            # Nothing typed yet — set the operation and wait for the operand.
+            self._expression = operation + " "
+        elif len(parts) == 1:
+            # A bare number is already typed; treat it as the operand.
+            self._expression = f"{operation} {stripped} "
+        else:
+            # Expression already has an operation; replace with the new one,
+            # keeping the first operand if present.
+            self._expression = f"{operation} {parts[1]} " if len(parts) > 1 else operation + " "
 
         self._set_display(self._expression)
 

@@ -6,75 +6,202 @@ Uses mocking to work in headless CI without tkinter.
 
 import pytest
 import sys
-from unittest.mock import patch, MagicMock, call, Mock
+from unittest.mock import patch, MagicMock, call, Mock, ANY
 import importlib.util
 
 from src.calculator import Calculator
 from src.input_handler import ExpressionParser, InputValidator, OperationNotAvailableInModeError
 
 
-# Check if tkinter is available
-tkinter_available = importlib.util.find_spec("tkinter") is not None
+# ============================================================================
+# CRITICAL: Mock tkinter BEFORE any import of src.gui
+# ============================================================================
+# This mocking must happen at module load time, before src.gui is imported,
+# to prevent the real tkinter from being loaded (which would fail in CI).
 
-# If tkinter is not available, we'll mock it before importing gui.py
-if not tkinter_available:
-    # Create a mock StringVar that properly stores values
-    class MockStringVar:
-        def __init__(self, value=""):
-            self._value = value
+class MockStringVar:
+    """Mock tk.StringVar for storing and retrieving string values."""
+    def __init__(self, value=""):
+        self._value = value
+        self._trace_callbacks = []
 
-        def set(self, value):
-            self._value = value
+    def set(self, value):
+        self._value = value
+        for callback in self._trace_callbacks:
+            callback(self._value)
 
-        def get(self):
+    def get(self):
+        return self._value
+
+    def trace_add(self, mode, callback):
+        """Mock trace_add to register callbacks."""
+        if mode == "write":
+            self._trace_callbacks.append(callback)
+        return "dummy_id"
+
+    def trace_remove(self, mode, variable, callback):
+        """Mock trace_remove."""
+        pass
+
+
+class MockWidget:
+    """Base mock widget supporting all necessary tkinter widget methods."""
+    def __init__(self, *args, **kwargs):
+        self._grid_info = {}
+        self._config = {}
+        self._text = kwargs.get("text", "")
+        self._is_removed = False
+
+    def grid(self, **kwargs):
+        """Mock grid layout manager."""
+        self._grid_info = kwargs
+        self._is_removed = False
+
+    def grid_remove(self):
+        """Mock grid_remove to hide widget."""
+        self._is_removed = True
+
+    def grid_forget(self):
+        """Mock grid_forget."""
+        self._grid_info = {}
+
+    def pack(self, **kwargs):
+        """Mock pack layout manager."""
+        pass
+
+    def withdraw(self):
+        """Mock withdraw (for Tk root window)."""
+        pass
+
+    def destroy(self):
+        """Mock destroy."""
+        pass
+
+    def config(self, **kwargs):
+        """Mock config method."""
+        self._config.update(kwargs)
+
+    def configure(self, **kwargs):
+        """Mock configure method (alias for config)."""
+        self._config.update(kwargs)
+
+    def delete(self, *args):
+        """Mock delete for Entry widgets."""
+        pass
+
+    def insert(self, *args):
+        """Mock insert for Entry widgets."""
+        pass
+
+    def get(self):
+        """Mock get for Entry widgets and StringVar."""
+        if isinstance(self, MockStringVar):
             return self._value
+        return ""
 
-    # Create a mock Tk that properly responds to methods
-    class MockTk:
-        def __init__(self):
-            self._title = ""
-            self._resizable = (False, False)
+    def cget(self, key):
+        """Mock cget to retrieve config values."""
+        return self._config.get(key)
 
-        def title(self, text=None):
-            if text is None:
-                return self._title
-            self._title = text
 
-        def resizable(self, width=None, height=None):
-            if width is None:
-                return self._resizable
-            self._resizable = (width, height)
+class MockTk(MockWidget):
+    """Mock tk.Tk root window."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._title = "Calculator"
+        self._resizable_w = False
+        self._resizable_h = False
 
-        def withdraw(self):
-            pass
+    def title(self, text=None):
+        """Get or set window title."""
+        if text is None:
+            return self._title
+        self._title = text
 
-        def destroy(self):
-            pass
+    def resizable(self, width=None, height=None):
+        """Get or set window resizability."""
+        if width is None:
+            return (self._resizable_w, self._resizable_h)
+        self._resizable_w = width
+        self._resizable_h = height
 
-        def columnconfigure(self, *args, **kwargs):
-            pass
+    def columnconfigure(self, *args, **kwargs):
+        """Mock columnconfigure."""
+        pass
 
-        def rowconfigure(self, *args, **kwargs):
-            pass
+    def rowconfigure(self, *args, **kwargs):
+        """Mock rowconfigure."""
+        pass
 
-        def mainloop(self):
-            pass
+    def mainloop(self):
+        """Mock mainloop."""
+        pass
 
-    # Create a mock tkinter module
-    mock_tk = MagicMock()
-    mock_tk.Tk = MockTk
-    mock_tk.StringVar = MockStringVar
-    mock_tk.Entry = MagicMock()
-    mock_tk.Frame = MagicMock()
-    mock_tk.Label = MagicMock()
-    mock_tk.Button = MagicMock()
-    mock_tk.OptionMenu = MagicMock()
-    sys.modules["tkinter"] = mock_tk
 
-# Now we can safely import tkinter
+class MockButton(MockWidget):
+    """Mock tk.Button widget."""
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(**kwargs)
+        self._command = kwargs.get("command")
+        self._text = kwargs.get("text", "")
+
+    def invoke(self):
+        """Invoke the button's command."""
+        if self._command:
+            self._command()
+
+
+class MockEntry(MockWidget):
+    """Mock tk.Entry widget."""
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(**kwargs)
+        self._value = ""
+        if "textvariable" in kwargs:
+            self._textvariable = kwargs["textvariable"]
+        else:
+            self._textvariable = None
+
+
+class MockFrame(MockWidget):
+    """Mock tk.Frame widget."""
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(**kwargs)
+
+
+class MockLabel(MockWidget):
+    """Mock tk.Label widget."""
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(**kwargs)
+        self._text = kwargs.get("text", "")
+
+
+class MockOptionMenu(MockWidget):
+    """Mock tk.OptionMenu widget."""
+    def __init__(self, parent, variable, *values, **kwargs):
+        super().__init__(**kwargs)
+        self._variable = variable
+        self._values = values
+        self._command = kwargs.get("command")
+
+
+# Create the mock tkinter module and inject it into sys.modules BEFORE any imports
+mock_tkinter = MagicMock()
+mock_tkinter.Tk = MockTk
+mock_tkinter.StringVar = MockStringVar
+mock_tkinter.Entry = MockEntry
+mock_tkinter.Frame = MockFrame
+mock_tkinter.Label = MockLabel
+mock_tkinter.Button = MockButton
+mock_tkinter.OptionMenu = MockOptionMenu
+mock_tkinter.END = "end"
+mock_tkinter.DISABLED = "disabled"
+mock_tkinter.NORMAL = "normal"
+
+# Inject the mock BEFORE importing src.gui
+sys.modules["tkinter"] = mock_tkinter
+
+# Now we can safely import tkinter and src.gui
 import tkinter as tk
-
-# Now import CalculatorGUI
 from src.gui import CalculatorGUI
 
 
@@ -803,3 +930,351 @@ class TestGUIDisplayVar:
         for i in range(5):
             gui_app._append(str(i))
             assert gui_app._display_var.get() == gui_app._expression
+
+
+# ============================================================================
+# Button Layout and Mode Switching Tests
+# ============================================================================
+
+
+class TestGUIButtonWidgetStorage:
+    """Tests for button widget storage and initialization."""
+
+    def test_gui_button_widgets_initialized(self, gui_app):
+        """Test that _button_widgets dict is populated after initialization."""
+        assert gui_app._button_widgets is not None
+        assert isinstance(gui_app._button_widgets, dict)
+        assert len(gui_app._button_widgets) > 0
+
+    def test_gui_button_widgets_contains_basic_labels(self, gui_app):
+        """Test that basic mode buttons are in _button_widgets."""
+        basic_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+"}
+        for label in basic_labels:
+            assert label in gui_app._button_widgets, f"Button '{label}' not found in _button_widgets"
+
+    def test_gui_button_widgets_contains_advanced_labels(self, gui_app):
+        """Test that advanced mode buttons are in _button_widgets."""
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        for label in advanced_labels:
+            assert label in gui_app._button_widgets, f"Button '{label}' not found in _button_widgets"
+
+    def test_gui_button_widgets_contains_scientific_labels(self, gui_app):
+        """Test that scientific mode buttons are in _button_widgets."""
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+        for label in scientific_labels:
+            assert label in gui_app._button_widgets, f"Button '{label}' not found in _button_widgets"
+
+    def test_gui_button_grid_kwargs_populated(self, gui_app):
+        """Test that _button_grid_kwargs contains grid info for all buttons."""
+        assert hasattr(gui_app, "_button_grid_kwargs")
+        assert isinstance(gui_app._button_grid_kwargs, dict)
+        assert len(gui_app._button_grid_kwargs) > 0
+
+
+class TestGUIInitialModeButtonVisibility:
+    """Tests for button visibility in initial mode."""
+
+    def test_gui_basic_mode_initial_buttons_visible(self, calculator):
+        """Test that basic buttons are visible when starting in basic mode."""
+        calculator.set_mode("basic")
+        app = CalculatorGUI(calculator)
+        basic_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+"}
+        for label in basic_labels:
+            btn = app._button_widgets[label]
+            assert not btn._is_removed, f"Button '{label}' should be visible in basic mode"
+
+    def test_gui_basic_mode_advanced_buttons_hidden(self, calculator):
+        """Test that advanced buttons are hidden when starting in basic mode."""
+        calculator.set_mode("basic")
+        app = CalculatorGUI(calculator)
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        for label in advanced_labels:
+            btn = app._button_widgets[label]
+            assert btn._is_removed, f"Button '{label}' should be hidden in basic mode"
+
+    def test_gui_advanced_mode_initial_buttons_visible(self, calculator):
+        """Test that basic and advanced buttons are visible when starting in advanced mode."""
+        calculator.set_mode("advanced")
+        app = CalculatorGUI(calculator)
+        visible_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+",
+                         "x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        for label in visible_labels:
+            btn = app._button_widgets[label]
+            assert not btn._is_removed, f"Button '{label}' should be visible in advanced mode"
+
+    def test_gui_advanced_mode_scientific_buttons_hidden(self, calculator):
+        """Test that scientific buttons are hidden when starting in advanced mode."""
+        calculator.set_mode("advanced")
+        app = CalculatorGUI(calculator)
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+        for label in scientific_labels:
+            btn = app._button_widgets[label]
+            assert btn._is_removed, f"Button '{label}' should be hidden in advanced mode"
+
+    def test_gui_scientific_mode_all_buttons_visible(self, calculator):
+        """Test that all buttons are visible when starting in scientific mode."""
+        calculator.set_mode("scientific")
+        app = CalculatorGUI(calculator)
+        all_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+",
+                      "x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log",
+                      "sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+        for label in all_labels:
+            btn = app._button_widgets[label]
+            assert not btn._is_removed, f"Button '{label}' should be visible in scientific mode"
+
+
+class TestGUIRebuildButtonGridForMode:
+    """Tests for _rebuild_button_grid_for_mode() method."""
+
+    def test_rebuild_button_grid_to_basic(self, gui_app):
+        """Test rebuilding button grid to basic mode."""
+        gui_app._calculator.set_mode("scientific")
+        gui_app._rebuild_button_grid_for_mode("basic")
+
+        basic_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+"}
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+
+        for label in basic_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible in basic mode"
+
+        for label in advanced_labels | scientific_labels:
+            assert gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be hidden in basic mode"
+
+    def test_rebuild_button_grid_to_advanced(self, gui_app):
+        """Test rebuilding button grid to advanced mode."""
+        gui_app._calculator.set_mode("basic")
+        gui_app._rebuild_button_grid_for_mode("advanced")
+
+        basic_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+"}
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+
+        for label in basic_labels | advanced_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible in advanced mode"
+
+        for label in scientific_labels:
+            assert gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be hidden in advanced mode"
+
+    def test_rebuild_button_grid_to_scientific(self, gui_app):
+        """Test rebuilding button grid to scientific mode."""
+        gui_app._calculator.set_mode("basic")
+        gui_app._rebuild_button_grid_for_mode("scientific")
+
+        all_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+",
+                      "x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log",
+                      "sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+
+        for label in all_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible in scientific mode"
+
+    def test_rebuild_button_grid_unknown_mode_falls_back_to_basic(self, gui_app):
+        """Test that unknown mode falls back to basic."""
+        gui_app._calculator.set_mode("scientific")
+        gui_app._rebuild_button_grid_for_mode("unknown_mode")
+
+        basic_labels = {"C", "←", "=", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "+"}
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+
+        for label in basic_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible after fallback"
+
+        for label in advanced_labels | scientific_labels:
+            assert gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be hidden after fallback"
+
+    def test_rebuild_button_grid_calls_grid_on_visible_buttons(self, gui_app):
+        """Test that grid() is called with correct kwargs for visible buttons."""
+        gui_app._rebuild_button_grid_for_mode("basic")
+
+        basic_labels = {"C", "←", "=", "7", "8"}
+        for label in basic_labels:
+            btn = gui_app._button_widgets[label]
+            grid_kwargs = gui_app._button_grid_kwargs[label]
+            assert btn._grid_info == grid_kwargs, f"Button '{label}' grid_info should match stored kwargs"
+
+    def test_rebuild_button_grid_calls_grid_remove_on_hidden_buttons(self, gui_app):
+        """Test that grid_remove() is called for hidden buttons."""
+        gui_app._rebuild_button_grid_for_mode("basic")
+
+        advanced_labels = {"x²", "x³", "√", "∛"}
+        for label in advanced_labels:
+            btn = gui_app._button_widgets[label]
+            assert btn._is_removed, f"Button '{label}' should be removed from grid"
+
+
+class TestGUIModeChangeTriggersRebuild:
+    """Tests for mode change triggering button grid rebuild."""
+
+    def test_on_mode_change_calls_rebuild_basic_to_advanced(self, gui_app):
+        """Test that _on_mode_change triggers rebuild when switching to advanced."""
+        gui_app._calculator.set_mode("basic")
+        gui_app._on_mode_change("advanced")
+
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        for label in advanced_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible after mode change"
+
+    def test_on_mode_change_calls_rebuild_advanced_to_scientific(self, gui_app):
+        """Test that _on_mode_change triggers rebuild when switching to scientific."""
+        gui_app._calculator.set_mode("advanced")
+        gui_app._on_mode_change("scientific")
+
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+        for label in scientific_labels:
+            assert not gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be visible after mode change"
+
+    def test_on_mode_change_calls_rebuild_scientific_to_basic(self, gui_app):
+        """Test that _on_mode_change triggers rebuild when switching to basic."""
+        gui_app._calculator.set_mode("scientific")
+        gui_app._on_mode_change("basic")
+
+        advanced_labels = {"x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log"}
+        scientific_labels = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "exp", "deg", "rad"}
+
+        for label in advanced_labels | scientific_labels:
+            assert gui_app._button_widgets[label]._is_removed, f"Button '{label}' should be hidden after mode change"
+
+    def test_on_mode_change_with_invalid_mode_does_not_rebuild(self, gui_app):
+        """Test that invalid mode does not trigger rebuild."""
+        gui_app._calculator.set_mode("basic")
+        initial_state = {label: btn._is_removed for label, btn in gui_app._button_widgets.items()}
+
+        gui_app._on_mode_change("invalid_mode")
+
+        final_state = {label: btn._is_removed for label, btn in gui_app._button_widgets.items()}
+        assert initial_state == final_state, "Button visibility should not change on invalid mode"
+
+    def test_on_mode_change_invalid_mode_shows_error(self, gui_app):
+        """Test that invalid mode change shows error message."""
+        gui_app._on_mode_change("invalid_mode")
+        display = gui_app._display_var.get()
+        assert display.startswith("Mode error:")
+
+
+class TestGUIAppendFunction:
+    """Tests for _append_function() method."""
+
+    @pytest.mark.parametrize("label,operation", [
+        ("x²", "square"),
+        ("x³", "cube"),
+        ("√", "square_root"),
+        ("∛", "cube_root"),
+        ("xⁿ", "power"),
+        ("n!", "factorial"),
+        ("ln", "natural_log"),
+        ("log", "log_base_10"),
+        ("sin", "sin"),
+        ("cos", "cos"),
+        ("tan", "tan"),
+        ("asin", "asin"),
+        ("acos", "acos"),
+        ("atan", "atan"),
+        ("sinh", "sinh"),
+        ("cosh", "cosh"),
+        ("tanh", "tanh"),
+        ("exp", "exp"),
+        ("deg", "degrees"),
+        ("rad", "radians"),
+    ])
+    def test_append_function_empty_expression(self, gui_app, label, operation):
+        """Test _append_function on empty expression starts operation."""
+        gui_app._expression = ""
+        gui_app._append_function(label)
+        assert gui_app._expression == operation + " ", f"Expression should be '{operation} ' but got '{gui_app._expression}'"
+
+    @pytest.mark.parametrize("label,operation", [
+        ("x²", "square"),
+        ("√", "square_root"),
+        ("sin", "sin"),
+        ("exp", "exp"),
+    ])
+    def test_append_function_with_number(self, gui_app, label, operation):
+        """Test _append_function with typed number treats it as operand."""
+        gui_app._expression = "4"
+        gui_app._append_function(label)
+        assert gui_app._expression == operation + " 4 ", f"Expression should be '{operation} 4 ' but got '{gui_app._expression}'"
+
+    @pytest.mark.parametrize("label", ["x²", "√", "sin", "exp", "deg"])
+    def test_append_function_display_updated(self, gui_app, label):
+        """Test _append_function updates the display."""
+        gui_app._append_function(label)
+        assert gui_app._display_var.get() == gui_app._expression
+
+
+class TestGUIOnButtonDispatchesFunction:
+    """Tests for _on_button() dispatching to _append_function()."""
+
+    @pytest.mark.parametrize("label", ["x²", "x³", "√", "∛", "xⁿ", "n!", "ln", "log", "sin", "cos", "tan", "exp", "deg", "rad"])
+    def test_on_button_dispatches_function_button_empty_expr(self, gui_app, label):
+        """Test that _on_button dispatches function buttons correctly."""
+        gui_app._on_button(label)
+        # Verify that the operation was set in the expression
+        assert gui_app._expression != "", f"Expression should not be empty after pressing '{label}'"
+        # Verify that it's a valid operation (starts with operation name)
+        from src.gui import _LABEL_TO_OPERATION
+        operation = _LABEL_TO_OPERATION[label]
+        assert gui_app._expression.startswith(operation), f"Expression should start with '{operation}' but got '{gui_app._expression}'"
+
+    def test_on_button_function_with_operand(self, gui_app):
+        """Test _on_button with function button when operand exists."""
+        gui_app._append("5")
+        gui_app._on_button("x²")
+        assert gui_app._expression == "square 5 "
+
+    def test_on_button_chain_function_calls(self, gui_app):
+        """Test chaining function button presses."""
+        gui_app._append("16")
+        gui_app._on_button("√")
+        assert "square_root" in gui_app._expression
+
+
+class TestGUIEndToEndButtonAndEvaluate:
+    """End-to-end tests for button presses and evaluation."""
+
+    def test_end_to_end_square_function(self, gui_app):
+        """Test complete flow: press 4, press x², press =, expect 16."""
+        gui_app._on_button("4")
+        assert gui_app._expression == "4"
+
+        gui_app._on_button("x²")
+        assert gui_app._expression == "square 4 "
+
+        gui_app._on_button("=")
+        assert gui_app._display_var.get() == "16"
+        assert gui_app._expression == "16"
+
+    def test_end_to_end_square_root(self, gui_app):
+        """Test complete flow: press 16, press √, press =, expect 4."""
+        gui_app._on_button("1")
+        gui_app._on_button("6")
+        assert gui_app._expression == "16"
+
+        gui_app._on_button("√")
+        assert gui_app._expression == "square_root 16 "
+
+        gui_app._on_button("=")
+        assert gui_app._display_var.get() == "4.0"
+
+    def test_end_to_end_factorial(self, gui_app):
+        """Test factorial: press 5, press n!, press =, expect 120."""
+        gui_app._on_button("5")
+        gui_app._on_button("n!")
+        assert gui_app._expression == "factorial 5 "
+
+        gui_app._on_button("=")
+        assert gui_app._display_var.get() == "120"
+
+    def test_end_to_end_result_chain_with_function(self, gui_app):
+        """Test chaining: 4 + 5 =, then press x², =, expect 81."""
+        gui_app._append("4")
+        gui_app._append_operator("+")
+        gui_app._append("5")
+        gui_app._on_button("=")
+        assert gui_app._expression == "9"
+
+        gui_app._on_button("x²")
+        assert gui_app._expression == "square 9 "
+
+        gui_app._on_button("=")
+        assert gui_app._display_var.get() == "81"
