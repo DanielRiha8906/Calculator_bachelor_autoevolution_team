@@ -1,0 +1,113 @@
+@startuml gui_class_diagram
+
+skinparam classAttributeIconSize 0
+
+package "src.gui" {
+
+    class GuiCalculator {
+        -_session: CalculatorSession
+        -_display_var: tk.StringVar
+        -_current_mode_button: tk.Button
+        -_number_buttons: dict[str, tk.Button]
+        -_operation_buttons: dict[str, tk.Button]
+        -_result_display: tk.Label
+        -_operand_stack: list[float]
+        -_pending_operation: str | None
+        --
+        +__init__(calculator: Calculator | None)
+        --
+        -_create_widgets()
+        -_bind_hover_effects(button, normal_bg, hover_bg)
+        -_on_number_click(digit: str)
+        -_on_operation_click(op_name: str)
+        -_on_equals_click()
+        -_on_mode_toggle()
+        -_update_display(value: str)
+        -_refresh_operation_buttons()
+        -_apply_theme()
+    }
+
+    note top of GuiCalculator
+      Module-level constant:
+      _THEME: dict
+      (colors and fonts for iOS-style UI)
+    end note
+}
+
+package "src" {
+
+    class CalculatorSession {
+        -_calculator: Calculator
+        -_history: OperationHistory
+        --
+        +set_mode(mode_name: str)
+        +get_current_mode() : str | None
+        +execute_operation(op_name: str, operands: list) : tuple
+        +get_operation_list() : list[str]
+        +get_arity(op_name: str) : int
+        +record_history(op_name, operands, result)
+        +save_history(filepath: str)
+    }
+
+    class OperationHistory {
+        -_entries: list
+        --
+        +record_operation(op_name: str, args: list, result)
+        +get_history() : list[str]
+        +save_to_file(filepath: str)
+    }
+
+    enum CalculatorMode {
+        NORMAL
+        SCIENTIFIC
+    }
+
+    class ModeConfig <<dataclass>> {
+        +mode: CalculatorMode
+        +operations: list[str]
+    }
+}
+
+package "src.core" {
+
+    class Calculator {
+        +add(a, b)
+        +subtract(a, b)
+        +multiply(a, b)
+        +divide(a, b)
+        +factorial(n)
+        +square(x)
+        +square_root(x)
+        +power(base, exp)
+        +sin(x) / cos(x) / tan(x)
+    }
+
+    class NormalOperations <<utility>> {
+        {static} +add(a, b)
+        {static} +subtract(a, b)
+        {static} +multiply(a, b)
+        {static} +divide(a, b)
+    }
+
+    class ScientificOperations <<utility>> {
+        {static} +factorial(n)
+        {static} +square(x)
+        {static} +square_root(x)
+        {static} +power(base, exp)
+        {static} +sin(x) / cos(x) / tan(x)
+    }
+}
+
+"tkinter.Tk" <|-- GuiCalculator : inherits
+
+GuiCalculator *-- CalculatorSession : composes
+
+CalculatorSession *-- Calculator : composes
+CalculatorSession *-- OperationHistory : composes
+CalculatorSession --> CalculatorMode : associates
+CalculatorSession --> ModeConfig : associates
+
+Calculator --> NormalOperations : delegates (static)
+Calculator --> ScientificOperations : delegates (static)
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml gui_activity_diagram
+
+start
+
+:User presses a button;
+
+if (Number button?) then (yes)
+    :_on_number_click(digit);
+    :Append digit to operand buffer;
+    :_update_display(buffer);
+else (no)
+    if (Operator button?) then (yes)
+        :_on_operation_click(op_name);
+        if (pending_operation exists?) then (yes)
+            :Execute pending op with stored operands;
+            :Get result from CalculatorSession;
+            if (Error?) then (yes)
+                :Display error message;
+                stop
+            else (no)
+                :Store result as new operand1;
+            endif
+        endif
+        :Store current op as _pending_operation;
+        :Reset operand buffer;
+        :_update_display("0");
+    else (no)
+        if (Equals button?) then (yes)
+            :_on_equals_click();
+            if (pending_operation exists?) then (no)
+                stop
+            else (yes)
+                :Execute op with operand1 + operand2\nvia CalculatorSession.execute_operation();
+                if (Error?) then (yes)
+                    :Display error message;
+                    :Clear pending state;
+                    stop
+                else (no)
+                    :record_history(op, operands, result);
+                    :_update_display(result);
+                    :Clear _pending_operation;
+                endif
+            endif
+        else (no)
+            if (Mode toggle button?) then (yes)
+                :_on_mode_toggle();
+                :Get current mode from session;
+                :Set next mode via session.set_mode();
+                :Update mode button text;
+                :_refresh_operation_buttons();
+                :Clear operand state;
+            else (no)
+                :Ignore unknown input;
+            endif
+        endif
+    endif
+endif
+
+:Display updated;
+
+stop
+
+@enduml
