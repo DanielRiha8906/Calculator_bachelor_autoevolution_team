@@ -432,3 +432,16 @@ Duration: 205.3s | Cost: $0.419917 USD | Turns: 13
   - `artifacts/gui_core_integration.puml` — Component diagram showing GUI Layer vs Core Layer architecture with dual entry points (GUI and CLI)
 
 Duration: 250.8s | Cost: $0.544021 USD | Turns: 5
+
+## Run: Issue #362 — V2 Task 16 - Structured/team: iOS Calculator GUI Redesign (2026-04-23)
+
+- **Branch:** task/issue-362-ios-calculator-gui
+- **PR target:** exp2/structured-team
+- **Files changed:**
+  - `src/gui.py` — Complete rewrite: iOS-inspired dark theme calculator GUI (4×5 standard grid, scientific panel, flat buttons, color scheme #000000/#333333/#FF9500/#A5A5A5)
+  - `tests/test_gui.py` — Complete rewrite: 71 new test methods covering display, arithmetic, scientific ops, color scheme, format_result, history, and edge cases
+- **Purpose:** Redesign GUI layer to match modern iOS calculator aesthetic with standard 4-column layout, operator colors, scientific mode toggle, and symbol labels; no calculation logic changed
+- **Risks:** GUI tests skip in headless CI (no display server); test skipping is expected and matches pre-existing pattern in this repo
+- **Tests passed:** 923 passed, 25 skipped (1 GUI module skipped headlessly), 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
