@@ -1,3 +1,17 @@
+## Run: Fix PR #354 — Add normal/scientific mode switching to interactive session (2026-04-23)
+
+- **Branch:** task/issue-274-expert-team
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `tests/test_cli.py` — updated expected operation set to include 6 trig ops; prepended mode selection input to all interactive_session() test mocks
+  - `tests/test_session.py` — added 6 trig operations to parametrized operation validity test
+  - `tests/test_cli_history_integration.py` — prepended mode selection input to all interactive_session() test mocks; switched to operation-name inputs for robustness
+- **Purpose:** Fix 30 failing tests caused by (1) new trig operations not reflected in operation-list assertions, and (2) new mode selection prompt at interactive_session() startup not reflected in mocked input sequences
+- **Risks:** None — test-only changes, no source code modified
+- **Tests passed:** 1216 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Add mode/trig to class and activity diagrams (2026-04-22)
 
 - **Branch:** task/issue-274-expert-team

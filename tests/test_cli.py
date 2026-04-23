@@ -12,6 +12,7 @@ from src.cli import (
     get_operands,
     interactive_session,
 )
+from src.validation import detect_mode
 
 
 class TestGetArity:
@@ -104,12 +105,13 @@ class TestGetOperationMenu:
         return Calculator()
 
     def test_get_operation_menu_contains_all_operations(self, calculator):
-        """Menu should contain all 12 public Calculator operations."""
+        """Menu should contain all 18 public Calculator operations."""
         menu = get_operation_menu(calculator)
         expected_ops = {
             "add", "subtract", "multiply", "divide", "power",
             "factorial", "square", "cube", "square_root", "cube_root",
-            "logarithm", "natural_logarithm"
+            "logarithm", "natural_logarithm",
+            "sin", "cos", "tan", "cot", "asin", "acos"
         }
         assert set(menu) == expected_ops
 
@@ -213,7 +215,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_quit_with_q(self, mock_print, mock_input, calculator):
         """Session should exit cleanly when user enters 'q'."""
-        mock_input.return_value = "q"
+        mock_input.side_effect = ["1", "q"]
         interactive_session(calculator)
         # Should print goodbye message
         printed_output = [call[0][0] for call in mock_print.call_args_list]
@@ -223,7 +225,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_quit_with_quit(self, mock_print, mock_input, calculator):
         """Session should exit cleanly when user enters 'quit'."""
-        mock_input.return_value = "quit"
+        mock_input.side_effect = ["1", "quit"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Goodbye" in str(output) for output in printed_output)
@@ -232,7 +234,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_quit_with_exit(self, mock_print, mock_input, calculator):
         """Session should exit cleanly when user enters 'exit'."""
-        mock_input.return_value = "exit"
+        mock_input.side_effect = ["1", "exit"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Goodbye" in str(output) for output in printed_output)
@@ -241,20 +243,19 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_quit_case_insensitive(self, mock_print, mock_input, calculator):
         """Quit commands should be case-insensitive."""
-        mock_input.return_value = "QUIT"
+        mock_input.side_effect = ["1", "QUIT"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Goodbye" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_perform_unary_operation(self, mock_print, mock_input, calculator):
+    def test_interactive_session_perform_unary_operation(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should correctly execute unary operation (square) and print result."""
-        # User selects square (operation 2, assuming operations list order)
-        # For safety, find the position of square in the menu
-        menu = get_operation_menu(calculator)
-        square_idx = menu.index("square") + 1  # 1-indexed
-        mock_input.side_effect = [str(square_idx), "5", "q"]
+        # User selects square operation by name
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "square", "5", "q"]
 
         interactive_session(calculator)
 
@@ -262,13 +263,13 @@ class TestInteractiveSession:
         # Should print result of square(5) = 25
         assert any("25" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_perform_binary_operation(self, mock_print, mock_input, calculator):
+    def test_interactive_session_perform_binary_operation(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should correctly execute binary operation (add) and print result."""
-        menu = get_operation_menu(calculator)
-        add_idx = menu.index("add") + 1  # 1-indexed
-        mock_input.side_effect = [str(add_idx), "3", "4", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "add", "3", "4", "q"]
 
         interactive_session(calculator)
 
@@ -280,7 +281,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_invalid_menu_selection_non_integer(self, mock_print, mock_input, calculator):
         """Session should handle non-integer menu selection gracefully."""
-        mock_input.side_effect = ["abc", "q"]
+        mock_input.side_effect = ["1", "abc", "q"]
         interactive_session(calculator)
 
         printed_output = [call[0][0] for call in mock_print.call_args_list]
@@ -291,7 +292,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_invalid_menu_selection_out_of_range_high(self, mock_print, mock_input, calculator):
         """Session should handle out-of-range menu selection (too high) gracefully."""
-        mock_input.side_effect = ["999", "q"]
+        mock_input.side_effect = ["1", "999", "q"]
         interactive_session(calculator)
 
         printed_output = [call[0][0] for call in mock_print.call_args_list]
@@ -302,20 +303,20 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_invalid_menu_selection_out_of_range_low(self, mock_print, mock_input, calculator):
         """Session should handle out-of-range menu selection (too low) gracefully."""
-        mock_input.side_effect = ["0", "q"]
+        mock_input.side_effect = ["1", "0", "q"]
         interactive_session(calculator)
 
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         # Should print error message about out of range
         assert any("out of range" in str(output).lower() for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_division_by_zero_caught(self, mock_print, mock_input, calculator):
+    def test_interactive_session_division_by_zero_caught(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should catch and display error when division by zero occurs."""
-        menu = get_operation_menu(calculator)
-        divide_idx = menu.index("divide") + 1  # 1-indexed
-        mock_input.side_effect = [str(divide_idx), "10", "0", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "divide", "10", "0", "q"]
 
         interactive_session(calculator)
 
@@ -323,14 +324,14 @@ class TestInteractiveSession:
         # Should print error message (division by zero)
         assert any("Error" in str(output) or "division" in str(output).lower() for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_factorial_with_float_caught(self, mock_print, mock_input, calculator):
+    def test_interactive_session_factorial_with_float_caught(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should catch TypeError when factorial receives float from CLI."""
-        menu = get_operation_menu(calculator)
-        factorial_idx = menu.index("factorial") + 1  # 1-indexed
-        # CLI parses as float, so factorial(5.0) will raise TypeError
-        mock_input.side_effect = [str(factorial_idx), "5.0", "q"]
+        mock_detect_mode.return_value = "interactive"
+        # Use scientific mode to access factorial. CLI parses as float, so factorial(5.0) will raise TypeError
+        mock_input.side_effect = ["2", "factorial", "5.0", "q"]
 
         interactive_session(calculator)
 
@@ -338,18 +339,18 @@ class TestInteractiveSession:
         # Should print error message
         assert any("Error" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_continues_after_error(self, mock_print, mock_input, calculator):
+    def test_interactive_session_continues_after_error(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should continue accepting input after an operation error."""
-        menu = get_operation_menu(calculator)
-        divide_idx = menu.index("divide") + 1
-        add_idx = menu.index("add") + 1
+        mock_detect_mode.return_value = "interactive"
 
         # Try division by zero, then do a valid add operation, then quit
         mock_input.side_effect = [
-            str(divide_idx), "10", "0",  # Division by zero error
-            str(add_idx), "2", "3",       # Valid operation
+            "1",  # Mode selection
+            "divide", "10", "0",  # Division by zero error
+            "add", "2", "3",       # Valid operation
             "q"
         ]
 
@@ -365,7 +366,7 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_shows_menu_initially(self, mock_print, mock_input, calculator):
         """Session should display the available operations menu."""
-        mock_input.return_value = "q"
+        mock_input.side_effect = ["1", "q"]
         interactive_session(calculator)
 
         printed_output = [call[0][0] for call in mock_print.call_args_list]
@@ -376,20 +377,20 @@ class TestInteractiveSession:
     @patch("builtins.print")
     def test_interactive_session_shows_quit_instruction(self, mock_print, mock_input, calculator):
         """Session should display quit instruction in menu."""
-        mock_input.return_value = "q"
+        mock_input.side_effect = ["1", "q"]
         interactive_session(calculator)
 
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         # Should mention quit options
         assert any("quit" in str(output).lower() or "exit" in str(output).lower() for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_negative_operands(self, mock_print, mock_input, calculator):
+    def test_interactive_session_negative_operands(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should handle negative operands correctly."""
-        menu = get_operation_menu(calculator)
-        subtract_idx = menu.index("subtract") + 1
-        mock_input.side_effect = [str(subtract_idx), "-5", "-3", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "subtract", "-5", "-3", "q"]
 
         interactive_session(calculator)
 
@@ -397,13 +398,13 @@ class TestInteractiveSession:
         # Should calculate subtract(-5, -3) = -2
         assert any("-2" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_interactive_session_float_operands(self, mock_print, mock_input, calculator):
+    def test_interactive_session_float_operands(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Session should handle float operands correctly."""
-        menu = get_operation_menu(calculator)
-        multiply_idx = menu.index("multiply") + 1
-        mock_input.side_effect = [str(multiply_idx), "2.5", "4", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "multiply", "2.5", "4", "q"]
 
         interactive_session(calculator)
 
@@ -474,31 +475,37 @@ class TestRetryLimitOperations:
         """Fixture providing a Calculator instance."""
         return Calculator()
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_operation_retry_limit_five_invalid_entries(self, mock_print, mock_input, calculator):
+    def test_operation_retry_limit_five_invalid_entries(self, mock_print, mock_input, mock_detect_mode, calculator):
         """interactive_session should terminate after 5 consecutive invalid operations."""
-        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "a", "b", "c", "d", "e"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Maximum retry attempts" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_operation_retry_limit_no_goodbye_on_termination(self, mock_print, mock_input, calculator):
+    def test_operation_retry_limit_no_goodbye_on_termination(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Should not print 'Goodbye!' when session terminates due to retry limit."""
-        mock_input.side_effect = ["a", "b", "c", "d", "e"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "a", "b", "c", "d", "e"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         # When terminated by retry limit, "Goodbye!" should not appear
         # (it only appears when user explicitly enters quit/exit/q)
         assert not any("Goodbye" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_operation_error_message_includes_available_operations(self, mock_print, mock_input, calculator):
+    def test_operation_error_message_includes_available_operations(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Error message for invalid operation should list available operations."""
-        mock_input.side_effect = ["invalid_op", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "invalid_op", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         output_str = " ".join(str(output) for output in printed_output)
@@ -506,16 +513,19 @@ class TestRetryLimitOperations:
         # Should include at least some operations
         assert any(op in output_str for op in ["add", "subtract", "multiply"])
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_operation_counter_resets_on_valid_operation(self, mock_print, mock_input, calculator):
+    def test_operation_counter_resets_on_valid_operation(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Operation counter should reset after successfully selecting a valid operation."""
+        mock_detect_mode.return_value = "interactive"
         menu = get_operation_menu(calculator)
         add_idx = menu.index("add") + 1
         # First: 1 invalid operation (counter = 1)
         # Then: valid operation 'add' with operands 2 and 3 (counter resets to 0)
         # Then: quit
         mock_input.side_effect = [
+            "1",  # Mode selection
             "invalid1",
             str(add_idx), "2", "3",  # Valid operation, counter resets
             "q"  # Quit
@@ -525,11 +535,13 @@ class TestRetryLimitOperations:
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Goodbye" in str(output) for output in printed_output)
 
+    @patch("src.cli.detect_mode")
     @patch("builtins.input")
     @patch("builtins.print")
-    def test_operation_retry_shows_invalid_message(self, mock_print, mock_input, calculator):
+    def test_operation_retry_shows_invalid_message(self, mock_print, mock_input, mock_detect_mode, calculator):
         """Should show 'Invalid selection' message for invalid operation."""
-        mock_input.side_effect = ["bad_op", "q"]
+        mock_detect_mode.return_value = "interactive"
+        mock_input.side_effect = ["1", "bad_op", "q"]
         interactive_session(calculator)
         printed_output = [call[0][0] for call in mock_print.call_args_list]
         assert any("Invalid" in str(output) and "selection" in str(output).lower() for output in printed_output)
