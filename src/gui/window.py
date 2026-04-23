@@ -403,6 +403,7 @@ class CalculatorWindow(tk.Tk):
         else:
             self._display_value += digit
         self._display_var.set(self._display_value)
+        self._result_var.set(self._display_value)
 
     def on_mode_changed(self, mode_name: str) -> None:
         """Switch the calculator to *mode_name* and refresh operation buttons.
@@ -462,7 +463,7 @@ class CalculatorWindow(tk.Tk):
             symbol = _SYMBOL_MAP.get(op_name, op_name)
             self._display_value = f"{self._display_value} {symbol} "
             self._display_var.set(self._display_value)
-            self._set_result("")
+            self._result_var.set(self._display_value)
 
     def _execute_unary_from_display(self, op_name: str) -> None:
         """Execute a unary *op_name* on the current display value.

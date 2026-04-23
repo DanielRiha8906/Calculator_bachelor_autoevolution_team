@@ -1,3 +1,16 @@
+## Run: Fix PR #370 — Wire number/operator buttons to result display (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — added `_result_var.set(_display_value)` in `on_number_clicked()` and `on_operation_selected()`; removed `_set_result("")` that overwrote the operator display
+  - `tests/test_gui_window.py` — added 5 new tests: `TestNumberClickedHandler` digit sync tests, new `TestOperationDisplaySync` class, `TestButtonOnlyBinaryFlow.test_full_button_flow_display_visible_at_each_step`
+- **Purpose:** Fix unresponsive number/operator buttons — clicking digits and operators now updates the result label in real time so users see their input
+- **Risks:** None — changes confined to display synchronization; no calculation logic modified
+- **Tests passed:** 95 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #370 — Address expert-team review feedback (2026-04-23)
 
 - **Branch:** task/issue-363-ios-gui-redesign

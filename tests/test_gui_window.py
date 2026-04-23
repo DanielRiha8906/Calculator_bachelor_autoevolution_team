@@ -794,6 +794,26 @@ class TestNumberClickedHandler:
 
         assert window._display_var.get() == "7"
 
+    def test_on_number_clicked_updates_result_var(self, mock_tkinter, mock_adapter):
+        """Clicking a digit must update the result label variable."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window.on_number_clicked("5")
+
+        assert window._result_var.get() == "5"
+
+    def test_on_number_clicked_accumulates_in_result_var(self, mock_tkinter, mock_adapter):
+        """Multiple digit clicks must accumulate and appear in result label."""
+        from src.gui.window import CalculatorWindow
+
+        window = CalculatorWindow(mock_adapter)
+        window.on_number_clicked("3")
+        window.on_number_clicked("4")
+        window.on_number_clicked("5")
+
+        assert window._result_var.get() == "345"
+
 
 class TestEqualsClickedHandler:
     """Test suite for on_equals_clicked event handler."""
@@ -938,6 +958,43 @@ class TestNewDisplayAttributes:
         window = CalculatorWindow(mock_adapter)
         # grid_remove() should have been called on the clear button
         assert window._clear_history_btn.grid_remove.called or window._clear_history_btn.grid_remove == MagicMock
+
+
+class TestOperationDisplaySync:
+    """Test suite for operation display synchronization with result label."""
+
+    def test_on_operation_selected_updates_result_var_binary(self, mock_tkinter, mock_adapter):
+        """Selecting a binary op must show the in-progress expression in result label."""
+        from src.gui.window import CalculatorWindow
+
+        mock_adapter.get_arity.return_value = 2
+        window = CalculatorWindow(mock_adapter)
+
+        # First click a digit
+        window.on_number_clicked("5")
+        assert window._result_var.get() == "5"
+
+        # Then select a binary operator
+        window.on_operation_selected("add")
+
+        # Result label should show the in-progress expression "5 +"
+        result = window._result_var.get()
+        assert "5" in result
+        assert "+" in result
+
+    def test_on_operation_selected_updates_result_var_multiple_ops(self, mock_tkinter, mock_adapter):
+        """Result label shows the operator symbol in the expression after binary op selection."""
+        from src.gui.window import CalculatorWindow
+
+        mock_adapter.get_arity.return_value = 2
+        window = CalculatorWindow(mock_adapter)
+
+        # Test with different operators
+        window.on_number_clicked("8")
+        window.on_operation_selected("subtract")
+        result = window._result_var.get()
+        assert "8" in result
+        assert "−" in result  # subtract symbol
 
 
 class TestModeChangedClearsState:
@@ -1206,3 +1263,26 @@ class TestButtonOnlyBinaryFlow:
 
         # Should be able to execute without error
         assert window._pending_binary_op is None
+
+    def test_full_button_flow_display_visible_at_each_step(self, mock_tkinter, mock_adapter):
+        """Full button-click flow: digit, operator, digit, equals — display is visible at each step."""
+        from src.gui.window import CalculatorWindow
+
+        mock_adapter.execute_operation_safe.return_value = ("9.0", "")
+        mock_adapter.get_arity.return_value = 2
+
+        window = CalculatorWindow(mock_adapter)
+
+        # Step 1: click "4"
+        window.on_number_clicked("4")
+        assert window._result_var.get() == "4"
+
+        # Step 2: click "+" (binary op)
+        window.on_operation_selected("add")
+        result_after_op = window._result_var.get()
+        assert "4" in result_after_op
+        assert "+" in result_after_op
+
+        # Step 3: click "5"
+        window.on_number_clicked("5")
+        assert "5" in window._result_var.get()
