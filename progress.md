@@ -502,4 +502,4 @@ Duration: 578.6s | Cost: $1.357357 USD | Turns: 17
   - `artifacts/activity-diagram-mode-selection-flow.puml` — updated activity diagram with mode toggle and operation button click flows
   - `artifacts/sequence_gui_mode_switch.puml` — updated sequence diagram showing button click → adapter → session interaction
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 207.0s | Cost: $0.627321 USD | Turns: 15
