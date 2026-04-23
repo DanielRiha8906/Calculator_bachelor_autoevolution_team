@@ -12,7 +12,7 @@
 - **Risks:** Interaction model is fundamentally different from text-box entry; existing on_execute_clicked preserved as legacy path for interface compatibility
 - **Tests passed:** 1432 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 524.5s | Cost: $1.370220 USD | Turns: 12
 
 ## Run: update-diagrams — iOS GUI Redesign Diagrams (2026-04-23)
 
