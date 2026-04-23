@@ -88,8 +88,8 @@ class TestMainEntryPoint:
             main()
 
         captured = capsys.readouterr()
-        assert "Calculator REPL" in captured.out
-        assert "Supported operations" in captured.out
+        assert "Calculator" in captured.out
+        assert "mode basic" in captured.out or "mode advanced" in captured.out or "mode scientific" in captured.out
 
     def test_main_with_eof_error_exits_cleanly(self, capsys):
         """Test that main() handles EOFError (exhausted piped input) gracefully."""

@@ -1,0 +1,51 @@
+@startuml activity_diagram_mode_switching
+title REPL Mode Switching — "mode scientific" Flow (PR #353)
+
+skinparam backgroundColor white
+skinparam activityBorderColor #333333
+skinparam activityBackgroundColor #F8F8F8
+skinparam diamondBackgroundColor #FFF9C4
+
+start
+
+:REPL loop awaits input;
+
+:User enters "mode scientific";
+
+:REPL detects input starts with "mode ";
+
+:Extract argument: "scientific";
+
+:Call _handle_mode_command("scientific");
+
+if (argument is empty?) then (yes)
+  :Print current mode\nand available modes;
+  :Return to REPL loop;
+  stop
+else (no)
+  if (argument in {"basic", "advanced", "scientific"}?) then (no)
+    :Print error:\n"Unknown mode: '<arg>'\nAvailable: basic, advanced, scientific";
+    :Return to REPL loop;
+    stop
+  else (yes)
+    :Call calculator.set_mode("scientific");
+
+    fork
+      :Instantiate BasicOperations;
+    fork again
+      :Instantiate AdvancedOperations;
+    fork again
+      :Instantiate ScientificOperations [NEW];
+    end fork
+
+    :Set engine _mode = "scientific";
+    note right: History is preserved\n(not cleared on mode switch)
+
+    :Print confirmation:\n"Mode switched to 'scientific'.";
+
+    :Return to REPL loop;
+    stop
+  endif
+endif
+
+@enduml

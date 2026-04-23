@@ -747,9 +747,9 @@ class TestModeParameter:
     """Tests for CalculatorEngine mode parameter."""
 
     def test_engine_initializes_with_default_mode(self):
-        """Test that CalculatorEngine() uses 'basic' as default mode."""
+        """Test that CalculatorEngine() uses 'advanced' as default mode."""
         engine = CalculatorEngine()
-        assert engine._mode == "basic"
+        assert engine._mode == "advanced"
 
     def test_engine_initializes_with_explicit_mode(self):
         """Test that CalculatorEngine(mode='basic') works."""
@@ -777,17 +777,14 @@ class TestModeParameter:
         assert engine.multiply(3, 4) == 12
         assert engine.divide(10, 2) == 5.0
 
-    def test_backward_compatibility_all_advanced_ops_available(self):
-        """Test that all advanced operations are available regardless of mode."""
+    def test_advanced_operations_not_available_in_basic_mode(self):
+        """Test that advanced operations are NOT available in basic mode."""
         engine = CalculatorEngine(mode="basic")
-        assert engine.factorial(5) == 120
-        assert engine.square(3) == 9
-        assert engine.cube(2) == 8
-        assert engine.square_root(4) == 2.0
-        assert engine.cube_root(8) == pytest.approx(2.0)
-        assert engine.power(2, 3) == 8
-        assert engine.natural_log(1) == 0.0
-        assert engine.log_base_10(10) == 1.0
+        # Advanced operations should raise ValueError when accessed
+        with pytest.raises(ValueError):
+            engine.factorial(5)
+        with pytest.raises(ValueError):
+            engine.square(3)
 
     def test_history_recorded_with_mode_parameter(self):
         """Test that history is still recorded when mode is specified."""
@@ -799,13 +796,24 @@ class TestModeParameter:
         assert history[0]["operator"] == "add"
         assert history[1]["operator"] == "multiply"
 
-    def test_mode_parameter_does_not_affect_operations(self):
-        """Test that mode parameter doesn't change operation behavior."""
-        engine1 = CalculatorEngine(mode="basic")
-        engine2 = CalculatorEngine(mode="advanced")
-        engine3 = CalculatorEngine()  # default
+    def test_mode_parameter_affects_available_operations(self):
+        """Test that mode parameter controls which operations are available."""
+        engine_basic = CalculatorEngine(mode="basic")
+        engine_advanced = CalculatorEngine(mode="advanced")
+        engine_scientific = CalculatorEngine(mode="scientific")
 
-        # All should produce identical results
-        assert engine1.add(5, 3) == engine2.add(5, 3) == engine3.add(5, 3)
-        assert engine1.factorial(4) == engine2.factorial(4) == engine3.factorial(4)
-        assert engine1.square_root(9) == engine2.square_root(9) == engine3.square_root(9)
+        # All modes have basic operations
+        assert engine_basic.add(5, 3) == engine_advanced.add(5, 3) == engine_scientific.add(5, 3) == 8
+
+        # Only advanced and scientific have factorial
+        assert engine_advanced.factorial(4) == 24
+        assert engine_scientific.factorial(4) == 24
+        with pytest.raises(ValueError):
+            engine_basic.factorial(4)
+
+        # Only scientific has sin
+        assert engine_scientific.sin(0) == 0.0
+        with pytest.raises(ValueError):
+            engine_basic.sin(0)
+        with pytest.raises(ValueError):
+            engine_advanced.sin(0)

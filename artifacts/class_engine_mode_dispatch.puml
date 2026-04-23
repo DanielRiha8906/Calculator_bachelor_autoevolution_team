@@ -1,0 +1,53 @@
+@startuml class_engine_mode_dispatch
+title CalculatorEngine Mode Dispatch and Composition (PR #353)
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor white
+
+class Calculator {
+  - _engine : CalculatorEngine
+  - _mode : str = "advanced"
+  + set_mode(mode: str) : None
+  + get_available_modes_for_operation(op: str) : list[str]
+  .. 13 scientific proxy methods ..
+  note: delegates to _engine
+}
+
+class CalculatorEngine {
+  - _mode : str
+  - _basic : BasicOperations
+  - _advanced : AdvancedOperations | None
+  - _scientific : ScientificOperations | None
+  - _VALID_MODES : frozenset = {basic, advanced, scientific}
+  + set_mode(mode: str) : None
+  - _activate_mode(mode: str) : None
+  + get_operations() : dict[str, object]
+  + get_available_modes_for_operation(op: str) : list[str]
+  .. 13 scientific proxy methods with mode-check guard ..
+}
+
+note bottom of CalculatorEngine
+  _activate_mode("basic")      → _basic only
+  _activate_mode("advanced")   → _basic + _advanced
+  _activate_mode("scientific") → _basic + _advanced + _scientific
+  Guard: if _scientific is None → raise ValueError
+end note
+
+class BasicOperations {
+  + get_operations() : dict
+}
+
+class AdvancedOperations {
+  + get_operations() : dict
+}
+
+class ScientificOperations {
+  + get_operations() : dict
+}
+
+Calculator "1" *-- "1" CalculatorEngine : _engine
+CalculatorEngine "1" *-- "1" BasicOperations : _basic (always)
+CalculatorEngine "1" *-- "0..1" AdvancedOperations : _advanced
+CalculatorEngine "1" *-- "0..1" ScientificOperations : _scientific
+
+@enduml

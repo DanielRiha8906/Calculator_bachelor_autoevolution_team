@@ -1,0 +1,73 @@
+@startuml sequence_diagram_scientific_calculation
+title Scientific Calculation — sin(x) Request & Domain Error Alt (PR #353)
+
+skinparam backgroundColor white
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #333333
+
+actor Caller
+participant "Calculator" as Calc
+participant "CalculatorEngine" as Engine
+participant "ScientificOperations" as SciOps
+participant "math" as Math
+
+== Happy Path: sin(1.5708) ==
+
+Caller ->> Calc : sin(1.5708)
+activate Calc
+
+Calc ->> Engine : sin(1.5708)
+activate Engine
+
+Engine ->> SciOps : sin(1.5708)
+activate SciOps
+
+SciOps ->> Math : math.sin(1.5708)
+activate Math
+Math --> SciOps : ≈ 1.0
+deactivate Math
+
+SciOps -> SciOps : _record(≈ 1.0)\n[no-op if no callback]
+
+SciOps --> Engine : ≈ 1.0
+deactivate SciOps
+
+Engine -> Engine : _record_history(\n  1.5708, "sin", None, 1.0)
+
+Engine --> Calc : ≈ 1.0
+deactivate Engine
+
+Calc --> Caller : ≈ 1.0
+deactivate Calc
+
+== Alt: Domain Error — asin(2.0) ==
+
+alt invalid domain input
+
+  Caller ->> Calc : asin(2.0)
+  activate Calc
+
+  Calc ->> Engine : asin(2.0)
+  activate Engine
+
+  Engine ->> SciOps : asin(2.0)
+  activate SciOps
+
+  SciOps ->> Math : math.asin(2.0)
+  activate Math
+  Math --> SciOps : raises ValueError
+  deactivate Math
+
+  SciOps -> SciOps : log error\nre-raise ValueError
+  SciOps --> Engine : raises ValueError
+  deactivate SciOps
+
+  Engine --> Calc : raises ValueError
+  deactivate Engine
+
+  Calc --> Caller : raises ValueError
+  deactivate Calc
+
+end
+
+@enduml

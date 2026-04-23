@@ -72,11 +72,7 @@ class TestInputValidator:
     @pytest.mark.parametrize("invalid_op", [
         "unknown",
         "sqrt",  # Not 'square_root'
-        "ln",    # Not 'natural_log'
         "log",   # Not 'log_base_10'
-        "sin",
-        "cos",
-        "tan",
         "",
         "ADD",  # Wrong case (but this is already lowercased by parser)
         "123",
@@ -564,9 +560,10 @@ class TestCalculatorREPL:
             repl.run()
 
         captured = capsys.readouterr()
-        assert "Calculator REPL" in captured.out
-        assert "Supported operations" in captured.out
-        assert "add" in captured.out
+        assert "Calculator" in captured.out
+        assert "mode basic" in captured.out
+        assert "mode advanced" in captured.out
+        assert "mode scientific" in captured.out
         assert "factorial" in captured.out
 
     # -------------------------------------------------------------------------
@@ -860,16 +857,21 @@ class TestModuleExports:
     def test_supported_operations_contains_expected_names(self):
         """Test that SUPPORTED_OPERATIONS contains the expected operation names."""
         expected_ops = {
-            "add", "subtract", "multiply", "divide", "power",
-            "factorial", "square", "cube", "square_root", "cube_root",
+            # Basic operations
+            "add", "subtract", "multiply", "divide",
+            # Advanced operations
+            "power", "factorial", "square", "cube", "square_root", "cube_root",
             "natural_log", "log_base_10",
+            # Scientific operations
+            "sin", "cos", "tan", "asin", "acos", "atan",
+            "sinh", "cosh", "tanh", "degrees", "radians", "exp", "ln",
         }
         assert SUPPORTED_OPERATIONS == expected_ops
 
     def test_one_operand_ops_derived_from_canonical_sets(self):
-        """Test that _ONE_OPERAND_OPS is derived from ADVANCED_OPERATIONS minus 'power'."""
-        from src.modes.operations import ADVANCED_OPERATIONS
-        expected = ADVANCED_OPERATIONS - {"power"}
+        """Test that _ONE_OPERAND_OPS is derived from ADVANCED and SCIENTIFIC ops minus 'power'."""
+        from src.modes.operations import ADVANCED_OPERATIONS, SCIENTIFIC_OPERATIONS
+        expected = (ADVANCED_OPERATIONS - {"power"}) | SCIENTIFIC_OPERATIONS
         assert _ONE_OPERAND_OPS == expected
 
     def test_two_operand_ops_derived_from_canonical_sets(self):
@@ -881,8 +883,12 @@ class TestModuleExports:
     def test_one_operand_ops_contains_expected_operations(self):
         """Test that _ONE_OPERAND_OPS contains all expected unary operations."""
         expected = {
+            # Advanced unary operations
             "factorial", "square", "cube", "square_root", "cube_root",
             "natural_log", "log_base_10",
+            # Scientific unary operations
+            "sin", "cos", "tan", "asin", "acos", "atan",
+            "sinh", "cosh", "tanh", "degrees", "radians", "exp", "ln",
         }
         assert _ONE_OPERAND_OPS == expected
 

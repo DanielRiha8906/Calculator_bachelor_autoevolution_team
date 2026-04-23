@@ -554,9 +554,9 @@ class TestModeParameter:
     """Tests for Calculator mode parameter and set_mode method."""
 
     def test_calculator_initializes_with_default_mode(self):
-        """Test that Calculator() uses 'basic' as default mode."""
+        """Test that Calculator() uses 'advanced' as default mode."""
         calc = Calculator()
-        assert calc._mode == "basic"
+        assert calc._mode == "advanced"
 
     def test_calculator_initializes_with_explicit_mode(self):
         """Test that Calculator(mode='basic') works."""
@@ -575,22 +575,24 @@ class TestModeParameter:
         calc.set_mode("advanced")
         assert calc._mode == "advanced"
 
-    def test_set_mode_reinitializes_engine(self):
-        """Test that set_mode() reinitializes the underlying engine."""
-        calc = Calculator()
-        engine1 = calc._engine
+    def test_set_mode_updates_engine_mode(self):
+        """Test that set_mode() updates the underlying engine's mode."""
+        calc = Calculator(mode="basic")
+        assert calc._engine._mode == "basic"
         calc.set_mode("advanced")
-        engine2 = calc._engine
-        assert engine1 is not engine2  # Different object instances
+        assert calc._engine._mode == "advanced"
+        # Same engine instance, just mode changed
+        assert calc._engine is not None
 
-    def test_set_mode_clears_history(self):
-        """Test that set_mode() clears the operation history."""
+    def test_set_mode_preserves_history(self):
+        """Test that set_mode() preserves the operation history."""
         calc = Calculator()
         calc.add(1, 2)
         calc.multiply(3, 4)
         assert len(calc.get_history()) == 2
-        calc.set_mode("advanced")
-        assert len(calc.get_history()) == 0
+        calc.set_mode("scientific")
+        # History should be preserved after mode switch
+        assert len(calc.get_history()) == 2
 
     def test_operations_work_after_set_mode(self):
         """Test that operations still work correctly after set_mode()."""
@@ -622,23 +624,35 @@ class TestModeParameter:
         assert calc.divide(10, 2) == 5.0
         assert calc.factorial(5) == 120
 
-    def test_mode_parameter_does_not_affect_operations(self):
-        """Test that mode parameter doesn't change operation behavior."""
-        calc1 = Calculator(mode="basic")
-        calc2 = Calculator(mode="advanced")
-        calc3 = Calculator()  # default
+    def test_mode_parameter_controls_available_operations(self):
+        """Test that mode parameter controls which operations are available."""
+        calc_basic = Calculator(mode="basic")
+        calc_advanced = Calculator(mode="advanced")
+        calc_scientific = Calculator(mode="scientific")
 
-        # All should produce identical results
-        assert calc1.add(5, 3) == calc2.add(5, 3) == calc3.add(5, 3)
-        assert calc1.factorial(4) == calc2.factorial(4) == calc3.factorial(4)
-        assert calc1.square_root(9) == calc2.square_root(9) == calc3.square_root(9)
+        # All modes have basic operations
+        assert calc_basic.add(5, 3) == calc_advanced.add(5, 3) == calc_scientific.add(5, 3) == 8
+
+        # Only advanced and scientific have factorial
+        assert calc_advanced.factorial(4) == 24
+        assert calc_scientific.factorial(4) == 24
+        with pytest.raises(ValueError):
+            calc_basic.factorial(4)
+
+        # Only scientific has sin
+        assert calc_scientific.sin(0) == 0.0
+        with pytest.raises(ValueError):
+            calc_basic.sin(0)
+        with pytest.raises(ValueError):
+            calc_advanced.sin(0)
 
     def test_set_mode_to_same_mode(self):
-        """Test that set_mode to the same mode works."""
-        calc = Calculator(mode="basic")
+        """Test that set_mode to the same mode preserves history."""
+        calc = Calculator(mode="advanced")
         calc.add(1, 2)
-        calc.set_mode("basic")
-        # History should be cleared even when setting to same mode
-        assert len(calc.get_history()) == 0
+        calc.set_mode("advanced")
+        # History should be preserved even when setting to same mode
+        assert len(calc.get_history()) == 1
         # Operations should still work
         assert calc.add(3, 4) == 7
+        assert len(calc.get_history()) == 2

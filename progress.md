@@ -1,4 +1,46 @@
 
+## Run: Fix PR #353 — Add scientific mode with interactive mode switching (2026-04-23)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/logic.py` — added `get_available_modes_for_operation()` method and `None`-guard clauses on all 21 advanced/scientific operation methods (raise `ValueError` instead of `AttributeError`)
+  - `src/calculator.py` — added `get_available_modes_for_operation()` pass-through method
+  - `src/input_handler.py` — added `OperationNotAvailableInModeError` exception, `_get_available_modes_for_operation()` helper, updated `_dispatch()` and `_evaluate()` for graceful out-of-mode error handling, updated welcome message to 7-line informative banner
+  - `tests/test_mode_availability.py` — new file: 117 tests for mode availability, guard clauses, new exception, REPL UX
+  - `tests/test_calculator.py` — updated 3 assertions from `AttributeError` to `ValueError`
+  - `tests/test_input_handler.py` — updated welcome message assertions to match new banner
+  - `tests/test_logic.py` — updated 5 assertions from `AttributeError` to `ValueError`
+  - `tests/test_main.py` — updated welcome message assertions to match new banner
+  - `tests/test_mode_switching.py` — updated 8 assertions from `AttributeError` to `ValueError`
+- **Purpose:** Address maintainer review feedback: clarify mode switching UX, add graceful out-of-mode error handling, improve welcome message
+- **Risks:** None — backward-compatible changes; `ValueError` is the appropriate exception type for invalid operations
+- **Tests passed:** 1506 passed, 0 failed
+
+Duration: 706.5s | Cost: $1.801913 USD | Turns: 15
+
+## Run: Issue #272 — V2 Task 14 - Naive/team (2026-04-22)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `src/modes/scientific.py` — new ScientificOperations class with 13 methods (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, degrees, radians, exp, ln)
+  - `src/modes/operations.py` — added SCIENTIFIC_OPERATIONS frozenset constant
+  - `src/modes/__init__.py` — exported ScientificOperations
+  - `src/logic.py` — CalculatorEngine: mode-aware initialization, set_mode() preserving history, scientific method delegation
+  - `src/calculator.py` — 13 scientific proxy methods, default mode changed to "advanced"
+  - `src/input_handler.py` — REPL mode command handling, SUPPORTED_OPERATIONS includes scientific ops
+  - `tests/test_scientific_operations.py` — 126 new unit tests for ScientificOperations
+  - `tests/test_mode_switching.py` — 40 new integration tests for mode switching
+  - `tests/test_calculator.py` — updated 5 tests to match new mode behavior
+  - `tests/test_input_handler.py` — updated 7 tests for expanded operation sets
+  - `tests/test_logic.py` — updated 3 tests for new default mode and history preservation
+- **Purpose:** Add scientific mode with trig, hyperbolic, and exponential functions; allow interactive mode switching via REPL "mode" command
+- **Risks:** Default mode changed from "basic" to "advanced" — existing callers relying on mode attribute string may need updating
+- **Tests passed:** 1389 passed, 0 failed
+
+Duration: 732.3s | Cost: $1.965830 USD | Turns: 14
+
 ## Run: Issue #269 — V2 Task 13 - Naive/team (2026-04-22)
 
 - **Branch:** task/issue-269-add-calculator-documentation
@@ -318,3 +360,26 @@ Duration: 304.2s | Cost: $0.850068 USD | Turns: 11
   - `artifacts/sequence_advanced_operation.puml` — sequence diagram for a complete advanced (unary) operation call through Calculator facade, CalculatorEngine, and AdvancedOperations
 
 Duration: 245.8s | Cost: $0.754668 USD | Turns: 17
+
+## Run: update-diagrams — Scientific mode PlantUML diagrams (2026-04-22)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_scientific_mode.puml` — Class diagram showing ScientificOperations integration with CalculatorEngine and facade hierarchy
+  - `artifacts/activity_diagram_mode_switching.puml` — Activity diagram for REPL mode-switch flow with validation and history preservation
+  - `artifacts/sequence_diagram_scientific_calculation.puml` — Sequence diagram for sin(x) scientific calculation including domain-error alt scenario
+
+## Run: update-diagrams — Scientific Mode PlantUML Diagrams (2026-04-23)
+
+- **Branch:** task/issue-272-scientific-mode
+- **PR target:** exp2/naive-team
+- **Files changed:**
+  - `artifacts/class_modes_scientific.puml` — Class diagram of operation set hierarchy with ScientificOperations
+  - `artifacts/class_engine_mode_dispatch.puml` — Class diagram of CalculatorEngine/Calculator mode dispatch and composition
+  - `artifacts/activity_mode_switch.puml` — Activity diagram for REPL mode switching flow
+  - `artifacts/sequence_scientific_op.puml` — Sequence diagram for scientific operation execution
+
+Duration: 238.6s | Cost: $0.542820 USD | Turns: 4
+
+Duration: 233.1s | Cost: $0.594438 USD | Turns: 6
