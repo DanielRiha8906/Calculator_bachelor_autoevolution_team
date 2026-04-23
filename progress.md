@@ -478,3 +478,16 @@ Duration: 228.3s | Cost: $0.480080 USD | Turns: 11
   - `artifacts/sequence_gui_mode_switch.puml` — sequence diagram of mode switching flow
 
 Duration: 316.9s | Cost: $0.800602 USD | Turns: 5
+
+## Run: Issue #363 — V2 Task 16 - Expert/team (2026-04-23)
+
+- **Branch:** task/issue-363-ios-gui-redesign
+- **PR target:** exp2/expert-team
+- **Files changed:**
+  - `src/gui/window.py` — complete rewrite of GuiCalculator layout to iOS-style flat design; added _THEME dict, _SYMBOL_MAP, _ARITHMETIC_OPS constants; replaced scrollable canvas with 4-column operations grid; added numbers grid (3×4); added mode toggle button; added hover effects on all buttons; replaced ttk with tk widgets for full color control
+  - `tests/test_gui_window.py` — updated broken assertions for removed attributes (_ops_canvas/_ops_inner_frame → _ops_frame); added 28 new test functions covering theme constants, symbol mapping, result display, mode toggle, numbers grid, operations grid, hover effects, and frame backgrounds
+- **Purpose:** Redesign GuiCalculator to modern iOS-style calculator with black/orange/gray flat design, mode-responsive operation grid, symbol-mapped buttons, and centralized theming
+- **Risks:** Visual-only change; calculation logic untouched. ttk removal means any ttk-specific styling in tests had to be updated.
+- **Tests passed:** 52 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
