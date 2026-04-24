@@ -1,0 +1,31 @@
+@startuml sequence_main_usage
+
+participant "__main__.py" as Main
+participant "Calculator" as Calc
+
+Main -> Main : main()
+activate Main
+
+Main -> Calc : <<create>>
+activate Calc
+
+Main ->> Calc : add(10, 5)
+Calc -->> Main : 15
+Main -> Main : print(15)
+
+Main ->> Calc : subtract(10, 5)
+Calc -->> Main : 5
+Main -> Main : print(5)
+
+Main ->> Calc : multiply(10, 5)
+Calc -->> Main : 50
+Main -> Main : print(50)
+
+Main ->> Calc : divide(10, 5)
+Calc -->> Main : 2.0
+Main -> Main : print(2.0)
+
+deactivate Calc
+deactivate Main
+
+@enduml

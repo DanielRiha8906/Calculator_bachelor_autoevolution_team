@@ -1,0 +1,16 @@
+@startuml activity_divide_flow
+
+start
+
+:Receive a, b;
+
+if (b == 0?) then (yes)
+    :Raise ZeroDivisionError;
+    stop
+else (no)
+    :Compute a / b;
+    :Return float result;
+    stop
+endif
+
+@enduml
