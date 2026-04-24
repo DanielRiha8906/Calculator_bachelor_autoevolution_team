@@ -42,4 +42,4 @@ Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
   - `artifacts/activity_diagram.puml` — new activity diagram for calculation operation flow
   - `artifacts/sequence_diagram.puml` — new sequence diagram for calculator usage sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
