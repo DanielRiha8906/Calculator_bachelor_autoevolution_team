@@ -59,3 +59,23 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Preserving the legacy `display_result` is essential: existing tests call it with 4 positional args; removing or renaming it would break the prior test suite.
   - The OPERATIONS dict acts as a self-documenting registry — arity, method name, display symbol, and description in one place makes future extension trivial.
 - **Test result:** pending VERIFY phase.
+
+### 2026-04-24 — issue-389: add non-interactive CLI mode
+
+- **Task:** Implement `main_cli_noninteractive(args: list[str]) -> int` in `src/cli.py` and add mode detection in `src/__main__.py`; create `calculator/` top-level package so `python -m calculator` works from the project root. Satisfy 34 failing tests in `tests/test_cli_noninteractive.py`.
+- **Files changed:** `src/cli.py`, `src/__main__.py`, `calculator/__init__.py` (new), `calculator/__main__.py` (new)
+- **Changes made:**
+  - Added `import sys` to `src/cli.py`.
+  - Extended `OPERATIONS` dict with four new word-based keys (`"add"`, `"subtract"`, `"multiply"`, `"divide"`) pointing to the same Calculator methods as the symbol-based keys (`"+"`, `"-"`, `"*"`, `"/"`). Existing keys preserved for backward compatibility.
+  - Added `_USAGE` module-level constant (multi-line usage string) and implemented `main_cli_noninteractive(args: list[str]) -> int`:
+    - Returns 1 (stderr error) when `args` is empty.
+    - Returns 0 (stdout usage) for `--help` / `-h`.
+    - Returns 1 for unknown operation name, wrong operand count, non-numeric operand, or any Calculator exception (ZeroDivisionError, ValueError, TypeError, Exception).
+    - Returns 0 and prints result on success.
+  - Updated `src/__main__.py`: added `import sys`, imported `main_cli_noninteractive`, added `if len(sys.argv) > 1: sys.exit(main_cli_noninteractive(sys.argv[1:]))` before the interactive branch.
+  - Created `calculator/__init__.py` (empty alias package) and `calculator/__main__.py` that delegates to `src.cli` so `python -m calculator` works from the project root without an installed package.
+- **Patterns found:**
+  - Subprocess integration tests used `python -m calculator` (not `python -m src`). The `src/` package is not exposed as `calculator` by name on the system Python path, so creating a thin `calculator/` top-level package is the minimal fix — no `setup.py`/`pyproject.toml` changes needed.
+  - The OPERATIONS dict needed word aliases (`"add"` etc.) alongside symbol aliases (`"+"`); the tests drove operation names derived from Calculator method names, not the symbols used in interactive mode.
+  - All error output goes to `sys.stderr` so pytest's `capsys.readouterr().err` can assert on it; printing to stdout would cause `err == ""` assertion failures in the error test cases.
+- **Test result:** 155/155 passed (34 new + 121 existing).

@@ -1,6 +1,15 @@
-import sys
+"""Entry point for `python -m calculator`.
 
-from .cli import run_calculator, display_error, main_cli_noninteractive
+Delegates to the src package main() to avoid duplicating logic.
+"""
+
+import sys
+import os
+
+# Ensure the project root is on the path so `src` is importable.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.cli import main_cli_noninteractive, run_calculator, display_error
 
 
 def main() -> None:

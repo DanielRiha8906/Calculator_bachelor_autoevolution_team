@@ -1,4 +1,21 @@
 
+## Run: Issue #389 — V3 Task 7 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-389-cli-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — added `main_cli_noninteractive()` function, word-based operation aliases, `_USAGE` constant
+  - `src/__main__.py` — added mode detection (CLI vs interactive) based on sys.argv
+  - `calculator/__init__.py` — new thin package enabling `python -m calculator`
+  - `calculator/__main__.py` — new entry point for `python -m calculator`
+  - `tests/test_cli_noninteractive.py` — 34 new tests covering all operations, error cases, and subprocess integration
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+- **Purpose:** Add non-interactive CLI mode so the calculator can be used from bash (e.g., `python -m calculator add 2 3`)
+- **Risks:** None — additive change; interactive mode untouched; all existing tests preserved
+- **Tests passed:** 155 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-371-division-incorrect-inputs

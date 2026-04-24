@@ -4,6 +4,7 @@ Provides functions to prompt the user for operands and operator,
 display results, and orchestrate a full calculation workflow.
 """
 
+import sys
 from .calculator import Calculator
 
 OPERATIONS = {
@@ -11,6 +12,10 @@ OPERATIONS = {
     "-": (2, "subtract", "-", "Subtraction"),
     "*": (2, "multiply", "*", "Multiplication"),
     "/": (2, "divide", "/", "Division"),
+    "add": (2, "add", "+", "Addition"),
+    "subtract": (2, "subtract", "-", "Subtraction"),
+    "multiply": (2, "multiply", "*", "Multiplication"),
+    "divide": (2, "divide", "/", "Division"),
     "square": (1, "square", "square", "Square (x^2)"),
     "cube": (1, "cube", "cube", "Cube (x^3)"),
     "sqrt": (1, "square_root", "sqrt", "Square root"),
@@ -155,7 +160,28 @@ def run_calculator() -> float:
         raise
 
 
-def main_cli_noninteractive(args: list) -> int:
+_USAGE = (
+    "Usage: calculator <operation> [operand1] [operand2]\n"
+    "\n"
+    "Binary operations (require two operands):\n"
+    "  add, +           Addition\n"
+    "  subtract, -      Subtraction\n"
+    "  multiply, *      Multiplication\n"
+    "  divide, /        Division\n"
+    "  power            Power (x^y)\n"
+    "\n"
+    "Unary operations (require one operand):\n"
+    "  square           Square (x^2)\n"
+    "  cube             Cube (x^3)\n"
+    "  sqrt             Square root\n"
+    "  cbrt             Cube root\n"
+    "  factorial        Factorial\n"
+    "  log              Base-10 logarithm\n"
+    "  ln               Natural logarithm\n"
+)
+
+
+def main_cli_noninteractive(args: list[str]) -> int:
     """Non-interactive CLI mode: parse arguments and perform calculation.
 
     Takes a list of command-line arguments (operation and operands) and
@@ -169,10 +195,68 @@ def main_cli_noninteractive(args: list) -> int:
 
     Returns:
         Exit code (0 for success, 1 for error)
-
-    Raises:
-        ValueError: If domain error occurs (e.g., sqrt of negative)
-        ZeroDivisionError: If division by zero is attempted
     """
-    # Placeholder: to be implemented by python-code-implementer
+    if not args:
+        print("Error: No operation specified.", file=sys.stderr)
+        print(_USAGE, file=sys.stderr)
+        return 1
+
+    operation_name = args[0]
+
+    if operation_name in ("--help", "-h"):
+        print(_USAGE)
+        return 0
+
+    if operation_name not in OPERATIONS:
+        print(
+            f"Error: Unknown operation '{operation_name}'. "
+            f"Valid operations: {', '.join(OPERATIONS.keys())}",
+            file=sys.stderr,
+        )
+        return 1
+
+    arity, method_name, _symbol, _description = OPERATIONS[operation_name]
+    operand_args = args[1:]
+
+    if arity == 1 and len(operand_args) != 1:
+        print(
+            f"Error: Operation '{operation_name}' requires exactly 1 operand, "
+            f"got {len(operand_args)}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if arity == 2 and len(operand_args) != 2:
+        print(
+            f"Error: Operation '{operation_name}' requires exactly 2 operands, "
+            f"got {len(operand_args)}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        operands = [float(o) for o in operand_args]
+    except ValueError as exc:
+        print(f"Error: Invalid operand — {exc}", file=sys.stderr)
+        return 1
+
+    calc = Calculator()
+    method = getattr(calc, method_name)
+
+    try:
+        result = method(*operands)
+    except ZeroDivisionError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except TypeError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:  # noqa: BLE001
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print(result)
     return 0
