@@ -157,3 +157,14 @@ Duration: 318.7s | Cost: $0.692764 USD | Turns: 5
 - **Tests passed:** 194 passed, 0 failed
 
 Duration: 538.3s | Cost: $1.167164 USD | Turns: 20
+
+## Run: update-diagrams — CLI Interface Diagrams (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — new class diagram for CLI module and relationships
+  - `artifacts/activity_diagram_cli.puml` — new activity diagram for run_cli() execution flow
+  - `artifacts/sequence_diagram_cli.puml` — new sequence diagram for CLI invocation scenarios
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

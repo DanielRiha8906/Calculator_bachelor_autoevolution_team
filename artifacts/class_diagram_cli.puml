@@ -1,0 +1,76 @@
+@startuml
+title CLI Interface — Class Diagram (issue #391)
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+  .. Binary Operations ..
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b): float
+  + power(base, exponent)
+  .. Unary Operations ..
+  + factorial(n: int): int
+  + square(x): int|float
+  + cube(x): int|float
+  + sqrt(x): float
+  + cbrt(x): float
+  + log10(x): float
+  + ln(x): float
+}
+
+class OperationRegistry {
+  - _calculator: Calculator
+  - _operations: dict[str, int]
+  - _sorted_names: List[str]
+  --
+  + __init__(calculator: Calculator)
+  + get_operations(): List[str]
+  + get_arity(operation_name: str): int
+  + call(operation_name: str, *args): Any
+}
+
+package "cli (module)" {
+  class parse_cli_operand <<function>> {
+    + parse_cli_operand(operand_str: str): Union[int, float]
+  }
+  class run_cli <<function>> {
+    + run_cli(argv: list[str] | None = None): int
+  }
+}
+
+package "interactive (module)" {
+  class parse_operand <<function>> {
+    + parse_operand(user_input: str): Union[int, float]
+  }
+  class run_interactive_session <<function>> {
+    + run_interactive_session(calculator: Calculator = None): None
+  }
+}
+
+package "__main__ (module)" {
+  class main <<function>> {
+    + main(): None
+  }
+}
+
+OperationRegistry *--> Calculator : holds instance
+
+run_cli --> Calculator : instantiates
+run_cli --> OperationRegistry : instantiates
+run_cli ..> parse_cli_operand : calls per operand
+
+run_interactive_session --> Calculator : creates if None
+run_interactive_session --> OperationRegistry : instantiates
+run_interactive_session ..> parse_operand : calls per operand
+
+main ..> run_interactive_session : calls
+
+note right of run_cli
+  Returns 0 on success.
+  Returns 1 on any error
+  (prints to stderr).
+end note
+
+@enduml

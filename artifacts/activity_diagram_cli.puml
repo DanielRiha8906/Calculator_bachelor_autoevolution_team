@@ -1,0 +1,70 @@
+@startuml
+title run_cli() — Execution Flow (issue #391)
+
+start
+
+:run_cli(argv=None);
+
+if (argv is None?) then (yes)
+  :argv = sys.argv[1:];
+endif
+
+if (argv empty?) then (yes)
+  :print usage to stderr;
+  :return 1;
+  stop
+endif
+
+:operation_name = argv[0]
+operand_args = argv[1:];
+
+:Instantiate Calculator()
+Instantiate OperationRegistry(calculator);
+
+if (operation_name in registry?) then (no)
+  :print "Error: Unknown operation" to stderr;
+  :return 1;
+  stop
+endif
+
+:arity = registry.get_arity(operation_name);
+
+if (len(operand_args) == arity?) then (no)
+  :print arity mismatch error to stderr;
+  :return 1;
+  stop
+endif
+
+:operands = [];
+
+fork
+  :for each raw operand string;
+  :try parse_cli_operand(raw);
+  if (parse OK?) then (yes)
+    :append value to operands;
+  else (no / ValueError)
+    :print "Error: Invalid operand" to stderr;
+    :return 1;
+    stop
+  endif
+fork again
+  note right
+    All operands are
+    parsed sequentially
+  end note
+end fork
+
+:try registry.call(operation_name, *operands);
+
+if (exception raised?) then (yes)
+  :print error message to stderr
+  (ZeroDivisionError / ValueError / other);
+  :return 1;
+  stop
+else (no)
+  :print result to stdout;
+  :return 0;
+  stop
+endif
+
+@enduml
