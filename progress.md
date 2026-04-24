@@ -75,4 +75,4 @@ Duration: 200.6s | Cost: $0.439166 USD | Turns: 15
   - `artifacts/activity_diagram_math_operations.puml` — activity flows for domain-validated unary (square_root) and binary divide operations
   - `artifacts/sequence_diagram_calculator_usage.puml` — sequence diagram showing success and error paths for unary and binary operations
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 187.1s | Cost: $0.457206 USD | Turns: 4
