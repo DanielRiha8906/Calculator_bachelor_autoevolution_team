@@ -1,4 +1,20 @@
 
+## Run: Issue #377 — V3 Task 3 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-377-factorial
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added `import math` and `factorial(self, n: int) -> int` method to Calculator class
+  - `tests/test_calculator.py` — added 11 factorial test cases in TestFactorial class covering 0!, 1!, small/large positives, negative inputs, and invalid types
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+- **Purpose:** Add factorial operation to the calculator (issue #377); implementation delegates to math.factorial with input validation for type and sign
+- **Risks:** None — purely additive change, no existing methods modified
+- **Tests passed:** 19 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-371-division-incorrect-inputs
