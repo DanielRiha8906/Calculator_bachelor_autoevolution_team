@@ -188,3 +188,14 @@ Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
   - `artifacts/sequence_interactive_session.puml` — sequence diagram for interactive session iteration
 
 Duration: 272.2s | Cost: $0.589015 USD | Turns: 4
+
+## Run: update-diagrams — Operation History Diagrams (2026-04-24)
+
+- **Branch:** task/issue-396-operation-history
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_history.puml` — class diagram showing Calculator and OperationHistory with Path composition and __main__ dependencies
+  - `artifacts/activity_diagram_interactive_history.puml` — activity diagram for interactive mode with history command and operation recording flow
+  - `artifacts/sequence_diagram_history.puml` — sequence diagrams for history command and successful calculation recording
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
