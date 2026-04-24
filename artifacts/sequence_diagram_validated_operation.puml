@@ -1,0 +1,38 @@
+@startuml
+title Validated Operation — log10 Happy Path and Error Path
+
+actor Client
+participant "Calculator" as calc
+participant "math\n(stdlib)" as math
+participant "ValueError" as err
+
+== Scenario 1: Happy Path — log10(100) ==
+
+Client ->> calc : log10(100)
+activate calc
+
+calc -> calc : check x > 0\n[100 > 0: true]
+
+calc ->> math : math.log10(100)
+activate math
+math -->> calc : 2.0
+deactivate math
+
+calc -->> Client : 2.0
+deactivate calc
+
+== Scenario 2: Error Path — log10(-5) ==
+
+Client ->> calc : log10(-5)
+activate calc
+
+calc -> calc : check x > 0\n[-5 > 0: false]
+
+calc ->> err : raise ValueError("x must be positive")
+activate err
+err -->> Client : ValueError propagates
+deactivate err
+
+deactivate calc
+
+@enduml

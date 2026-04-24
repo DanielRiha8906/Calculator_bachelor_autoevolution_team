@@ -81,3 +81,14 @@ Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
   - `artifacts/sequence_diagram.puml` — added factorial alt block showing error and success paths
 
 Duration: 163.2s | Cost: $0.420227 USD | Turns: 14
+
+## Run: update-diagrams — Advanced Math Operations Diagrams (2026-04-24)
+
+- **Branch:** task/issue-382-advanced-math-ops
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — full Calculator class diagram with all 12 methods grouped by category
+  - `artifacts/activity_diagram_calculation_flow.puml` — activity diagram with all 5 calculation/validation execution paths
+  - `artifacts/sequence_diagram_validated_operation.puml` — sequence diagram for log10 happy path and error path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

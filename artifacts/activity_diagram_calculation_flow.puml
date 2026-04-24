@@ -1,0 +1,71 @@
+@startuml
+title Calculator Calculation Flow — All Execution Paths
+
+start
+
+:Receive operation and arguments;
+
+fork
+  group Unvalidated Path
+    :add / subtract / multiply\n/ square / cube / power;
+    :Apply arithmetic expression\n(+, -, *, **, **2, **3);
+    :Return numeric result;
+  end group
+
+fork again
+  group sqrt Domain Check
+    :sqrt(x);
+    if (x < 0?) then (yes)
+      #pink:Raise ValueError;
+    else (no)
+      :math.sqrt(x);
+      :Return float result;
+    endif
+  end group
+
+fork again
+  group log10 / ln Domain Check
+    :log10(x) or ln(x);
+    if (x <= 0?) then (yes)
+      #pink:Raise ValueError;
+    else (no)
+      :math.log10(x) or math.log(x);
+      :Return float result;
+    endif
+  end group
+
+fork again
+  group cbrt Conditional
+    :cbrt(x);
+    if (x < 0?) then (yes)
+      :Negate x, compute\nmath.pow(-x, 1/3),\nnegate result;
+    else (no)
+      :math.pow(x, 1/3);
+    endif
+    :Return float result;
+  end group
+
+fork again
+  group factorial Strict Validation
+    :factorial(n);
+    if (n is bool, float,\nstr, or None?) then (yes)
+      #pink:Raise ValueError;
+    else (no)
+      if (not isinstance(n, int)?) then (yes)
+        #pink:Raise ValueError;
+      else (no)
+        if (n < 0?) then (yes)
+          #pink:Raise ValueError;
+        else (no)
+          :result = 1\nfor i in 2..n: result *= i;
+          :Return int result;
+        endif
+      endif
+    endif
+  end group
+
+end fork
+
+stop
+
+@enduml
