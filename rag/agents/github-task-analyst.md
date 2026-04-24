@@ -148,3 +148,55 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - **Dependencies:** Relies on existing calculator.py history internals from PR #443 (no changes needed there); augments CLI behavior
 - **Test Implications:** New tests needed for loop behavior, file I/O, history display command, user prompts (beyond existing 30 in-memory history tests)
 - **Pattern Insight:** This PR is part of V3 Task 9 (#395), coming after Task 8 (validation/retry). The unresolved feedback suggests the initial PR implementation was incomplete relative to the task requirements. The feedback prioritizes UX (user discovery of history) and persistence (history.txt) equally with the in-memory tracking already implemented.
+
+### Cycle: 2026-04-24 — Issue #398: V3 Task 10 - Naive/team
+- **Issue Title:** V3 Task 10 - Naive/team
+- **Task:** Add error logging to the calculator
+- **Label:** ai-implement:naive-team
+- **Status:** OPEN
+- **Created:** 2026-04-24T13:33:28Z
+- **Updated:** 2026-04-24T19:36:06Z
+- **Position in V3 Cycle:** Task 10 is the final task in the V3 sequence (Tasks 1-10 all labeled ai-implement:naive-team). Follows Task 9 (history with persistence). Task ordering: 1(div tests) → 2(calc tests) → 3(factorial) → 4(advanced math) → 5(user input) → 7(CLI) → 8(validation/retry) → 9(history+persistence) → 10(error logging).
+- **Minimal Description:** Single sentence body: "Add error logging to the calculator." No explicit acceptance criteria, test specs, or implementation guidance.
+- **Context Inferred:** This is a final observability/hardening feature coming after all core functionality (calcs, user I/O, validation, history) is in place. Given prior task patterns, error logging should capture: calculation errors (div by zero, invalid factorial, negative sqrt), invalid input attempts (from validation #392), retry attempts, and system errors (file I/O if history persists).
+- **Key Functional Requirements (Must Have):**
+  1. Capture and log calculation errors (division by zero, invalid factorial, negative square root, etc.)
+  2. Capture and log invalid user input attempts (non-numeric operands, invalid operation names, missing operands)
+  3. Capture and log retry attempts triggered by validation (Task #392)
+  4. Log error messages with context (operation, operands, error type, timestamp)
+  5. Support both interactive mode (#383) and CLI mode (#389)
+- **Non-Functional Requirements (Should Have):**
+  1. Logging should not interfere with normal calculator operation or user interaction
+  2. Use Python's standard logging module (or equivalent)
+  3. Logs should be persistent (written to file) for post-session analysis, similar to history.txt
+  4. Logging should be configurable (enable/disable, log level) or use sensible defaults
+- **Technical Constraints:**
+  1. Use Python `logging` module
+  2. Must not break existing tests (215 passing as of PR #443)
+  3. Compatible with calculator.py, interactive input, CLI, validation, history persistence
+  4. Should be thin wrapper around existing code (no core logic changes)
+- **Dependencies:**
+  - Task #392 (input validation/retry logic) — error logging should capture validation failures
+  - Task #395 (operation history/persistence) — error logging may follow similar persistence model (file I/O)
+  - Task #389 (CLI mode) and #383 (interactive input) — error logging must integrate with both
+- **Out of Scope:**
+  - Changing core calculation logic
+  - Remote/external logging systems
+  - User-facing error messages (handled by Task #392 validation)
+- **Open Ambiguities:**
+  1. **Log file location:** Root dir, .logs/ subdirectory, or configurable?
+  2. **Log format:** Structured JSON, plain text, or Python logging default format?
+  3. **Log retention:** Single file with appending, rotation, or clear on startup?
+  4. **Log level granularity:** Uniform logging or differentiate warnings/errors/critical?
+  5. **What constitutes an error:** Do user retries count as separate log entries or only final failures?
+  6. **Integration with history:** Separate error.log file or merged with history.txt?
+  7. **Logging scope:** Only user-triggered errors or also internal/debug logging?
+- **Recommended Working Assumptions:**
+  1. Use Python `logging` module with file + console handlers
+  2. Log file: `error.log` in repository root (consistent with likely `history.txt` location)
+  3. Format: timestamp, log level, operation/context, error message
+  4. Log all error conditions: invalid input, calculation failure, system errors
+  5. Keep logging separate from operation history (distinct files)
+  6. No log rotation/purging required for Naive variant
+  7. Implementation: Wrap error-prone operations with try-except + logger calls
+- **Recurring Pattern Insight:** V3 cycle follows a logical progression: core features (Tasks 1–4) → user interaction (5, 7–8) → observability (9–10). Task 10 (error logging) is the final observability feature after history (Task 9). Both Tasks 9 and 10 use similar patterns: persistent file I/O (history.txt, error.log) and integration across all existing modes.
