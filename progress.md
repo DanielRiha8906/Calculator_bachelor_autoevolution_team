@@ -12,7 +12,7 @@
 - **Risks:** src/__main__.py not refactored to delegate to Application due to existing test mocks targeting __main__ internals; full delegation is a follow-up task
 - **Tests passed:** 208 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 512.7s | Cost: $1.159136 USD | Turns: 17
 
 ## Run: update-diagrams — Error Logging UML Diagrams (2026-04-24)
 
