@@ -1,0 +1,36 @@
+@startuml sequence_registry_dispatch
+
+title Registry to Operation Dispatch
+
+participant Caller
+participant OperationRegistry as registry
+participant Operation as op
+participant InputValidator as validator
+
+Caller ->> registry : get("add")
+activate registry
+registry -->> Caller : ArithmeticAdd instance
+deactivate registry
+
+Caller ->> op : arity
+activate op
+op -->> Caller : 2
+deactivate op
+
+note over Caller : validate len(operands) == arity
+
+loop for each raw operand
+    Caller ->> validator : parse_number(raw)
+    activate validator
+    validator -->> Caller : float value
+    deactivate validator
+end
+
+Caller ->> op : execute(*operands)
+activate op
+op -->> Caller : result : float
+deactivate op
+
+note over Caller : print result\nlog to OperationHistory
+
+@enduml

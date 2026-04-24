@@ -1,0 +1,39 @@
+@startuml activity_calculation_flow
+
+title CLI Calculation Flow
+
+start
+
+:cli_mode() called;
+
+if (len(sys.argv) > 1?) then (yes)
+    :CLIInput.get_operation_and_operands()\nextract op_name and raw operands from argv;
+    :_build_registry()\ninstantiate all 13 operations\nand register each by name;
+    if (registry.has(op_name)?) then (yes)
+        :registry.get(op_name)\nreturns Operation instance;
+        if (len(operands) == op.arity?) then (yes)
+            :InputValidator.parse_number(raw)\nfor each operand;
+            if (all operands valid?) then (yes)
+                :op.execute(*operands)\ncomputes result;
+                :print result to stdout;
+                :OperationHistory.record()\nlog to history file;
+            else (no)
+                :ErrorLog.log_error("validation", ...);
+                :print error message;
+                stop
+            endif
+        else (no)
+            :print arity mismatch error;
+            stop
+        endif
+    else (no)
+        :print unknown operation error;
+        stop
+    endif
+else (no)
+    :_run_interactive_loop(registry, history_file_path);
+endif
+
+stop
+
+@enduml

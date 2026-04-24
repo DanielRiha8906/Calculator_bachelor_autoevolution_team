@@ -305,3 +305,15 @@ Duration: 211.4s | Cost: $0.558391 USD | Turns: 4
   - `artifacts/sequence_diagram_interactive_calculation.puml` — new sequence diagram for one successful interactive calculation with history recording
 
 Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
+
+## Run: update-diagrams — Modular Calculator Package UML (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_operations.puml` — Operation ABC hierarchy and OperationRegistry composition
+  - `artifacts/class_calculator_package.puml` — Calculator package structure with utility classes
+  - `artifacts/activity_calculation_flow.puml` — CLI calculation activity flow
+  - `artifacts/sequence_registry_dispatch.puml` — Registry to Operation dispatch sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
