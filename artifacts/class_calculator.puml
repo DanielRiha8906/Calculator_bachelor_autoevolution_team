@@ -7,11 +7,27 @@ class Calculator {
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
     + divide(a, b) : float
+    + factorial(n: int) : int
 }
 
 note right of Calculator::divide
   raises ZeroDivisionError
   when b == 0
 end note
+
+note right of Calculator::factorial
+  strict type + sign validation;
+  raises ValueError for non-int,
+  bool, float, str, None, or n < 0;
+  delegates to math.factorial(n)
+end note
+
+package "Python stdlib" {
+    class math <<module>> {
+        + factorial(n: int) : int
+    }
+}
+
+Calculator --> math : uses factorial()
 
 @enduml

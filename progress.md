@@ -45,3 +45,27 @@ Duration: 209.6s | Cost: $0.525387 USD | Turns: 24
   - `artifacts/sequence_diagram.puml` — new sequence diagram showing pytest/fixture/Calculator interaction for normal and division-by-zero tests
 
 Duration: 207.8s | Cost: $0.428801 USD | Turns: 4
+
+## Run: Issue #378 — V3 Task 3 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-378-factorial
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added factorial(self, n: int) -> int method with input validation and math.factorial delegation
+  - `tests/test_calculator.py` — added TestCalculatorFactorial class with 10 tests covering valid inputs, boundary cases, and error handling
+- **Purpose:** Add factorial as a supported calculator operation; raises ValueError for negative integers, floats, strings, and None
+- **Risks:** None — additive change only; no existing methods modified
+- **Tests passed:** 33 passed, 0 failed
+
+Duration: 276.8s | Cost: $0.627102 USD | Turns: 21
+
+## Run: update-diagrams — Add factorial operation diagrams (2026-04-24)
+
+- **Branch:** task/issue-378-factorial
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — class diagram updated with new `factorial` method and `math` dependency
+  - `artifacts/activity_factorial.puml` — new activity diagram for `factorial()` validation and computation flow
+  - `artifacts/component_calculator.puml` — component diagram showing Calculator and math stdlib relationship
+
+Duration: 157.2s | Cost: $0.412103 USD | Turns: 7

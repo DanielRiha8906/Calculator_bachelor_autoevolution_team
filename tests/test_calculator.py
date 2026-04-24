@@ -138,3 +138,57 @@ class TestCalculatorDivide:
         """Verify zero numerator is handled correctly."""
         result = calculator.divide(0, 5)
         assert result == 0.0
+
+
+class TestCalculatorFactorial:
+    """Test suite for Calculator.factorial() method."""
+
+    def test_factorial_zero(self, calculator):
+        """Verify factorial of zero returns 1."""
+        result = calculator.factorial(0)
+        assert result == 1
+
+    def test_factorial_one(self, calculator):
+        """Verify factorial of one returns 1."""
+        result = calculator.factorial(1)
+        assert result == 1
+
+    def test_factorial_small_positive(self, calculator):
+        """Verify factorial of small positive integer."""
+        result = calculator.factorial(5)
+        assert result == 120
+
+    def test_factorial_moderate_positive(self, calculator):
+        """Verify factorial of moderate positive integer."""
+        result = calculator.factorial(10)
+        assert result == 3628800
+
+    def test_factorial_twenty(self, calculator):
+        """Verify factorial of twenty."""
+        result = calculator.factorial(20)
+        assert result == 2432902008176640000
+
+    def test_factorial_negative_raises_error(self, calculator):
+        """Verify that factorial of negative integer raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(-1)
+
+    def test_factorial_negative_five_raises_error(self, calculator):
+        """Verify that factorial of -5 raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(-5)
+
+    def test_factorial_float_raises_error(self, calculator):
+        """Verify that factorial of float raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(5.5)
+
+    def test_factorial_string_raises_error(self, calculator):
+        """Verify that factorial of string raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial("5")
+
+    def test_factorial_none_raises_error(self, calculator):
+        """Verify that factorial of None raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(None)

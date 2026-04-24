@@ -128,3 +128,80 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - No changes to production code were needed; existing implementation already satisfies all requirements.
 - All 23 test specifications are passing.
 - Full test suite is verified as stable and ready for commit.
+
+### Cycle 5: 2026-04-24 — Issue #378 Factorial Method (WRITE phase)
+
+**Task:** Write failing tests for Calculator.factorial() covering 10 scenarios: factorial(0), factorial(1), small positive (5), moderate positive (10), larger value (20), and error handling for negative integers, floats, strings, and None.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test class `TestCalculatorFactorial` in existing test file.
+2. 10 new tests total covering:
+   - 5 happy-path tests: zero, one, small positive (5), moderate (10), large (20)
+   - 5 error-handling tests: negative values (-1, -5), float (5.5), string ("5"), None
+3. All error tests use `pytest.raises(ValueError)` for assertion.
+4. Reused existing calculator fixture.
+5. Named tests descriptively following convention: `test_factorial_<scenario>`
+
+**Patterns Found:**
+- factorial() method does not exist yet on Calculator class.
+- All 10 tests fail with AttributeError (expected behavior for WRITE phase).
+- Test structure is consistent with existing test classes in the suite.
+
+**Test Results:**
+- 10 new tests written
+- 10 tests FAILED (as expected — implementation does not exist)
+- 0 tests passed
+- Failure reason: AttributeError: 'Calculator' object has no attribute 'factorial'
+- Duration: 0.05s
+
+**Status:** READY FOR HANDOFF — All tests fail as expected. Implementation required.
+
+**Escalations:** None. All failures are due to missing method (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Implement Calculator.factorial() method to satisfy all 10 test specifications.
+- Method must handle non-negative integers (0, 1, 5, 10, 20) and return correct factorial values.
+- Method must raise ValueError for: negative integers (-1, -5), floats (5.5), strings ("5"), and None.
+- 10 failing tests are ready for implementation verification.
+
+### Cycle 6: 2026-04-24 — Issue #378 Factorial Method (VERIFY phase)
+
+**Task:** Run full test suite to confirm all tests pass after implementer completion.
+
+**Phase:** VERIFY
+
+**Test Results:**
+- Total tests collected: 33
+- Passed: 33
+- Failed: 0
+- Errors: 0
+- Duration: 0.02s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- 6 tests for addition (positive integers, negative integers, mixed signs, floats, zero handling, zero+zero)
+- 6 tests for subtraction (positive integers, negative result, negative operands, floats, zero minuend, zero subtrahend)
+- 6 tests for multiplication (positive integers, negative integers, mixed signs, floats, by zero, by one)
+- 5 tests for division (by zero, normal, floats, negative divisor, zero dividend)
+- 10 tests for factorial (zero, one, small positive, moderate, large, negative errors, float error, string error, None error)
+
+**Implementation Verified:**
+- Calculator.factorial() method added to src/calculator.py
+- Import math statement added at module level
+- Type guard correctly rejects non-int types (float, string, None, bool)
+- Range guard correctly raises ValueError for negative integers
+- Delegates to math.factorial(n) for computation
+- All 10 new factorial tests pass
+- All 23 prior tests remain passing
+
+**Escalations:** None. All tests pass. No bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Cycle complete. Ready for PR and merge.
+- Implementation successfully satisfies all 10 test specifications.
+- Full test suite is verified as stable with 33 passing tests.
+- No regressions detected in existing tests.
+- Ready for commit and PR.
