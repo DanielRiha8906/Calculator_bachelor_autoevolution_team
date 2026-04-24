@@ -87,3 +87,96 @@ Implement `Calculator.factorial(self, n: int) -> int` in `/home/runner/work/Calc
 
 Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
+---
+
+### 2026-04-24 — Issue #385 — V3 Task 5 - Expert/team — Interactive User Input Session
+
+**Task:** Add interactive user input to calculator enabling operation selection, variable-arity operand input, result display, and multi-calculation session support.
+
+**Key Decisions:**
+- Create two new modules: `operation_registry.py` (operation discovery and arity metadata) and `interactive.py` (session handler)
+- Dynamic operation discovery via reflection on Calculator class using `inspect.signature()`
+- Unary detection: 1 non-self parameter; binary: 2 non-self parameters
+- Interactive session loop: operation prompt → operand prompts (based on arity) → calculation → result display → continue/exit prompt → loop or exit
+- Error handling: catch ValueError, ZeroDivisionError, and other exceptions; display error message; ask "Continue? (yes/no):" and allow recovery
+- Input parsing: attempt float() conversion; if fails, re-prompt with "Invalid input. Please enter a number."
+- Operation selection: numeric (0, 1, 2...) or name-based (TBD by implementer); invalid selection re-prompts
+- No modifications to Calculator methods; no changes to operation implementations
+- Existing hardcoded demo in `__main__.py` preserved; interactive mode added as new optional path
+
+**Architecture Observations (from source exploration):**
+- Calculator class (`/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/calculator.py`): 12 methods total
+  - Binary (5): add, subtract, multiply, divide, power
+  - Unary (7): factorial, square, cube, sqrt, cbrt, ln, log10
+- No existing operation registry; operations are bare methods on class
+- `__main__.py` currently calls hardcoded demo; no interactive entry point
+- Test file uses pytest fixture pattern with `calc` fixture; easily extensible
+- Trigonometric functions (sin, cos, tan, cot, asin, acos) mentioned in brief are NOT implemented; task uses only what exists
+
+**Patterns Found:**
+- Single-responsibility methods on Calculator class
+- Type hints already present on recent methods (factorial, square, cube, etc.)
+- Test organization by operation type works well
+- Input/output testing requires mocking of `builtins.input` and `builtins.print`
+
+**Test Specifications Provided to pytest-edge-tester (WRITE):**
+15 comprehensive interactive scenarios in `tests/test_interactive.py`:
+1. Binary operation (add) with valid operands → result displayed
+2. Unary operation (factorial) with valid operand → result displayed
+3. Unary operation (square) with valid operand → result displayed
+4. Invalid operation selection → re-prompt
+5. Non-numeric operand → re-prompt
+6. Domain error (sqrt of negative) → error message, ask continue, allow recovery
+7. Binary operation (divide) with valid operands → result displayed
+8. Zero division error → error message, ask continue
+9. Multiple calculations in session → both results shown, loop works
+10. Factorial with float operand → domain error
+11. Operation list displayed at start
+12. User chooses "Continue: yes" → loops correctly
+13. User chooses "Continue: no" → session exits
+14. Operand input with whitespace/type tolerance (if applicable)
+15. Float operands for binary operations → calculated correctly
+
+All tests mock `builtins.input` and `builtins.print` to control interaction flow.
+
+**Source Changes Plan for python-code-implementer:**
+1. Create `src/operation_registry.py`:
+   - Class `OperationRegistry(calculator: Calculator)`
+   - Methods: `get_operations() -> List[str]`, `get_arity(op_name: str) -> int`, `call(op_name: str, *args) -> Any`
+   - Uses `inspect.signature()` to determine arity
+   - Sorted operation list for consistent UI
+   - Full type hints
+
+2. Create `src/interactive.py`:
+   - Function `run_interactive_session(calculator: Calculator = None) -> None`
+   - Function `parse_operand(user_input: str) -> float | int` (attempts float conversion; raises ValueError on fail)
+   - Main loop: operation prompt → operand prompts → execute → display result or error → continue/exit
+   - All exception handling in loop; no unhandled exceptions leak
+   - Uses `input()` and `print()` for user interaction
+   - Full type hints
+
+3. Optionally modify `src/__main__.py`:
+   - Add import: `from src.interactive import run_interactive_session`
+   - Keep hardcoded `main()` unchanged (regression safety)
+   - Either: add conditional flag `--interactive` in `if __name__` block, OR add comment noting interactive mode availability
+   - Simplest: NO CHANGE to `__main__.py` is acceptable; interactive mode available as importable function
+
+**No Changes to `src/calculator.py`:**
+- All 12 existing methods remain unchanged
+- No type validation added to binary operations
+- No new methods added (trigonometric ops NOT included in this task)
+
+**Handoff to pytest-edge-tester (WRITE):**
+Write 15 test scenarios in `tests/test_interactive.py`. All tests must mock `builtins.input` (with list of user inputs in sequence) and `builtins.print` (to capture output). Each test calls `run_interactive_session(calculator)` or similar. Scenarios cover: valid calculations (unary/binary), invalid operation selection, non-numeric operands, domain errors, zero division, session loops, operation list display, continue/exit handling. All tests must FAIL initially (functions don't exist yet).
+
+**Handoff to python-code-implementer (upon tester's WRITE report):**
+Implement two new modules and optionally modify `__main__.py` per source changes plan above. Key requirements:
+- OperationRegistry must correctly identify arity (1 or 2) for all 12 operations
+- Interactive session must support the full flow: list → select → prompt operands → calculate → result/error → continue/exit
+- All exceptions caught and handled gracefully; user can recover from any error
+- Input parsing robust (float conversion, re-prompt on failure)
+- Operation selection validation (re-prompt on invalid)
+- Session loop correctly implements "Continue? (yes/no):" logic
+
+Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+

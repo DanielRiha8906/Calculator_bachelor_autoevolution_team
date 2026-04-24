@@ -92,3 +92,17 @@ Duration: 163.2s | Cost: $0.420227 USD | Turns: 14
   - `artifacts/sequence_diagram_validated_operation.puml` — sequence diagram for log10 happy path and error path
 
 Duration: 243.0s | Cost: $0.521679 USD | Turns: 5
+
+## Run: Issue #385 — V3 Task 5 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/operation_registry.py` — new module with OperationRegistry class for dynamic operation discovery and arity detection
+  - `src/interactive.py` — new module with run_interactive_session() for interactive multi-calculation sessions
+  - `tests/test_interactive.py` — 15 new tests covering all interactive session flows (binary/unary ops, error recovery, multi-calc sessions, input validation)
+- **Purpose:** Add interactive user input so the calculator can read the selected operation and operand values at runtime, supporting both unary and binary operations with multi-calculation session loops.
+- **Risks:** None — no changes to existing Calculator class or existing tests
+- **Tests passed:** 138 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
