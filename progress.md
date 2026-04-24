@@ -1,4 +1,17 @@
 
+## Run: Issue #407 — V3 Task 13 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-407-add-documentation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `README.md` — added comprehensive calculator documentation (overview, installation, usage, operations reference, error handling, architecture, history, retry info)
+  - `tests/test_documentation.py` — 16 new tests verifying documentation completeness and accuracy
+- **Purpose:** Add user-facing and developer-facing documentation for the calculator application covering all 12 operations, interaction modes, error handling, and module architecture
+- **Risks:** None — documentation-only change; no source code modified
+- **Tests passed:** 340 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #404 — V3 Task 12 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-404-refactor-modules
