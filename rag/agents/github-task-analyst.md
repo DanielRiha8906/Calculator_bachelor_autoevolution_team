@@ -41,3 +41,24 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Tester will write failing tests for valid (0, 1, positive integers) and invalid cases (negatives, floats, edge cases)
   - Implementer receives tester's failing test names and must implement factorial function + integration to make them pass
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #382: V3 Task 4 - Expert/team
+- **Task Type:** Feature expansion (add 8 new mathematical operations)
+- **Scope:** Add square, cube, square root, cube root, power, log₁₀, ln as calculator operations; handle domain errors and mathematical edge cases
+- **Key Patterns:**
+  - Clear operation list with explicit emphasis on edge cases (domain validation for sqrt/log/ln, negative cube root handling)
+  - No comments or linked issues; all requirements in issue body
+  - Explicit constraint: "avoid unrelated refactoring"
+  - Continuation of task progression (follows issues #376, #379)
+  - Mixed unary (6 ops) and binary (1 op) operation types; cube root requires special handling (negative domain valid unlike sqrt)
+- **Ambiguities Flagged:**
+  1. Power operation edge cases (0^0, negative base with fractional exponent) — no specification; assumed Python `**` semantics
+  2. Error type/signaling — not specified; assumed to match existing invalid-input handling (e.g., division by zero pattern)
+  3. Floating-point comparison tolerance — not specified; assumed to match existing test conventions
+  4. Negative zero handling — edge case not mentioned; presumed Python default semantics
+- **Handoff Notes:**
+  - Architect must explicitly clarify power operation behavior for edge cases (0^0, negative base + fractional exponent)
+  - Architect must produce test specs listing all 8 operations with normal and error cases; special attention to cube root (negative inputs must succeed) vs sqrt/log/ln (domain errors)
+  - Tester will write failing tests for each operation + edge case
+  - Implementer will integrate all operations into operation registry and make failing tests pass
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)

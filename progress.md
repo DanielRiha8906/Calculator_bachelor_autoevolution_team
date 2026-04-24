@@ -47,6 +47,19 @@ Duration: 360.3s | Cost: $0.703439 USD | Turns: 18
 
 Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
 
+## Run: Issue #382 — V3 Task 4 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-382-advanced-math-ops
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `import math` and 7 new methods: `square`, `cube`, `sqrt`, `cbrt`, `log10`, `ln`, `power` with domain validation for sqrt (rejects negative), log10 and ln (reject non-positive), and cube root supporting negative inputs
+  - `tests/test_calculator.py` — added 50 new tests covering all 7 operations with valid inputs, floating-point edge cases, and domain error handling
+- **Purpose:** Add advanced mathematical operations (square, cube, square root, cube root, power, log₁₀, ln) to the calculator, integrating them consistently with the existing pattern and handling critical domain edge cases.
+- **Risks:** None
+- **Tests passed:** 123 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Unit Test Suite PR #376 (2026-04-24)
 
 - **Branch:** task/issue-376-unit-test-suite
