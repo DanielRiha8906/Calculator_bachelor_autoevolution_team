@@ -138,3 +138,18 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - `open(filepath, "a")` per call is simpler and safer than a global `logging.FileHandler` when test isolation requires writing to a `tmp_path`-scoped filepath on each test invocation.
   - Exporting a sentinel `error_logger` object keeps the import line `from src.error_logger import error_logger, log_error` from raising ImportError even though the object itself is unused by the tests.
 - **Test result:** 278 passed, 1 skipped (pre-existing skip).
+
+### 2026-04-24 — issue-401: separate calculator logic from interface
+
+- **Task:** Create `src/interface.py` housing all CLI UI logic; convert `src/cli.py` to a backward-compat facade; update `src/batch_cli.py` to import from `interface`; satisfy 10 failing tests in `tests/test_separation.py`.
+- **Files changed:** `src/interface.py` (created), `src/cli.py` (replaced with facade), `src/batch_cli.py` (import line updated)
+- **Changes made:**
+  - Created `src/interface.py`: copied `MaxRetriesExceeded`, `OPERATIONS`, all helper functions (`_get_operation_arity`, `_get_calculator_method`, `_get_display_symbol`), all prompt functions, all display functions (`display_result`, `display_result_unary`, `display_result_binary`, `display_error`, `display_history`, `display_history_notification`), `_format_history_entry`, `persist_history_to_file`, and `run_calculator` verbatim from old `cli.py`. No mathematical calculations exist in this module — all math is delegated to `Calculator` methods via `getattr`.
+  - Replaced `src/cli.py` body with a single block of `from .interface import (...)` re-exports plus an `__all__` list. Module docstring explains it is a backward-compat facade.
+  - Changed the single import line in `src/batch_cli.py`: `from .cli import ...` → `from .interface import OPERATIONS, display_result_unary, display_result_binary`.
+  - `src/__main__.py` required no changes — it imports from `.cli`, which now proxies through to `.interface`.
+- **Patterns found:**
+  - The facade pattern (thin re-export module) is the least-disruptive way to introduce a new module boundary when many callers already depend on the old import path. An `__all__` list makes the re-export intent explicit and IDE-discoverable.
+  - No circular import risk: `interface` imports only `Calculator` (no CLI imports); `cli` imports only from `interface`; `batch_cli` imports from both `interface` and `calculator` — no cycle possible.
+  - Lazy `Calculator` instantiation in `run_calculator` (only when `calc is None`) is already the existing pattern; no module-level `Calculator` instance exists, satisfying `test_interface_lazy_calculator_init`.
+- **Test result:** 294 passed, 1 skipped (16 new tests in test_separation.py all pass).

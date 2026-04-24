@@ -271,3 +271,75 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 **Handoff Notes for Next Agent:**
 - **pytest-edge-tester (WRITE phase):** Write 10 failing test cases covering: (1) Interactive loop with 3+ operations per session (tests 1-3), (2) History file written and formatted correctly (tests 4-6), (3) User notification message displayed (tests 7-8), (4) Backward compatibility: batch mode unaffected, quit command works (tests 9-10). All 10 tests must initially fail. Expected: no changes to existing 30 history recording tests or 27 CLI prompt tests; all remain passing.
 - **python-code-implementer:** After tests are written and fail, implement per plan: (1) Add persist_history_to_file() and display_history_notification() functions to cli.py, (2) Modify run_calculator() signature to accept optional persistent Calculator, (3) Add "quit"/"exit" sentinel handling to prompt_for_operator(), (4) Implement interactive loop and history file persistence in __main__.py, (5) Optional: add "history" command. No changes to calculator.py or batch_cli.py. Target: all 10 new tests passing + all 57 existing tests (30 history + 27 CLI) passing = 67 total.
+
+### Cycle 7: 2026-04-24 — Issue #401 V3 Task 11 (Separate Calculator Logic from Interface)
+**Task:** Refactor to separate core calculation logic (Calculator class) from user interface concerns (prompts, display, error messages, operation routing, history persistence).
+
+**Analysis of Current State:**
+- `src/calculator.py`: Contains pure mathematical operations (11 methods) + history recording infrastructure. No UI imports. Clean separation on calc side.
+- `src/cli.py`: Contains ALL interactive UI logic: exception classes, operation metadata dict, prompt functions, display functions, history formatting/persistence, and main orchestration function `run_calculator()`.
+- `src/batch_cli.py`: Batch mode handler. Imports operation metadata and display functions from `cli.py`.
+- `src/__main__.py`: Entry point. Routes interactive vs batch modes. Imports UI functions from `cli.py`.
+- `tests/test_calculator.py`: Tests Calculator in isolation (pure math). No UI imports.
+- `tests/test_cli.py`: Tests interactive prompts, display functions, and run_calculator flow.
+- `tests/test_batch_cli.py`: Tests batch mode argument parsing and execution.
+- `tests/test_history.py`: Tests Calculator history recording.
+
+**Problem Identified:**
+- `calculator.py` is clean (no UI concerns), but `cli.py` is a monolith combining prompts, display, exception classes, operation metadata, and orchestration
+- `batch_cli.py` imports from `cli.py` to reuse operation metadata and display functions (indirect coupling through facade)
+- Clear module boundaries needed: Calculator has no UI; UI module has no business logic
+
+**Key Architectural Decisions:**
+1. **Create new `src/interface.py`** — Consolidate ALL user interface concerns here
+   - Move `MaxRetriesExceeded` exception from cli.py
+   - Move `OPERATIONS` dict from cli.py
+   - Move all prompt functions: `prompt_for_first_number`, `prompt_for_operator`, `prompt_for_second_number`
+   - Move all display functions: `display_result`, `display_result_unary`, `display_result_binary`, `display_error`, `display_history`, `display_history_notification`
+   - Move helper functions: `_get_operation_arity`, `_get_calculator_method`, `_get_display_symbol`, `_format_history_entry`
+   - Move persistence function: `persist_history_to_file`
+   - Move main orchestration: `run_calculator(calc, max_retries)`
+   - Import: `Calculator` from `.calculator`, only standard library (sys, math, builtins.input)
+
+2. **Convert `src/cli.py`** to a backward-compatibility facade
+   - Remove ALL implementation code (prompts, displays, operations, exceptions)
+   - Import everything from `interface.py` and re-export it
+   - Maintain existing docstring explaining facade purpose
+   - Ensures no breaking changes: `from src.cli import run_calculator` still works
+
+3. **Update `src/batch_cli.py`** to import from interface, not cli
+   - Change: `from .cli import OPERATIONS, display_result_unary, display_result_binary`
+   - To: `from .interface import OPERATIONS, display_result_unary, display_result_binary`
+   - No behavioral changes; only import source changes
+
+4. **Verify `src/__main__.py`** imports work
+   - Current imports from `cli` continue working due to facade
+   - No changes required (backward compatible)
+   - Optional: update to import from `interface` directly for clarity (not required)
+
+5. **No changes to calculator.py**
+   - Already clean; no UI imports or concerns
+   - History recording is core business logic, not UI
+
+**Separation of Concerns Achieved:**
+- **`src/calculator.py`**: Pure math operations + history recording (zero UI concerns)
+- **`src/interface.py`**: ALL user interaction, prompts, display, error messages, operation routing, history persistence (zero business logic)
+- **`src/cli.py`**: Backward-compatibility facade (re-exports interface for existing imports)
+- **`src/batch_cli.py`**: Batch mode handler (imports from interface, not through cli facade)
+- **`src/__main__.py`**: Entry point and mode routing (no changes needed)
+
+**Patterns Found:**
+- Facade pattern: cli.py becomes a re-export facade for backward compatibility
+- One-way dependency: interface → calculator (no cycles)
+- Complete separation: calculator has zero UI imports; interface has zero math implementations
+
+**Risks & Mitigations:**
+- Risk: Import cycles if interface imports from cli. Mitigation: interface only imports Calculator; no cycle possible.
+- Risk: Existing imports from cli.py break. Mitigation: cli.py re-exports everything; zero breaking changes.
+- Risk: Interface.py becomes too large. Mitigation: Acceptable for current scope; future splits (interactive.py, display.py) possible if needed.
+- Risk: Tests import from cli directly and break. Mitigation: cli still exports everything; tests pass unchanged.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 15 test cases covering: (1) Separation verification (4 tests: calculator has no UI imports, interface exports all functions, operations dict exists, exception exists), (2) Backward compatibility (3 tests: imports from cli.py still work, run_calculator works same as before, batch_cli imports from interface), (3) Functional equivalence (4 tests: prompts work, displays work, persistence works, orchestration works), (4) No regressions (4 tests: all existing calculator tests pass, all existing cli tests pass, all existing batch_cli tests pass, all existing history tests pass). All new tests must initially fail or verify pre-conditions. Expected: 15 tests covering architecture + verification of no test regressions.
+- **python-code-implementer:** (1) Create `src/interface.py` by copying all UI code from `cli.py` (prompts, displays, operations dict, exception, helper functions, persistence, run_calculator). (2) Convert `src/cli.py` to a facade: remove all impl, add `from .interface import *` with explicit re-exports. (3) Update `src/batch_cli.py`: change imports from `.cli` to `.interface` for operation metadata and display functions. (4) Verify `src/__main__.py` imports work (no changes needed). (5) Run full test suite: all existing tests must pass (zero behavioral changes, only module org). Target: all 15 architecture tests passing + all existing 110+ tests passing.
+

@@ -760,3 +760,142 @@ Ready for python-code-implementer to create src/error_logger.py module.
 5. Support for custom log file paths (essential for test isolation)
 
 The test suite comprehensively validates all error logging scenarios: log format correctness, file persistence, append semantics, integration with calculator operations, user input validation scenarios, retry tracking, batch mode errors, and log rotation prevention. Full backward compatibility is maintained - all 253 prior tests continue to pass.
+
+### 2026-04-24 | task/issue-401-separate-calculator-logic | WRITE | 16 tests written, 10 failing
+
+**Task:** Write comprehensive failing tests for calculator/interface separation of concerns (Issue #401).
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented (16 tests covering 15 test classes):**
+
+1. TestCalculatorHasNoUIImports (1 test): Verify calculator.py imports only math, not cli/batch_cli/interface
+2. TestInterfaceModuleExists (1 test): Verify src/interface.py can be imported
+3. TestInterfaceExportsOperationsDict (1 test): Verify interface exports OPERATIONS dict with 12 operations + metadata
+4. TestInterfaceExportsPromptFunctions (1 test): Verify interface exports prompt_for_first_number, prompt_for_operator, prompt_for_second_number
+5. TestInterfaceExportsDisplayFunctions (1 test): Verify interface exports display_result, display_result_unary, display_result_binary, display_error, display_history, display_history_notification
+6. TestInterfaceExportsHelperFunctions (1 test): Verify interface exports _get_operation_arity, _get_calculator_method, _get_display_symbol, _format_history_entry
+7. TestInterfaceExportsPersistenceAndException (1 test): Verify interface exports persist_history_to_file, MaxRetriesExceeded, run_calculator
+8. TestInterfaceNoDirectMathLogic (1 test): Verify interface.py contains no direct mathematical operations (heuristic check)
+9. TestBackwardCompatCliExports (1 test): Verify cli.py re-exports all interface symbols for backward compatibility
+10. TestBackwardCompatImportsFromCliWork (1 test): Verify existing imports from cli (run_calculator, display_error, OPERATIONS, MaxRetriesExceeded) work
+11. TestBatchCLIImportsFromInterface (1 test): Verify batch_cli.py imports from interface or cli (allowing refactoring)
+12. TestRunCalculatorSignatureUnchanged (1 test): Verify run_calculator(calc=None, max_retries=3) signature unchanged
+13. TestCalculatorMethodsWorkStandalone (1 test): Verify Calculator methods work identically and record history independently
+14. TestInterfaceLazyCalculatorInit (1 test): Verify importing interface doesn't instantiate Calculator at module level
+15. TestNoCircularImports (2 tests): Verify interface/cli imports in both orders don't cause circular imports
+
+**Test Results:**
+- Total tests: 16
+- Passed: 6 (tests for features already in cli.py - backward compat, calculator independence)
+- Failed: 10 (all tests requiring src/interface.py which doesn't exist yet)
+- Collection errors: 0
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_separation.py`
+
+**Failing Tests (10 total):**
+1. test_interface_module_exists - ImportError: interface module doesn't exist
+2. test_interface_exports_operations_dict - ImportError: interface module doesn't exist
+3. test_interface_exports_prompt_functions - ImportError: interface module doesn't exist
+4. test_interface_exports_display_functions - ImportError: interface module doesn't exist
+5. test_interface_exports_helper_functions - ImportError: interface module doesn't exist
+6. test_interface_exports_persistence_and_exception - ImportError: interface module doesn't exist
+7. test_interface_no_direct_math_logic - FileNotFoundError: interface.py doesn't exist
+8. test_interface_lazy_calculator_init - ImportError: interface module doesn't exist
+9. test_no_circular_imports - ImportError: interface module doesn't exist
+10. test_no_circular_imports_reverse_order - ImportError: interface module doesn't exist
+
+**Passing Tests (6 total):**
+1. test_calculator_has_no_ui_imports - PASS: calculator.py correctly has no ui imports
+2. test_backward_compat_cli_facade_exports - PASS: cli.py exports all required symbols
+3. test_backward_compat_imports_from_cli_work - PASS: existing imports from cli work
+4. test_batch_cli_imports_from_interface - PASS: batch_cli.py imports correctly
+5. test_run_calculator_signature_unchanged - PASS: run_calculator signature is correct
+6. test_calculator_methods_work_standalone - PASS: Calculator methods work correctly
+
+**Test Structure:**
+- Tests use direct source file inspection (for calculator.py imports) and importlib (for module imports)
+- Tests verify exports by checking hasattr and callable
+- Tests verify function signatures with inspect.signature
+- Tests verify dict structure with isinstance and tuple validation
+- Circular import tests use sys.modules cleanup to test fresh imports
+- Tests are designed to fail only due to missing interface.py, not due to test issues
+
+**Handoff Note:** 16 tests committed. 10 failing as expected (interface.py missing). 6 passing because they test existing cli.py functionality and calculator independence. Ready for python-code-implementer to create src/interface.py by extracting all UI-related code from cli.py and then updating cli.py to re-export from interface.py and batch_cli.py to import from interface.py.
+
+### 2026-04-24 | task/issue-401-separate-calculator-logic | VERIFY | All 294 tests pass, 1 skipped
+
+**Task:** Verify that all tests pass after implementer completed separation of calculator logic from interface.
+
+**Phase:** VERIFY (Green phase)
+
+**Result:** Full pytest suite run on all test files in the project.
+
+**Summary:**
+- Total tests: 295
+- Passed: 294 (99.7%)
+- Failed: 0
+- Skipped: 1 (backward compatibility placeholder in test_batch_cli.py)
+- Errors: 0
+
+**Specifically Verified - 10 Target Tests from test_separation.py:**
+1. test_interface_module_exists - PASS
+2. test_interface_exports_operations_dict - PASS
+3. test_interface_exports_prompt_functions - PASS
+4. test_interface_exports_display_functions - PASS
+5. test_interface_exports_helper_functions - PASS
+6. test_interface_exports_persistence_and_exception - PASS
+7. test_interface_no_direct_math_logic - PASS
+8. test_interface_lazy_calculator_init - PASS
+9. test_no_circular_imports - PASS
+10. test_no_circular_imports_reverse_order - PASS
+
+**Full Test Breakdown by File:**
+1. test_batch_cli.py: 31 tests (all pass)
+2. test_calculator.py: 68 tests (all pass)
+3. test_cli.py: 87 tests (all pass)
+4. test_error_logging.py: 25 tests (all pass)
+5. test_history.py: 25 tests (all pass)
+6. test_history_persistence.py: 41 tests (all pass)
+7. test_separation.py: 16 tests (all pass)
+
+**Verification Results for Implementer's Changes:**
+- src/interface.py - CREATED: 11,346 bytes
+  - Exports OPERATIONS dict with 12 operations and metadata
+  - Exports all prompt functions: prompt_for_first_number, prompt_for_operator, prompt_for_second_number
+  - Exports all display functions: display_result, display_result_unary, display_result_binary, display_error, display_history, display_history_notification
+  - Exports helper functions: _get_operation_arity, _get_calculator_method, _get_display_symbol, _format_history_entry
+  - Exports persistence and exception: persist_history_to_file, MaxRetriesExceeded, run_calculator
+  - No direct mathematical logic (contains only UI/interface code)
+  - Lazy Calculator initialization (no module-level instantiation)
+
+- src/cli.py - MODIFIED: 1,202 bytes
+  - Now a backward-compatibility facade re-exporting all symbols from interface.py
+  - Maintains existing import paths for all clients
+  - No breaking changes to public API
+
+- src/batch_cli.py - MODIFIED: 5,550 bytes
+  - Updated imports to use interface module
+  - All functionality preserved
+  - Batch mode continues to work correctly
+
+**No Regressions:**
+- All 294 existing tests continue to pass
+- No test failures or errors
+- Circular import prevention verified (imports work in both directions)
+- Calculator maintains independence from UI logic
+- Backward compatibility fully maintained
+
+**Conclusion:** All 294 tests pass successfully (1 skipped for valid backward compat reason). The implementer successfully completed Issue #401 — Separate calculator logic from interface. The refactoring:
+1. Extracted all UI-related code from cli.py into a new src/interface.py module
+2. Updated src/cli.py to re-export all symbols from interface.py for backward compatibility
+3. Updated src/batch_cli.py to import from interface instead of cli
+4. Eliminated tight coupling between calculator and interface layers
+5. Enables future independent evolution of calculator and UI logic
+6. Maintains 100% backward compatibility with existing code and tests
+
+All 16 separation-of-concerns tests pass, including the 10 specifically targeted tests. The architecture now clearly separates:
+- Calculator logic: src/calculator.py (math operations, history recording)
+- Interface logic: src/interface.py (CLI prompts, displays, persistence, retry handling)
+- Batch execution: src/batch_cli.py (command-line argument parsing and batch operation execution)
+- Backward compatibility: src/cli.py (facade re-exporting from interface)

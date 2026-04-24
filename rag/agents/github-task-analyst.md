@@ -200,3 +200,56 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   6. No log rotation/purging required for Naive variant
   7. Implementation: Wrap error-prone operations with try-except + logger calls
 - **Recurring Pattern Insight:** V3 cycle follows a logical progression: core features (Tasks 1–4) → user interaction (5, 7–8) → observability (9–10). Task 10 (error logging) is the final observability feature after history (Task 9). Both Tasks 9 and 10 use similar patterns: persistent file I/O (history.txt, error.log) and integration across all existing modes.
+
+### Cycle: 2026-04-24 — Issue #401: V3 Task 11 - Naive/team
+- **Issue Title:** V3 Task 11 - Naive/team
+- **Task:** Separate the calculator logic from the interface.
+- **Label:** ai-implement:naive-team
+- **Status:** OPEN
+- **Created:** 2026-04-24T13:33:31Z
+- **Updated:** 2026-04-24T20:15:04Z
+- **Position in V3 Cycle:** Task 11 follows Task 10 (error logging). This is the 11th and final (known) task in the V3 sequence. V3 progression: core features (1–4) → user interaction (5, 7–8) → observability (9–10) → architectural refactoring (11).
+- **Issue Description:** Minimal body: "Separate the calculator logic from the interface." No acceptance criteria, test specs, or implementation guidance provided.
+- **Interpretation:** This is a refactoring/architectural task — not a feature addition. The task requires decoupling the core calculation logic from the UI/CLI presentation layer. This is a natural architectural maturation task appearing after all features and observability work is complete.
+- **Key Functional Requirements (Must Have):**
+  1. Separate core calculation logic (mathematical operations) into its own module/class
+  2. Separate user interface concerns (CLI, interactive prompts, input/output) into distinct module(s)
+  3. Ensure the Calculator class exposes only business logic (method signatures for operations)
+  4. All interface-specific logic (input prompts, result formatting, error message presentation, validation UI) must move to interface module(s)
+- **Architectural Outcome:**
+  - Result: Clean separation of concerns with calculator.py (or core_calculator.py) handling pure logic, and interface/cli/interactive modules handling user interaction
+  - Benefits: improved testability, reusability, maintainability, and potential for multiple UI implementations
+- **Non-Functional Requirements (Should Have):**
+  1. No change to Calculator public API (existing operations must remain callable with same signatures)
+  2. All existing tests must continue to pass (currently 215+ tests)
+  3. No breaking changes to CLI or interactive modes from user perspective
+  4. Code should be clearer and more modular post-refactoring
+- **Technical Constraints:**
+  1. Naive variant suggests straightforward refactoring, not over-engineering
+  2. Must not break existing test suite
+  3. Module boundaries should align with logical concerns (logic vs. interface)
+  4. Should use Python's standard module/package structure (no new dependencies)
+- **Dependencies:**
+  - Implicitly depends on Tasks 5, 7, 8, 9, 10 (all user-facing features must remain intact)
+  - Does NOT require changes to error logging (Task 10), history (Task 9), validation (Task 8)
+  - These features should integrate cleanly with the refactored architecture
+- **Out of Scope:**
+  - Adding new features
+  - Changing calculator functionality
+  - Modifying test suite structure (tests should remain unchanged)
+  - Network/external integration
+- **Open Ambiguities:**
+  1. **Exact module structure:** Current layout of calculator.py, cli.py, interactive.py, etc.? Should interface components merge into one module or stay separate?
+  2. **What counts as "logic" vs. "interface":** Are validation checks part of logic or interface? Where does retry loop logic belong?
+  3. **Backward compatibility:** Must the module import paths remain the same, or can they be reorganized?
+  4. **Dependency injection:** Should the CLI/interactive modules receive a Calculator instance, or access it another way?
+  5. **Persistence integration:** How do history.txt and error.log fit in the refactored architecture?
+- **Recommended Working Assumptions:**
+  1. Calculator core: pure mathematical operations, no UI code
+  2. Interface layer: all prompts, input handling, output formatting, retry loops
+  3. Validation: belongs in interface layer (input validation is UI concern, not core logic)
+  4. History and logging: should be called from interface layer, not core calculator
+  5. No changes to test imports or structure — refactoring should be transparent to tests
+  6. Module separation can be file-based (separate .py files) or class-based (separate classes in same file), whichever makes sense
+- **Recurring Pattern Insight:** V3 cycle exhibits a clear progression: (1) foundation/testing → (2) feature development (basic calc) → (3–4) advanced features → (5, 7) interactive/CLI layers → (8–10) robustness (validation, history, logging) → (11) architectural cleanup. This mirrors typical software maturation: build features, add robustness, then refactor for maintainability. The final task (11) is an architectural step back to organize the codebase after all features are in place.
+- **Comparison to Prior Cycles:** V1 and V2 likely had similar task patterns. Task 11 arriving last suggests this is a planned architectural review after the feature set is complete.
