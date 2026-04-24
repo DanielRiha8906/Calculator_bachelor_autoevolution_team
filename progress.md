@@ -21,6 +21,20 @@ Duration: 241.5s | Cost: $0.484060 USD | Turns: 16
 
 Duration: 183.4s | Cost: $0.425742 USD | Turns: 14
 
+## Run: Issue #379 — V3 Task 3 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-379-factorial
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `factorial(self, n: int) -> int` method with full input validation (bool, float, str, None, negative) and iterative computation
+  - `src/__main__.py` — added factorial demo print statement
+  - `tests/test_calculator.py` — added 21 factorial tests covering base cases (0, 1), positive integers, large values, negative rejection, non-integer type rejection, return type check, and stdlib cross-validation
+- **Purpose:** Add factorial as a supported calculator operation with correct boundary handling and input validation, per issue #379.
+- **Risks:** None
+- **Tests passed:** 73 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #376 — V3 Task 2 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-376-unit-test-suite
