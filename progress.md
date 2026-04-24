@@ -8,7 +8,7 @@
   - `artifacts/activity_record_operation.puml` — added/updated activity diagram for record-operation flow
   - `artifacts/sequence_display_history.puml` — added/updated sequence diagram for display-history interaction
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 212.8s | Cost: $0.436210 USD | Turns: 4
 
 ## Run: Issue #395 — V3 Task 9 - Naive/team (2026-04-24)
 
