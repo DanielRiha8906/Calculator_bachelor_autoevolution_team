@@ -157,4 +157,4 @@ Duration: 331.0s | Cost: $0.765543 USD | Turns: 13
   - `artifacts/class_diagram_cli_components.puml` — module dependency diagram for __main__, cli, and Calculator
   - `artifacts/activity_diagram_calculator_flow.puml` — runtime activity flow for binary/unary operations and error paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 211.2s | Cost: $0.496983 USD | Turns: 4
