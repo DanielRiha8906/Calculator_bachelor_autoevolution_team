@@ -107,3 +107,32 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Implementer will add CLI argument parsing (argparse or manual) and invoke operation registry with parsed operands
   - Note: Test suite must remain accurate to "current version of application" — implies tests should reflect actual behavior, not aspirational behavior
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #394: V3 Task 8 - Expert/team
+- **Task Type:** Feature enhancement (input validation with retry logic)
+- **Scope:** Add input validation with retry logic to interactive mode; maintain fail-fast CLI behavior
+- **Key Patterns:**
+  - Clear dual-mode specification: retry logic for interactive, fail-fast for CLI
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "keep the change scoped to input validation behavior"
+  - Follows completion of issues #376–#391 (core operations, interactive mode, CLI all established)
+  - Task builds on existing interactive mode (`src/interactive.py`) and CLI mode (`src/cli.py`)
+- **Key Findings:**
+  1. **Task context:** Interactive mode already exists and works; CLI mode already exists and works; this task enhances input validation in interactive mode only
+  2. **Retry mechanics:** Invalid operation selection and non-numeric operands trigger re-prompting; max 5 consecutive failed attempts per session
+  3. **Session termination:** After 5 failed attempts, session exits with clear message; counter resets to 0 on successful input
+  4. **CLI behavior:** No changes to CLI mode; fail-fast behavior remains (exit with error on any validation failure)
+  5. **Error categories:** Input validation failures (unknown op, non-numeric operand) count toward limit; computation errors (sqrt negative, div by zero) do NOT count
+- **Ambiguities Flagged:**
+  1. Counter reset trigger — does it reset only on valid input, or also when user chooses to continue after a computation error? (RESOLVED: reset only on valid input)
+  2. Failed attempt definition — does it include computation errors or only validation failures? (RESOLVED: validation failures only; computation errors are not counted)
+  3. List format for available operations — what format when user enters invalid operation? (DEFERRED to implementation; use existing format from interactive mode)
+  4. Exact error message wording — are message strings prescriptive or suggestive? (DEFERRED; use reasonable, user-friendly messages matching current style)
+  5. Early exit mechanism — can user exit before hitting 5-attempt limit? (DEFERRED; maintain current behavior; 5-attempt limit is primary termination trigger)
+- **Handoff Notes:**
+  - Architect should clarify: (1) whether counter increments for computation errors (NO), (2) whether reset happens on successful input only (YES), (3) acceptable error message format/style
+  - Architect must produce test specs covering: valid operations, invalid operations (with re-prompt), non-numeric operands (with re-prompt), counter reset on success, counter increment on failure, session termination at 5 attempts, computation errors not counted
+  - Tester will write failing tests for interactive mode validation scenarios and verify CLI mode remains fail-fast
+  - Implementer will add validation logic to `src/interactive.py` (operation selection, operand parsing); no changes to `src/cli.py` required
+  - Critical: All existing tests must remain passing (no regression)
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)

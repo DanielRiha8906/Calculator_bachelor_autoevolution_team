@@ -5,6 +5,8 @@ from typing import Union
 from .calculator import Calculator
 from .operation_registry import OperationRegistry
 
+MAX_ATTEMPTS = 5
+
 
 def parse_operand(user_input: str) -> Union[int, float]:
     """Parse a user-supplied string into a numeric operand.
@@ -32,6 +34,8 @@ def run_interactive_session(calculator: Calculator = None) -> None:
 
     Presents a menu of available operations discovered from ``calculator``,
     accepts operand input, computes results, and loops until the user exits.
+    Terminates the session automatically after MAX_ATTEMPTS consecutive invalid
+    inputs (across operation selection and operand entry).
 
     Args:
         calculator: An optional ``Calculator`` instance to use.  A new
@@ -41,6 +45,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
         calculator = Calculator()
 
     registry = OperationRegistry(calculator)
+    retry_count = 0
 
     while True:
         # --- Display operation menu ---
@@ -60,8 +65,18 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                 if index < 0 or index >= len(operations):
                     raise IndexError
                 op_name = operations[index]
+                retry_count = 0
             except (ValueError, IndexError):
+                retry_count += 1
                 print("Invalid operation. Please try again.")
+                print("Available operations:")
+                for idx, name in enumerate(operations):
+                    arity = registry.get_arity(name)
+                    label = "unary" if arity == 1 else "binary"
+                    print(f"  {idx}: {name} ({label})")
+                if retry_count >= MAX_ATTEMPTS:
+                    print("Too many consecutive invalid inputs. Session terminated.")
+                    return
 
         arity = registry.get_arity(op_name)
 
@@ -72,8 +87,13 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                 raw = input("Enter operand: ")
                 try:
                     operand = parse_operand(raw)
+                    retry_count = 0
                 except ValueError:
+                    retry_count += 1
                     print("Invalid input. Please enter a number.")
+                    if retry_count >= MAX_ATTEMPTS:
+                        print("Too many consecutive invalid inputs. Session terminated.")
+                        return
             operands = (operand,)
         else:
             operand1: Union[int, float] | None = None
@@ -81,16 +101,26 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                 raw = input("Enter operand 1: ")
                 try:
                     operand1 = parse_operand(raw)
+                    retry_count = 0
                 except ValueError:
+                    retry_count += 1
                     print("Invalid input. Please enter a number.")
+                    if retry_count >= MAX_ATTEMPTS:
+                        print("Too many consecutive invalid inputs. Session terminated.")
+                        return
 
             operand2: Union[int, float] | None = None
             while operand2 is None:
                 raw = input("Enter operand 2: ")
                 try:
                     operand2 = parse_operand(raw)
+                    retry_count = 0
                 except ValueError:
+                    retry_count += 1
                     print("Invalid input. Please enter a number.")
+                    if retry_count >= MAX_ATTEMPTS:
+                        print("Too many consecutive invalid inputs. Session terminated.")
+                        return
 
             operands = (operand1, operand2)
 

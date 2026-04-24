@@ -130,3 +130,25 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** Not run by this agent (implementer does not run tests).
 
 **Handoff notes for next agent:** The Tester must check whether `tests/test_main_entrypoint.py` patches `sys.argv` before it exercises the module. If it does not, that test will now break because `len(sys.argv) > 1` will be True under the test runner, routing to `run_cli()` instead of `run_interactive_session()`. No new external dependencies introduced (`sys` is stdlib).
+
+### 2026-04-24 — Add input validation retry logic to interactive session (issue-394)
+
+**Task:** Extend `src/interactive.py` with `MAX_ATTEMPTS = 5`, a shared `retry_count`, and session-termination logic to make 14 failing tests pass in `tests/test_interactive_validation.py`.
+
+**Files changed:**
+- `src/interactive.py` — added `MAX_ATTEMPTS = 5` constant after imports; initialized `retry_count = 0` before the outer `while True` loop; operation-selection retry loop now increments `retry_count`, re-displays the available operations list, checks `>= MAX_ATTEMPTS` and terminates if exceeded, resets to 0 on success; unary operand loop and both binary operand loops follow the same pattern; computation errors (ZeroDivisionError, domain ValueError) left unchanged — they do not increment the counter.
+
+**Key decisions:**
+- `retry_count` is a single shared variable across all three input phases (operation selection, operand 1, operand 2). The spec says "the same counter" — no reset between operand1 and operand2.
+- The termination check is `>= MAX_ATTEMPTS` (not `>`), meaning on the 5th consecutive failure the session is terminated.
+- On an invalid operation, the available-operations list is re-printed immediately after the error message, matching the plan requirement.
+- The counter resets to 0 on every successful input acceptance (operation index or operand parse), ensuring a single bad input mid-session does not accumulate toward termination across multiple successful inputs.
+- Computation errors (ZeroDivisionError, any other Exception from `registry.call`) are intentionally untouched — they do not touch `retry_count`.
+
+**Patterns found:**
+- When a retry counter must span multiple logically distinct input phases, initialise it once outside all loops and pass it along implicitly via closure (same function scope). Avoid sub-function extraction that would require passing/returning the counter unless the architect mandates it.
+- `>= MAX_ATTEMPTS` rather than `== MAX_ATTEMPTS` is safer: if somehow the counter skips a value (e.g. future refactor increments by 2), the termination still fires.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** No new external dependencies introduced. The continue-prompt loop (`yes/no`) was intentionally left untouched — it does not participate in the retry counter per the architect's spec. If a future task adds retry logic there, new failing tests must be written first.

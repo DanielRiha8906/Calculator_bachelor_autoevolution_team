@@ -1,3 +1,17 @@
+## Run: Issue #394 — V3 Task 8 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-394-input-validation-retry
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/interactive.py` — add MAX_ATTEMPTS=5 constant, retry_count variable, validation retry loops for operation selection and operand input, session termination after 5 consecutive invalid inputs, available operations display on invalid operation
+  - `tests/test_interactive_validation.py` — 14 new tests covering retry counter, session termination, computation error exclusion, mixed failures, CLI fail-fast preservation
+  - `rag/agents/*.md` — updated per-agent RAG files
+- **Purpose:** Add input validation with retry logic to interactive mode; session terminates gracefully after 5 consecutive invalid inputs; CLI mode remains fail-fast and unaffected.
+- **Risks:** None
+- **Tests passed:** 213 passed, 0 failed
+
+Duration: 687.0s | Cost: $1.229090 USD | Turns: 17
+
 ## Run: Fix PR #436 — Add CLI entry point for bash-based calculator invocation (#391) (2026-04-24)
 
 - **Branch:** task/issue-391-cli-interface
@@ -197,3 +211,14 @@ Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
   - `artifacts/error_handling_diagram_cli.puml` — new: all run_cli() error paths and exit codes
 
 Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-24)
+
+- **Branch:** task/issue-394-input-validation-retry
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/interactive_class.puml` — class diagram for interactive module with MAX_ATTEMPTS constant and run_interactive_session dependencies
+  - `artifacts/retry_flow_activity.puml` — activity diagram for retry validation flow with session termination paths
+  - `artifacts/retry_sequence.puml` — sequence diagram for user session hitting retry limit
+
+Duration: 216.3s | Cost: $0.496068 USD | Turns: 4

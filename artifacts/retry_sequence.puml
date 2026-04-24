@@ -1,0 +1,59 @@
+@startuml retry_sequence
+
+skinparam backgroundColor white
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderColor #333333
+
+actor User
+participant "Session\n(run_interactive_session)" as Session
+participant OperationRegistry
+participant Console
+
+== Initialization ==
+
+Session -> OperationRegistry : new OperationRegistry()
+activate Session
+Session -> Session : retry_count = 0
+
+== Display Operations ==
+
+Session -> Console : display available operations list
+
+== Operation Selection with Retry Limit ==
+
+loop up to MAX_ATTEMPTS (5) attempts
+
+    Console -> User : "Select operation by index:"
+    User -> Session : invalid input\n(ValueError / IndexError)
+    activate Session
+    Session -> Session : retry_count += 1
+    Session -> Session : check retry_count >= MAX_ATTEMPTS
+
+    alt retry_count < MAX_ATTEMPTS
+        Session -> Console : "Invalid operation. Please try again."
+        Session -> Console : show operations list
+        deactivate Session
+    end
+
+end
+
+Session -> Console : "Too many consecutive invalid inputs.\nSession terminated."
+deactivate Session
+note over Session : session returns (terminates)
+
+== Alternative: Successful Selection (retry_count < 5) ==
+
+alt User provides valid index at any attempt
+
+    User -> Session : valid operation index
+    activate Session
+    Session -> Session : op_name = selected operation
+    Session -> Session : retry_count = 0
+    Session -> OperationRegistry : get_arity(op_name)
+    OperationRegistry --> Session : arity
+    Session -> Console : prompt for operand(s)
+    deactivate Session
+
+end
+
+@enduml
