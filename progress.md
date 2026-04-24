@@ -1,3 +1,19 @@
+## Run: Issue #403 — V3 Task 11 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-403-expert-team
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — enhanced module docstring declaring pure calculation core, independence from UI layers, operation categories
+  - `src/operation_registry.py` — enhanced module docstring declaring layer-agnostic registry, independence from presentation layers, Registry pattern
+  - `src/interactive.py` — enhanced module docstring declaring presentation layer responsibility, dependency list, no-cli-import constraint
+  - `src/cli.py` — enhanced module docstring declaring CLI presentation layer responsibility, dependency list, no-interactive-import constraint
+  - `tests/test_core_separation.py` — new test file with 21 tests validating separation-of-concerns architecture (core independence, module boundaries, reusability, error handling responsibility)
+- **Purpose:** Formalize and validate the existing separation between core calculation logic and interface concerns (interactive, CLI, session management); all architectural boundaries were already correct — changes document and test those boundaries explicitly.
+- **Risks:** None — changes are docstring enhancements and new tests only; no behavioral code modified.
+- **Tests passed:** 309 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #400 — Error logging for calculator application (2026-04-24)
 
 - **Branch:** task/issue-400-error-logging
