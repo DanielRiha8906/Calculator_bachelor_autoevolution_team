@@ -1,0 +1,54 @@
+@startuml sequence_diagram_mode_switch
+!theme plain
+
+actor User
+participant "InteractiveLoop\n_run_interactive_loop()" as Loop
+participant "_build_registry()" as Builder
+participant "OperationRegistry" as Registry
+
+User -> Loop : "mode scientific"
+activate Loop
+
+Loop -> Loop : parts = input.split()
+Loop -> Loop : mode_arg = parts[1] = "scientific"
+Loop -> Loop : match against valid aliases
+
+note right of Loop : "sci" and "scientific" both accepted
+
+Loop -> Builder : _build_registry(MODE_SCIENTIFIC)
+activate Builder
+
+Builder -> Registry : registry = OperationRegistry()
+activate Registry
+
+Builder -> Registry : register(ArithmeticAdd())
+Builder -> Registry : register(ArithmeticSubtract())
+Builder -> Registry : register(ArithmeticMultiply())
+Builder -> Registry : register(ArithmeticDivide())
+Builder -> Registry : register(ArithmeticModulo())
+Builder -> Registry : register(ArithmeticFactorial())
+Builder -> Registry : register(ScientificSquare())
+Builder -> Registry : register(ScientificCube())
+Builder -> Registry : register(ScientificSquareRoot())
+Builder -> Registry : register(ScientificCubeRoot())
+Builder -> Registry : register(ScientificPower())
+Builder -> Registry : register(ScientificLog10())
+Builder -> Registry : register(ScientificLn())
+
+deactivate Registry
+Builder --> Loop : registry (13 operations)
+deactivate Builder
+
+Loop -> Loop : current_mode = MODE_SCIENTIFIC
+Loop -> Loop : active_registry = new registry
+Loop -> User : "Mode switched to scientific."
+
+deactivate Loop
+
+User -> Loop : "square_root"
+activate Loop
+Loop -> Loop : op in active_registry? check passes
+Loop -> User : Prompt for operand
+deactivate Loop
+
+@enduml

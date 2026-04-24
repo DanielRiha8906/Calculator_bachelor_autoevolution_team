@@ -1,70 +1,69 @@
 @startuml activity_diagram_interactive_mode
+!theme plain
 
 start
 
-:Create Calculator instance;
-:Create ErrorLog instance;
-:Create OperationHistory instance\n(file truncated at init);
+:Initialize history, error_log;
 :consecutive_failures = 0;
+:current_mode = MODE_NORMAL;
+:active_registry = _build_registry(MODE_NORMAL);
 
 repeat
+  :Prompt: enter operation name;
+  :operation = input().strip().lower();
 
-    :Prompt for operation name;
-    :Read input;
+  if (operation in {quit, exit, q}?) then (yes)
+    break
+  endif
 
-    if (EOFError?) then (yes)
-        :Exit loop (EOF);
-        break
+  if (operation == "history"?) then (yes)
+    :Display operation history;
+    :consecutive_failures = 0;
+  elseif (operation starts with "mode"?) then (yes)
+    if (mode_arg == "normal" or "norm"?) then (yes)
+      :current_mode = MODE_NORMAL;
+      :active_registry = _build_registry(MODE_NORMAL);
+      :Print "Mode switched to normal.";
+    elseif (mode_arg == "scientific" or "sci"?) then (yes)
+      :current_mode = MODE_SCIENTIFIC;
+      :active_registry = _build_registry(MODE_SCIENTIFIC);
+      :Print "Mode switched to scientific.";
+    else (no)
+      :Print "Unknown mode. Use normal or scientific.";
+      :consecutive_failures += 1;
     endif
-
-    if (input is "quit"?) then (yes)
-        :Exit loop (graceful quit);
-        break
-    endif
-
-    if (operation in registry?) then (no)
-        :error_log.log_error(\n  "unsupported_operation", input, [], msg);
+  elseif (MODE_NORMAL and op in _SCIENTIFIC_OPS_BLOCKED?) then (yes)
+    :Print "Error: operation not available in normal mode";
+    :consecutive_failures += 1;
+  elseif (not active_registry.has(operation)?) then (yes)
+    :Log unsupported operation error;
+    :Print "Error: Unknown operation";
+    :consecutive_failures += 1;
+  else (no)
+    :op_obj = active_registry.get(operation);
+    :Collect operands via InputValidator;
+    if (input parse error?) then (yes)
+      :Log invalid input;
+      :consecutive_failures += 1;
+    else (no)
+      :result = op_obj.execute(*operands);
+      if (execution error?) then (yes)
+        :Log calculation error;
         :consecutive_failures += 1;
-        :Print "Unknown operation" error;
-        if (consecutive_failures >= 3?) then (yes)
-            :Print "Too many invalid attempts. Exiting.";
-            :Exit loop (failure limit);
-            break
-        endif
-    else (yes)
-        :Prompt for operands (arity from registry);
-        :Parse each operand via _parse_number();
-
-        if (parse fails — ValueError?) then (yes)
-            :error_log.log_error(\n  "invalid_input", operation, raw_inputs, str(e));
-            :consecutive_failures += 1;
-            :Print parse error message;
-            if (consecutive_failures >= 3?) then (yes)
-                :Print "Too many invalid attempts. Exiting.";
-                :Exit loop (failure limit);
-                break
-            endif
-        else (no)
-            :Call Calculator method(operands);
-
-            if (raises ValueError or ZeroDivisionError?) then (yes)
-                :error_log.log_error(\n  "calculation_error", operation, inputs, str(e));
-                :consecutive_failures += 1;
-                :Print error message;
-                if (consecutive_failures >= 3?) then (yes)
-                    :Print "Too many invalid attempts. Exiting.";
-                    :Exit loop (failure limit);
-                    break
-                endif
-            else (no)
-                :Print result;
-                :history.add_entry(operation, inputs, result);
-                :consecutive_failures = 0;
-            endif
-        endif
+      else (no)
+        :Print result;
+        :history.record(operation, operands, result);
+        :consecutive_failures = 0;
+      endif
     endif
+  endif
 
-repeat while (continue loop)
+  if (consecutive_failures >= 3?) then (yes)
+    :Print "Too many invalid attempts. Exiting.";
+    break
+  endif
+
+repeat while (user continues)
 
 stop
 

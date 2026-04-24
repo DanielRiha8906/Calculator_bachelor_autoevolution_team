@@ -1,0 +1,76 @@
+@startuml class_diagram_scientific_mode
+!theme plain
+skinparam classAttributeIconSize 0
+
+abstract class Operation {
+  {abstract} +name : str
+  {abstract} +arity : int
+  {abstract} +execute(*args : float) : float
+}
+
+class OperationRegistry {
+  - _ops : dict[str, Operation]
+  + register(operation : Operation, name : str = None) : None
+  + get(name : str) : Operation
+  + list_all() : list[str]
+  + has(name : str) : bool
+}
+
+package "Arithmetic Operations" {
+  class ArithmeticAdd
+  class ArithmeticSubtract
+  class ArithmeticMultiply
+  class ArithmeticDivide
+  class ArithmeticFactorial
+  class ArithmeticModulo
+}
+
+package "Scientific Operations" {
+  class ScientificSquare
+  class ScientificCube
+  class ScientificSquareRoot
+  class ScientificCubeRoot
+  class ScientificPower
+  class ScientificLog10
+  class ScientificLn
+}
+
+class InputValidator {
+  {static} +parse_number(raw : str) : int | float
+}
+
+class OperationHistory {
+  - _file_path : Path
+  + record(operation : str, operands : list, result) : None
+  + get_all() : list[str]
+  + display() : str
+}
+
+class ErrorLog {
+  - _file_path : Path
+  + log_error(category : str, operation : str, inputs : list, desc : str) : None
+}
+
+note top of OperationRegistry
+  MODE_NORMAL = "normal" (4 ops)
+  MODE_SCIENTIFIC = "scientific" (13 ops)
+  _build_registry(mode) -> OperationRegistry
+end note
+
+Operation <|-- ArithmeticAdd
+Operation <|-- ArithmeticSubtract
+Operation <|-- ArithmeticMultiply
+Operation <|-- ArithmeticDivide
+Operation <|-- ArithmeticFactorial
+Operation <|-- ArithmeticModulo
+Operation <|-- ScientificSquare
+Operation <|-- ScientificCube
+Operation <|-- ScientificSquareRoot
+Operation <|-- ScientificCubeRoot
+Operation <|-- ScientificPower
+Operation <|-- ScientificLog10
+Operation <|-- ScientificLn
+
+OperationRegistry "1" o-- "0..*" Operation : stores
+
+@enduml

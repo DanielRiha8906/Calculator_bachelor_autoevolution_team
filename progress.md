@@ -1,3 +1,14 @@
+## Run: update-diagrams — Scientific Mode (2026-04-24)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_scientific_mode.puml` — class diagram: Operation hierarchy, OperationRegistry, 13 operation subclasses, mode constants
+  - `artifacts/activity_diagram_interactive_mode.puml` — activity diagram: interactive session loop with mode switching, operation filtering, consecutive failure tracking
+  - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram: mode switch command processing through registry rebuild
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #411 — V3 Task 14 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-411-scientific-mode
