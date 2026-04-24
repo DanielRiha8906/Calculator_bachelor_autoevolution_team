@@ -318,3 +318,14 @@ Duration: 410.4s | Cost: $0.692189 USD | Turns: 4
   - `artifacts/interactive_activity.puml` — updated interactive session activity diagram with ErrorLogger logging calls and exit points
 
 Duration: 296.6s | Cost: $0.709031 USD | Turns: 4
+
+## Run: update-diagrams — Expert team layer separation diagrams (2026-04-24)
+
+- **Branch:** task/issue-403-expert-team
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_architecture.puml` — class diagram showing Calculator, OperationRegistry, OperationHistory, ErrorLogger with layer grouping and isolation invariants
+  - `artifacts/sequence_diagram_cli_flow.puml` — sequence diagram for CLI add operation with error path alt fragment
+  - `artifacts/activity_diagram_interactive_session.puml` — activity diagram for interactive session with retry logic and history branch
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

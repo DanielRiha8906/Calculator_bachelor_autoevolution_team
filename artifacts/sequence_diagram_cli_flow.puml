@@ -1,0 +1,74 @@
+@startuml sequence_diagram_cli_flow
+
+title run_cli(["add", "5", "3"])
+
+participant "CLI\n(run_cli)" as CLI
+participant "Calculator" as Calc
+participant "OperationRegistry" as Reg
+participant "ErrorLogger" as ELog
+participant "OperationHistory" as Hist
+
+CLI -> Calc : new Calculator()
+activate Calc
+CLI -> Reg : new OperationRegistry(calc)
+activate Reg
+Reg -> Calc : introspect methods (inspect module)
+Reg --> CLI : registry ready
+CLI -> ELog : new ErrorLogger("error.log")
+activate ELog
+CLI -> Hist : new OperationHistory()
+activate Hist
+
+CLI -> Reg : get_operations()
+Reg --> CLI : ["add", "subtract", ...]
+
+alt unknown operation
+    CLI -> ELog : log_invalid_operation()
+    ELog --> CLI : logged
+    CLI --> CLI : return 1
+else valid operation "add"
+    CLI -> Reg : get_arity("add")
+    Reg --> CLI : 2
+
+    alt operand count mismatch
+        CLI -> ELog : log_incorrect_argument_count()
+        ELog --> CLI : logged
+        CLI --> CLI : return 1
+    else correct count (2 operands)
+        CLI -> CLI : parse_cli_operand("5") -> 5
+        CLI -> CLI : parse_cli_operand("3") -> 3
+
+        alt parse ValueError
+            CLI -> ELog : log_invalid_operand()
+            ELog --> CLI : logged
+            CLI --> CLI : return 1
+        else operands parsed ok
+            CLI -> Reg : call("add", 5, 3)
+            activate Reg
+            Reg -> Calc : add(5, 3)
+            Calc --> Reg : 8
+            Reg --> CLI : 8
+            deactivate Reg
+
+            alt ZeroDivisionError / ValueError / Exception
+                CLI -> ELog : log_runtime_calculation_error()
+                ELog --> CLI : logged
+                CLI --> CLI : return 1
+            else success
+                CLI -> Hist : record("add", (5, 3), 8)
+                Hist --> CLI : entry recorded
+                CLI -> Hist : write_to_file("history.txt")
+                Hist --> CLI : file written
+                CLI -> CLI : print("8")
+                CLI --> CLI : return 0
+            end
+        end
+    end
+end
+
+deactivate Hist
+deactivate ELog
+deactivate Reg
+deactivate Calc
+
+@enduml
