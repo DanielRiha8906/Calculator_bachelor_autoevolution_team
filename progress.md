@@ -11,7 +11,7 @@
 - **Risks:** Adding "no"/"n" exit recognition in operand loops is a behavior change beyond the directive spec; it was required to satisfy 3 interactive tests that supply only invalid input followed by "no". All 256 pre-existing tests continue to pass.
 - **Tests passed:** 288 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 912.2s | Cost: $2.044845 USD | Turns: 15
 
 ## Run: Fix PR #444 — feat: add session operation history to interactive mode (2026-04-24)
 
