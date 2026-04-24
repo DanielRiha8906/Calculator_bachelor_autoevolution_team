@@ -1,0 +1,83 @@
+@startuml activity_diagram_cli_routing
+
+skinparam activityDiamondBackgroundColor #FEFECE
+
+start
+
+:User invokes app;
+:main() reads sys.argv;
+
+if (sys.argv has args?) then (yes — batch mode)
+
+    :batch_main(argv) called;
+    :parse_batch_args(argv);
+
+    if (--help flag or no op?) then (yes)
+        :print_help();
+        :sys.exit(0);
+        stop
+    else (no — valid op)
+        :execute_batch(operation_key, operands);
+
+        if (op or operands invalid?) then (yes)
+            :print error to stderr;
+            :return 1;
+            :sys.exit(1);
+            stop
+        else (no)
+        endif
+
+        :Create Calculator instance;
+        :method = getattr(calc, method_name);
+
+        if (exception raised?) then (yes)
+            :print error to stderr;
+            :return 1;
+            :sys.exit(1);
+            stop
+        else (no)
+        endif
+
+        if (unary op?) then (yes)
+            :display_result_unary(key, operand, result);
+        else (no — binary)
+            :display_result_binary(key, first, second, result);
+        endif
+
+        :return 0;
+        :sys.exit(0);
+        stop
+    endif
+
+else (no — interactive mode)
+
+    :run_calculator() called;
+    :Create Calculator instance;
+    :prompt_for_operator();
+    :Look up arity from OPERATIONS;
+
+    if (unary op?) then (yes)
+        :prompt_for_first_number();
+        :calc.method(operand);
+        :display_result_unary(key, operand, result);
+    else (no — binary)
+        :prompt_for_first_number();
+        :prompt_for_second_number();
+        :calc.method(first, second);
+        :display_result_binary(key, first, second, result);
+    endif
+
+    if (exception raised?) then (yes)
+        :run_calculator() calls display_error();
+        :re-raises to main();
+        :main() calls display_error();
+        stop
+    else (no)
+    endif
+
+    :return result to main();
+    stop
+
+endif
+
+@enduml

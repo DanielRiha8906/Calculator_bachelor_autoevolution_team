@@ -1,0 +1,81 @@
+@startuml class_diagram_batch_cli
+
+skinparam classAttributeIconSize 0
+
+class "__main__" <<module>> {
+    + main() : None
+}
+
+note right of "__main__"::main
+  Routes on sys.argv:
+  len > 1 → batch_main(sys.argv[1:])
+  else     → run_calculator()
+  Catches Exception → display_error()
+end note
+
+class "cli" <<module>> {
+    + OPERATIONS : dict
+    + run_calculator() : float
+    + display_result_unary(key, operand, result) : None
+    + display_result_binary(key, first, second, result) : None
+    + display_error(error_message: str) : None
+}
+
+note right of "cli"::OPERATIONS
+  12-entry dict:
+  key → (arity, method_name, symbol, description)
+  Binary (arity 2): "+", "-", "*", "/", "power"
+  Unary  (arity 1): "square", "cube", "sqrt",
+                    "cbrt", "factorial", "log", "ln"
+end note
+
+class "batch_cli" <<module>> {
+    + _BATCH_OPERATIONS : dict
+
+    + parse_batch_args(argv: list) : tuple | None
+    + print_help() : None
+    + execute_batch(operation_key: str, operands: list) : int
+    + batch_main(argv: list) : int
+}
+
+note right of "batch_cli"::_BATCH_OPERATIONS
+  12-op dict mirroring cli.OPERATIONS:
+  add, subtract, multiply, divide, power,
+  square, cube, sqrt, cbrt, factorial, log, ln
+end note
+
+note right of "batch_cli"::execute_batch
+  Validates op and operand count.
+  Calls Calculator method via getattr().
+  Delegates display to cli.display_result_*.
+  Catches exceptions → stderr → return 1.
+end note
+
+note right of "batch_cli"::batch_main
+  Calls parse_batch_args().
+  None returned → print_help() → sys.exit(0).
+  Otherwise → execute_batch() → sys.exit(code).
+end note
+
+class Calculator <<class>> {
+    + add(a: float, b: float) : float
+    + subtract(a: float, b: float) : float
+    + multiply(a: float, b: float) : float
+    + divide(a: float, b: float) : float
+    + power(base: float, exp: float) : float
+    + square(a: float) : float
+    + cube(a: float) : float
+    + square_root(a: float) : float
+    + cube_root(a: float) : float
+    + factorial(n: float|int) : int
+    + log(a: float) : float
+    + ln(a: float) : float
+}
+
+"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error
+"__main__" --> "batch_cli" : <<import>>\nbatch_main
+"batch_cli" --> Calculator : <<import>>\ncreates instance
+"batch_cli" --> "cli" : <<import>>\nOPERATIONS\ndisplay_result_unary\ndisplay_result_binary
+"cli" --> Calculator : <<import>>\ncreates instance
+
+@enduml

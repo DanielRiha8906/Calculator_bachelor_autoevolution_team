@@ -158,3 +158,32 @@ Duration: 331.0s | Cost: $0.765543 USD | Turns: 13
   - `artifacts/activity_diagram_calculator_flow.puml` — runtime activity flow for binary/unary operations and error paths
 
 Duration: 211.2s | Cost: $0.496983 USD | Turns: 4
+
+## Run: Issue #389 — V3 Task 7 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-389-add-cli-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/batch_cli.py` — new module implementing batch/non-interactive CLI mode (batch_main, execute_batch, parse_batch_args, print_help)
+  - `src/__main__.py` — added sys.argv routing: arguments present → batch mode, no arguments → interactive mode
+  - `tests/test_batch_cli.py` — 32 new tests for batch CLI covering all operations, error conditions, arg validation, and help flags
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Add CLI mode so the calculator can be invoked from bash (e.g., `python -m calculator add 5 3`), satisfying issue #389
+- **Risks:** None — interactive mode unchanged; batch mode is additive
+- **Tests passed:** 152 passed, 0 failed, 1 skipped
+
+Duration: 489.9s | Cost: $1.046504 USD | Turns: 17
+
+## Run: update-diagrams — Add CLI Mode (2026-04-24)
+
+- **Branch:** task/issue-389-add-cli-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_batch_cli.puml` — module dependency diagram for __main__, cli, batch_cli, and Calculator including new batch_cli functions and _BATCH_OPERATIONS dict
+  - `artifacts/activity_diagram_cli_routing.puml` — entry-point routing flow showing interactive vs batch vs help path branching in main()
+  - `artifacts/sequence_diagram_batch_calculation.puml` — batch CLI calculation sequence: __main__ → batch_cli → Calculator → cli display, with help and error alt paths
+
+Duration: 211.9s | Cost: $0.518498 USD | Turns: 5

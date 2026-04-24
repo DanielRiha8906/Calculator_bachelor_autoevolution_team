@@ -59,3 +59,21 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Preserving the legacy `display_result` is essential: existing tests call it with 4 positional args; removing or renaming it would break the prior test suite.
   - The OPERATIONS dict acts as a self-documenting registry — arity, method name, display symbol, and description in one place makes future extension trivial.
 - **Test result:** pending VERIFY phase.
+
+### 2026-04-24 — issue-389: add batch/non-interactive CLI mode
+
+- **Task:** Create `src/batch_cli.py` and modify `src/__main__.py` to satisfy 32 failing tests in `tests/test_batch_cli.py`.
+- **Files changed:** `src/batch_cli.py` (created), `src/__main__.py` (modified)
+- **Changes made:**
+  - Created `src/batch_cli.py` with a private `_BATCH_OPERATIONS` registry mapping method-name keys (`add`, `subtract`, etc.) to `(arity, method_name, display_key)` triples.  This is separate from `cli.OPERATIONS` which uses symbol keys (`+`, `-`, etc.) for the arithmetic operators.
+  - Implemented `parse_batch_args(argv)`: returns `(None, [])` for empty argv or help flags, otherwise `(argv[0], argv[1:])`.
+  - Implemented `print_help()`: prints "Usage:" and "Supported operations:" to stdout; satisfies help tests checking for "usage" in output.
+  - Implemented `execute_batch(operation_key, operands)`: validates operation key, operand count, and numeric parsing; dispatches via `getattr(calc, method_name)`; catches `ZeroDivisionError` and `ValueError` and prints to stderr; returns 0/1.
+  - Implemented `batch_main(argv)`: calls `sys.exit()` with the appropriate code — tests use `pytest.raises(SystemExit)` so `sys.exit` is mandatory.
+  - Updated `src/__main__.py`: added `import sys` and a branch on `len(sys.argv) > 1` to route to `batch_main`; interactive path unchanged.
+- **Patterns found:**
+  - Tests used `pytest.raises(SystemExit)` — meaning `batch_main` must call `sys.exit()`, not just `return int`. A return-value-based design would silently pass without triggering the assertion.
+  - The interactive `OPERATIONS` dict uses symbol keys for binary ops and word keys for unary/power.  Batch mode needs its own registry keyed by method name to support natural command-line syntax (`add 5 3` not `+ 5 3`).
+  - Error message keyword matching ("zero", "negative", "positive") is satisfied by the Calculator's own exception messages without wrapping — `ZeroDivisionError("float division by zero")` already contains "zero".
+  - `cube_root(-8)` succeeds (returns -2.0) so must not raise; the test asserts exit code 0 and "-2" in stdout.
+- **Test result:** pending VERIFY phase.
