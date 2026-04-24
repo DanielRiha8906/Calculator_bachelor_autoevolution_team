@@ -7,7 +7,7 @@
   - `artifacts/activity_diagram_interactive_mode.puml` — activity diagram: interactive session loop with mode switching, operation filtering, consecutive failure tracking
   - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram: mode switch command processing through registry rebuild
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 330.0s | Cost: $0.626322 USD | Turns: 4
 
 ## Run: Issue #411 — V3 Task 14 - Structured/team (2026-04-24)
 
