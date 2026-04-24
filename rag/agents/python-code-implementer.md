@@ -199,3 +199,27 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** 256/256 passed (241 pre-existing + 15 new history-menu tests).
 
 **Handoff notes for next agent:** No new external dependencies introduced. `_HISTORY_SENTINEL` is an internal string constant — it should never appear in history entries (it is only used as a flow-control flag and is never passed to `history.record()`). If a future task adds per-prompt history viewing (e.g., "h" during operand entry), new failing tests must be written first.
+
+### 2026-04-24 — Add error logging for issue #400
+
+**Task:** Create `src/error_logger.py` and integrate it into `src/interactive.py` and `src/cli.py` to make 30 failing tests pass in `tests/test_error_logging.py`.
+
+**Files changed:**
+- `src/error_logger.py` — new module; `ErrorLogger` class with `log_invalid_operation`, `log_invalid_operand`, `log_incorrect_argument_count`, `log_runtime_calculation_error`; each method appends one line to `error.log` in append mode; timestamp via `datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")`; `IOError`, `OSError`, `PermissionError` caught in `_write()` and printed to stderr, never re-raised.
+- `src/cli.py` — added `ErrorLogger` and `OperationHistory` imports; `error_logger = ErrorLogger()` and `history = OperationHistory()` inside `run_cli()`; logging calls at: empty argv, unknown op, wrong arity, invalid operand, ZeroDivisionError, ValueError, generic Exception; `history.record()` + `history.write_to_file()` on success.
+- `src/interactive.py` — added `ErrorLogger` import; `error_logger = ErrorLogger()` inside `run_interactive_session()`; logging calls at: op-selection ValueError/IndexError, unary/binary operand ValueError, ZeroDivisionError, ValueError, generic Exception; added `"no"/"n"` exit recognition in op-selection loop and all three operand-entry loops (required by tests that supply `["invalid", "no"]` sequences).
+
+**Key decisions:**
+- The directive did not mention adding "no"/"n" exit handling to operand-entry loops or the op-selection loop. However, 3 tests provide input sequences like `["999", "no"]` or `["9", "abc", "no"]` that can only terminate cleanly if "no"/"n" is recognized as an exit command in those loops. The change was applied and documented as a risk in progress.md.
+- `cli.py` was extended to write `history.txt` on successful operations. The test `test_error_log_separate_from_history` asserts `"add" in history_content` after `run_cli(['add', '2', '3'])`, which requires history persistence from the CLI path. This was not in the directive but was required by the test. The `OperationHistory` import was added to `cli.py`.
+- Entry format uses `operation=None` (Python `None` printed as string) for cases where no operation name is known (e.g. empty argv). Tests check for `"Incorrect Argument Count" in log_content or "Usage" in log_content`, which matches.
+- `IOError`, `OSError`, `PermissionError` are all caught separately in `_write()` even though `IOError` and `OSError` are aliases in Python 3. This is explicit and matches the directive's requirement list.
+
+**Patterns found:**
+- When tests provide short input sequences (e.g. `["invalid_op", "no"]`) that don't follow the normal flow, the "no"/"n" exit must be recognized in all input-gathering loops — not just the final continue-prompt. Adding it as an early guard (`if raw.strip().lower() in ("no", "n"): write + return`) before the try/parse block is the cleanest approach.
+- `OperationHistory` writes history in overwrite mode (`"w"`), so each `run_cli()` call produces a fresh `history.txt`. This is consistent with the existing interactive session behavior and satisfies the `test_error_log_separate_from_history` test.
+- Always verify against both CLI and interactive test input sequences independently — the two modes share similar error types but have different input consumption patterns.
+
+**Test result:** 288/288 passed (256 pre-existing + 32 new error-logging tests).
+
+**Handoff notes for next agent:** `src/cli.py` now writes `history.txt` on every successful operation (overwrite mode). If a future task requires CLI history to append across multiple invocations, new failing tests must be written first. The "no"/"n" exit in operand loops is a behavior addition that could affect any future test relying on "no" being tried as a number (it would now exit instead of parsing). No new external dependencies introduced (`datetime` and `sys` are stdlib).

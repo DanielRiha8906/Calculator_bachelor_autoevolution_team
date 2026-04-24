@@ -9,6 +9,8 @@ import sys
 from typing import Union
 
 from .calculator import Calculator
+from .error_logger import ErrorLogger
+from .history import OperationHistory
 from .operation_registry import OperationRegistry
 
 
@@ -61,23 +63,37 @@ def run_cli(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
+    calculator = Calculator()
+    registry = OperationRegistry(calculator)
+    error_logger = ErrorLogger()
+    history = OperationHistory()
+
     if not argv:
+        error_logger.log_incorrect_argument_count(
+            None, 1, 0, "Usage: calculator <operation> [operands...]"
+        )
         print("Usage: calculator <operation> [operands...]", file=sys.stderr)
         return 1
 
     operation_name = argv[0]
     operand_args = argv[1:]
 
-    calculator = Calculator()
-    registry = OperationRegistry(calculator)
-
     if operation_name not in registry.get_operations():
+        error_logger.log_invalid_operation(
+            operation_name, f"Unknown operation: {operation_name}"
+        )
         print(f"Error: Unknown operation: {operation_name}", file=sys.stderr)
         return 1
 
     arity = registry.get_arity(operation_name)
 
     if len(operand_args) != arity:
+        error_logger.log_incorrect_argument_count(
+            operation_name,
+            arity,
+            len(operand_args),
+            f"{operation_name} requires {arity} operand(s), got {len(operand_args)}",
+        )
         print(
             f"Error: {operation_name} requires {arity} operand(s),"
             f" got {len(operand_args)}",
@@ -90,20 +106,34 @@ def run_cli(argv: list[str] | None = None) -> int:
         try:
             operands.append(parse_cli_operand(raw))
         except ValueError:
+            error_logger.log_invalid_operand(
+                operation_name, raw, f"Invalid operand: {raw}"
+            )
             print(f"Error: Invalid operand: {raw}", file=sys.stderr)
             return 1
 
     try:
         result = registry.call(operation_name, *operands)
     except ZeroDivisionError:
+        error_logger.log_runtime_calculation_error(
+            operation_name, tuple(operands), "ZeroDivisionError", "Division by zero"
+        )
         print("Error: Division by zero", file=sys.stderr)
         return 1
     except ValueError as exc:
+        error_logger.log_runtime_calculation_error(
+            operation_name, tuple(operands), "ValueError", str(exc)
+        )
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     except Exception as exc:  # noqa: BLE001
+        error_logger.log_runtime_calculation_error(
+            operation_name, tuple(operands), type(exc).__name__, str(exc)
+        )
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
+    history.record(operation_name, tuple(operands), result)
+    history.write_to_file()
     print(result)
     return 0
