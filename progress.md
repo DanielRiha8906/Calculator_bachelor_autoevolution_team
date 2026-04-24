@@ -12,7 +12,7 @@
 - **Risks:** None — changes are docstring enhancements and new tests only; no behavioral code modified.
 - **Tests passed:** 309 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 588.1s | Cost: $1.242995 USD | Turns: 16
 
 ## Run: Issue #400 — Error logging for calculator application (2026-04-24)
 
