@@ -1,5 +1,5 @@
 @startuml
-title run_interactive_session() — Activity Flow
+title Interactive Session — Main Loop (run_interactive_session)
 
 start
 
@@ -19,11 +19,11 @@ repeat
   repeat
     :Prompt: "Select operation by number:";
     :Read user input;
-  repeat while (input is valid integer in range?) is (no — invalid)
+  repeat while (valid integer in range?) is (no — invalid)
   -> yes — valid index;
 
   :Resolve operation name from index;
-  :get_arity(op_name) → arity;
+  :arity = registry.get_arity(op_name);
 
   if (arity == 1?) then (yes)
 
@@ -32,7 +32,7 @@ repeat
       :Read user input;
     repeat while (parse_operand() succeeds?) is (no — ValueError)
     -> yes — parsed;
-    :operands = [parsed value];
+    :operands = [parsed_value];
 
   else (no — arity == 2)
 
@@ -48,7 +48,7 @@ repeat
       :Read user input;
     repeat while (parse_operand() succeeds?) is (no — ValueError)
     -> yes — parsed;
-    :operands = [operand1, parsed value];
+    :operands = [operand1, parsed_value];
 
   endif
 
@@ -68,7 +68,7 @@ repeat
   repeat while (input is yes/y or no/n?) is (no — unrecognised)
   -> yes — recognised;
 
-repeat while (user chose yes/y?) is (yes — continue)
+repeat while (user chose yes or y?) is (yes — continue)
 -> no/n — exit;
 
 stop

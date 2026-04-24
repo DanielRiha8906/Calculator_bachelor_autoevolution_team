@@ -92,3 +92,55 @@ Duration: 163.2s | Cost: $0.420227 USD | Turns: 14
   - `artifacts/sequence_diagram_validated_operation.puml` — sequence diagram for log10 happy path and error path
 
 Duration: 243.0s | Cost: $0.521679 USD | Turns: 5
+
+## Run: Issue #385 — V3 Task 5 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/operation_registry.py` — new module with OperationRegistry class for dynamic operation discovery and arity detection
+  - `src/interactive.py` — new module with run_interactive_session() for interactive multi-calculation sessions
+  - `tests/test_interactive.py` — 15 new tests covering all interactive session flows (binary/unary ops, error recovery, multi-calc sessions, input validation)
+- **Purpose:** Add interactive user input so the calculator can read the selected operation and operand values at runtime, supporting both unary and binary operations with multi-calculation session loops.
+- **Risks:** None — no changes to existing Calculator class or existing tests
+- **Tests passed:** 138 passed, 0 failed
+
+Duration: 508.8s | Cost: $0.950293 USD | Turns: 18
+
+## Run: update-diagrams — Interactive input diagrams (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — new class diagram: Calculator and OperationRegistry with relationships
+  - `artifacts/activity_diagram.puml` — new activity diagram: run_interactive_session() flow with loops and error paths
+  - `artifacts/sequence_diagram.puml` — new sequence diagram: binary operation happy path
+
+Duration: 263.4s | Cost: $0.560446 USD | Turns: 5
+
+## Run: Fix PR #434 — Issue #385: Add interactive user input session for calculator (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — added import of `run_interactive_session`; replaced `main()` call with `run_interactive_session()` in `__main__` block to enable `python -m src` interactive mode
+  - `tests/test_main_entrypoint.py` — new file; 3 tests verifying entry point wiring, backward compatibility of `main()`, and demo output
+- **Purpose:** Address unresolved PR review feedback: running `python -m src` now launches the interactive calculator session instead of a hardcoded demo
+- **Risks:** None — minimal 2-line change to entry point only; no changes to Calculator, interactive, or operation_registry modules
+- **Tests passed:** 141 passed, 0 failed
+
+Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
+
+## Run: update-diagrams — Interactive Calculator Session UML (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/calculator_class_diagram.puml` — Class diagram showing Calculator, OperationRegistry and their composition relationship
+  - `artifacts/interactive_session_flow.puml` — Activity diagram of the interactive session main loop with error recovery
+  - `artifacts/operation_discovery_flow.puml` — Activity diagram of OperationRegistry introspection and method filtering
+  - `artifacts/binary_operation_sequence.puml` — Sequence diagram of a binary operation execution through the full call stack
+  - `artifacts/module_components.puml` — Component diagram showing module dependencies
+  - `artifacts/session_state_machine.puml` — State machine diagram of interactive session states and transitions
+
+Duration: 318.7s | Cost: $0.692764 USD | Turns: 5

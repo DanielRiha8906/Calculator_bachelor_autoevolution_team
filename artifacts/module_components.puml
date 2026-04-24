@@ -1,0 +1,16 @@
+@startuml
+title Module Components — Interactive Calculator (PR #434)
+
+component "__main__\n(entry point)" as main <<entry point>>
+component "interactive\n(run_interactive_session\nparse_operand)" as interactive
+component "operation_registry\n(OperationRegistry)" as registry
+component "calculator\n(Calculator)" as calculator
+component "inspect\n(stdlib)" as inspect <<stdlib>>
+
+main --> interactive : imports run_interactive_session\ncalls at startup
+interactive --> calculator : creates Calculator instance
+interactive --> registry : creates OperationRegistry\ncalls get_operations, get_arity, call
+registry --> calculator : holds reference,\nforwards operation calls
+registry --> inspect : getmembers, signature\nat construction time
+
+@enduml

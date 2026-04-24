@@ -1,17 +1,61 @@
 @startuml
-title Calculator Class Structure
+title Calculator System — Class Overview
 
 skinparam classAttributeIconSize 0
 
 class Calculator {
+  .. 5 binary operations ..
   + add(a, b)
   + subtract(a, b)
   + multiply(a, b)
   + divide(a, b)
+  + power(base, exponent)
+  .. 7 unary operations ..
+  + factorial(n)
+  + square(x)
+  + cube(x)
+  + sqrt(x)
+  + cbrt(x)
+  + log10(x)
+  + ln(x)
 }
 
 note bottom of Calculator
-  Stateless — no instance state between calls
+  Stateless — no instance state between calls.
+  Binary operations take two operands (arity=2).
+  Unary operations take one operand (arity=1).
 end note
+
+class OperationRegistry {
+  - _calculator: Calculator
+  - _operations: dict
+  - _sorted_names: List[str]
+  --
+  + __init__(calculator: Calculator)
+  + get_operations(): List[str]
+  + get_arity(operation_name: str): int
+  + call(operation_name: str, *args): Any
+}
+
+note right of OperationRegistry
+  Uses Python inspect module to scan
+  Calculator at construction time.
+  Raises KeyError for unknown operations.
+  Forwards Calculator exceptions on call().
+end note
+
+package "interactive (module-level functions)" {
+  class parse_operand <<function>> {
+    parse_operand(user_input: str): Union[int, float]
+  }
+  class run_interactive_session <<function>> {
+    run_interactive_session(calculator: Calculator = None): None
+  }
+}
+
+OperationRegistry *-- Calculator : composition\n(holds reference)
+run_interactive_session --> OperationRegistry : creates and uses
+run_interactive_session --> Calculator : creates if None
+run_interactive_session ..> parse_operand : calls for each operand
 
 @enduml

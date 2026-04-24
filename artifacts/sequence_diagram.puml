@@ -1,44 +1,54 @@
 @startuml
-title Calculator Usage Sequence
+title Interactive Session — Binary Operation Happy Path
 
-actor Caller
-participant "__main__" as main
+actor User
+participant "run_interactive_session" as session
+participant "OperationRegistry" as registry
 participant "Calculator" as calc
 
-Caller ->> main : invoke
-activate main
-
-main ->> calc : Calculator()
+session ->> registry : new OperationRegistry(calculator)
+activate registry
+registry ->> calc : inspect.getmembers() / getfullargspec()
 activate calc
-
-main ->> calc : add(10, 5)
-calc -->> main : 15
-
-main ->> calc : subtract(10, 5)
-calc -->> main : 5
-
-main ->> calc : multiply(10, 5)
-calc -->> main : 50
-
-alt b == 0
-  main ->> calc : divide(10, 0)
-  calc -->> main : ZeroDivisionError (not caught)
-else b != 0
-  main ->> calc : divide(10, 5)
-  calc -->> main : 2.0
-end
-
-alt n invalid (bool, float, str, None, or negative)
-  main ->> calc : factorial(-1)
-  calc -->> main : ValueError (not caught)
-else n valid
-  main ->> calc : factorial(5)
-  calc -->> main : 120
-end
-
+calc -->> registry : method list and signatures
 deactivate calc
+deactivate registry
 
-main ->> Caller : print results
-deactivate main
+session ->> registry : get_operations()
+activate registry
+registry -->> session : ["add", "cbrt", "cube", ...]
+deactivate registry
+
+session ->> User : display menu\n(0: add [binary], 1: cbrt [unary], ...)
+User ->> session : "0"
+
+session ->> registry : get_arity("add")
+activate registry
+registry -->> session : 2
+deactivate registry
+
+session ->> User : "Enter operand 1:"
+User ->> session : "5"
+session -> session : parse_operand("5") → 5
+
+session ->> User : "Enter operand 2:"
+User ->> session : "3"
+session -> session : parse_operand("3") → 3
+
+session ->> registry : call("add", 5, 3)
+activate registry
+registry ->> calc : add(5, 3)
+activate calc
+calc -->> registry : 8
+deactivate calc
+registry -->> session : 8
+deactivate registry
+
+session ->> User : "Result: 8"
+
+session ->> User : "Continue? (yes/no):"
+User ->> session : "no"
+
+session -> session : exit loop
 
 @enduml

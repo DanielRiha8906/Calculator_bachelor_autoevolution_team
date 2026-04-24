@@ -1,0 +1,55 @@
+@startuml
+title Interactive Session — Binary Operation add(5, 3) = 8
+
+actor User
+participant "run_interactive_session" as Session
+participant "OperationRegistry" as Registry
+participant "Calculator" as Calc
+
+Session ->> Registry : new OperationRegistry(calculator)
+activate Registry
+Registry ->> Calc : inspect.getmembers() / inspect.signature()
+activate Calc
+Calc -->> Registry : method list and signatures
+deactivate Calc
+Registry -->> Session : registry ready
+deactivate Registry
+
+Session ->> Registry : get_operations()
+activate Registry
+Registry -->> Session : ["add", "cbrt", "cube", ...]
+deactivate Registry
+
+Session ->> User : display numbered menu\n(0: add [binary], 1: cbrt [unary], ...)
+User ->> Session : "0"
+
+Session ->> Registry : get_arity("add")
+activate Registry
+Registry -->> Session : 2
+deactivate Registry
+
+Session ->> User : "Enter operand 1:"
+User ->> Session : "5"
+Session -> Session : parse_operand("5") → 5
+
+Session ->> User : "Enter operand 2:"
+User ->> Session : "3"
+Session -> Session : parse_operand("3") → 3
+
+Session ->> Registry : call("add", 5, 3)
+activate Registry
+Registry ->> Calc : add(5, 3)
+activate Calc
+Calc -->> Registry : 8
+deactivate Calc
+Registry -->> Session : 8
+deactivate Registry
+
+Session ->> User : "Result: 8"
+
+Session ->> User : "Continue? (yes/no):"
+User ->> Session : "yes"
+
+Session -> Session : loop back to menu
+
+@enduml

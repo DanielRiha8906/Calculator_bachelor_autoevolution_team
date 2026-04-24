@@ -1,0 +1,55 @@
+@startuml
+title Calculator System — Class Diagram (PR #434)
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+  .. Binary Operations ..
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+  + power(base, exponent)
+  .. Unary Operations ..
+  + factorial(n: int): int
+  + square(x): int|float
+  + cube(x): int|float
+  + sqrt(x): float
+  + cbrt(x): float
+  + ln(x): float
+  + log10(x): float
+}
+
+class OperationRegistry {
+  - _calculator: Calculator
+  - _operations: dict[str, int]
+  - _sorted_names: List[str]
+  --
+  + __init__(calculator: Calculator)
+  + get_operations(): List[str]
+  + get_arity(operation_name: str): int
+  + call(operation_name: str, *args): Any
+}
+
+note right of OperationRegistry
+  Discovers operations via inspect at runtime.
+  Keeps only arity 1 or 2 methods.
+  Sorts names alphabetically at construction.
+end note
+
+package "interactive (module functions)" {
+  class parse_operand <<function>> {
+    + parse_operand(user_input: str): Union[int, float]
+  }
+  class run_interactive_session <<function>> {
+    + run_interactive_session(calculator: Calculator = None): None
+  }
+}
+
+OperationRegistry *--> Calculator : uses
+
+run_interactive_session --> Calculator : creates if None
+run_interactive_session --> OperationRegistry : creates and uses
+run_interactive_session ..> parse_operand : calls for each operand
+
+@enduml

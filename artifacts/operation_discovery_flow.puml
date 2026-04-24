@@ -1,0 +1,37 @@
+@startuml
+title OperationRegistry.__init__ — Operation Discovery Flow
+
+start
+
+:Receive calculator instance;
+:Store as _calculator;
+:Initialise _operations = {};
+
+:Call inspect.getmembers(calculator)\nto get all (name, method) pairs;
+
+:results = list of (name, callable) pairs;
+
+while (more members?) is (yes)
+
+  :Take next (name, member);
+
+  if (name starts with "_"?) then (yes)
+    :Skip — private member;
+  else (no)
+    :sig = inspect.signature(member);
+    :param_count = number of\nnon-self parameters;
+
+    if (param_count in {1, 2}?) then (yes)
+      :_operations[name] = param_count;
+    else (no)
+      :Skip — wrong arity;
+    endif
+  endif
+
+endwhile (no more members)
+
+:_sorted_names = sorted(_operations.keys());
+
+stop
+
+@enduml

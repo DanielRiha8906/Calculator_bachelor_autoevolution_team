@@ -47,3 +47,45 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** 123/123 passed (73 pre-existing + 50 new advanced math tests).
 
 **Handoff notes for next agent:** No new dependencies introduced (`math` is stdlib). The existing simple methods (add, subtract, multiply, divide) still lack input validation — a future task could add it, but only after failing tests are written first.
+
+### 2026-04-24 — Add interactive session and operation registry (src/interactive.py, src/operation_registry.py)
+
+**Task:** Implement `src/operation_registry.py` and `src/interactive.py` to make 15 failing tests pass in `tests/test_interactive.py`.
+
+**Files changed:**
+- `src/operation_registry.py` — new file; `OperationRegistry` class uses `inspect.signature` to discover public Calculator methods with arity 1 or 2, exposes `get_operations()`, `get_arity()`, `call()`
+- `src/interactive.py` — new file; `parse_operand()` helper (int-first, then float); `run_interactive_session()` main loop with operation menu, operand gathering, result printing, and continue-prompt
+
+**Key decisions:**
+- `parse_operand` checks for "." in the raw string before deciding int vs float; this lets "3.5" resolve to float so `Calculator.factorial(3.5)` raises `ValueError` (caught as "Error: ...") matching the test expectation.
+- `OperationRegistry` uses `inspect.getmembers(..., predicate=inspect.ismethod)` which already excludes `self` from the parameter list, so `arity = len(params)` gives the correct user-facing arity (1 or 2).
+- Operation list is sorted once in `__init__` and stored; ordering is deterministic, matching the alphabetical index mapping in the tester's report.
+- Exception handling catches `ZeroDivisionError` first (to emit "Error: Division by zero"), then broad `Exception` for all others (ValueError, math domain errors, etc.).
+- The continue-prompt loop re-prompts silently on unexpected input, matching the spec.
+- `run_interactive_session` accepts an optional `Calculator` arg (default `None`) to support both test injection and standalone use.
+
+**Patterns found:**
+- `inspect.getmembers(instance, predicate=inspect.ismethod)` returns bound methods, so their signature already excludes `self` — no need to subtract 1 from parameter count.
+- Always handle `ZeroDivisionError` before broad `Exception` when both are in the same try/except chain, to give a more informative message.
+
+**Test result:** 138/138 passed (123 pre-existing + 15 new interactive tests).
+
+**Handoff notes for next agent:** No new dependencies introduced. `src/__main__.py` was not modified. The interactive module currently has no way to reach it from `__main__.py` — a future task could wire it in, but that requires a new failing test first.
+
+### 2026-04-24 — Wire interactive session into __main__.py (issue-385)
+
+**Task:** Modify `src/__main__.py` so that `python -m src` launches `run_interactive_session()` instead of the demo `main()`.
+
+**Files changed:**
+- `src/__main__.py` — added `from .interactive import run_interactive_session` import; added docstring to `main()` labelling it as demo/backward-compat; replaced `main()` with `run_interactive_session()` in the `if __name__ == "__main__":` block.
+
+**Key decisions:**
+- `main()` was preserved unchanged (aside from adding a docstring) to honour backward compatibility and not break any callers that import and call `main` directly.
+- `run_interactive_session()` is called with no arguments so it defaults to constructing its own `Calculator` instance, matching the standalone-use path already supported by the function signature.
+
+**Patterns found:**
+- No new patterns. The change is purely a wiring step.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** No new dependencies introduced. `src/__main__.py` is now the entry point for the interactive session. The Tester should verify that `python -m src` launches the interactive loop and that all 138 pre-existing tests continue to pass.
