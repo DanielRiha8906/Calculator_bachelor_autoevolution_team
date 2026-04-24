@@ -316,4 +316,4 @@ Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
   - `artifacts/activity_calculation_flow.puml` — CLI calculation activity flow
   - `artifacts/sequence_registry_dispatch.puml` — Registry to Operation dispatch sequence
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
