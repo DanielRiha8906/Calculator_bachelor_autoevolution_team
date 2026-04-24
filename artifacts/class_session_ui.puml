@@ -1,0 +1,56 @@
+@startuml
+title Session & UI — Issue #406
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src.session" {
+  class SessionManager {
+    - _MAX_ATTEMPTS: int = 5
+    - _calculator: Calculator
+    - _error_logger: ErrorLogger
+    - _history: OperationHistory
+    - _retry_count: int
+    + __init__(calculator, error_logger, history)
+    + increment_retry_count(): bool
+    + reset_retry_count()
+  }
+}
+
+package "src (infrastructure / core)" {
+  class Calculator
+  class ErrorLogger
+  class OperationHistory
+  class OperationRegistry
+}
+
+SessionManager o-- Calculator     : aggregates
+SessionManager o-- ErrorLogger    : aggregates
+SessionManager o-- OperationHistory : aggregates
+
+package "src.ui" {
+
+  class "interactive.py" <<module>> as Interactive {
+    + run_interactive_session(calculator=None)
+    + parse_operand(user_input: str): Union[int, float]
+    + display_history_indexed(history: OperationHistory)
+  }
+
+  class "cli.py" <<module>> as CLI {
+    + run_cli(argv=None): int
+    + parse_cli_operand(operand_str: str): Union[int, float]
+  }
+
+}
+
+Interactive --> Calculator       : creates/uses
+Interactive --> OperationRegistry : creates/uses
+Interactive --> OperationHistory  : creates/uses
+Interactive --> ErrorLogger       : creates/uses
+
+CLI --> Calculator       : creates/uses
+CLI --> OperationRegistry : creates/uses
+CLI --> OperationHistory  : creates/uses
+CLI --> ErrorLogger       : creates/uses
+
+@enduml

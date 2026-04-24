@@ -1,0 +1,63 @@
+@startuml
+title Core & Registry Classes — Issue #406
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src (Calculation Core)" {
+  class Calculator {
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + power(base, exponent)
+    + factorial(n: int): int
+    + square(x): int | float
+    + cube(x): int | float
+    + sqrt(x): float
+    + cbrt(x): float
+    + ln(x): float
+    + log10(x): float
+  }
+}
+
+package "src (Discovery)" {
+  class OperationRegistry {
+    - _calculator: Calculator
+    - _operations: dict[str, int]
+    - _sorted_names: List[str]
+    + get_operations(): List[str]
+    + get_arity(name: str): int
+    + call(name: str, *args): Any
+  }
+
+  OperationRegistry o-- Calculator : aggregates
+}
+
+package "src.core (Abstractions)" {
+  enum OperationType {
+    UNARY = "unary"
+    BINARY = "binary"
+  }
+
+  class OperationMetadata <<dataclass>> {
+    + name: str
+    + arity: int
+    + op_type: OperationType
+    + description: str
+  }
+
+  OperationMetadata --> OperationType : op_type
+}
+
+note bottom of OperationRegistry
+  Builds registry by introspecting Calculator
+  methods at construction time.
+end note
+
+note bottom of OperationMetadata
+  Not yet imported by other modules —
+  placeholder for future typed operation catalog.
+end note
+
+@enduml

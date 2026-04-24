@@ -388,3 +388,17 @@ Duration: 332.4s | Cost: $0.659363 USD | Turns: 6
   - `artifacts/component_diagram_layers.puml` — component diagram showing Core, Discovery, UI, Infrastructure, and Session layers
 
 Duration: 509.7s | Cost: $0.996440 USD | Turns: 7
+
+## Run: update-diagrams — Issue #406 modular refactor diagrams (2026-04-24)
+
+- **Branch:** task/issue-406-modular-refactor
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/package_architecture.puml` — new package/component diagram showing modular package hierarchy
+  - `artifacts/class_core_registry.puml` — new class diagram for Calculator, OperationRegistry, OperationType, OperationMetadata
+  - `artifacts/class_infrastructure.puml` — new class diagram for ErrorLogger, OperationHistory
+  - `artifacts/class_session_ui.puml` — new class diagram for SessionManager and UI module functions
+  - `artifacts/dependency_flow.puml` — new sequence diagram for interactive session runtime flow
+  - `artifacts/import_graph.puml` — new component diagram showing module import dependencies
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

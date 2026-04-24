@@ -1,0 +1,65 @@
+@startuml
+title Interactive Session Runtime Flow — Issue #406
+
+participant "interactive.py" as UI
+participant Calculator
+participant OperationRegistry
+participant OperationHistory
+participant ErrorLogger
+
+== Startup ==
+UI -> Calculator       : new Calculator()
+activate Calculator
+UI -> OperationRegistry : new OperationRegistry(calculator)
+activate OperationRegistry
+OperationRegistry -> Calculator : introspect methods
+OperationRegistry --> UI : registry ready
+UI -> OperationHistory : new OperationHistory()
+activate OperationHistory
+UI -> ErrorLogger     : new ErrorLogger()
+activate ErrorLogger
+
+== Operation Selection ==
+UI -> OperationRegistry : get_operations()
+OperationRegistry --> UI : sorted list of names
+UI -> UI : prompt user for operation name
+
+== Operand Parsing ==
+UI -> UI : parse_operand(user_input)
+note right of UI
+  Raises ValueError on
+  non-numeric input
+end note
+
+== Computation ==
+UI -> OperationRegistry : call(name, *args)
+activate OperationRegistry
+OperationRegistry -> Calculator : <method>(*args)
+activate Calculator
+Calculator --> OperationRegistry : result
+deactivate Calculator
+OperationRegistry --> UI : result
+deactivate OperationRegistry
+
+== History Recording ==
+UI -> OperationHistory : record(name, operands, result)
+OperationHistory --> UI : ok
+
+== Error Path (invalid input / calculation error) ==
+alt operand parse failure
+  UI -> ErrorLogger : log_invalid_operand(...)
+else wrong argument count
+  UI -> ErrorLogger : log_incorrect_argument_count(...)
+else runtime error (e.g. divide by zero)
+  UI -> ErrorLogger : log_runtime_calculation_error(...)
+end
+
+== Session End ==
+UI -> OperationHistory : write_to_file()
+OperationHistory --> UI : file written
+deactivate OperationHistory
+deactivate ErrorLogger
+deactivate OperationRegistry
+deactivate Calculator
+
+@enduml
