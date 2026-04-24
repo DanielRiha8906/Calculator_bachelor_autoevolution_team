@@ -9,7 +9,7 @@
   - `artifacts/activity_operation_execution.puml` — Activity diagram: operation execution with success/failure branch and _record_operation call
   - `artifacts/sequence_display_history.puml` — Sequence diagram: display_history flow from CLI through Calculator to stdout
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 244.3s | Cost: $0.519995 USD | Turns: 5
 
 ## Run: Fix PR #443 — feat: add operation history to calculator (2026-04-24)
 
