@@ -21,7 +21,7 @@
 - **Risks:** None — all 334 tests pass; backward-compat re-exports in `src/__init__.py` remain intact.
 - **Tests passed:** 334 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 926.6s | Cost: $2.014364 USD | Turns: 15
 
 ## Run: Issue #406 — V3 Task 12 - Expert/team (2026-04-24)
 
