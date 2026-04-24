@@ -145,4 +145,4 @@ Duration: 498.8s | Cost: $1.150512 USD | Turns: 21
   - `artifacts/cli_mode_activity.puml` — activity diagram for CLI mode execution flow
   - `artifacts/cli_mode_sequence.puml` — sequence diagram for successful CLI invocation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
