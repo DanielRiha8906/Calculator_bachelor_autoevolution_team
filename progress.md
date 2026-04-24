@@ -8,4 +8,4 @@
 - **Risks:** None — no source code changes required; existing implementation already raises ZeroDivisionError natively
 - **Tests passed:** 5 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 220.4s | Cost: $0.499339 USD | Turns: 17
