@@ -111,3 +111,14 @@ Duration: 255.8s | Cost: $0.582970 USD | Turns: 6
 - **Tests passed:** 107 passed, 0 failed
 
 Duration: 436.2s | Cost: $0.904403 USD | Turns: 16
+
+## Run: update-diagrams — Add Interactive User Input (2026-04-24)
+
+- **Branch:** task/issue-384-interactive-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_interactive_input.puml` — new class diagram showing Calculator and __main__ module with registry-based dispatch
+  - `artifacts/activity_diagram_repl_loop.puml` — new activity diagram showing REPL loop flow with all error paths
+  - `artifacts/sequence_diagram_user_interaction.puml` — new sequence diagram showing user-to-result interaction with error handling
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

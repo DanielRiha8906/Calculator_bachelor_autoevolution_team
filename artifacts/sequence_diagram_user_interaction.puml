@@ -1,0 +1,79 @@
+@startuml sequence_diagram_user_interaction
+
+title Interactive Calculator: User Input to Result Delivery
+
+actor User
+participant "main()" as Main
+participant "Registry" as Registry
+participant "_parse_number()" as Parse
+participant "Calculator" as Calc
+
+User -> Main : run program
+activate Main
+
+Main -> Calc : Calculator()
+activate Calc
+Calc --> Main : instance
+deactivate Calc
+
+Main -> Registry : build registry\n(name -> method, arity)
+activate Registry
+Registry --> Main : registry dict
+deactivate Registry
+
+loop REPL iteration
+    Main -> User : show prompt (list operations)
+    User -> Main : enter operation name
+
+    alt User enters "quit" / "exit" / "q"
+        Main -> User : exit message
+        deactivate Main
+
+    else Unknown operation
+        Main -> Registry : lookup operation
+        activate Registry
+        Registry --> Main : not found
+        deactivate Registry
+        Main -> User : "Unknown operation" error
+
+    else Valid operation
+        Main -> Registry : lookup operation
+        activate Registry
+        Registry --> Main : (method, arity)
+        deactivate Registry
+
+        loop for each operand (arity times)
+            Main -> User : prompt for operand N
+            User -> Main : enter raw value
+
+            alt Invalid number input
+                Main -> Parse : _parse_number(raw)
+                activate Parse
+                Parse --> Main : raises ValueError
+                deactivate Parse
+                Main -> User : "Invalid number" error
+                note right of Main: restart REPL iteration
+            else Valid number
+                Main -> Parse : _parse_number(raw)
+                activate Parse
+                Parse --> Main : int|float value
+                deactivate Parse
+            end
+        end
+
+        Main -> Calc : method(*operands)
+        activate Calc
+
+        alt Calculation error (ValueError or ZeroDivisionError)
+            Calc --> Main : raises exception
+            deactivate Calc
+            Main -> User : "Error: <message>"
+        else Success
+            Calc --> Main : result
+            deactivate Calc
+            Main -> User : "Result: <value>"
+        end
+    end
+end
+
+@enduml

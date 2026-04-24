@@ -1,0 +1,41 @@
+@startuml class_diagram_interactive_input
+
+title Calculator Class and Interactive Input Architecture
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    .. Binary Arithmetic ..
+    + add(a, b) : int|float
+    + subtract(a, b) : int|float
+    + multiply(a, b) : int|float
+    + divide(a, b) : float
+    + power(base, exponent) : int|float
+    .. Unary Operations ..
+    + factorial(n) : int
+    + square(x) : int|float
+    + cube(x) : int|float
+    + square_root(x) : float
+    + cube_root(x) : float
+    + log10(x) : float
+    + ln(x) : float
+}
+
+class "__main__ module" as Main {
+    + main() : None
+    - _parse_number(raw: str) : int|float
+}
+
+note right of Main
+  Registry: dict[str, tuple[Callable, int]]
+  Maps operation name -> (method, arity)
+  e.g. "add" -> (calc.add, 2)
+       "factorial" -> (calc.factorial, 1)
+end note
+
+Main *--> Calculator : creates (composition)
+Main --> Calculator : dispatches via registry
+
+Main ..> Main : _parse_number() called\nfor each operand prompt
+
+@enduml
