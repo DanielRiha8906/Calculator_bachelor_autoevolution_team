@@ -143,4 +143,4 @@ Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
   - `artifacts/module_components.puml` — Component diagram showing module dependencies
   - `artifacts/session_state_machine.puml` — State machine diagram of interactive session states and transitions
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 318.7s | Cost: $0.692764 USD | Turns: 5
