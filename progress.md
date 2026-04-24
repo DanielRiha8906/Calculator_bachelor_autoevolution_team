@@ -1,4 +1,21 @@
 
+## Run: Issue #410 — V3 Task 14 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/scientific_operations.py` — created, pure functions for sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e
+  - `src/calculator_core.py` — added 12 scientific methods, mode management (enable/disable/toggle/is_scientific_mode)
+  - `src/interface.py` — added mode parameter to prompt_for_operator, MODE_TOGGLE sentinel, display_mode_change, arity-0 constant dispatch
+  - `src/cli.py` — updated re-exports to include display_mode_change and SCIENTIFIC_OPERATIONS
+  - `src/__main__.py` — interactive loop now tracks mode, handles MODE_TOGGLE, passes mode to run_calculator
+  - `tests/test_scientific_mode.py` — 35 new tests covering all scientific operations, mode management, history, validation, and UI
+- **Purpose:** Add scientific mode with trig/hyperbolic/exponential functions and interactive mode switching; normal mode is default and unaffected
+- **Risks:** None — purely additive; no existing operations or tests changed
+- **Tests passed:** 375 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #407 — V3 Task 13 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-407-add-documentation
