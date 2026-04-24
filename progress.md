@@ -15,7 +15,7 @@
 - **Risks:** None — backward compatibility maintained via calculator.py re-export facade; all existing imports continue to work unchanged
 - **Tests passed:** 324 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 574.3s | Cost: $1.406446 USD | Turns: 18
 
 ## Run: update-diagrams — Separate calculator logic from interface (#401) (2026-04-24)
 
