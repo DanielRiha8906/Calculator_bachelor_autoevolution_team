@@ -10,7 +10,7 @@
 - **Risks:** None
 - **Tests passed:** 213 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 687.0s | Cost: $1.229090 USD | Turns: 17
 
 ## Run: Fix PR #436 — Add CLI entry point for bash-based calculator invocation (#391) (2026-04-24)
 
