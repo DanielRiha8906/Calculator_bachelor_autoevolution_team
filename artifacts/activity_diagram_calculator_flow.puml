@@ -1,0 +1,68 @@
+@startuml activity_diagram_calculator_flow
+
+skinparam activityDiamondBackgroundColor #FEFECE
+
+start
+
+:User invokes app;
+:main() calls run_calculator();
+:Create Calculator instance;
+
+while (operator valid?) is (invalid)
+    :prompt_for_operator()\nprint error, retry;
+endwhile (valid)
+
+:Look up arity from OPERATIONS dict;
+
+if (arity == 1?) then (yes — unary)
+
+    while (first number valid?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :operand stored;
+
+    :method = getattr(calc, method_name);
+
+    if (ValueError raised?) then (yes)
+        :run_calculator() calls display_error();
+        :re-raises to main();
+        :main() calls display_error();
+        stop
+    else (no)
+        :result = method(operand);
+        :display_result_unary(key, operand, result);
+        :prints "sqrt(9.0) = 3.0";
+    endif
+
+else (no — binary)
+
+    while (first number valid?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :first stored;
+
+    while (second number valid?) is (invalid)
+        :prompt_for_second_number()\nprint error, retry;
+    endwhile (valid)
+    :second stored;
+
+    :method = getattr(calc, method_name);
+
+    if (ZeroDivisionError or ValueError?) then (yes)
+        :run_calculator() calls display_error();
+        :re-raises to main();
+        :main() calls display_error();
+        stop
+    else (no)
+        :result = method(first, second);
+        :display_result_binary(key, first, second, result);
+        :prints "5.0 + 3.0 = 8.0";
+    endif
+
+endif
+
+:run_calculator() returns result;
+:main() exits normally;
+stop
+
+@enduml

@@ -147,3 +147,14 @@ Duration: 289.9s | Cost: $0.657900 USD | Turns: 4
 - **Tests passed:** 121 passed, 0 failed
 
 Duration: 331.0s | Cost: $0.765543 USD | Turns: 13
+
+## Run: update-diagrams — add CLI user input diagrams (2026-04-24)
+
+- **Branch:** task/issue-383-add-user-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — Calculator class with all 12 methods and error annotations
+  - `artifacts/class_diagram_cli_components.puml` — module dependency diagram for __main__, cli, and Calculator
+  - `artifacts/activity_diagram_calculator_flow.puml` — runtime activity flow for binary/unary operations and error paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

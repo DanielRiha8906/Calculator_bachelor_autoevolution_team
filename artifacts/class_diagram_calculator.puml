@@ -4,24 +4,24 @@ skinparam classAttributeIconSize 0
 
 class Calculator {
     ' Binary Operations (arity 2)
-    + add(a, b) : numeric
-    + subtract(a, b) : numeric
-    + multiply(a, b) : numeric
-    + divide(a, b) : numeric
-    + power(base, exp) : numeric
+    + add(a: float, b: float) : float
+    + subtract(a: float, b: float) : float
+    + multiply(a: float, b: float) : float
+    + divide(a: float, b: float) : float
+    + power(base: float, exp: float) : float
 
     ' Unary Operations (arity 1)
-    + square(a) : numeric
-    + cube(a) : numeric
-    + square_root(a) : float
-    + cube_root(a) : float
-    + factorial(n) : int
-    + log(a) : float
-    + ln(a) : float
+    + square(a: float) : float
+    + cube(a: float) : float
+    + square_root(a: float) : float
+    + cube_root(a: float) : float
+    + factorial(n: float|int) : int
+    + log(a: float) : float
+    + ln(a: float) : float
 }
 
 note top of Calculator
-  Stateless class — all pure methods
+  Stateless class — no instance variables
   Binary (arity 2): add, subtract, multiply, divide, power
   Unary  (arity 1): square, cube, square_root, cube_root, factorial, log, ln
 end note
@@ -39,7 +39,7 @@ end note
 note right of Calculator::factorial
   Raises ValueError when:
   - n is a boolean
-  - n is non-integer
+  - n is fractional
   - n < 0
 end note
 
