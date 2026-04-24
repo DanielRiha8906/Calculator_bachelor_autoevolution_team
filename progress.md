@@ -364,3 +364,14 @@ Duration: 172.3s | Cost: $0.461259 USD | Turns: 4
   - `artifacts/sequence_diagram_operation.puml` — sequence diagram for add(5,3) interaction
 
 Duration: 282.4s | Cost: $0.580798 USD | Turns: 4
+
+## Run: update-diagrams — Add PlantUML diagrams for calculator architecture (2026-04-24)
+
+- **Branch:** task/issue-407-add-documentation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — Class diagram showing Calculator, operation modules, interface, batch_cli, and facade relationships
+  - `artifacts/activity_diagram_main_flow.puml` — Activity diagram showing entry dispatch and batch/interactive mode flows
+  - `artifacts/sequence_diagram_single_operation.puml` — Sequence diagram for single operation execution (binary happy path + error case)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

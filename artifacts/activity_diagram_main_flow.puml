@@ -1,0 +1,56 @@
+@startuml activity_diagram_main_flow
+
+skinparam activityFontSize 13
+skinparam diamondFontSize 12
+
+start
+
+:python -m src invoked;
+
+if (len(sys.argv) > 1?) then (yes — batch mode)
+
+  if (argv[1:] == ['history']?) then (yes)
+    :load and display history.txt;
+    stop
+  else (no)
+    :parse_batch_args();
+    :execute_batch(calc, args);
+    if (operation succeeded?) then (yes)
+      :print result to stdout;
+      :exit(0);
+    else (no)
+      :print error to stderr;
+      :exit(1);
+    endif
+    stop
+  endif
+
+else (no — interactive mode)
+
+  :Create Calculator instance;
+
+  while (running?) is (yes)
+    :run_calculator(calc, max_retries=3);
+    if (result == "QUIT"?) then (yes)
+      break
+    else (no)
+      if (MaxRetriesExceeded raised?) then (yes)
+        :display error message;
+        break
+      else (no)
+        :continue — accumulate history;
+      endif
+    endif
+  endwhile
+
+  fork
+    :persist_history_to_file(calc);
+  fork again
+    note right: Ctrl+C also triggers\npersist before exit
+  end fork
+
+  stop
+
+endif
+
+@enduml

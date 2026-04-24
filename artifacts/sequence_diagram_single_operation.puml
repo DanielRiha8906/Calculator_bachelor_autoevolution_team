@@ -1,0 +1,58 @@
+@startuml sequence_diagram_single_operation
+
+skinparam sequenceMessageAlign center
+skinparam participantFontSize 13
+
+actor User
+participant "interface" as iface
+participant "Calculator" as calc
+participant "OperationModule\n(basic_ops / advanced_ops)" as ops
+
+== Happy Path: binary operation (add 5.0 3.0) ==
+
+User ->> iface : type operation key "+"
+activate iface
+
+iface -> iface : prompt_for_operator() → "+"
+iface -> iface : _get_operation_arity("+") → 2
+
+iface ->> User : prompt for first number
+User ->> iface : 5.0
+
+iface ->> User : prompt for second number
+User ->> iface : 3.0
+
+iface -> iface : _get_calculator_method("+") → "add"
+
+iface -> calc : calc.add(5.0, 3.0)
+activate calc
+
+calc -> ops : basic_operations.add(5.0, 3.0)
+ops --> calc : 8.0
+
+calc -> calc : _record_operation("add", [5.0, 3.0], 8.0)
+calc --> iface : 8.0
+deactivate calc
+
+iface ->> User : display "5.0 + 3.0 = 8.0"
+iface ->> User : display_history_notification()
+iface --> iface : return 8.0
+deactivate iface
+
+== Error Path: division by zero ==
+
+iface -> calc : calc.divide(10.0, 0.0)
+activate calc
+
+alt ZeroDivisionError
+  calc -> ops : basic_operations.divide(10.0, 0.0)
+  ops --> calc : raise ZeroDivisionError
+  calc --> iface : raise ZeroDivisionError
+  deactivate calc
+  activate iface
+  iface -> iface : display_error("division by zero")
+  iface --> iface : re-raise ZeroDivisionError
+  deactivate iface
+end
+
+@enduml
