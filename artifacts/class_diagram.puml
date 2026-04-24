@@ -3,10 +3,23 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
+    .. Binary Arithmetic ..
     + add(a: int|float, b: int|float) : int|float
     + subtract(a: int|float, b: int|float) : int|float
     + multiply(a: int|float, b: int|float) : int|float
     + divide(a: int|float, b: int|float) : float
+    .. Unary Algebraic ..
+    + square(x: int|float) : int|float
+    + cube(x: int|float) : int|float
+    + square_root(x: int|float) : float
+    + cube_root(x: int|float) : float
+    .. Binary Power ..
+    + power(base: int|float, exponent: int|float) : int|float
+    .. Unary Logarithm ..
+    + log10(x: int|float) : float
+    + ln(x: int|float) : float
+    .. Unary Special ..
+    + factorial(n: int) : int
 }
 
 note right of Calculator::divide

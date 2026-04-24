@@ -86,3 +86,15 @@ Duration: 157.2s | Cost: $0.412103 USD | Turns: 7
 - **Tests passed:** 82 passed, 0 failed
 
 Duration: 395.6s | Cost: $0.776898 USD | Turns: 18
+
+## Run: update-diagrams — Advanced Operations UML Update (2026-04-24)
+
+- **Branch:** task/issue-381-advanced-operations
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — added 7 new methods (square, cube, square_root, cube_root, power, log10, ln) with signatures, return types, and exception conditions
+  - `artifacts/class_diagram.puml` — updated Calculator class to show all 11 methods
+  - `artifacts/activity_diagram.puml` — generalized exception-handling flow to cover ValueError in addition to ZeroDivisionError
+  - `artifacts/component_calculator.puml` — updated operations list to all 11 operations and math dependency note
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
