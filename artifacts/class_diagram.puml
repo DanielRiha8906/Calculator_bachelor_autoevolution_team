@@ -1,5 +1,5 @@
 @startuml
-title Calculator System — Class Overview (with CLI & Entry Point)
+title Calculator System — Class Overview (with Session History)
 
 skinparam classAttributeIconSize 0
 
@@ -11,7 +11,7 @@ class Calculator {
   + divide(a, b)
   + power(base, exponent)
   .. unary operations (arity=1) ..
-  + factorial(n)
+  + factorial(n: int): int
   + square(x)
   + cube(x)
   + sqrt(x)
@@ -29,7 +29,7 @@ end note
 class OperationRegistry {
   - _calculator: Calculator
   - _operations: dict[str, int]
-  - _sorted_names: List[str]
+  - _sorted_names: list[str]
   --
   + __init__(calculator: Calculator)
   + get_operations(): List[str]
@@ -44,6 +44,24 @@ note right of OperationRegistry
   Forwards Calculator exceptions on call().
 end note
 
+class OperationHistory {
+  - _entries: list[str]
+  --
+  + __init__()
+  + record(operation_name: str, operands: tuple, result: Any): None
+  + get_entries(): list[str]
+  + display(): str
+  + write_to_file(filepath: str): None
+}
+
+note right of OperationHistory
+  Independent — no dependency on Calculator
+  or OperationRegistry.
+  Entries formatted as: op(args) = result.
+  write_to_file() called at all 5 session exit paths.
+  IOError on write is silently logged to stderr.
+end note
+
 package "cli (module-level functions)" {
   class parse_cli_operand <<function>> {
     parse_cli_operand(operand_str: str): Union[int, float]
@@ -56,6 +74,12 @@ package "cli (module-level functions)" {
 package "interactive (module-level functions)" {
   class parse_operand <<function>> {
     parse_operand(user_input: str): Union[int, float]
+  }
+  class format_history_entry <<function>> {
+    format_history_entry(operation_name: str, operands: tuple, result: Any): str
+  }
+  class display_history_indexed <<function>> {
+    display_history_indexed(history: OperationHistory): None
   }
   class run_interactive_session <<function>> {
     run_interactive_session(calculator: Calculator = None): None
@@ -77,7 +101,10 @@ run_cli ..> parse_cli_operand : calls for each operand
 
 run_interactive_session --> Calculator : creates if None
 run_interactive_session --> OperationRegistry : creates and uses
+run_interactive_session --> OperationHistory : creates per session
 run_interactive_session ..> parse_operand : calls for each operand
+run_interactive_session ..> display_history_indexed : calls on "h" command
+run_interactive_session ..> format_history_entry : used by record path
 
 Main --> run_cli : if CLI args present
 Main --> run_interactive_session : if no CLI args

@@ -1,0 +1,47 @@
+@startuml
+title Calculator System — Module Component Boundaries (PR #444)
+
+skinparam componentStyle rectangle
+
+component "__main__\n(entry point)" as Main
+component "cli" as CLI
+component "interactive" as Interactive
+component "operation_registry" as Registry
+component "calculator" as Calc
+component "history" as History
+
+database "history.txt\n(filesystem)" as HistFile
+
+note top of Main
+  if len(sys.argv) > 1:
+    run_cli(); sys.exit(rc)
+  else:
+    run_interactive_session()
+end note
+
+Main --> CLI : if CLI args present\n(run_cli)
+Main --> Interactive : if no args\n(run_interactive_session)
+
+CLI --> Registry : instantiates per invocation
+CLI --> Calc : instantiates per invocation
+
+Interactive --> Registry : instantiates once per session
+Interactive --> Calc : instantiates once per session
+Interactive --> History : instantiates once per session\nrecords each successful op
+
+Registry --> Calc : composition\n(introspects at construction)
+
+History --> HistFile : write_to_file("history.txt")\nat all session exit points
+
+note bottom of History
+  Independent module — no dependency
+  on Calculator or OperationRegistry.
+  CLI mode does NOT use History.
+end note
+
+note bottom of CLI
+  Does NOT use OperationHistory.
+  Fail-fast: exits on first error.
+end note
+
+@enduml

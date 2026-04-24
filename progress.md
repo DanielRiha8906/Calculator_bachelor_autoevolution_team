@@ -264,3 +264,15 @@ Duration: 216.3s | Cost: $0.496068 USD | Turns: 4
   - `artifacts/session_state_machine.puml` — updated with RECORDING and PERSISTING states for history lifecycle
 
 Duration: 228.5s | Cost: $0.513488 USD | Turns: 7
+
+## Run: update-diagrams — Session Operation History (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added OperationHistory class and composition/usage relationships
+  - `artifacts/activity_diagram_session.puml` — interactive session flow with history command and all exit paths
+  - `artifacts/sequence_diagram_operation.puml` — happy path operation cycle with history recording
+  - `artifacts/component_diagram.puml` — module boundaries including history.py and history.txt dependency
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
