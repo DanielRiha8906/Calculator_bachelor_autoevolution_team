@@ -13,7 +13,7 @@
 - **Risks:** Calculator is now stateful — callers that create a new instance per operation will not accumulate history across calls; existing tests unaffected as they do not depend on history state
 - **Tests passed:** 215 passed, 0 failed, 1 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 530.5s | Cost: $1.188065 USD | Turns: 20
 
 ## Run: Issue #392 — V3 Task 8 - Naive/team (2026-04-24)
 
