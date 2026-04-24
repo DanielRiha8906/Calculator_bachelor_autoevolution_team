@@ -613,3 +613,68 @@ All 38 tests pass immediately, indicating the implementer has successfully compl
 - try/finally block in main() verified with capsys/assertions
 
 **Handoff Note:** All 38 tests pass immediately. The implementer successfully completed all history persistence features before tester invocation. This is opposite of expected WRITE phase behavior. Rather than report this as failure, proceeding to VERIFY phase to confirm full suite stability.
+
+### 2026-04-24 | task/issue-398-error-logging | WRITE | 25 failing tests written, 24 failing (expected)
+
+**Task:** Write comprehensive failing tests for error logging functionality covering error.log file creation, log format validation, calculator error logging, user input error logging, batch mode error logging, and file persistence.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented (25 tests total across 15 test classes):**
+
+1. TestLoggerInitialization (1 test): Logger initialization creates error.log on first log call
+2. TestLogFormatTimestamp (1 test): Logged lines contain timestamp in [YYYY-MM-DD HH:MM:SS] format
+3. TestLogFormatErrorLevel (1 test): Logged lines contain [ERROR] level indicator
+4. TestLogFormatOperationAndOperands (1 test): Logged lines contain "Operation: divide" and "Operands: [10, 0]"
+5. TestLogFormatErrorType (1 test): Logged lines contain error type (e.g., "ValueError")
+6. TestLogFormatErrorMessage (1 test): Logged lines contain error message text
+7. TestSquareRootNegativeLogging (1 test): calculator.square_root(-5) logs with operation, operands, error type
+8. TestDivisionByZeroLogging (1 test): calculator.divide(10, 0) logs with ZeroDivisionError
+9. TestFactorialNegativeLogging (1 test): calculator.factorial(-5) logs with ValueError
+10. TestLogNonPositiveLogging (1 test): calculator.log(0) logs with ValueError
+11. TestLnNegativeLogging (1 test): calculator.ln(-1) logs with ValueError
+12. TestSuccessfulOperationsNotLogged (1 test): Successful operations (add) don't create log entries
+13. TestInvalidOperandInputLogging (1 test): Invalid numeric input ("abc") logged with context
+14. TestInvalidOperatorInputLogging (1 test): Invalid operator input ("xyz") logged with context
+15. TestRetryAttemptLogging (1 test): Each retry attempt logged with attempt count
+16. TestMaxRetriesExceededLogging (1 test): Max retries exceeded logged with context
+17. TestMaxRetriesExceededOperatorLogging (1 test): Max retries exceeded for operator logged
+18. TestBatchUnknownOperationLogging (1 test): Unknown batch operation logged
+19. TestBatchWrongOperandCountLogging (1 test): Wrong operand count in batch logged
+20. TestBatchNonNumericArgumentLogging (1 test): Non-numeric batch argument logged
+21. TestBatchDivisionByZeroLogging (1 test): Division by zero in batch logged
+22. TestBatchSqrtNegativeLogging (1 test): Negative sqrt in batch logged
+23. TestErrorLogFilePersistence (1 test): Multiple log calls all persist to file
+24. TestErrorLogAppendMode (1 test): Second log call appends; first error still present
+25. TestErrorLogNoRotation (1 test): Repeated logs produce one growing file, not rotated files
+
+**Test Results:**
+- Total tests written: 25
+- Passed: 1 (test_successful_operations_not_logged - correctly expects no log file)
+- Failed: 24 (all call log_error which is not yet implemented)
+- Collection errors: 0
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_error_logging.py`
+
+**Test Structure:**
+- Uses tmp_path fixture for isolated temporary directories and log files
+- Imports Calculator to test error scenarios (divide by zero, sqrt negative, etc.)
+- Graceful import fallback: if src.error_logger doesn't exist, defines stub log_error function
+- Tests verify file creation, content format, and persistence behavior
+- All error logging tests follow pattern: trigger operation → call log_error → verify log content
+
+**Key Findings:**
+1. All 24 new error logging tests correctly fail because log_error is not implemented
+2. One test (test_successful_operations_not_logged) passes as designed - it expects no logging for successful operations
+3. Test design includes proper error type and message validation using regex and string containment checks
+4. Tests support multiple scenarios: calculator operations, user input validation, batch mode, and retry tracking
+
+**Handoff Note:** 25 failing tests committed successfully (24 failing as expected, 1 passing for valid reason). The error_logger module must:
+1. Provide `log_error(operation, operands, error_type, error_message, filepath="error.log")` function
+2. Create/append to error.log file with structured format
+3. Include timestamp [YYYY-MM-DD HH:MM:SS], [ERROR] level, operation name, operands list, error type, and error message
+4. Support file path parameter for testing
+5. Work in append mode (subsequent calls add to existing file)
+6. Not rotate log files (one continuously growing file)
+
+Ready for python-code-implementer to create src/error_logger.py module.
