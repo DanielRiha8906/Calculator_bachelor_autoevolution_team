@@ -119,3 +119,18 @@ Duration: 256.1s | Cost: $0.503387 USD | Turns: 4
 - **Tests passed:** 121 passed, 0 failed
 
 Duration: 416.6s | Cost: $0.814535 USD | Turns: 14
+
+## Run: update-diagrams — Add user input CLI diagrams (2026-04-24)
+
+- **Branch:** task/issue-383-add-user-input
+- **PR target:** task/issue-383-add-user-input
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — Calculator class with 12 arity-labeled methods
+  - `artifacts/class_diagram_cli.puml` — CLI module structure with OPERATIONS registry and function groups
+  - `artifacts/activity_diagram_user_session.puml` — Interactive session flow with arity branching and error handling
+  - `artifacts/sequence_diagram_unary_success.puml` — Successful unary operation sequence (sqrt example)
+  - `artifacts/sequence_diagram_error_path.puml` — Division by zero two-layer error handling sequence
+  - `artifacts/sequence_diagram_invalid_input.puml` — Operator validation loop sequence
+  - `artifacts/component_diagram_modules.puml` — Module dependency diagram (__main__ → cli → calculator → math)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

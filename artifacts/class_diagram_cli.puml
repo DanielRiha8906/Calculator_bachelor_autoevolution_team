@@ -3,75 +3,69 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
-    + add(a: float, b: float) : float
-    + subtract(a: float, b: float) : float
-    + multiply(a: float, b: float) : float
-    + divide(a: float, b: float) : float
-    + square(a: float) : float
-    + cube(a: float) : float
-    + square_root(a: float) : float
-    + cube_root(a: float) : float
-    + factorial(n: int) : int
-    + power(base: float, exp: float) : float
-    + log(a: float) : float
-    + ln(a: float) : float
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : numeric
+    + power(base, exp) : numeric
+    + square(a) : numeric
+    + cube(a) : numeric
+    + square_root(a) : float
+    + cube_root(a) : float
+    + factorial(n) : int
+    + log(a) : float
+    + ln(a) : float
 }
 
-note right of Calculator::divide
-  Raises ZeroDivisionError
-  when b == 0
-end note
-
-note right of Calculator::square_root
-  Raises ValueError when a < 0
-end note
-
-note right of Calculator::log
-  Raises ValueError when a <= 0
-end note
-
-note right of Calculator::ln
-  Raises ValueError when a <= 0
-end note
-
-note right of Calculator::factorial
-  Raises ValueError for
-  boolean, non-integer, or n < 0
-end note
-
 class "cli" <<module>> {
-    + SUPPORTED_OPERATORS : set
-    + prompt_for_first_number() : float
+    ' Registry
+    + OPERATIONS : dict
+
+    ' Prompt functions
     + prompt_for_operator() : str
+    + prompt_for_first_number() : float
     + prompt_for_second_number() : float
+
+    ' Display functions
     + display_result(first, operator, second, result) : None
-    + display_error(error_message: str) : None
+    + display_result_unary(operation_key, operand, result) : None
+    + display_result_binary(operation_key, first, second, result) : None
+    + display_error(error_message) : None
+
+    ' Private helpers
+    - _get_operation_arity(key) : int
+    - _get_calculator_method(key) : str
+    - _get_display_symbol(key) : str
+
+    ' Orchestrator
     + run_calculator() : float
 }
 
-note right of "cli"::SUPPORTED_OPERATORS
-  {"+", "-", "*", "/"}
+note right of "cli"::OPERATIONS
+  12-entry dict:
+  key -> (arity, method_name, symbol, description)
+  Binary (arity 2): "+", "-", "*", "/", "power"
+  Unary  (arity 1): "square", "cube", "sqrt",
+                    "cbrt", "factorial", "log", "ln"
 end note
 
-note right of "cli"::prompt_for_first_number
-  Loops until valid float input
-end note
-
-note right of "cli"::prompt_for_operator
-  Loops until operator in
-  SUPPORTED_OPERATORS
+note right of "cli"::run_calculator
+  Arity-aware dispatch via getattr().
+  Catches ValueError / ZeroDivisionError,
+  calls display_error(), then re-raises.
 end note
 
 class "__main__" <<module>> {
     + main() : None
 }
 
-class "__init__" <<module>> {
-    ' re-exports Calculator
-}
+note right of "__main__"::main
+  Calls run_calculator().
+  Catches ZeroDivisionError and Exception,
+  calls display_error().
+end note
 
 "cli" --> Calculator : <<import>>\nCalculator
-"__main__" --> "cli" : <<import>>\nrun_calculator, display_error
-"__init__" --> Calculator : <<import>>\nCalculator
+"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error
 
 @enduml

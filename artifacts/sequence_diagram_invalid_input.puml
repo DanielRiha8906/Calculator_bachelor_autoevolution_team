@@ -1,0 +1,35 @@
+@startuml sequence_diagram_invalid_input
+
+title Operator Validation Loop — Invalid Input Then Valid Input
+
+participant "User" as User
+participant "run_calculator()" as RunCalc
+
+activate RunCalc
+
+RunCalc -> User : "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, factorial, power, log, ln): "
+User --> RunCalc : "mod"
+RunCalc -> RunCalc : "mod" not in OPERATIONS
+RunCalc -> User : "Invalid operator 'mod'. Please enter one of: ..."
+
+RunCalc -> User : "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, factorial, power, log, ln): "
+User --> RunCalc : "abc"
+RunCalc -> RunCalc : "abc" not in OPERATIONS
+RunCalc -> User : "Invalid operator 'abc'. Please enter one of: ..."
+
+RunCalc -> User : "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, factorial, power, log, ln): "
+User --> RunCalc : "+"
+RunCalc -> RunCalc : "+" in OPERATIONS — valid
+RunCalc -> RunCalc : return "+"
+
+note over RunCalc
+  Loop exits with valid operation key.
+  Same validation pattern applies to
+  prompt_for_first_number() and
+  prompt_for_second_number() for
+  non-numeric input.
+end note
+
+deactivate RunCalc
+
+@enduml

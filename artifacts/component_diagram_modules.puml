@@ -1,0 +1,56 @@
+@startuml component_diagram_modules
+
+title Module Dependency — Calculator CLI
+
+package "src/" {
+
+    component "__main__.py" as Main {
+        [main()]
+    }
+
+    component "cli.py" as CLI {
+        [run_calculator()]
+        [prompt_for_operator()]
+        [prompt_for_first_number()]
+        [prompt_for_second_number()]
+        [display_result_unary()]
+        [display_result_binary()]
+        [display_error()]
+        [OPERATIONS dict]
+    }
+
+    component "calculator.py" as Calc {
+        [Calculator]
+    }
+
+}
+
+package "stdlib" {
+    component "math" as Math {
+        [sqrt, factorial, log10, log]
+    }
+}
+
+Main --> CLI : imports run_calculator,\ndisplay_error
+CLI --> Calc : imports Calculator
+Calc --> Math : imports math
+
+note bottom of Main
+  Entry point.
+  Catches ZeroDivisionError
+  and Exception.
+end note
+
+note bottom of CLI
+  Arity-aware dispatch via OPERATIONS dict.
+  Validation loops for all user inputs.
+  Re-raises exceptions to main().
+end note
+
+note bottom of Calc
+  Stateless pure methods.
+  Raises ValueError or ZeroDivisionError
+  on invalid inputs.
+end note
+
+@enduml

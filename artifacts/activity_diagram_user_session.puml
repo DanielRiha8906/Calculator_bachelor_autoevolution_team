@@ -9,42 +9,60 @@ start
 :call run_calculator();
 :Create Calculator instance;
 
-while (valid first number?) is (invalid)
-    :prompt_for_first_number()\nprint error, retry;
-endwhile (valid)
-:Store first number;
-
 while (valid operator?) is (invalid)
     :prompt_for_operator()\nprint error, retry;
 endwhile (valid)
-:Store operator;
+:Store operator key;
+:Look up arity from OPERATIONS;
 
-while (valid second number?) is (invalid)
-    :prompt_for_second_number()\nprint error, retry;
-endwhile (valid)
-:Store second number;
+if (arity == 1?) then (yes — unary)
 
-if (operator == "+") then (yes)
-    :calc.add(first, second);
-elseif (operator == "-") then (yes)
-    :calc.subtract(first, second);
-elseif (operator == "*") then (yes)
-    :calc.multiply(first, second);
-else (operator == "/")
-    :calc.divide(first, second);
-    note right
-      May raise
-      ZeroDivisionError
-    end note
+    while (valid operand?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :Store operand;
+
+    :method = getattr(calc, method_name);
+    :result = method(operand);
+
+    if (ValueError raised?) then (yes)
+        :display_error(error_message);
+        :re-raise to main();
+        :main calls display_error();
+        stop
+    else (no)
+    endif
+
+    :display_result_unary(key, operand, result);
+
+else (no — binary)
+
+    while (valid first number?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :Store first number;
+
+    while (valid second number?) is (invalid)
+        :prompt_for_second_number()\nprint error, retry;
+    endwhile (valid)
+    :Store second number;
+
+    :method = getattr(calc, method_name);
+    :result = method(first, second);
+
+    if (ZeroDivisionError or ValueError?) then (yes)
+        :display_error(error_message);
+        :re-raise to main();
+        :main calls display_error();
+        stop
+    else (no)
+    endif
+
+    :display_result_binary(key, first, second, result);
+
 endif
 
-if (exception raised?) then (yes)
-    :display_error(error_message);
-    stop
-else (no)
-    :display_result(first, operator, second, result);
-    :return result to main();
-    stop
-endif
+:return result to main();
+stop
 
 @enduml

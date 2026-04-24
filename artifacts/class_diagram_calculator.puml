@@ -3,14 +3,14 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
-    ' Binary Operations
+    ' Binary Operations (arity 2)
     + add(a, b) : numeric
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
     + divide(a, b) : numeric
     + power(base, exp) : numeric
 
-    ' Unary Operations
+    ' Unary Operations (arity 1)
     + square(a) : numeric
     + cube(a) : numeric
     + square_root(a) : float
@@ -20,6 +20,12 @@ class Calculator {
     + ln(a) : float
 }
 
+note top of Calculator
+  Stateless class — all pure methods
+  Binary (arity 2): add, subtract, multiply, divide, power
+  Unary  (arity 1): square, cube, square_root, cube_root, factorial, log, ln
+end note
+
 note right of Calculator::divide
   Raises ZeroDivisionError
   when b == 0
@@ -28,11 +34,6 @@ end note
 note right of Calculator::square_root
   Raises ValueError
   when a < 0
-end note
-
-note right of Calculator::cube_root
-  Handles negatives:
-  -(abs(a) ^ (1/3))
 end note
 
 note right of Calculator::factorial
@@ -52,7 +53,7 @@ note right of Calculator::ln
   Raises ValueError when a <= 0
 end note
 
-package "math" <<module>> {
+package "math" <<stdlib>> {
 }
 
 Calculator ..> math : uses\nsqrt, factorial,\nlog10, log

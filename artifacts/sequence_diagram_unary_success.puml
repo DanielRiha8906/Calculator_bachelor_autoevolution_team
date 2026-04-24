@@ -1,0 +1,43 @@
+@startuml sequence_diagram_unary_success
+
+title Successful Unary Operation — sqrt(16) = 4.0
+
+participant "User" as User
+participant "main()" as Main
+participant "run_calculator()" as RunCalc
+participant "Calculator" as Calc
+participant "display_result_unary()" as Display
+
+User -> Main : invoke app
+activate Main
+
+Main -> RunCalc : run_calculator()
+activate RunCalc
+
+RunCalc -> RunCalc : prompt_for_operator()
+User --> RunCalc : "sqrt"
+RunCalc -> RunCalc : arity = _get_operation_arity("sqrt") → 1
+RunCalc -> RunCalc : method_name = _get_calculator_method("sqrt") → "square_root"
+
+RunCalc -> RunCalc : prompt_for_first_number()
+User --> RunCalc : 16
+RunCalc -> RunCalc : operand = 16.0
+
+RunCalc -> Calc : <<create>>
+activate Calc
+RunCalc -> Calc : square_root(16.0)
+Calc --> RunCalc : 4.0
+deactivate Calc
+
+RunCalc -> Display : display_result_unary("sqrt", 16.0, 4.0)
+activate Display
+Display --> RunCalc : prints "sqrt(16.0) = 4.0"
+deactivate Display
+
+RunCalc --> Main : 4.0
+deactivate RunCalc
+
+Main --> User : exit 0
+deactivate Main
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml sequence_diagram_error_path
+
+title Division by Zero — Two-Layer Error Handling
+
+participant "User" as User
+participant "main()" as Main
+participant "run_calculator()" as RunCalc
+participant "Calculator" as Calc
+participant "display_error()" as ErrDisplay
+
+User -> Main : invoke app
+activate Main
+
+Main -> RunCalc : run_calculator()
+activate RunCalc
+
+RunCalc -> RunCalc : prompt_for_operator() → "/"
+RunCalc -> RunCalc : arity = 2
+RunCalc -> RunCalc : prompt_for_first_number() → 10.0
+RunCalc -> RunCalc : prompt_for_second_number() → 0.0
+
+RunCalc -> Calc : <<create>>
+activate Calc
+RunCalc -> Calc : divide(10.0, 0.0)
+Calc --> RunCalc : raise ZeroDivisionError
+deactivate Calc
+
+note over RunCalc
+  Layer 1: run_calculator()
+  catches ZeroDivisionError
+end note
+
+RunCalc -> ErrDisplay : display_error("division by zero")
+activate ErrDisplay
+ErrDisplay --> RunCalc : prints "Error: division by zero"
+deactivate ErrDisplay
+
+RunCalc --> Main : re-raise ZeroDivisionError
+deactivate RunCalc
+
+note over Main
+  Layer 2: main()
+  catches ZeroDivisionError
+end note
+
+Main -> ErrDisplay : display_error("Division by zero is not allowed.")
+activate ErrDisplay
+ErrDisplay --> Main : prints "Error: Division by zero is not allowed."
+deactivate ErrDisplay
+
+Main --> User : exit
+deactivate Main
+
+@enduml
