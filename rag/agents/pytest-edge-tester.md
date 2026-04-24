@@ -290,3 +290,47 @@ test_cli_full_workflow_factorial now expects ValueError because factorial() requ
 - All tests verified passing
 
 **Conclusion:** All 121 tests pass. The implementer's fix to factorial() now allows float-like integers (5.0), resolving the previous CLI limitation. The test suite comprehensively covers both the fixed behavior and all existing calculator/CLI functionality.
+
+### 2026-04-24 | task/issue-389-cli-mode | WRITE | 34 failing tests for non-interactive CLI mode
+
+**Task:** Write failing tests for non-interactive CLI mode (python -m calculator [operation] [operands...]) supporting all 12 calculator operations via command-line arguments.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented:**
+1. Test Group 1: Binary operations (5 parametrized tests) — add, subtract, multiply, divide, power
+2. Test Group 2: Unary operations (7 parametrized tests) — square, cube, sqrt, cbrt, factorial, log, ln
+3. Test Group 3: Float/negative operands (4 individual tests)
+4. Test Group 4: Division by zero error handling (1 test)
+5. Test Group 5: Domain errors (6 tests) — sqrt negative, log(0), log(negative), ln(0), factorial(negative), factorial(non-integer)
+6. Test Group 6: Invalid input handling (5 tests) — invalid operation, missing operand, non-numeric operand
+7. Test Group 7: Subprocess integration (3 tests) — end-to-end via python -m calculator
+8. Test Group 8: Help and usage (3 tests) — --help flag, -h flag, no arguments
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_cli_noninteractive.py`
+
+**Test Results:**
+- Total tests collected: 34
+- All tests FAIL (as expected for RED phase)
+- Tests use @pytest.mark.parametrize for data-driven cases
+- Error cases properly validated with capsys for stdout/stderr inspection
+- Subprocess tests validate actual module invocation behavior
+- Help/usage tests handle SystemExit and argparse default behavior
+
+**Implementation Notes:**
+1. Added stub `main_cli_noninteractive(args: list) -> int` to src/cli.py (returns 0 for now)
+2. Function signature ready for implementation:
+   - Accepts list of CLI args (operation name + operands)
+   - Returns exit code (0 for success, 1 for error)
+   - Prints result to stdout on success, error message to stderr on failure
+   - Supports both unary and binary operations via args[0] = operation, args[1:] = operands
+
+**Test Quality Patterns:**
+- All tests verify exit code behavior (0 for success, 1 for error)
+- Output assertions use capsys to capture stdout/stderr
+- Floating-point results use pytest.approx() for tolerance
+- Error assertions check for presence of "Error" or "error" in output
+- Subprocess tests explicitly exclude "No module named" errors to avoid false positives
+- Parametrization consolidates multiple similar test cases into single functions
+
+**Handoff Note:** 34 failing tests committed. Ready for python-code-implementer to implement main_cli_noninteractive() with full argument parsing, operation dispatch, result/error output, and proper exit codes.
