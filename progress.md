@@ -8,7 +8,7 @@
   - `artifacts/activity_interactive_flow.puml` — activity diagram for interactive calculator session flow
   - `artifacts/sequence_calculation_request.puml` — sequence diagram for a single unary calculation request
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 206.9s | Cost: $0.510452 USD | Turns: 6
 
 ## Run: Issue #401 — V3 Task 11 - Naive/team (2026-04-24)
 
