@@ -1,3 +1,16 @@
+## Run: Issue #408 — V3 Task 13 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-408-add-documentation
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `README.md` — added comprehensive calculator documentation section (arithmetic & scientific operations, CLI mode examples, interactive REPL mode, error handling, session history, error logging, project structure)
+  - `tests/test_documentation.py` — 17 new tests verifying README.md existence and required content coverage
+- **Purpose:** Add written documentation for the calculator application so its features, usage, and project structure are easier to understand
+- **Risks:** None — documentation only, no src/ changes
+- **Tests passed:** 263 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #452 — feat: modular calculator package structure (2026-04-24)
 
 - **Branch:** task/issue-405-modular-refactor

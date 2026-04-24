@@ -10,6 +10,12 @@ Per-cycle entries appended by the orchestrator after each completed run.
 - **Notes:** <anything significant>
 -->
 
+### Cycle: 2026-04-24 — Issue #408: V3 Task 13 - Structured/team (documentation)
+- **Branch:** task/issue-408-add-documentation
+- **Files changed:** `README.md` (added comprehensive calculator documentation section), `tests/test_documentation.py` (17 new tests verifying README content)
+- **Tests:** 263 passed, 0 failed, 3 skipped
+- **Notes:** Documentation-only task. Added English-language calculator docs to existing README (Czech autoevolution project docs preserved). Covers all 13 operations (6 arithmetic, 7 scientific), CLI mode with examples, interactive REPL mode, error handling (3-strike limit), session history, error logging, and project structure. No src/ changes.
+
 ### Cycle: 2026-04-24 — Issue #399: V3 Task 10 - Structured/team (error logging)
 - **Branch:** task/issue-399-error-logging
 - **Files changed:** `src/error_logging.py` (new: ErrorLog class), `src/__main__.py` (added ErrorLog import + injection into cli_mode and _run_interactive_loop), `tests/test_error_logging.py` (23 new tests)
