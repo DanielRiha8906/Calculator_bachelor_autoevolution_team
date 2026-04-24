@@ -1,0 +1,29 @@
+@startuml activity_diagram
+
+start
+
+:Test method invoked;
+
+:Request calculator fixture;
+:Create Calculator() instance;
+:Calculator ready;
+
+if (Is this a division-by-zero test?) then (yes)
+    :Invoke divide(a, 0)\ninside pytest.raises(ZeroDivisionError);
+    :Calculator raises ZeroDivisionError;
+    :pytest.raises() catches exception;
+    :Assert exception was raised;
+    :PASS;
+else (no)
+    :Invoke calculator method\n(add / subtract / multiply / divide);
+    :Calculator executes arithmetic operator;
+    :Return result to test;
+    :Assert result == expected value;
+    :PASS;
+endif
+
+:Test complete;
+
+stop
+
+@enduml

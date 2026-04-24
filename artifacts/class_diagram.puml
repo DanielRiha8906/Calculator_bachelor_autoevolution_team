@@ -1,0 +1,68 @@
+@startuml class_diagram
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a: int|float, b: int|float) : int|float
+    + subtract(a: int|float, b: int|float) : int|float
+    + multiply(a: int|float, b: int|float) : int|float
+    + divide(a: int|float, b: int|float) : float
+}
+
+note right of Calculator::divide
+  raises ZeroDivisionError
+  when b == 0
+end note
+
+class "calculator()" as fixture <<fixture>> {
+    + returns: Calculator
+}
+
+class TestCalculatorAdd <<test>> {
+    + test_addition_positive_integers()
+    + test_addition_negative_integers()
+    + test_addition_mixed_signs()
+    + test_addition_with_floats()
+    + test_addition_with_zero()
+    + test_addition_zero_to_zero()
+}
+
+class TestCalculatorSubtract <<test>> {
+    + test_subtraction_positive_integers()
+    + test_subtraction_negative_result()
+    + test_subtraction_negative_operands()
+    + test_subtraction_with_floats()
+    + test_subtraction_with_zero_minuend()
+    + test_subtraction_with_zero_subtrahend()
+}
+
+class TestCalculatorMultiply <<test>> {
+    + test_multiplication_positive_integers()
+    + test_multiplication_negative_integers()
+    + test_multiplication_mixed_signs()
+    + test_multiplication_with_floats()
+    + test_multiplication_by_zero()
+    + test_multiplication_by_one()
+}
+
+class TestCalculatorDivide <<test>> {
+    + test_division_by_zero()
+    + test_division_normal()
+    + test_division_with_floats()
+    + test_division_negative_divisor()
+    + test_division_zero_dividend()
+}
+
+fixture ..> Calculator : instantiates
+
+TestCalculatorAdd ..> fixture : uses
+TestCalculatorSubtract ..> fixture : uses
+TestCalculatorMultiply ..> fixture : uses
+TestCalculatorDivide ..> fixture : uses
+
+TestCalculatorAdd ..> Calculator : invokes add()
+TestCalculatorSubtract ..> Calculator : invokes subtract()
+TestCalculatorMultiply ..> Calculator : invokes multiply()
+TestCalculatorDivide ..> Calculator : invokes divide()
+
+@enduml

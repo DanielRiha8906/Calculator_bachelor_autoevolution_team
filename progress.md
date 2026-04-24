@@ -34,3 +34,14 @@ Duration: 167.4s | Cost: $0.365152 USD | Turns: 4
 - **Tests passed:** 23 passed, 0 failed
 
 Duration: 209.6s | Cost: $0.525387 USD | Turns: 24
+
+## Run: update-diagrams — Unit Test Suite UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-375-unit-test-suite
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — new class diagram showing Calculator class and 4 test classes with fixture dependency
+  - `artifacts/activity_diagram.puml` — new activity diagram showing test execution flow with normal and exception paths
+  - `artifacts/sequence_diagram.puml` — new sequence diagram showing pytest/fixture/Calculator interaction for normal and division-by-zero tests
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
