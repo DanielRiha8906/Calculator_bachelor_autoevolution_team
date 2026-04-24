@@ -1,0 +1,120 @@
+@startuml retry_flow_activity
+
+skinparam backgroundColor white
+skinparam activityBorderColor #333333
+skinparam activityBackgroundColor #f5f5f5
+skinparam activityDiamondBackgroundColor #fffde7
+
+start
+
+:Initialize calculator (if None);
+:Create OperationRegistry;
+:Set retry_count = 0;
+
+repeat
+    :Display available operations list;
+
+    repeat
+        :Prompt for operation selection index;
+        if (parse to int and index valid?) then (yes)
+            :Set op_name;
+            :Reset retry_count = 0;
+            break
+        else (no / ValueError / IndexError)
+            :retry_count += 1;
+            if (retry_count >= MAX_ATTEMPTS?) then (yes)
+                :Print termination message;
+                stop
+            else (no)
+                :Print "Invalid operation. Please try again.";
+                :Show operations list;
+            endif
+        endif
+    repeat while (invalid input)
+
+    :Get arity from registry;
+
+    if (arity == 1?) then (yes)
+
+        repeat
+            :Prompt for operand;
+            if (parse_operand succeeds?) then (yes)
+                :Store operand;
+                :Reset retry_count = 0;
+                break
+            else (no / ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS?) then (yes)
+                    :Print termination message;
+                    stop
+                else (no)
+                    :Print "Invalid input. Please try again.";
+                endif
+            endif
+        repeat while (invalid input)
+
+    else (no, arity == 2)
+
+        repeat
+            :Prompt for operand1;
+            if (parse_operand succeeds?) then (yes)
+                :Store operand1;
+                :Reset retry_count = 0;
+                break
+            else (no / ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS?) then (yes)
+                    :Print termination message;
+                    stop
+                else (no)
+                    :Print "Invalid input. Please try again.";
+                endif
+            endif
+        repeat while (invalid input)
+
+        note right
+            retry_count is NOT reset
+            between operand1 and operand2
+        end note
+
+        repeat
+            :Prompt for operand2;
+            if (parse_operand succeeds?) then (yes)
+                :Store operand2;
+                :Reset retry_count = 0;
+                break
+            else (no / ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS?) then (yes)
+                    :Print termination message;
+                    stop
+                else (no)
+                    :Print "Invalid input. Please try again.";
+                endif
+            endif
+        repeat while (invalid input)
+
+    endif
+
+    :Try registry.call(op_name, *operands);
+    if (computation error?) then (yes / ZeroDivisionError or ValueError)
+        :Print error message;
+        note right: retry_count NOT incremented
+    else (no)
+        :Print result;
+    endif
+
+    :Prompt "Continue? (yes/no)";
+    if (response == "yes"?) then (yes)
+        ' loop back to display operations
+    elseif (response == "no"?) then (no)
+        stop
+    else (other)
+        :Re-prompt (no counter interaction);
+    endif
+
+repeat while (session continues)
+
+stop
+
+@enduml

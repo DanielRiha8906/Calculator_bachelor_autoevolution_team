@@ -1,0 +1,52 @@
+@startuml interactive_class
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor white
+
+package "src.interactive" {
+    class "«module constant»\nMAX_ATTEMPTS" <<constant>> {
+        + MAX_ATTEMPTS : int = 5
+    }
+
+    class "«function»\nparse_operand" <<function>> {
+        + parse_operand(user_input: str) : Union[int, float]
+        .. raises ..
+        ValueError on invalid input
+    }
+
+    class "«function»\nrun_interactive_session" <<function>> {
+        + run_interactive_session(calculator: Calculator = None) : None
+        -- local state --
+        - retry_count : int
+        - op_name : str | None
+        - arity : int
+        - operand : Union[int, float]
+        - operand1 : Union[int, float]
+        - operand2 : Union[int, float]
+        - result : Union[int, float]
+    }
+}
+
+package "src.calculator" {
+    class Calculator {
+        + add(a, b)
+        + subtract(a, b)
+        + multiply(a, b)
+        + divide(a, b)
+    }
+}
+
+package "src.operation_registry" {
+    class OperationRegistry {
+        + get_operations() : list[str]
+        + get_arity(name: str) : int
+        + call(op_name: str, *operands) : Union[int, float]
+    }
+}
+
+"run_interactive_session" ..> Calculator : depends on\n(optional, injected)
+"run_interactive_session" *-- OperationRegistry : creates and uses
+"run_interactive_session" ..> "parse_operand" : calls
+"run_interactive_session" ..> "MAX_ATTEMPTS" : references
+
+@enduml

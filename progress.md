@@ -211,3 +211,14 @@ Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
   - `artifacts/error_handling_diagram_cli.puml` — new: all run_cli() error paths and exit codes
 
 Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
+
+## Run: update-diagrams — Input Validation Retry Diagrams (2026-04-24)
+
+- **Branch:** task/issue-394-input-validation-retry
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/interactive_class.puml` — class diagram for interactive module with MAX_ATTEMPTS constant and run_interactive_session dependencies
+  - `artifacts/retry_flow_activity.puml` — activity diagram for retry validation flow with session termination paths
+  - `artifacts/retry_sequence.puml` — sequence diagram for user session hitting retry limit
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
