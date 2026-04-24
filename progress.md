@@ -52,4 +52,4 @@ Duration: 348.5s | Cost: $0.711770 USD | Turns: 16
   - `artifacts/activity_factorial_flow.puml` — new activity diagram showing 3-stage factorial validation flow
   - `artifacts/sequence_main_usage.puml` — no changes (accurate to main() behavior)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 239.0s | Cost: $0.551973 USD | Turns: 15
