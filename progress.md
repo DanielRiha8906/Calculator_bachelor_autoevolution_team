@@ -134,4 +134,4 @@ Duration: 216.1s | Cost: $0.546564 USD | Turns: 4
 - **Risks:** None — CLI mode is purely additive; existing interactive tests unaffected
 - **Tests passed:** 129 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 498.8s | Cost: $1.150512 USD | Turns: 21
