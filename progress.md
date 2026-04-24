@@ -97,4 +97,4 @@ Duration: 395.6s | Cost: $0.776898 USD | Turns: 18
   - `artifacts/activity_diagram.puml` — generalized exception-handling flow to cover ValueError in addition to ZeroDivisionError
   - `artifacts/component_calculator.puml` — updated operations list to all 11 operations and math dependency note
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 255.8s | Cost: $0.582970 USD | Turns: 6
