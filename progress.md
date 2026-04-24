@@ -117,3 +117,16 @@ Duration: 508.8s | Cost: $0.950293 USD | Turns: 18
   - `artifacts/sequence_diagram.puml` — new sequence diagram: binary operation happy path
 
 Duration: 263.4s | Cost: $0.560446 USD | Turns: 5
+
+## Run: Fix PR #434 — Issue #385: Add interactive user input session for calculator (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — added import of `run_interactive_session`; replaced `main()` call with `run_interactive_session()` in `__main__` block to enable `python -m src` interactive mode
+  - `tests/test_main_entrypoint.py` — new file; 3 tests verifying entry point wiring, backward compatibility of `main()`, and demo output
+- **Purpose:** Address unresolved PR review feedback: running `python -m src` now launches the interactive calculator session instead of a hardcoded demo
+- **Risks:** None — minimal 2-line change to entry point only; no changes to Calculator, interactive, or operation_registry modules
+- **Tests passed:** 141 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

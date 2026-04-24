@@ -180,3 +180,77 @@ Implement two new modules and optionally modify `__main__.py` per source changes
 
 Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
+---
+
+### 2026-04-24 — PR #434 — Interactive Mode Entry Point (Unresolved Blocker)
+
+**Task:** Address blocker feedback from Owner (DanielRiha8906): "There is no way to launch the application to get into the interactive mode. Change __main__.py that when launched via python -m src, user input will be possible."
+
+**Status:** The `src/interactive.py` and `src/operation_registry.py` modules are ALREADY FULLY IMPLEMENTED and FUNCTIONAL from the previous cycle (issue #385). The blocker is that `src/__main__.py` does not invoke them; it only runs a hardcoded demo.
+
+**Current State:**
+- `src/__main__.py`: imports Calculator, defines `main()` with hardcoded demo operations, calls `main()` in `if __name__` block
+- `src/interactive.py`: fully implemented with `run_interactive_session()` function; accepts user input via `input()`, displays operation menu, prompts for operands, computes and displays results, handles errors gracefully, loops until user exits
+- `src/operation_registry.py`: fully implemented; introspects Calculator class, discovers all public methods, filters to arity 1 or 2, provides get_operations(), get_arity(), call() methods
+
+**Key Decisions:**
+- Single-file change to `src/__main__.py`: replace the `main()` call with `run_interactive_session()`
+- Keep existing `main()` function for backward compatibility (may be imported elsewhere)
+- Add import: `from .interactive import run_interactive_session`
+- Change `if __name__ == "__main__":` block from `main()` to `run_interactive_session()`
+- This is a 2-line change with zero impact on existing Calculator class or test suite
+
+**Architecture Impact:**
+- MINIMAL: only the entry point changes
+- `main()` is only called from `__main__` block; nothing else depends on it
+- No changes to Calculator, operation_registry, or interactive modules
+- Pre-existing tests continue to pass (unless they explicitly test entry point behavior)
+- Backward compatible: any code doing `from src import main; main()` still works (just invokes interactive session instead of demo)
+
+**Test Specifications for pytest-edge-tester (WRITE):**
+10 scenarios in new `tests/test_interactive_entrypoint.py` or extended `tests/test_interactive.py`:
+1. `__main__` block calls `run_interactive_session()` with no arguments
+2. User selects 'add', provides operands 5 and 3, gets result 8
+3. User selects 'factorial', provides operand 5, gets result 120
+4. User completes operation, chooses 'yes' to continue, performs second operation, then exits
+5. User completes operation, chooses 'no' to exit (session exits cleanly)
+6. Operation list is displayed at session start
+7. User enters invalid operation index (e.g., 999), sees "Invalid operation" message, re-prompted
+8. User enters non-numeric operand (e.g., "abc"), sees "Invalid input" message, re-prompted
+9. User selects divide with operands 5 and 0, sees "Error: Division by zero" message
+10. User selects sqrt with operand -4, sees "Error:" message (domain error), session continues
+
+All tests mock `builtins.input()` with sequence of user inputs and mock/capture `builtins.print()` to verify output.
+
+**Source Changes Plan for python-code-implementer:**
+- File: `src/__main__.py`
+  - Action: Modify existing file
+  - Change 1: Add import line at top: `from .interactive import run_interactive_session`
+  - Change 2: Keep existing `main()` function unchanged
+  - Change 3: In `if __name__ == "__main__":` block, replace `main()` with `run_interactive_session()`
+  - Total: 2 lines changed (1 added, 1 modified)
+  - No other files need modification
+
+**Why This Fixes the Blocker:**
+- Users can now run `python -m src` and immediately enter interactive mode
+- No more hardcoded demo; interactive session accepts live user input
+- All supporting infrastructure already exists and is tested
+- Minimal risk: one entry point change with zero side effects
+
+**Handoff to pytest-edge-tester (WRITE):**
+Write 10 test scenarios in `tests/test_interactive_entrypoint.py` (or append to `tests/test_interactive.py`). Tests must mock `input()` and `print()` to simulate user interaction. All tests should FAIL initially because the new import and entry point do not yet exist. Tests verify:
+- `run_interactive_session()` is invoked from `__main__` when module is executed
+- Normal flow: operation selection → operand input → result display → continue/exit
+- Error recovery: invalid operation, non-numeric operand, domain errors, zero division
+- Session loop: multi-calculation sessions with proper exit handling
+
+**Handoff to python-code-implementer:**
+Implement single-file change to `src/__main__.py`:
+1. Add import: `from .interactive import run_interactive_session`
+2. Keep `main()` function as-is (backward compatibility)
+3. Replace `main()` call in `if __name__ == "__main__":` block with `run_interactive_session()`
+
+No other source files need modification. `src/interactive.py` and `src/operation_registry.py` are already complete and functional. All Calculator methods remain unchanged.
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+

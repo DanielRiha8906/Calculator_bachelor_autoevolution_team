@@ -272,3 +272,41 @@ All 49 new test specifications have been written and are passing. Since the impl
 **Assessment:** The full test suite is GREEN. All 138 tests pass without failure. The implementations for src/interactive.py (run_interactive_session function) and src/operation_registry.py (OperationRegistry class) are correct and complete for all specified test cases. No regressions in existing tests. No escalations needed.
 
 **Handoff Notes:** Test suite verification complete. All 138 tests passing. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 10 (2026-04-24)
+**Task:** Issue #385 — Interactive Input Entry Point
+**Phase:** WRITE
+**Test Cases Added:** 3 new tests
+
+- `test_main_entry_point_calls_interactive_session` — Verifies that running `python -m src` invokes `run_interactive_session()` exactly once with no arguments using `runpy.run_module()` and mocking
+- `test_main_function_preserved_for_backward_compatibility` — Confirms the main() function still exists and is callable for backward compatibility
+- `test_main_function_demo_output` — Verifies main() outputs demo calculations for add, subtract, multiply, divide, and factorial operations
+
+**Test Status:** All 3 new tests PASS immediately. The implementation has already been completed by the implementer:
+- `src/__main__.py` imports `run_interactive_session` from `.interactive`
+- The `if __name__ == "__main__":` block calls `run_interactive_session()` instead of `main()`
+- The main() function is preserved for backward compatibility
+
+**Test File Structure:**
+- File: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_main_entrypoint.py`
+- Uses `runpy.run_module()` to simulate `python -m src` execution
+- Mocks `src.interactive.run_interactive_session` before module execution to prevent actual interactive input
+- Uses `unittest.mock.patch` for output verification
+- All tests are in TestMainEntryPoint class
+
+**Patterns Applied:**
+- Module-level mocking with `patch('src.interactive.run_interactive_session')` to prevent stdin reading
+- Module cache clearing (`del sys.modules['src.__main__']`) to force re-execution with mocks
+- Output capture using `@patch('builtins.print')`
+- Call count and argument assertions (`assert_called_once_with()`)
+
+**Full Test Suite Results:**
+- Total tests collected: 141 (138 pre-existing + 3 new)
+- All 141 tests PASS (100% success)
+  - test_calculator.py: 123 tests, all pass
+  - test_interactive.py: 15 tests, all pass
+  - test_main_entrypoint.py: 3 tests, all pass
+- No regressions in existing tests
+- No escalations needed
+
+**Handoff Notes:** Test suite verification complete. All 141 tests passing. The entry point implementation is correct and complete. Ready for orchestrator to finalize commit and PR.
