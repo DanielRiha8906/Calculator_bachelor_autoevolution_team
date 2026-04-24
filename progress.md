@@ -7,7 +7,7 @@
   - `artifacts/activity_diagram_calculation_flow.puml` — activity diagram for CLI and interactive calculation flow
   - `artifacts/component_diagram_calculator_modules.puml` — component/package dependency diagram for src/calculator/ modules
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 221.0s | Cost: $0.586572 USD | Turns: 5
 
 ## Run: Issue #405 — V3 Task 12 - Structured/team (2026-04-24)
 
