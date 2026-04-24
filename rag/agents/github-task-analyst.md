@@ -336,3 +336,81 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Feedback is actionable and specific (task list provided)
   - Test suite passing does not guarantee full task completion (tests still used old imports, so they don't validate new sub-package accessibility)
   - Backward-compatibility re-exports masked the incomplete entry point update (tests passed but entry point was not updated)
+
+### Cycle: 2026-04-24 — Issue #409: V3 Task 13 - Expert/team (Documentation)
+- **Task Type:** Documentation creation (user guide and developer guide)
+- **Scope:** Add comprehensive written documentation for the calculator application covering user usage, developer maintenance, code structure, and current implementation behavior
+- **Key Patterns:**
+  - Clear, self-contained documentation task with explicit scope
+  - No comments or linked issues; requirements fully expressed in issue body
+  - Explicit constraint: "Keep the documentation aligned with the actual implementation rather than idealized or planned future behavior"
+  - Follows completion of issues #376–#406 (all calculator features and modular refactoring established)
+  - Documentation-only task; no source code changes required
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Document the **available calculator functionality** (operations list with arity and domain constraints)
+  2. **FR2 (MUST HAVE):** Document **guided interactive mode** usage (how to run, example session, available commands)
+  3. **FR3 (MUST HAVE):** Document **bash-based CLI usage** (syntax, examples for binary/unary operations, exit codes)
+  4. **FR4 (MUST HAVE):** Document **local session behavior** such as **history tracking** (file format, display, overwrite behavior)
+  5. **FR5 (MUST HAVE):** Document **error logging** (what is logged, file location, format, append behavior)
+  6. **FR6 (MUST HAVE):** Document **current code structure after refactoring** (module organization, layer architecture, purpose of each module/file)
+  7. **NFR1:** Keep documentation aligned with **actual implementation** (post-refactoring), not idealized future state
+  8. **NFR2:** Maintain relevant tests so they accurately reflect current version
+- **Deliverables Created:**
+  - `README.md` — Comprehensive rewrite with 400+ lines covering:
+    - **User Guide** section with subsections: Running the Application, Interactive Mode, CLI Usage, Operations List (with domain validation details), History Tracking, Error Logging
+    - **Developer Guide** section with subsections: Code Structure (modular layer architecture diagram), Module Purposes (table of 6 key modules), Entry Point Flow, Running Tests
+    - **Repository Overview** — file tree showing project structure
+    - **Auto-Evolution Engine** — overview of CLAUDE.md, agent responsibilities, and workflow automation
+    - **Local Setup** — quick-start for development
+    - **Running Auto-Evolution** — instructions for triggering agent pipeline
+  - `tests/test_documentation.py` — 16 new tests validating README content:
+    - **Existence tests (2):** README exists and is non-empty
+    - **User Guide tests (6):** Has User Guide section, run instructions, interactive mode walkthrough, CLI syntax, operations list, history/error logging mentions
+    - **Developer Guide tests (5):** Has Developer Guide section, code structure, module purposes, entry point flow, test execution docs
+    - **Operations & domain tests (2):** Operations with arity documented, domain validation/constraints documented
+    - **1 aggregate test** (test_readme_has_domain_validation_info)
+- **Implementation Details (from PR/progress.md):**
+  - `README.md` completely rewritten (not incremental)
+  - Tests added to `tests/test_documentation.py` (16 new tests)
+  - All 350 tests passing (no regressions)
+  - Branch: `task/issue-409-documentation`
+  - PR target: `exp3/expert-team`
+- **Files Modified in src/:** NONE (documentation-only)
+- **Files Added/Modified:**
+  - Added: `README.md` (comprehensive user + developer guide)
+  - Added: `tests/test_documentation.py` (16 validation tests)
+  - Updated: `rag/agents/python-code-implementer.md` and `rag/agents/pytest-edge-tester.md` (cycle entries appended)
+- **Key Content from README.md:**
+  - **User Guide:** Shows 12 supported operations (5 binary: add/subtract/multiply/divide/power; 7 unary: factorial/square/cube/sqrt/cbrt/ln/log10)
+  - **Domain Validation:** Explicitly documents constraints (sqrt: x >= 0, factorial: non-negative int, ln/log10: x > 0, divide: divisor != 0)
+  - **Interactive Mode:** Includes example session with menu, operand prompts, result display, history view ("h"), exit ("no"/"n"), 5-attempt limit behavior
+  - **CLI Usage:** Shows `python -m src <operation> <operand1> [operand2]` pattern with binary/unary examples; documents exit codes (0 success, 1 error)
+  - **History:** Describes `history.txt` format (function-style: `add(10, 5) = 15`), overwrite-on-write behavior, mid-session view capability
+  - **Error Logging:** Describes `error.log` (append mode, never overwrites), timestamp format, error type labels, graceful I/O failure handling
+  - **Code Structure:** Modular layer architecture (core, ui, infrastructure, session); maps 6 key modules to layers and responsibilities
+  - **Entry Point:** Documents `__main__.py` dispatch logic (no args = interactive, args = CLI)
+- **Ambiguities Resolved During Implementation:**
+  - None flagged; task was straightforward documentation of existing implementation
+- **Acceptance Criteria (met):**
+  - AC1: All operations documented with arity and domain constraints — YES
+  - AC2: Interactive mode walkthrough provided with example — YES
+  - AC3: CLI syntax documented with examples — YES
+  - AC4: History behavior documented — YES
+  - AC5: Error logging documented — YES
+  - AC6: Code structure documented — YES
+  - AC7: Documentation aligned with actual post-refactoring code — YES
+  - AC8: No source code changes; documentation-only — YES
+  - AC9: Tests added to validate documentation exists and has required sections — YES (16 tests)
+  - AC10: All tests pass; no regressions — YES (350 passed)
+- **Handoff Notes:**
+  - No architect handoff required; documentation task is self-contained
+  - No test-writing phase required; tests validate documentation structure, not feature behavior
+  - Documentation is complete and production-ready; no further work needed for this issue
+  - Future documentation updates (if any) should maintain the same structure and detail level
+- **Label:** `ai-implement:expert-team` (expert team delivery)
+- **Patterns Observed:**
+  - Documentation task required full understanding of post-refactoring code structure (previous refactoring task #406 was prerequisite)
+  - Task successfully completed in single agent cycle (no PR review feedback needed)
+  - Tests for documentation are meta-tests (they verify the README has required sections, not that code behaves correctly)
+  - README now serves as authoritative user and developer guide; should be updated whenever feature behavior changes
+

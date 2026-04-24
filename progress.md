@@ -1,3 +1,29 @@
+## Run: update-diagrams — Issue #409 Documentation UML diagrams (2026-04-24)
+
+- **Branch:** task/issue-409-documentation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/calculator_classes.puml` — class diagram for Calculator, OperationRegistry, OperationHistory, ErrorLogger with associations
+  - `artifacts/interactive_session_activity.puml` — activity diagram for interactive session loop with retry logic and exit paths
+  - `artifacts/cli_execution_sequence.puml` — sequence diagram for CLI execution flow with error handling branches
+
+Duration: 365.6s | Cost: $0.623501 USD | Turns: 6
+
+## Run: Issue #409 — V3 Task 13 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-409-documentation
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `README.md` — complete rewrite with comprehensive User Guide and Developer Guide sections
+  - `tests/test_documentation.py` — 16 new tests validating README content and structure
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+- **Purpose:** Add comprehensive written documentation covering how to run, use, and maintain the calculator application, including interactive mode walkthrough, CLI usage, operations reference, history/error logging behavior, and refactored code structure.
+- **Risks:** None — documentation-only change; no source code modified
+- **Tests passed:** 350 passed, 0 failed
+
+Duration: 591.9s | Cost: $1.262945 USD | Turns: 16
+
 ## Run: Fix PR #453 — Issue #406: Refactor calculator into modular package hierarchy (2026-04-24)
 
 - **Branch:** task/issue-406-modular-refactor

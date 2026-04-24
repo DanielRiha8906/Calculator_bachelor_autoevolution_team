@@ -1,0 +1,70 @@
+@startuml cli_execution_sequence
+
+skinparam sequenceArrowThickness 1.5
+skinparam participantFontStyle Bold
+skinparam noteFontSize 11
+
+title CLI Execution Flow
+
+actor "__main__" as Main
+participant "run_cli(argv)" as CLI
+participant "OperationRegistry" as Registry
+participant "Calculator" as Calc
+participant "ErrorLogger" as ELog
+participant "OperationHistory" as Hist
+
+Main ->> CLI : run_cli(argv)
+activate CLI
+
+CLI -> Calc : new Calculator()
+CLI -> Registry : new OperationRegistry(calculator)
+CLI -> ELog : new ErrorLogger()
+CLI -> Hist : new OperationHistory()
+
+CLI ->> Registry : get_operations()
+Registry -->> CLI : List[str]
+
+alt invalid operation name
+    CLI ->> ELog : log_invalid_operation(name, msg)
+    CLI -->> Main : return 1
+end
+
+CLI ->> Registry : get_arity(operation_name)
+Registry -->> CLI : int
+
+alt argument count mismatch
+    CLI ->> ELog : log_incorrect_argument_count(name, required, actual, msg)
+    CLI -->> Main : return 1
+end
+
+CLI -> CLI : parse_cli_operand(argv)
+
+alt parse error (invalid operand value)
+    CLI ->> ELog : log_invalid_operand(name, value, msg)
+    CLI -->> Main : return 1
+end
+
+CLI ->> Registry : call(operation_name, *operands)
+activate Registry
+
+Registry ->> Calc : <operation>(*operands)
+activate Calc
+Calc -->> Registry : result
+deactivate Calc
+
+Registry -->> CLI : result
+deactivate Registry
+
+alt runtime calculation error (ZeroDivisionError / ValueError)
+    CLI ->> ELog : log_runtime_calculation_error(name, operands, error_type, msg)
+    CLI -->> Main : return 1
+end
+
+CLI ->> Hist : record(operation_name, operands, result)
+CLI ->> Hist : write_to_file()
+
+CLI -> Main : print(result)
+CLI -->> Main : return 0
+deactivate CLI
+
+@enduml
