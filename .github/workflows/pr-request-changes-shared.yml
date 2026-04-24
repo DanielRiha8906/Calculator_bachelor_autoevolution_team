@@ -69,7 +69,7 @@ jobs:
           anthropic_api_key: ${{ secrets.anthropic_api_key }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
-          claude_args: "--max-turns 24"
+          claude_args: "--max-turns 30"
           prompt: |
             You are the orchestrator of an autonomous multi-agent PR-fix pipeline. There is no human in the loop.
             Active branch: ${{ inputs.pr_head_ref }}
