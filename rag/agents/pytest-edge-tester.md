@@ -310,3 +310,39 @@ All 49 new test specifications have been written and are passing. Since the impl
 - No escalations needed
 
 **Handoff Notes:** Test suite verification complete. All 141 tests passing. The entry point implementation is correct and complete. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 11 (2026-04-24)
+**Task:** Issue #386 — CLI feature — write failing tests
+**Phase:** WRITE
+**Test Cases Added:** 29 test functions with 53 total test cases (21 parametrized + 8 regular)
+
+Test organization by class:
+- **TestCLIBinaryOperations (8 test functions with 16 parametrized cases):** Tests add, subtract, multiply, divide, power with various integer and float operands
+- **TestCLIUnaryOperations (8 test functions with 12 parametrized cases):** Tests factorial, square, cube, sqrt, cbrt, ln, log10 with valid inputs
+- **TestCLIFloatAndNegativeOperands (3 test functions):** Tests float operands, negative operands, and large number computation
+- **TestCLIDomainErrors (5 test functions):** Tests domain errors—division by zero, sqrt of negative, factorial of negative, log operations on invalid inputs
+- **TestCLIArgumentValidation (6 test functions):** Tests argument validation—missing operation, missing operands (unary/binary), too many operands, unknown operation
+- **TestCLIOperandFormatErrors (3 test functions):** Tests non-numeric operand format errors
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_cli.py`
+
+**Test Status:** All 29 test functions FAIL as expected with `ModuleNotFoundError: No module named 'src.cli'`. This is correct — the module `src/cli.py` does not exist yet.
+
+**Test File Structure:**
+- Organized into 6 test classes by functional area (binary ops, unary ops, float/negative, domain errors, argument validation, format errors)
+- Parametrized tests use `@pytest.mark.parametrize` for data-driven coverage (e.g., 4 binary add test cases in one function)
+- Uses `unittest.mock.patch('sys.stdout', new_callable=StringIO)` to capture stdout for success cases
+- Uses `unittest.mock.patch('sys.stderr', new_callable=StringIO)` to capture stderr for error cases
+- Tests use `pytest.approx()` for floating-point comparisons (sqrt, cbrt, ln, log10)
+- All test names follow `test_cli_<scenario>` convention within class methods
+- Exit codes verified: 0 for success, 1 for error
+
+**Patterns Applied:**
+- Consolidated similar test cases into parametrized tests where applicable (e.g., 4 add test cases with different operands)
+- Each distinct error condition tested exactly once (e.g., division by zero, sqrt of negative, argument missing)
+- Test naming is descriptive and matches existing conventions
+- Mixed parametrized and individual test functions based on test complexity
+- Proper use of pytest.approx() for floating-point assertions
+
+**Handoff Notes:**
+29 new CLI test functions with 53 total test cases written and all confirmed failing due to missing module. Test file is syntactically valid (confirmed via import attempt). Ready for python-code-implementer to implement src/cli.py with run_cli(argv) function to satisfy the failing tests.
