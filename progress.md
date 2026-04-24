@@ -9,3 +9,14 @@
 - **Tests passed:** 5 passed, 0 failed
 
 Duration: 220.4s | Cost: $0.499339 USD | Turns: 17
+
+## Run: update-diagrams — Division by zero tests (2026-04-24)
+
+- **Branch:** task/issue-372-div-by-zero
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — class diagram of Calculator with divide() ZeroDivisionError annotation
+  - `artifacts/activity_divide.puml` — activity diagram of divide() normal and exception paths
+  - `artifacts/sequence_divide_tests.puml` — sequence diagram of test suite interactions with Calculator
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

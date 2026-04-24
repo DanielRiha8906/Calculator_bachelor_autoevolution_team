@@ -1,0 +1,50 @@
+@startuml sequence_divide_tests
+
+participant "pytest" as pytest
+participant "calculator fixture" as fixture
+participant "Calculator" as calc
+participant "TestCalculatorDivide" as tests
+
+pytest -> fixture : request fixture
+activate fixture
+fixture -> calc : Calculator()
+fixture --> pytest : calculator instance
+deactivate fixture
+
+pytest -> tests : run test suite
+activate tests
+
+tests -> calc : divide(10, 0)
+activate calc
+calc --> tests : raises ZeroDivisionError
+deactivate calc
+note right of tests : test_division_by_zero\npytest.raises asserts exception
+
+tests -> calc : divide(10, 2)
+activate calc
+calc --> tests : 5.0
+deactivate calc
+note right of tests : test_division_normal
+
+tests -> calc : divide(7.5, 2.5)
+activate calc
+calc --> tests : 3.0
+deactivate calc
+note right of tests : test_division_with_floats
+
+tests -> calc : divide(10, -2)
+activate calc
+calc --> tests : -5.0
+deactivate calc
+note right of tests : test_division_negative_divisor
+
+tests -> calc : divide(0, 5)
+activate calc
+calc --> tests : 0.0
+deactivate calc
+note right of tests : test_division_zero_dividend
+
+tests --> pytest : all 5 tests passed
+deactivate tests
+
+@enduml
