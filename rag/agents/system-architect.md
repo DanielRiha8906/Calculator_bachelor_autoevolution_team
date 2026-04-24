@@ -97,3 +97,55 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 **Handoff Notes for Next Agent:**
 - **pytest-edge-tester (WRITE phase):** Write 19 new test scenarios (tests 1-19 in this output's Test Specifications section). Existing 27 tests (backward compatibility tests 20-27) must be either preserved as-is OR updated to match new run_calculator() input flow. Key: all 46 total tests (27 existing + 19 new) must pass by end of cycle.
 - **python-code-implementer:** Receives architect's plan + tester's WRITE report. Implements src/cli.py refactor per plan, focusing on: (1) OPERATIONS dict with all 11 operations and arity, (2) arity-aware run_calculator(), (3) helper functions for operation lookup and display, (4) error handling that preserves test expectations. Calculator class unchanged. Target: pytest-edge-tester VERIFY phase confirms all tests passing.
+
+### Cycle 4: 2026-04-24 — Issue #389 V3 Task 7 (Add CLI Mode to Calculator)
+**Task:** Add batch/command-line mode to calculator alongside existing interactive mode. CLI should accept operations from bash like `python -m calculator add 5 3`.
+
+**Analysis of Current State:**
+- `src/calculator.py` fully implemented with 11 methods (4 binary, 8 unary)
+- `src/cli.py` implements interactive-only mode: sequential prompts for operands, operation, displays result
+- `src/__main__.py` is entry point for interactive mode only
+- `tests/test_cli.py` has 27 tests covering interactive flow
+- Existing OPERATIONS dict in cli.py maps all 11 operations with arity info
+- Requirements: batch mode with proper exit codes (0 success, 1 error), --help support, all operations accessible, error handling for all edge cases
+
+**Key Architectural Decisions:**
+1. **Create new `src/batch_cli.py`** module for batch/command-line argument processing
+   - Does NOT duplicate operation logic; imports and reuses OPERATIONS dict from cli.py
+   - Handles sys.argv parsing, operation validation, operand parsing, error handling
+   - Returns exit code (0 or 1) based on success/failure
+   - Outputs results to stdout, errors to stderr
+
+2. **Modify `src/__main__.py`** to detect mode based on argument count
+   - If len(sys.argv) > 1: batch mode (import batch_cli.batch_main, execute, sys.exit with returned code)
+   - If len(sys.argv) == 1: interactive mode (existing flow)
+   - Maintains backward compatibility: calling with no args still runs interactive mode
+
+3. **Support in batch_cli.py:**
+   - --help/-h flags: print usage and exit 0
+   - All 12 operations: add, subtract, multiply, divide, square, cube, sqrt, cbrt, factorial, power, log, ln
+   - Full error handling: ValueError (domain errors), ZeroDivisionError, TypeError
+   - Argument validation: count (must match arity), type (must be numeric)
+   - Output format: reuse display_result_unary() and display_result_binary() for consistency
+
+4. **No changes to Calculator or existing cli.py**
+   - Reuse OPERATIONS dict, helper functions, display functions
+   - All Calculator methods already error-check properly (sqrt(-1), log(0), etc.)
+
+5. **Test strategy:**
+   - Create `tests/test_batch_cli.py` with 28 test scenarios
+   - Covers: all 12 operations, help flag, error cases (div/0, sqrt negative, log non-positive, factorial negative), argument validation (missing, invalid type, too many), invalid operations
+   - Tests use subprocess.run or direct batch_main() calls with mocked sys.argv
+
+**Patterns Found:**
+- Mode detection pattern: multi-purpose CLI entry point dispatching to interactive or batch handler
+- Operation reuse: OPERATIONS dict is the single source of truth for all operation metadata
+
+**Risks & Mitigations:**
+- Risk: Mode detection logic error breaks interactive mode. Mitigation: simple check `len(sys.argv) > 1` is unambiguous; thoroughly test both paths.
+- Risk: Batch mode error messages don't match user expectations. Mitigation: use stderr consistently, clear error text.
+- Risk: Subprocess tests are brittle (e.g., timing, PATH). Mitigation: prefer direct function call tests with mocked sys.argv for reliability.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 28 test cases in tests/test_batch_cli.py covering all scenarios in Test Specifications section. All tests must initially fail (batch_cli module doesn't exist yet).
+- **python-code-implementer:** After tests are written and failing, implement: (1) Create src/batch_cli.py with parse_batch_args(), execute_batch(), batch_main() functions. (2) Modify src/__main__.py to detect mode and route. Target: all 28 batch tests + all 27 existing interactive tests passing.

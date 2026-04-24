@@ -51,3 +51,38 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Expanding the operator prompt/selection to include unary and higher-arity operations
   - Redesigning the orchestrator logic to handle variable-arity operations
   - Revising the workflow (currently: first_number → operator → second_number → result)
+
+### Cycle: 2026-04-24 — Issue #389: V3 Task 7 - Naive/team
+- **Issue Title:** V3 Task 7 - Naive/team
+- **Task:** Add CLI mode so the calculator can be used from bash.
+- **Label:** ai-implement:naive-team
+- **Status:** OPEN
+- **Created:** 2026-04-24T13:33:19Z
+- **Updated:** 2026-04-24T16:58:08Z
+- **Context:** This is Task 7 in the V3 cycle and follows Task 5 (#383) which added user input. The prior work in PR #432 identified that the CLI needs to expose ALL calculator operations (basic arithmetic + advanced functions). Task #389 is the dedicated task to implement this properly.
+- **Key Requirements:**
+  1. Implement a bash-callable CLI interface for the calculator
+  2. Support all available operations: basic arithmetic (add, subtract, multiply, divide) and advanced (square, cube, sqrt, cbrt, power, log, ln, factorial)
+  3. Handle edge cases: division by zero, negative factorial, invalid inputs
+  4. Maintain clean error handling and user output
+- **Scope Notes:**
+  - Minimal, straightforward implementation expected (Naive variant)
+  - Builds on existing Calculator class; no core logic changes needed
+  - Integration with existing interactive mode (#383) should not break
+  - Test coverage is handled in parallel (task #374)
+- **Ambiguities Identified:**
+  - CLI invocation style: module execution (`python -m calculator`) vs. script execution?
+  - Single-operation batch mode vs. interactive loop?
+  - Operation argument format: positional (e.g., `calculator add 5 3`) or named flags?
+  - Output format: just result, or result with operation/operands?
+  - Help system: built-in `--help` command or documentation only?
+- **Key Insight from Prior Work:**
+  - PR #432 feedback shows that partial CLI support is not acceptable — ALL operations must be exposed, including unary and higher-arity operations.
+  - This suggests the CLI design must be flexible enough to handle variable-arity operations (1, 2, or more operands per operation).
+- **Recommended Working Assumptions:**
+  1. Single-operation batch mode (each invocation performs one calculation and exits)
+  2. Positional arguments: operation name followed by operands
+  3. Error to stderr, results to stdout
+  4. Basic `--help` listing available operations and signatures
+  5. Thin wrapper around existing Calculator class
+- **Recurring Pattern:** The V3 cycle shows a deliberate test-first approach: Task 1 (division tests) → Task 2 (calculator tests) → Task 5 (user input) → Task 7 (CLI mode). All tasks are intentionally minimal to isolate concerns.
