@@ -13,3 +13,14 @@
 - **Tests passed:** 8 passed, 0 failed
 
 Duration: 243.4s | Cost: $0.461745 USD | Turns: 17
+
+## Run: update-diagrams — Division incorrect inputs diagrams (2026-04-24)
+
+- **Branch:** task/issue-371-division-incorrect-inputs
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — new class diagram for Calculator with four methods
+  - `artifacts/activity_divide_flow.puml` — new activity diagram for divide operation flow
+  - `artifacts/sequence_main_usage.puml` — new sequence diagram for __main__.py usage of Calculator
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -1,0 +1,17 @@
+@startuml class_diagram_calculator
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : float
+}
+
+note right of Calculator::divide
+  Raises ZeroDivisionError
+  when b == 0
+end note
+
+@enduml
