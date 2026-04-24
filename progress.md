@@ -134,3 +134,16 @@ Duration: 416.6s | Cost: $0.814535 USD | Turns: 14
   - `artifacts/component_diagram_modules.puml` — Module dependency diagram (__main__ → cli → calculator → math)
 
 Duration: 289.9s | Cost: $0.657900 USD | Turns: 4
+
+## Run: Fix PR #432 — feat: add CLI user input to calculator (2026-04-24)
+
+- **Branch:** task/issue-383-add-user-input
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/calculator.py` — updated factorial() to accept float-like integers (e.g., 5.0 → 120); adds bool check, float-to-int coercion for integer-valued floats, rejects fractional floats
+  - `tests/test_cli.py` — updated test_cli_full_workflow_factorial to expect result == 120.0 instead of ValueError, reflecting fixed behavior
+- **Purpose:** Fix factorial operation failure in CLI (issue: CLI always passes float to Calculator.factorial(), which previously rejected all floats)
+- **Risks:** None — change is additive; all existing tests still pass; boolean inputs still rejected
+- **Tests passed:** 121 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
