@@ -7,7 +7,7 @@ calculation, and print results or errors.  Entry point is batch_main().
 import sys
 
 from .calculator import Calculator
-from .cli import OPERATIONS, display_result_unary, display_result_binary
+from .interface import OPERATIONS, display_result_unary, display_result_binary
 
 # Batch-mode operation registry: maps the operation key used on the command
 # line (always the Calculator method name or a consistent alias) to

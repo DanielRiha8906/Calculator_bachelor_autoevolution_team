@@ -1,4 +1,30 @@
 
+## Run: update-diagrams — Separate calculator logic from interface (#401) (2026-04-24)
+
+- **Branch:** task/issue-401-separate-calculator-logic
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_separation.puml` — class diagram showing Calculator vs interface separation with facade pattern
+  - `artifacts/activity_interactive_flow.puml` — activity diagram for interactive calculator session flow
+  - `artifacts/sequence_calculation_request.puml` — sequence diagram for a single unary calculation request
+
+Duration: 206.9s | Cost: $0.510452 USD | Turns: 6
+
+## Run: Issue #401 — V3 Task 11 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-401-separate-calculator-logic
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/interface.py` — new module containing all UI logic extracted from cli.py (prompts, display, OPERATIONS, run_calculator, MaxRetriesExceeded)
+  - `src/cli.py` — converted to backward-compat facade re-exporting all symbols from interface.py
+  - `src/batch_cli.py` — updated import from `.cli` to `.interface` for OPERATIONS and display functions
+  - `tests/test_separation.py` — 16 new tests verifying clean separation of calculator logic from interface
+- **Purpose:** Separate core mathematical logic (calculator.py) from all user interface concerns (interface.py), improving modularity and testability
+- **Risks:** None — backward compatibility maintained via cli.py re-export facade; no breaking API changes
+- **Tests passed:** 294 passed, 1 skipped, 0 failed
+
+Duration: 543.6s | Cost: $1.152947 USD | Turns: 18
+
 ## Run: Issue #398 — V3 Task 10 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-398-error-logging
