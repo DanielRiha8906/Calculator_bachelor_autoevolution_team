@@ -6,6 +6,12 @@ display results, and orchestrate a full calculation workflow.
 
 from .calculator import Calculator
 
+
+class MaxRetriesExceeded(Exception):
+    """Raised when user exhausts maximum retry attempts for a single input field."""
+    pass
+
+
 OPERATIONS = {
     "+": (2, "add", "+", "Addition"),
     "-": (2, "subtract", "-", "Subtraction"),
@@ -34,30 +40,54 @@ def _get_display_symbol(operation_key: str) -> str:
     return OPERATIONS[operation_key][2]
 
 
-def prompt_for_first_number() -> float:
+def prompt_for_first_number(max_retries: int = 3) -> float:
     """Prompt the user for the first operand, re-prompting on invalid input.
+
+    Args:
+        max_retries: Maximum number of invalid attempts before raising
+            MaxRetriesExceeded. Defaults to 3.
 
     Returns:
         The first operand as a float.
+
+    Raises:
+        MaxRetriesExceeded: If the user exhausts all retry attempts.
     """
+    attempts = 0
     while True:
         raw = input("Enter the first number: ")
         try:
             return float(raw)
         except ValueError:
-            print("Invalid input. Please enter a numeric value.")
+            attempts += 1
+            print(
+                f"Invalid input. Please enter a numeric value. "
+                f"(Attempt {attempts}/{max_retries})"
+            )
+            if attempts > max_retries:
+                raise MaxRetriesExceeded(
+                    "Maximum retry attempts exceeded for first number input."
+                )
 
 
-def prompt_for_operator() -> str:
+def prompt_for_operator(max_retries: int = 3) -> str:
     """Prompt the user for an operation, re-prompting on invalid input.
 
     Valid operations include: +, -, *, /, square, cube, sqrt, cbrt,
     factorial, power, log, ln
 
+    Args:
+        max_retries: Maximum number of invalid attempts before raising
+            MaxRetriesExceeded. Defaults to 3.
+
     Returns:
         The operation key as a string.
+
+    Raises:
+        MaxRetriesExceeded: If the user exhausts all retry attempts.
     """
     valid_ops = list(OPERATIONS.keys())
+    attempts = 0
     while True:
         raw = input(
             "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, "
@@ -65,21 +95,45 @@ def prompt_for_operator() -> str:
         )
         if raw in OPERATIONS:
             return raw
-        print(f"Invalid operator '{raw}'. Please enter one of: {', '.join(valid_ops)}")
+        attempts += 1
+        print(
+            f"Invalid operator '{raw}'. Please enter one of: {', '.join(valid_ops)}. "
+            f"(Attempt {attempts}/{max_retries})"
+        )
+        if attempts > max_retries:
+            raise MaxRetriesExceeded(
+                "Maximum retry attempts exceeded for operator input."
+            )
 
 
-def prompt_for_second_number() -> float:
+def prompt_for_second_number(max_retries: int = 3) -> float:
     """Prompt the user for the second operand, re-prompting on invalid input.
+
+    Args:
+        max_retries: Maximum number of invalid attempts before raising
+            MaxRetriesExceeded. Defaults to 3.
 
     Returns:
         The second operand as a float.
+
+    Raises:
+        MaxRetriesExceeded: If the user exhausts all retry attempts.
     """
+    attempts = 0
     while True:
         raw = input("Enter the second number: ")
         try:
             return float(raw)
         except ValueError:
-            print("Invalid input. Please enter a numeric value.")
+            attempts += 1
+            print(
+                f"Invalid input. Please enter a numeric value. "
+                f"(Attempt {attempts}/{max_retries})"
+            )
+            if attempts > max_retries:
+                raise MaxRetriesExceeded(
+                    "Maximum retry attempts exceeded for second number input."
+                )
 
 
 def display_result(first: float, operator: str, second: float, result: float) -> None:
@@ -115,7 +169,7 @@ def display_error(error_message: str) -> None:
     print(f"Error: {error_message}")
 
 
-def run_calculator() -> float:
+def run_calculator(max_retries: int = 3) -> float:
     """Run a single interactive calculation and return the result.
 
     Prompts the user for an operation and required operand(s), performs the
@@ -124,28 +178,33 @@ def run_calculator() -> float:
     Supports both unary operations (e.g., square, sqrt) and binary operations
     (e.g., +, power).
 
+    Args:
+        max_retries: Maximum number of invalid attempts for each prompt before
+            raising MaxRetriesExceeded. Defaults to 3.
+
     Returns:
         The numeric result of the calculation.
 
     Raises:
+        MaxRetriesExceeded: If the user exhausts retry attempts on any prompt.
         ValueError: If a domain error occurs (e.g., sqrt of negative).
         ZeroDivisionError: If division by zero is attempted.
     """
     calc = Calculator()
 
-    operation_key = prompt_for_operator()
+    operation_key = prompt_for_operator(max_retries=max_retries)
     arity = _get_operation_arity(operation_key)
     method_name = _get_calculator_method(operation_key)
     method = getattr(calc, method_name)
 
     try:
         if arity == 1:
-            operand = prompt_for_first_number()
+            operand = prompt_for_first_number(max_retries=max_retries)
             result = method(operand)
             display_result_unary(operation_key, operand, result)
         else:
-            first = prompt_for_first_number()
-            second = prompt_for_second_number()
+            first = prompt_for_first_number(max_retries=max_retries)
+            second = prompt_for_second_number(max_retries=max_retries)
             result = method(first, second)
             display_result_binary(operation_key, first, second, result)
 

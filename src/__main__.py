@@ -1,6 +1,6 @@
 import sys
 
-from .cli import run_calculator, display_error
+from .cli import run_calculator, display_error, MaxRetriesExceeded
 
 
 def main() -> None:
@@ -15,10 +15,15 @@ def main() -> None:
     else:
         try:
             run_calculator()
+        except MaxRetriesExceeded as e:
+            display_error(str(e))
+            sys.exit(1)
         except ZeroDivisionError:
             display_error("Division by zero is not allowed.")
+            sys.exit(1)
         except Exception as e:
             display_error(str(e))
+            sys.exit(1)
 
 
 if __name__ == "__main__":

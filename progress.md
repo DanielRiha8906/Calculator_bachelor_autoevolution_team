@@ -1,4 +1,22 @@
 
+## Run: Issue #392 — V3 Task 8 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-392-input-validation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — added `MaxRetriesExceeded` exception class; added `max_retries=3` parameter to `prompt_for_first_number`, `prompt_for_operator`, `prompt_for_second_number`, and `run_calculator`; retry counter logic with attempt feedback messages
+  - `src/__main__.py` — imported `MaxRetriesExceeded`; added explicit handler for `MaxRetriesExceeded` and `sys.exit(1)` to all error paths
+  - `src/batch_cli.py` — added `return` after `sys.exit()` calls to prevent test harness fallthrough
+  - `tests/test_cli.py` — 33 new tests for retry limit behavior, domain error non-retryability, main integration, and batch mode preservation
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Add input validation with retry limit (max 3 attempts) to interactive calculator; graceful exit with error message after limit exceeded
+- **Risks:** None — domain errors (ValueError, ZeroDivisionError) still propagate without retry; batch mode unchanged
+- **Tests passed:** 185 passed, 0 failed, 1 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-371-division-incorrect-inputs
