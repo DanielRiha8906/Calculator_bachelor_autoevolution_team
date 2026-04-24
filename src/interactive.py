@@ -3,6 +3,7 @@
 from typing import Union
 
 from .calculator import Calculator
+from .error_logger import ErrorLogger
 from .history import OperationHistory
 from .operation_registry import OperationRegistry
 
@@ -67,6 +68,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
 
     registry = OperationRegistry(calculator)
     history = OperationHistory()
+    error_logger = ErrorLogger()
     retry_count = 0
 
     while True:
@@ -87,6 +89,9 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                 display_history_indexed(history)
                 op_name = _HISTORY_SENTINEL
                 break
+            if raw_index.strip().lower() in ("no", "n"):
+                history.write_to_file()
+                return
             try:
                 index = int(raw_index)
                 if index < 0 or index >= len(operations):
@@ -95,6 +100,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                 retry_count = 0
             except (ValueError, IndexError):
                 retry_count += 1
+                error_logger.log_invalid_operation(None, "Invalid operation. Please try again.")
                 print("Invalid operation. Please try again.")
                 print("Available operations:")
                 for idx, name in enumerate(operations):
@@ -128,11 +134,15 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             operand: Union[int, float] | None = None
             while operand is None:
                 raw = input("Enter operand: ")
+                if raw.strip().lower() in ("no", "n"):
+                    history.write_to_file()
+                    return
                 try:
                     operand = parse_operand(raw)
                     retry_count = 0
                 except ValueError:
                     retry_count += 1
+                    error_logger.log_invalid_operand(op_name, raw, "Invalid input. Please enter a number.")
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
@@ -143,11 +153,15 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             operand1: Union[int, float] | None = None
             while operand1 is None:
                 raw = input("Enter operand 1: ")
+                if raw.strip().lower() in ("no", "n"):
+                    history.write_to_file()
+                    return
                 try:
                     operand1 = parse_operand(raw)
                     retry_count = 0
                 except ValueError:
                     retry_count += 1
+                    error_logger.log_invalid_operand(op_name, raw, "Invalid input. Please enter a number.")
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
@@ -157,11 +171,15 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             operand2: Union[int, float] | None = None
             while operand2 is None:
                 raw = input("Enter operand 2: ")
+                if raw.strip().lower() in ("no", "n"):
+                    history.write_to_file()
+                    return
                 try:
                     operand2 = parse_operand(raw)
                     retry_count = 0
                 except ValueError:
                     retry_count += 1
+                    error_logger.log_invalid_operand(op_name, raw, "Invalid input. Please enter a number.")
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
@@ -176,8 +194,13 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             print(f"Result: {result}")
             history.record(op_name, operands, result)
         except ZeroDivisionError:
+            error_logger.log_runtime_calculation_error(op_name, operands, "ZeroDivisionError", "Division by zero")
             print("Error: Division by zero")
+        except ValueError as exc:
+            error_logger.log_runtime_calculation_error(op_name, operands, "ValueError", str(exc))
+            print(f"Error: {exc}")
         except Exception as exc:
+            error_logger.log_runtime_calculation_error(op_name, operands, type(exc).__name__, str(exc))
             print(f"Error: {exc}")
 
         # --- Continue prompt ---

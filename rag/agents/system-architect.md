@@ -906,3 +906,79 @@ No other files need modification. `src/cli.py` is already complete and functiona
 **Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
 ---
+
+### 2026-04-24 — Issue #400 — V3 Task 10 - Expert/team — Error Logging
+
+**Task:** Create centralized error logging infrastructure for all calculator errors (invalid operations, invalid operands, incorrect argument counts, runtime calculation errors). Separate error.log file from history.txt. Log all error categories in both interactive and CLI modes with consistent human-readable format.
+
+**Requirements Analysis:**
+- Create error.log file with entries for: invalid operations, invalid operands, incorrect argument counts (CLI), runtime errors
+- Separate file from history.txt (which contains only successful operations)
+- Consistent timestamp format across all entries
+- Include error context: operation name, operands (when applicable), error message
+- Graceful file I/O failure handling (no crash on write failure)
+- All 4 error categories must be logged in both interactive and CLI modes
+- Format: human-readable with timestamp, error type, operation, operands, message
+
+**Key Decisions:**
+- Create new module `src/error_logger.py` with `ErrorLogger` class
+- ErrorLogger logs 4 error types: InvalidOperation, InvalidOperand, IncorrectArgumentCount, RuntimeCalculationError
+- All entries timestamped in ISO 8601 format (YYYY-MM-DD HH:MM:SS)
+- Entries appended to error.log (not overwritten)
+- File I/O errors logged to stderr, do NOT crash session
+- Interactive mode logs errors after detecting them, before re-prompting
+- CLI mode logs errors before returning exit code 1
+- Logging happens automatically (no configuration needed)
+
+**Architecture Observations (from full source inspection):**
+- Interactive mode (`src/interactive.py`): handles 4 error types (invalid operation, invalid operand, zero division, domain errors)
+- CLI mode (`src/cli.py`): handles same 4 error types plus missing/incorrect argument counts
+- Both modes use try/except blocks to catch and display errors
+- No centralized logging infrastructure exists yet
+- ErrorLogger will be instantiated once per session/invocation (interactive or CLI)
+
+**Patterns Found:**
+- Error handling pattern: catch exception, log, display to user, recover or exit
+- Operation registry pattern: centralized method discovery via introspection
+- Session pattern: stateful interaction with user (interactive) or single command (CLI)
+
+**Source Changes Plan for python-code-implementer:**
+
+**File 1: Create `src/error_logger.py` (NEW)**
+- Class `ErrorLogger` with methods:
+  - `log_invalid_operation(operation_name: str | None, message: str) -> None`
+  - `log_invalid_operand(operation_name: str | None, operand_value: str | Any, message: str) -> None`
+  - `log_incorrect_argument_count(operation_name: str | None, required: int, actual: int, message: str) -> None`
+  - `log_runtime_calculation_error(operation_name: str, operands: tuple | None, error_type: str, message: str) -> None`
+- Helper functions: `_format_timestamp()`, `_format_error_entry()`, `_safe_write_to_file()`
+- Log file: "error.log" in current working directory (project root)
+- Entry format: `[TIMESTAMP] [ERROR_TYPE] operation=..., operand(s)=..., message=...`
+
+**File 2: Modify `src/interactive.py` (EXISTING)**
+- Add import: `from .error_logger import ErrorLogger`
+- Initialize ErrorLogger in `run_interactive_session()`
+- Log invalid operation errors in operation selection loop
+- Log invalid operand errors in operand gathering loops (both unary and binary)
+- Log runtime calculation errors in computation try/except block
+- Logging happens before error display and re-prompt
+
+**File 3: Modify `src/cli.py` (EXISTING)**
+- Add import: `from .error_logger import ErrorLogger`
+- Initialize ErrorLogger in `run_cli()`
+- Log all 4 error types (invalid operation, invalid operand, incorrect argument count, runtime error)
+- Logging happens before printing error to stderr and returning exit code 1
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+**Key Files Affected:**
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/error_logger.py` (create)
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/interactive.py` (modify)
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/cli.py` (modify)
+
+**Risks & Mitigations:**
+- Risk: Logging overhead slows down application: Mitigation: File I/O is minimal; one line written per error
+- Risk: File permissions prevent log writing: Mitigation: Catch IOError, print warning to stderr, continue without crashing
+- Risk: Error format is inconsistent: Mitigation: Centralized formatting in error_logger module
+- Risk: Logging breaks existing tests: Mitigation: Error logger writes to file only; tests can mock or clean up after
+
+---

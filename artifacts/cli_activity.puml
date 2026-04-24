@@ -1,0 +1,69 @@
+@startuml
+title run_cli() — CLI Execution Flow with Error Logging (issue #400)
+
+start
+
+:sys.argv → run_cli(argv);
+:Create Calculator, OperationRegistry,\nErrorLogger, OperationHistory;
+
+if (argv is empty?) then (yes)
+  :error_logger.log_incorrect_argument_count();
+  :print usage to stderr;
+  :return 1;
+  stop
+endif
+
+:operation_name = argv[0]
+operand_args = argv[1:];
+
+if (operation_name in registry?) then (no)
+  :error_logger.log_invalid_operation();
+  :print "Unknown operation" to stderr;
+  :return 1;
+  stop
+endif
+
+:arity = registry.get_arity(operation_name);
+
+if (len(operand_args) == arity?) then (no)
+  :error_logger.log_incorrect_argument_count();
+  :print arity mismatch error to stderr;
+  :return 1;
+  stop
+endif
+
+:for each raw operand string\ntry parse_cli_operand(raw);
+
+if (all operands parsed OK?) then (yes)
+  :operands list ready;
+else (no — ValueError)
+  :error_logger.log_invalid_operand();
+  :print "Invalid operand" to stderr;
+  :return 1;
+  stop
+endif
+
+:try registry.call(operation_name, *operands);
+
+if (exception raised?) then (yes)
+  if (ZeroDivisionError?) then (yes)
+    :error_logger.log_runtime_calculation_error()\n"ZeroDivisionError";
+    :print "Division by zero" to stderr;
+  elseif (ValueError?) then (yes)
+    :error_logger.log_runtime_calculation_error()\n"ValueError";
+    :print specific error to stderr;
+  else (other Exception)
+    :error_logger.log_runtime_calculation_error()\n"Exception";
+    :print generic error to stderr;
+  endif
+  :return 1;
+  stop
+else (no)
+  :history.record(operation_name, operands, result);
+  :history.write_to_file();
+  :print result to stdout;
+  :return 0;
+  stop
+endif
+
+@enduml
