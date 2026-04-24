@@ -395,3 +395,104 @@ Implement new file `src/cli.py` with `run_cli(argv=None) -> int` function and he
 **Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
 ---
+
+### 2026-04-24 — PR #436 — CLI Entry Point Implementation Fix (BLOCKER RESOLUTION)
+
+**Task:** Fix critical blocker in PR #436: `src/__main__.py` does not dispatch to `run_cli()` when command-line arguments are present, so `python -m src add 5 7` incorrectly launches interactive mode instead of executing CLI operation.
+
+**Status:** PR describes adding `src/cli.py` with full functionality and 53 passing tests. However, the entry point (`src/__main__.py`) was not updated to conditionally dispatch to CLI mode when arguments are detected. The `src/cli.py` implementation exists and is fully functional; only the entry point wiring is missing.
+
+**Current State (verified via source inspection):**
+- `src/cli.py`: EXISTS and COMPLETE with `run_cli(argv=None) -> int` function; fully tested with 53 passing tests (verified via test_cli.py)
+- `src/__main__.py`: MISSING the conditional dispatch; currently only calls `run_interactive_session()` unconditionally
+- The PR claims to implement the feature but the entry point routing is unimplemented (blocker)
+
+**Root Cause:**
+- `src/__main__.py` line 15-16 invokes `run_interactive_session()` unconditionally
+- No check for `len(sys.argv) > 1` to detect CLI arguments
+- `run_cli()` function exists but is never called from the entry point
+- As a result: `python -m src add 5 7` launches interactive mode instead of executing CLI command
+
+**Required Fix:**
+Modify `src/__main__.py` to implement argument-count conditional:
+```python
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        exit_code = run_cli()
+        sys.exit(exit_code)
+    else:
+        run_interactive_session()
+```
+
+**Architectural Impact:**
+- MINIMAL: single-method entry point change
+- No impact on Calculator, OperationRegistry, or other modules
+- Backward compatible: `python -m src` (no args) still launches interactive
+- New behavior enabled: `python -m src <op> <operands>` now correctly routes to CLI
+- No changes to existing 141 tests; 53 new CLI tests are already passing (once entry point is fixed, all will pass)
+
+**Test Specifications for pytest-edge-tester (WRITE):**
+8 test scenarios to verify the entry point dispatch logic (can be added to `tests/test_cli.py` or separate):
+1. **test_main_no_args_launches_interactive**: sys.argv=['src'] → run_interactive_session() called (mocked), not run_cli()
+2. **test_main_with_cli_args_launches_cli**: sys.argv=['src', 'add', '5', '7'] → run_cli() called (mocked), not run_interactive_session()
+3. **test_main_cli_success_exits_zero**: sys.argv=['src', 'add', '5', '7'] → exit code 0 (or no sys.exit call on success)
+4. **test_main_cli_error_exits_one**: sys.argv=['src', 'unknown'] → exit code 1 (or sys.exit(1) called)
+5. **test_main_interactive_no_exit**: sys.argv=['src'] → run_interactive_session() completes normally, no sys.exit() called
+6. **test_cli_dispatch_correctly_invokes_run_cli_function**: Verify sys.argv is passed correctly to run_cli() (i.e., run_cli() receives argv[1:] or run_cli() uses sys.argv internally)
+7. **test_cli_exit_code_zero_on_valid_operation**: sys.argv=['src', 'factorial', '5'] → produces exit code 0 and correct output
+8. **test_cli_exit_code_one_on_invalid_operation**: sys.argv=['src', 'invalid_op', '5'] → produces exit code 1 (or non-zero) and error output
+
+All tests must mock `sys.argv` and either mock/capture `sys.exit()` or verify exit behavior via subprocess invocation.
+
+**Source Changes Plan for python-code-implementer:**
+
+**File: `src/__main__.py`**
+- Action: MODIFY existing file
+- Current lines 15-16:
+  ```python
+  if __name__ == "__main__":
+      run_interactive_session()
+  ```
+- Required changes:
+  1. Add import at top of file: `import sys`
+  2. Add import at top of file: `from .cli import run_cli` (already exists: `from .cli import run_cli` imported)
+  3. Replace lines 15-16 with:
+     ```python
+     if __name__ == "__main__":
+         if len(sys.argv) > 1:
+             exit_code = run_cli()
+             sys.exit(exit_code)
+         else:
+             run_interactive_session()
+     ```
+- Total: 1 import line added (`import sys`), 5 lines in entry point (replacing 2 lines)
+- Verification: `import sys` is needed for `sys.argv` and `sys.exit()`; `from .cli import run_cli` already present in lines 1-2
+
+**Why This Fixes the Blocker:**
+- Restores intended behavior: CLI invocations now correctly dispatch to `run_cli()`
+- Interactive invocations remain unchanged: `python -m src` still launches interactive
+- All 53 CLI tests now pass (they test `run_cli()` directly; once entry point calls it, integration is complete)
+- All 141 pre-existing tests remain passing (no changes to Calculator, interactive, or registry modules)
+- PR can now be merged: blocker resolved with minimal, targeted change
+
+**Handoff to pytest-edge-tester (WRITE):**
+Write 8 test scenarios in `tests/test_cli.py` or new `tests/test_entrypoint.py`:
+- 3 tests for CLI dispatch path: valid op, invalid op, correct exit code handling
+- 2 tests for interactive dispatch path: no args invocation, no sys.exit() call
+- 3 tests for integration: sys.argv mocking, run_cli() invocation verification, exit code propagation
+
+All tests should mock `sys.argv`, mock or verify `sys.exit()` behavior, and mock `run_interactive_session()` to prevent actual interactive startup. All tests must FAIL initially because the conditional logic does not yet exist.
+
+**Handoff to python-code-implementer:**
+Modify `src/__main__.py`:
+1. Verify `import sys` is present (or add it)
+2. Verify `from .cli import run_cli` is present (already exists in current file)
+3. Replace the unconditional `run_interactive_session()` call with the conditional dispatch logic above
+4. Total modification: ~5 lines in the `if __name__ == "__main__":` block
+
+No other files need modification. `src/cli.py` is already complete and functional. All tests will pass once the entry point correctly invokes `run_cli()` for CLI arguments and `run_interactive_session()` for no arguments.
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+---

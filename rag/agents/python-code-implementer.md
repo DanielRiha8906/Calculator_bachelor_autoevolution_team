@@ -110,3 +110,23 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** 194/194 passed (141 pre-existing + 53 new CLI tests).
 
 **Handoff notes for next agent:** `src/__main__.py` was intentionally NOT wired to dispatch CLI args, due to a conflict with `test_main_entrypoint.py`. If the Architect wants `python -m src add 5 3` to work, a new test for `__main__.py` must first be written that correctly handles the `runpy.run_module` + `sys.argv` interaction (e.g. patching `sys.argv` in the test, or using subprocess). No new dependencies introduced.
+
+### 2026-04-24 — Wire CLI dispatch into __main__.py (issue-391-cli-interface)
+
+**Task:** Modify `src/__main__.py` to dispatch to `run_cli()` when `sys.argv` has arguments, and fall back to `run_interactive_session()` when no arguments are present.
+
+**Files changed:**
+- `src/__main__.py` — added `import sys` as first import; added `from .cli import run_cli` import; replaced the bare `run_interactive_session()` call in the `if __name__ == "__main__":` block with a branch: `if len(sys.argv) > 1` calls `run_cli()` and `sys.exit(exit_code)`, else calls `run_interactive_session()`.
+
+**Key decisions:**
+- `run_cli()` is called with no arguments; the existing `src/cli.py` signature already defaults to reading `sys.argv[1:]` internally, so no change to `cli.py` is needed.
+- `sys.exit(exit_code)` is used (not `raise SystemExit`) to match the plan's intent and standard Python CLI idiom.
+- The previous RAG cycle noted a conflict: `test_main_entrypoint.py` uses `runpy.run_module` and inherits the live `sys.argv`. This dispatch change is compatible only if the new tests patch `sys.argv` before calling `runpy.run_module` or use subprocess. The Tester must verify this.
+- `main()` was left untouched — it remains a demo function preserved for backward compatibility.
+
+**Patterns found:**
+- When `sys.argv` dispatch is added to `__main__.py`, any test that exercises the module via `runpy.run_module` without patching `sys.argv` will see the test runner's argv (e.g. `['pytest', ...]`), which has length > 1 and will trigger the CLI branch. Such tests must either patch `sys.argv = ['src']` or use subprocess to isolate the invocation.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** The Tester must check whether `tests/test_main_entrypoint.py` patches `sys.argv` before it exercises the module. If it does not, that test will now break because `len(sys.argv) > 1` will be True under the test runner, routing to `run_cli()` instead of `run_interactive_session()`. No new external dependencies introduced (`sys` is stdlib).

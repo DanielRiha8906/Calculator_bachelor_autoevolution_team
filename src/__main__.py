@@ -1,4 +1,6 @@
+import sys
 from .calculator import Calculator
+from .cli import run_cli
 from .interactive import run_interactive_session
 
 
@@ -13,4 +15,8 @@ def main():
 
 
 if __name__ == "__main__":
-    run_interactive_session()
+    if len(sys.argv) > 1:
+        exit_code = run_cli()
+        sys.exit(exit_code)
+    else:
+        run_interactive_session()

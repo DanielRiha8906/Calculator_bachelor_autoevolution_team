@@ -367,3 +367,49 @@ Test organization by class:
 **Assessment:** The full test suite is GREEN. All 194 tests pass without failure. The implementations for src/cli.py (parse_cli_operand() and run_cli(argv) functions) are correct and complete for all specified test cases. No regressions in existing tests. No escalations needed.
 
 **Handoff Notes:** Test suite verification complete. All 194 tests passing. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 13 (2026-04-24)
+**Task:** Issue #391 — CLI entry point dispatch — write and verify tests
+**Phase:** WRITE + VERIFY
+**Test Cases Added:** 5 new tests in TestMainDispatch class
+
+- `test_main_entry_no_args_calls_interactive()` — sys.argv=['src']: dispatch to run_interactive_session(), not run_cli()
+- `test_main_entry_with_cli_args_calls_cli()` — sys.argv=['src', 'add', '5', '7']: dispatch to run_cli(), not run_interactive_session()
+- `test_main_entry_cli_success_exit_zero()` — run_cli() returns 0: sys.exit(0) is called
+- `test_main_entry_cli_error_exit_nonzero()` — run_cli() returns 1: sys.exit(1) is called
+- `test_main_entry_single_arg_dispatches_to_cli()` — sys.argv=['src', 'add'] (len > 1): dispatch to run_cli(), not interactive
+
+**Test Status:** ALL 5 NEW TESTS PASS immediately. Unexpected for WRITE phase, but correct upon investigation:
+
+The implementer's implementation in src/__main__.py correctly:
+1. Imports sys, run_cli, and run_interactive_session
+2. Checks `if len(sys.argv) > 1:` to branch between CLI and interactive modes
+3. Calls `run_cli()` without arguments (run_cli defaults to sys.argv[1:] internally)
+4. Calls `sys.exit(exit_code)` with the result from run_cli()
+5. Otherwise calls run_interactive_session() for interactive mode
+
+My test code correctly:
+1. Patches sys.argv to control the dispatch branch
+2. Mocks run_interactive_session and run_cli to prevent actual execution
+3. Clears sys.modules['src.__main__'] to force re-execution with patched mocks
+4. Uses runpy.run_module to simulate `python -m src` execution
+5. Patches sys.exit to prevent test termination
+
+I also fixed the regression in the original `test_main_entry_point_calls_interactive_session()` test by:
+- Adding `with patch.object(sys, 'argv', ['src']):` to ensure sys.argv has length 1
+- Adding mock assertions for run_cli to verify it is NOT called
+- Preserving backward compatibility tests for the main() function
+
+**Full Test Suite Results (VERIFY Phase):**
+- Total tests collected: 199 (194 pre-existing + 5 new)
+- All 199 tests PASS (100% success)
+  - test_calculator.py: 123 tests, all pass (no regressions)
+  - test_interactive.py: 15 tests, all pass (no regressions)
+  - test_main_entrypoint.py: 8 tests, all pass (3 existing + 5 new)
+  - test_cli.py: 53 tests, all pass (no regressions)
+- No regressions in existing tests
+- No escalations needed
+
+**Assessment:** The full test suite is GREEN. All 199 tests pass without failure. The CLI entry point dispatch logic is correct and complete. Both interactive and CLI modes are properly tested. Ready for orchestrator to finalize.
+
+**Handoff Notes:** All 5 new dispatch tests written, all passing in both WRITE and VERIFY phases. The original test regression was fixed by patching sys.argv. Full test suite (199 tests) passes with no regressions. Ready for PR.

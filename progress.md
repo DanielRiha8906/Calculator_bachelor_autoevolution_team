@@ -1,3 +1,19 @@
+## Run: Fix PR #436 — Add CLI entry point for bash-based calculator invocation (#391) (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — add `import sys`, import `run_cli`, add `if len(sys.argv) > 1` conditional to dispatch to CLI mode; else fallback to interactive session
+  - `tests/test_main_entrypoint.py` — fix existing test to patch `sys.argv`; add 5 new dispatch tests for CLI/interactive routing and exit code propagation
+  - `rag/agents/system-architect.md` — updated RAG with cycle entry
+  - `rag/agents/python-code-implementer.md` — updated RAG with cycle entry
+  - `rag/agents/pytest-edge-tester.md` — updated RAG with cycle entry
+- **Purpose:** Wire `src/__main__.py` to `run_cli()` so that `python -m src <op> <operands>` invokes CLI mode instead of launching interactive session; interactive mode preserved when no args given.
+- **Risks:** None
+- **Tests passed:** 199 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #373 — V3 Task 1 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-373-division-by-zero
