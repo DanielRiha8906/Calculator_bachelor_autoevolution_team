@@ -161,3 +161,90 @@ class Calculator:
         """
         return base ** exponent
 
+    def sin(self, x: int | float) -> float:
+        """Return the sine of x (in radians).
+
+        Args:
+            x: A real number (angle in radians).
+
+        Returns:
+            The sine of x as a float.
+        """
+        return math.sin(x)
+
+    def cos(self, x: int | float) -> float:
+        """Return the cosine of x (in radians).
+
+        Args:
+            x: A real number (angle in radians).
+
+        Returns:
+            The cosine of x as a float.
+        """
+        return math.cos(x)
+
+    def tan(self, x: int | float) -> float:
+        """Return the tangent of x (in radians).
+
+        Args:
+            x: A real number (angle in radians).
+
+        Returns:
+            The tangent of x as a float.
+
+        Raises:
+            ValueError: If x is at a point where tangent is undefined (π/2 + nπ).
+        """
+        normalized = x % math.pi
+        if abs(normalized - math.pi / 2) < 1e-10:
+            raise ValueError("tangent is undefined at π/2 + nπ")
+        return math.tan(x)
+
+    def cot(self, x: int | float) -> float:
+        """Return the cotangent of x (in radians).
+
+        Args:
+            x: A real number (angle in radians).
+
+        Returns:
+            The cotangent of x as a float.
+
+        Raises:
+            ValueError: If x is a multiple of π (where cotangent is undefined).
+        """
+        if abs(x % math.pi) < 1e-10:
+            raise ValueError("cotangent is undefined at multiples of π")
+        return 1.0 / math.tan(x)
+
+    def asin(self, x: int | float) -> float:
+        """Return the arcsine of x (result in radians).
+
+        Args:
+            x: A real number in the range [-1, 1].
+
+        Returns:
+            The arcsine of x as a float (in radians).
+
+        Raises:
+            ValueError: If x is outside [-1, 1].
+        """
+        if x < -1.0 or x > 1.0:
+            raise ValueError("arcsine domain is [-1, 1]")
+        return math.asin(x)
+
+    def acos(self, x: int | float) -> float:
+        """Return the arccosine of x (result in radians).
+
+        Args:
+            x: A real number in the range [-1, 1].
+
+        Returns:
+            The arccosine of x as a float (in radians).
+
+        Raises:
+            ValueError: If x is outside [-1, 1].
+        """
+        if x < -1.0 or x > 1.0:
+            raise ValueError("arccosine domain is [-1, 1]")
+        return math.acos(x)
+

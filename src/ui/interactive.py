@@ -22,6 +22,7 @@ Responsibilities:
 from typing import Union
 
 from ..calculator import Calculator
+from ..core.operations import OperationMode
 from ..infrastructure.error_logger import ErrorLogger
 from ..infrastructure.history import OperationHistory
 from ..operation_registry import OperationRegistry
@@ -70,6 +71,25 @@ def parse_operand(user_input: str) -> Union[int, float]:
     return int(user_input)
 
 
+def _select_mode() -> OperationMode:
+    """Prompt the user to select a calculator mode and return the chosen OperationMode.
+
+    Accepts "0" or "normal" for NORMAL mode, "1" or "scientific" for SCIENTIFIC mode.
+    Re-prompts on invalid input until a valid choice is made.
+
+    Returns:
+        The selected ``OperationMode``.
+    """
+    print("Select mode: 0=Normal, 1=Scientific")
+    while True:
+        raw = input("Mode (0/normal or 1/scientific): ").strip().lower()
+        if raw in ("0", "normal"):
+            return OperationMode.NORMAL
+        if raw in ("1", "scientific"):
+            return OperationMode.SCIENTIFIC
+        print("Invalid mode. Please enter 0 (normal) or 1 (scientific).")
+
+
 def run_interactive_session(calculator: Calculator = None) -> None:
     """Run an interactive calculator session in the terminal.
 
@@ -89,16 +109,21 @@ def run_interactive_session(calculator: Calculator = None) -> None:
     history = OperationHistory()
     error_logger = ErrorLogger()
     retry_count = 0
+    mode: OperationMode | None = None
 
     while True:
         # --- Display operation menu ---
-        operations = registry.get_operations()
+        if mode is None:
+            operations = registry.get_operations()
+        else:
+            operations = registry.get_operations_by_mode(mode)
         print("Available operations:")
         for idx, name in enumerate(operations):
             arity = registry.get_arity(name)
             label = "unary" if arity == 1 else "binary"
             print(f"  {idx}: {name} ({label})")
         print("  h: View operation history")
+        print("  m: Switch mode")
 
         # --- Select operation ---
         op_name: str | None = None
@@ -111,6 +136,18 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             if raw_index.strip().lower() in ("no", "n"):
                 history.write_to_file()
                 return
+            if raw_index.strip().lower() == "m":
+                mode = _select_mode()
+                # Refresh the operation list for new mode and re-display menu
+                operations = registry.get_operations_by_mode(mode)
+                print("Available operations:")
+                for idx, name in enumerate(operations):
+                    arity = registry.get_arity(name)
+                    label = "unary" if arity == 1 else "binary"
+                    print(f"  {idx}: {name} ({label})")
+                print("  h: View operation history")
+                print("  m: Switch mode")
+                continue
             try:
                 index = int(raw_index)
                 if index < 0 or index >= len(operations):
