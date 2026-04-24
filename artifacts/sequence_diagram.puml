@@ -1,0 +1,40 @@
+@startuml sequence_diagram
+
+participant "pytest" as pytest
+participant "test_calculator.py" as tests
+participant "calculator fixture" as fixture
+participant "Calculator" as calc
+
+pytest -> fixture : request fixture
+activate fixture
+fixture -> calc : Calculator()
+activate calc
+calc --> fixture : instance
+deactivate calc
+fixture --> tests : calculator instance
+deactivate fixture
+
+alt Normal operation (e.g. test_addition_positive_integers)
+    pytest -> tests : run test
+    activate tests
+    tests ->> calc : add(5, 3)
+    activate calc
+    calc --> tests : 8
+    deactivate calc
+    tests -> tests : assert 8 == 8
+    tests --> pytest : PASS
+    deactivate tests
+
+else Division by zero (test_division_by_zero)
+    pytest -> tests : run test
+    activate tests
+    tests ->> calc : divide(10, 0)\ninside pytest.raises(ZeroDivisionError)
+    activate calc
+    calc --> tests : raises ZeroDivisionError
+    deactivate calc
+    tests -> tests : assert exception raised
+    tests --> pytest : PASS
+    deactivate tests
+end
+
+@enduml
