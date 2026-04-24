@@ -194,10 +194,15 @@ def _run_interactive_loop(registry: dict[str, tuple]) -> None:
     Args:
         registry: The operation registry mapping name to (callable, arity).
 
-    The loop continues until the user types ``quit``, ``exit``, or ``q``.
+    The loop continues until the user types ``quit``, ``exit``, or ``q``,
+    or until 3 consecutive failures occur (unknown operation, invalid operand,
+    or domain error).  On reaching 3 consecutive failures the loop prints
+    "Too many invalid attempts. Exiting." and terminates.
     ``EOFError`` is intentionally *not* caught here so that callers can
     decide how to handle a closed stdin.
     """
+    consecutive_failures: int = 0
+
     while True:
         print("Enter operation (add, subtract, multiply, divide, factorial, square, cube,")
         print("square_root, cube_root, power, log10, ln) or 'quit' to exit:")
@@ -208,6 +213,10 @@ def _run_interactive_loop(registry: dict[str, tuple]) -> None:
 
         if operation not in registry:
             print(f"Error: Unknown operation '{operation}'. Please try again.")
+            consecutive_failures += 1
+            if consecutive_failures >= 3:
+                print("Too many invalid attempts. Exiting.")
+                break
             continue
 
         method, arity = registry[operation]
@@ -225,18 +234,28 @@ def _run_interactive_loop(registry: dict[str, tuple]) -> None:
                 operands.append(_parse_number(raw))
             except ValueError:
                 print(f"Error: Invalid number '{raw}'. Please enter a numeric value.")
+                consecutive_failures += 1
                 error_occurred = True
+                if consecutive_failures >= 3:
+                    print("Too many invalid attempts. Exiting.")
                 break
 
         if error_occurred:
+            if consecutive_failures >= 3:
+                break
             continue
 
         # Execute the operation
         try:
             result = method(*operands)
             print(f"Result: {result}")
+            consecutive_failures = 0
         except (ValueError, ZeroDivisionError) as exc:
             print(f"Error: {exc}")
+            consecutive_failures += 1
+            if consecutive_failures >= 3:
+                print("Too many invalid attempts. Exiting.")
+                break
 
 
 def main() -> None:
