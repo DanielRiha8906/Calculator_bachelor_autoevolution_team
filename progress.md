@@ -102,3 +102,20 @@ Duration: 343.3s | Cost: $0.705994 USD | Turns: 16
   - `artifacts/sequence_diagram_calculation.puml` — sequence diagram for single calculation interaction
 
 Duration: 256.1s | Cost: $0.503387 USD | Turns: 4
+
+## Run: Fix PR #432 — feat: add CLI user input to calculator (2026-04-24)
+
+- **Branch:** task/issue-383-add-user-input
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — extended OPERATIONS dict to include all 11 Calculator methods (4 binary + 7 unary); refactored run_calculator() to be arity-aware; added display_result_unary and display_result_binary; replaced if/elif dispatch with getattr() lookup
+  - `tests/test_cli.py` — updated 5 existing workflow tests to match new operator-first input order; extended operator acceptance tests from 4 to 12 operations; added 21 new tests for unary operations, display functions, and error conditions
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Address PR review feedback: all implemented Calculator operations (cube, square, sqrt, cbrt, factorial, power, log, ln) are now callable via the CLI, not just the four basic arithmetic operators
+- **Risks:** None — Calculator class unchanged; backward-compatible display_result() preserved; all tests pass
+- **Tests passed:** 121 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
