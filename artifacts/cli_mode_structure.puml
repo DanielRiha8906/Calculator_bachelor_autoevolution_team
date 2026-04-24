@@ -1,0 +1,89 @@
+@startuml cli_mode_structure
+
+title __main__.py Module Structure: CLI and Interactive Modes
+
+skinparam classAttributeIconSize 0
+
+class "cli_mode()" as CliMode <<entry point>> {
+    + cli_mode() : None
+}
+
+class "_parse_cli_arguments()" as ParseArgs {
+    - _parse_cli_arguments(registry: dict) : tuple | None
+}
+
+class "_execute_cli_mode()" as ExecuteCli {
+    - _execute_cli_mode(operation: str,\n  operands: list, registry: dict) : None
+}
+
+class "_run_interactive_loop()" as InteractiveLoop {
+    - _run_interactive_loop(registry: dict) : None
+}
+
+class "_build_registry()" as BuildRegistry {
+    - _build_registry(calculator: Calculator) : dict
+}
+
+class "_parse_number()" as ParseNumber {
+    - _parse_number(raw: str) : int | float
+}
+
+class "main()" as LegacyMain <<legacy>> {
+    + main() : None
+}
+
+class "Calculator" as Calc {
+    .. Binary Arithmetic ..
+    + add(a, b) : int|float
+    + subtract(a, b) : int|float
+    + multiply(a, b) : int|float
+    + divide(a, b) : float
+    + power(base, exponent) : int|float
+    .. Unary Operations ..
+    + factorial(n) : int
+    + square(x) : int|float
+    + cube(x) : int|float
+    + square_root(x) : float
+    + cube_root(x) : float
+    + log10(x) : float
+    + ln(x) : float
+}
+
+note top of CliMode
+  Main dispatcher — invoked by
+  the __main__ block at module level
+end note
+
+note right of ExecuteCli
+  CLI path: resolves registry[operation]
+  and calls method(*operands)
+end note
+
+note left of InteractiveLoop
+  Interactive path: REPL loop,
+  calls _parse_number() per operand
+end note
+
+note bottom of LegacyMain
+  Legacy entry point — creates
+  Calculator, builds registry,
+  runs interactive loop directly
+end note
+
+CliMode --> Calc           : Calculator()
+CliMode --> BuildRegistry  : _build_registry(calculator)
+CliMode ..> ParseArgs      : _parse_cli_arguments(registry)
+CliMode ..> ExecuteCli     : if CLI args present
+CliMode ..> InteractiveLoop : fallback if no CLI args
+
+BuildRegistry --> Calc     : depends on instance
+
+ExecuteCli ..> Calc        : registry[op](*operands)
+
+InteractiveLoop ..> ParseNumber : _parse_number(raw)
+
+LegacyMain --> Calc          : Calculator()
+LegacyMain --> BuildRegistry  : _build_registry(calculator)
+LegacyMain --> InteractiveLoop : _run_interactive_loop(registry)
+
+@enduml

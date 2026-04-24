@@ -1,0 +1,54 @@
+@startuml cli_mode_activity
+
+title CLI Mode Execution Flow
+
+start
+
+:cli_mode() called;
+:Create Calculator() instance;
+:_build_registry(calculator);
+:_parse_cli_arguments(registry);
+
+if (CLI args present?\nlen(sys.argv) > 1) then (no)
+    :_run_interactive_loop(registry);
+    note right: exits on EOFError or OSError
+    stop
+else (yes)
+endif
+
+if (operation valid\nin registry?) then (no)
+    :Print error to stderr;
+    :sys.exit(1);
+    stop
+else (yes)
+endif
+
+if (operand count\nmatches arity?) then (no)
+    :Print error to stderr;
+    :sys.exit(1);
+    stop
+else (yes)
+endif
+
+if (all operands parse\nas numbers?) then (no)
+    :Print error to stderr;
+    :sys.exit(1);
+    stop
+else (yes)
+endif
+
+:_execute_cli_mode(operation, operands, registry);
+:Retrieve method = registry[operation];
+:Call method(*operands);
+
+if (execution success?) then (no)
+    note right: ValueError or ZeroDivisionError
+    :Print error to stderr;
+    :sys.exit(1);
+    stop
+else (yes)
+    :Print result to stdout;
+    stop
+endif
+
+@enduml

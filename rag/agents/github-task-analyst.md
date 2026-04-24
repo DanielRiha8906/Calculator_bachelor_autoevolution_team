@@ -194,3 +194,51 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Likely end-of-V3 task; integration and usability focus
 - "ai-implement:structured-team" label consistent; no new operations, UX/workflow addition
 - No comments suggest this is straightforward specification; ambiguities are structural (input format, loop behavior)
+
+### 2026-04-24 | V3 Task 7 - Structured/team (Issue #390)
+
+**Issue:** Add a CLI mode so the calculator can be executed from bash using command-line arguments. Allow the user to provide the operation and required values directly in the command and print the result to the terminal. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Add command-line argument parsing to calculator
+- Calculator must accept operation and operand values as CLI arguments
+- Calculator must execute operation and print result directly to terminal (no interactive loop)
+- Update test suite to remain consistent with dual-mode behavior (interactive from Task 5 + CLI from Task 7)
+
+**Explicit Requirements:**
+- **Functional:** CLI argument parsing for operation and operands
+- **Functional:** Direct execution and result output to stdout
+- **Testing:** Update tests to accommodate CLI mode coexisting with interactive mode
+
+**Ambiguities & Gaps:**
+- No comments provided; issue body is minimal
+- **CLI syntax unspecified:** No format defined for command-line invocation (e.g., `calc add 5 3` vs `calc --op add --args 5 3` vs expression string `calc "5 + 3"`)
+- **Mode selection logic:** Unclear what triggers CLI vs. interactive mode (argc > 1? flag check? environment variable?)
+- **Error handling for CLI:** No specification for invalid arguments, missing operands, invalid operations (assume stderr output + non-zero exit code per CLI conventions)
+- **Output format:** No specification for result display (plain number? operation + result? JSON? Assume plain number to stdout)
+- **Mode coexistence:** Phrasing "Add a CLI mode" suggests both modes coexist, but not explicit; unclear if CLI replaces or supplements interactive mode
+- **Argument validation:** No specification of type checking, range validation, or how operation names map to operation functions
+- No test examples or acceptance criteria provided
+- No mention of help/usage messages or version flags
+
+**Assumed Resolution (for Architect):**
+- **CLI mode activation:** When CLI arguments are provided (argc > 1), skip interactive loop and enter CLI execution mode
+- **CLI syntax:** Use positional arguments: `calculator <operation> <operand1> [<operand2> ...]` (simple, clear, UNIX-style)
+- **Mode coexistence:** Both CLI and interactive modes available in same binary; interactive is default when no args provided
+- **Error handling:** Invalid args → print error to stderr, exit code 1; missing/invalid operands → descriptive error; invalid operation → "unknown operation" message
+- **Output:** Plain number to stdout (e.g., `8` for `add 5 3`); no decorative text
+- **Operand parsing:** Parse all operands as floats/integers; let operation implementation validate type constraints
+- **Operation names:** Map CLI operation names to internal operation functions (likely string matching: "add" → add_operation, "sqrt" → sqrt_operation, etc.)
+
+**Context from Related Issues:**
+- V3 Task 5 (#384): Interactive input mode (CLI mode supplements this; both modes must coexist)
+- V3 Tasks 1-4 (#372, #375, #378, #381): Operation implementations (factorial, advanced math, error handling, test suite)
+- V2 Task 14 (#273): Scientific mode architecture (both interactive and CLI modes should access same operation set)
+
+**Patterns:**
+- V3 Task 7 is input-layer task following Task 5; adds alternative input channel (CLI) to existing interactive UI
+- Minimal specification consistent with prior V3 tasks; CLI syntax and mode selection logic unspecified
+- No new operations; purely input-handling and integration task
+- "ai-implement:structured-team" label consistent; no new core features
+- Task likely represents completion of input-interface work for V3 (error handling, test coverage, interactive, CLI)
+- Ambiguities are straightforward engineering decisions (CLI format, arg parsing, mode logic); no deep domain confusion

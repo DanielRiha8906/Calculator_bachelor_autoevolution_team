@@ -122,3 +122,27 @@ Duration: 436.2s | Cost: $0.904403 USD | Turns: 16
   - `artifacts/sequence_diagram_user_interaction.puml` — new sequence diagram showing user-to-result interaction with error handling
 
 Duration: 216.1s | Cost: $0.546564 USD | Turns: 4
+
+## Run: Issue #390 — V3 Task 7 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-390-cli-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/__main__.py` — refactored to support CLI mode (`cli_mode()`, `_parse_cli_arguments()`, `_execute_cli_mode()`, `_run_interactive_loop()`) while preserving interactive mode and `main()`
+  - `tests/test_cli_mode.py` — 22 new tests covering CLI basic ops, floats/negatives, error handling, and interactive fallback
+- **Purpose:** Add CLI mode so calculator can be invoked with command-line arguments (e.g. `python -m src add 5 3`); interactive mode unchanged
+- **Risks:** None — CLI mode is purely additive; existing interactive tests unaffected
+- **Tests passed:** 129 passed, 0 failed
+
+Duration: 498.8s | Cost: $1.150512 USD | Turns: 21
+
+## Run: update-diagrams — CLI Mode Diagrams (2026-04-24)
+
+- **Branch:** task/issue-390-cli-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/cli_mode_structure.puml` — component/structure diagram for __main__.py dual-mode dispatch
+  - `artifacts/cli_mode_activity.puml` — activity diagram for CLI mode execution flow
+  - `artifacts/cli_mode_sequence.puml` — sequence diagram for successful CLI invocation
+
+Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
