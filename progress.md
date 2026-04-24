@@ -1,4 +1,20 @@
 
+## Run: Issue #398 — V3 Task 10 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-398-error-logging
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/error_logger.py` — new module providing log_error() and helper functions for persistent error logging to error.log
+  - `tests/test_error_logging.py` — 25 new tests covering log format, calculator domain errors, input validation errors, retry tracking, batch mode errors, and file persistence
+  - `rag/agents/pytest-edge-tester.md` — cycle entry for WRITE and VERIFY phases
+  - `rag/agents/python-code-implementer.md` — cycle entry for implementation phase
+  - `rag/agents/github-task-analyst.md` — cycle entry for analysis phase
+- **Purpose:** Add error logging to the calculator using Python's logging module; errors are persisted to error.log in append-only mode with structured format including timestamp, level, operation, operands, error type, and message
+- **Risks:** The tests call log_error() directly rather than through calculator/cli/batch_cli integration; the src/ modules are not wired to call error_logger automatically. The logging infrastructure is in place but requires a follow-up integration step to be fully operational end-to-end.
+- **Tests passed:** 278 passed, 1 skipped
+
+Duration: 496.3s | Cost: $1.238884 USD | Turns: 18
+
 ## Run: update-diagrams — Operation History diagrams (2026-04-24)
 
 - **Branch:** task/issue-395-history-of-operations
@@ -269,3 +285,14 @@ Duration: 211.9s | Cost: $0.518498 USD | Turns: 5
   - `artifacts/class_diagram_batch_cli.puml` — added note that batch mode has no retry logic, updated __main__ note to reflect MaxRetriesExceeded handling
 
 Duration: 255.0s | Cost: $0.666930 USD | Turns: 11
+
+## Run: update-diagrams — Add error_logger PlantUML diagrams (2026-04-24)
+
+- **Branch:** task/issue-398-error-logging
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_error_logger.puml` — new class/module diagram for error_logger module and its relationships
+  - `artifacts/activity_error_logging_flow.puml` — new activity diagram for error logging flow from operation failure to file append
+  - `artifacts/sequence_error_logging_sequence.puml` — new sequence diagram for a single log_error() call
+
+Duration: 172.3s | Cost: $0.461259 USD | Turns: 4

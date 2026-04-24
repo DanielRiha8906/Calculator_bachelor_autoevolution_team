@@ -1,0 +1,38 @@
+@startuml activity_error_logging_flow
+
+start
+
+:Calculator operation invoked;
+
+if (Exception raised?) then (yes)
+  :Catch exception;
+  :Extract operation, operands,\nerror_type, error_message;
+
+  if (Error context?) then (calculation)
+    :log_calculation_error(\n  operation, operands,\n  error_type, error_message\n);
+  elseif (Error context?) then (input validation)
+    :log_input_error(\n  field_name, input_value,\n  error_type, error_message\n);
+  elseif (Error context?) then (retry / max retries)
+    fork
+      :log_retry_attempt(\n  field_name, attempt_num, max_retries\n);
+    fork again
+      :log_max_retries_exceeded(\n  field_name, error_message\n);
+    end fork
+  else (batch)
+    :log_batch_error(\n  operation, operands,\n  error_type, error_message\n);
+  endif
+
+  :All helpers delegate to log_error();
+  :log_error(\n  operation, operands,\n  error_type, error_message,\n  filepath\n);
+  :Format structured log line\n[YYYY-MM-DD HH:MM:SS] [ERROR]\nOperation | Operands |\nError type | Error message;
+  :Open filepath in append mode\n(with block);
+  :Write formatted line to file;
+  :Close file (end of with block);
+  :Return to caller;
+  stop
+else (no)
+  :Return result to caller;
+  stop
+endif
+
+@enduml
