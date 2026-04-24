@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from src.calculator import Calculator
 from src.operation_registry import OperationRegistry
-from src.error_logger import ErrorLogger
+from src.infrastructure.error_logger import ErrorLogger
 
 
 # ============================================================================
@@ -125,14 +125,14 @@ class TestModuleBoundaryValidation:
 
     def test_interactive_no_cli_import(self):
         """Read src/interactive.py and verify it does not import cli."""
-        from src import interactive
+        from src.ui import interactive
         source = inspect.getsource(interactive)
         assert "import cli" not in source
         assert "from cli" not in source
 
     def test_cli_no_interactive_import(self):
         """Read src/cli.py and verify it does not import interactive."""
-        from src import cli
+        from src.ui import cli
         source = inspect.getsource(cli)
         assert "import interactive" not in source
         assert "from interactive" not in source
@@ -154,8 +154,8 @@ class TestModuleBoundaryValidation:
         try:
             from src.calculator import Calculator
             from src.operation_registry import OperationRegistry
-            from src.interactive import run_interactive_session
-            from src.cli import run_cli
+            from src.ui.interactive import run_interactive_session
+            from src.ui.cli import run_cli
             # If we get here, no circular imports occurred
             assert True
         except ImportError as e:

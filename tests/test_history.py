@@ -4,7 +4,7 @@ import pytest
 import tempfile
 import os
 from pathlib import Path
-from src.history import OperationHistory
+from src.infrastructure.history import OperationHistory
 
 
 # ============================================================================

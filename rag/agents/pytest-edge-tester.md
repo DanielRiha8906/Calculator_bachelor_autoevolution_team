@@ -1004,3 +1004,58 @@ The python-code-implementer successfully completed the modular refactoring:
 No escalations needed. The implementation maintains full backward compatibility through src/__init__.py re-exports.
 
 **Handoff Notes:** Test suite verification complete. All 334 tests passing (100%). Modular refactoring fully implemented with proper layer separation and backward compatibility. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 25 (2026-04-24)
+**Task:** Issue #406 — Fix Stale Mock Patches After Modular Refactoring
+**Phase:** VERIFY (Patch Fix)
+**Test Execution:** Full test suite run via `python -m pytest tests/ --tb=short -q` and `python -m pytest tests/ -v --tb=short`
+
+**Problem Identified:**
+After the modular refactoring (Cycle 24), `src/__main__.py` was updated to import from new module locations:
+```python
+from .ui.cli import run_cli
+from .ui.interactive import run_interactive_session
+```
+
+However, `tests/test_main_entrypoint.py` still used stale mock patch targets:
+- `patch('src.interactive.run_interactive_session')` → OLD (flat file structure)
+- `patch('src.cli.run_cli')` → OLD (flat file structure)
+
+These old paths were targeting modules that no longer exist in the new modular structure.
+
+**Root Cause:**
+The refactoring created new packages (src/ui/, src/infrastructure/, etc.) and moved modules there. The old flat imports (src.interactive, src.cli, etc.) no longer resolve, causing `AttributeError: module 'src' has no attribute 'interactive'` when patching.
+
+**Solution Applied:**
+Updated all mock patches in `tests/test_main_entrypoint.py` to target the NEW module locations where functions are defined:
+- Line 30: `patch('src.interactive.run_interactive_session')` → `patch('src.ui.interactive.run_interactive_session')`
+- Line 31: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+- Line 96: `patch('src.interactive.run_interactive_session')` → `patch('src.ui.interactive.run_interactive_session')`
+- Line 97: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+- Line 115: `patch('src.ui.interactive.run_interactive_session')` → `patch('src.ui.interactive.run_interactive_session')` ✓ (already correct)
+- Line 116: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+- Line 134: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+- Line 149: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+- Line 166: `patch('src.ui.interactive.run_interactive_session')` → `patch('src.ui.interactive.run_interactive_session')` ✓ (already correct)
+- Line 167: `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`
+
+**Verification Applied:**
+Confirmed no stale old-path imports remain in the test suite via grep:
+```bash
+grep -r "patch('src\.interactive\|patch('src\.cli\|patch('src\.error_logger\|patch('src\.history" tests/
+```
+Result: No matches (all stale patches updated)
+
+**Test Results:**
+- Total tests run: 334
+- Tests passing: 334 (100%)
+- Tests failing: 0
+- Suite status: **GREEN** ✓
+
+All 334 tests pass, including:
+- 8 tests in test_main_entrypoint.py (all now passing with corrected patches)
+- 326 pre-existing tests from all other test files (no regressions)
+
+**Assessment:** The mock patch fix is complete and correct. All patches now target the new modular structure properly. The test suite is fully functional with the refactored codebase. No production code bugs identified — the issue was purely in the test infrastructure (stale patch paths).
+
+**Handoff Notes:** Stale mock patches fixed. All 334 tests passing. Full test suite verification complete. No production code escalations needed. Ready for orchestrator to commit and PR.

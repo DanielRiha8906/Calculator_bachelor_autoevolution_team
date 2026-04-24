@@ -1,3 +1,28 @@
+## Run: Fix PR #453 — Issue #406: Refactor calculator into modular package hierarchy (2026-04-24)
+
+- **Branch:** task/issue-406-modular-refactor
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — updated imports to use new sub-package paths (`src.ui.cli`, `src.ui.interactive`)
+  - `src/interactive.py` — deleted (replaced by `src/ui/interactive.py`)
+  - `src/cli.py` — deleted (replaced by `src/ui/cli.py`)
+  - `src/history.py` — deleted (replaced by `src/infrastructure/history.py`)
+  - `src/error_logger.py` — deleted (replaced by `src/infrastructure/error_logger.py`)
+  - `tests/test_interactive.py` — updated import to `src.ui.interactive`
+  - `tests/test_interactive_validation.py` — updated imports to `src.ui.interactive`, `src.ui.cli`
+  - `tests/test_interactive_history_menu.py` — updated import to `src.ui.interactive`
+  - `tests/test_cli.py` — updated import to `src.ui.cli`
+  - `tests/test_history.py` — updated import to `src.infrastructure.history`
+  - `tests/test_error_logging.py` — updated imports to `src.ui.cli`, `src.ui.interactive`
+  - `tests/test_core_separation.py` — updated imports to `src.infrastructure.error_logger`, `src.ui.interactive`, `src.ui.cli`
+  - `tests/test_modular_structure.py` — updated imports to `src.infrastructure.error_logger`, `src.infrastructure.history`
+  - `tests/test_main_entrypoint.py` — updated mock patches to `src.ui.interactive.run_interactive_session`, `src.ui.cli.run_cli`
+- **Purpose:** Address unresolved PR review feedback: update entry point to use new sub-packages, migrate all test imports from old flat paths to new sub-package paths, and delete the now-redundant old flat files.
+- **Risks:** None — all 334 tests pass; backward-compat re-exports in `src/__init__.py` remain intact.
+- **Tests passed:** 334 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #406 — V3 Task 12 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-406-modular-refactor

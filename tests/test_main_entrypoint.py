@@ -25,10 +25,9 @@ class TestMainEntryPoint:
 
         Expected: run_interactive_session is called exactly once with no arguments.
         """
-        # Mock run_interactive_session before running the module to prevent actual
-        # interactive input attempts during test execution
-        with patch('src.interactive.run_interactive_session') as mock_run:
-            with patch('src.cli.run_cli') as mock_cli:
+        # Patch the source modules before running __main__
+        with patch('src.ui.interactive.run_interactive_session') as mock_run:
+            with patch('src.ui.cli.run_cli') as mock_cli:
                 # Clear the module cache to force re-execution with the mock in place
                 if 'src.__main__' in sys.modules:
                     del sys.modules['src.__main__']
@@ -93,8 +92,8 @@ class TestMainDispatch:
 
         Expected: run_interactive_session() is called; run_cli() is NOT called.
         """
-        with patch('src.interactive.run_interactive_session') as mock_interactive:
-            with patch('src.cli.run_cli') as mock_cli:
+        with patch('src.ui.interactive.run_interactive_session') as mock_interactive:
+            with patch('src.ui.cli.run_cli') as mock_cli:
                 if 'src.__main__' in sys.modules:
                     del sys.modules['src.__main__']
 
@@ -112,8 +111,8 @@ class TestMainDispatch:
 
         Expected: run_cli() is called; run_interactive_session() is NOT called.
         """
-        with patch('src.interactive.run_interactive_session') as mock_interactive:
-            with patch('src.cli.run_cli', return_value=0) as mock_cli:
+        with patch('src.ui.interactive.run_interactive_session') as mock_interactive:
+            with patch('src.ui.cli.run_cli', return_value=0) as mock_cli:
                 if 'src.__main__' in sys.modules:
                     del sys.modules['src.__main__']
 
@@ -131,7 +130,7 @@ class TestMainDispatch:
 
         Expected: sys.exit(0) is called.
         """
-        with patch('src.cli.run_cli', return_value=0) as mock_cli:
+        with patch('src.ui.cli.run_cli', return_value=0) as mock_cli:
             if 'src.__main__' in sys.modules:
                 del sys.modules['src.__main__']
 
@@ -146,7 +145,7 @@ class TestMainDispatch:
 
         Expected: sys.exit(1) is called.
         """
-        with patch('src.cli.run_cli', return_value=1) as mock_cli:
+        with patch('src.ui.cli.run_cli', return_value=1) as mock_cli:
             if 'src.__main__' in sys.modules:
                 del sys.modules['src.__main__']
 
@@ -163,8 +162,8 @@ class TestMainDispatch:
 
         Expected: run_cli() is called; run_interactive_session() is NOT called.
         """
-        with patch('src.interactive.run_interactive_session') as mock_interactive:
-            with patch('src.cli.run_cli', return_value=1) as mock_cli:
+        with patch('src.ui.interactive.run_interactive_session') as mock_interactive:
+            with patch('src.ui.cli.run_cli', return_value=1) as mock_cli:
                 if 'src.__main__' in sys.modules:
                     del sys.modules['src.__main__']
 

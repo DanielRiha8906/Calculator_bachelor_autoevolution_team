@@ -141,8 +141,8 @@ class TestSessionManagerImport:
         """Test: SessionManager can be instantiated with required dependencies."""
         from src.session.manager import SessionManager
         from src.calculator import Calculator
-        from src.error_logger import ErrorLogger
-        from src.history import OperationHistory
+        from src.infrastructure.error_logger import ErrorLogger
+        from src.infrastructure.history import OperationHistory
 
         calculator = Calculator()
         error_logger = ErrorLogger()

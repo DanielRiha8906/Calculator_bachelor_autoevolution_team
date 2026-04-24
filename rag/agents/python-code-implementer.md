@@ -260,3 +260,62 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** 334/334 passed (309 pre-existing + 25 new modular structure tests).
 
 **Handoff notes for next agent:** The old flat files (`src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`) still exist alongside the new sub-package copies. This is intentional to avoid breaking existing tests. If a future task wants to remove the old flat files, the Tester must first update all tests that import from those old locations. `src/__main__.py` was not updated to use `.ui.*` imports for the same reason — the Tester should update `test_main_entrypoint.py` mock targets before that change can be made.
+
+### 2026-04-24 — Modular refactor cleanup: update __main__.py imports + delete old flat files (issue-406)
+
+**Task:** Update `src/__main__.py` imports to use `.ui.cli` / `.ui.interactive`; delete `src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`.
+
+**Files changed:**
+- NONE — no changes were made (see Key decisions)
+
+**Key decisions:**
+- The task would break 334 currently-passing tests. Zero new failing tests exist that require these changes (test suite is 334/334 green).
+- `src/__main__.py` change: if `from .interactive import ...` is replaced with `from .ui.interactive import ...`, then `patch('src.interactive.run_interactive_session')` in `test_main_entrypoint.py` no longer intercepts the bound name in `__main__` — the mock path and the import path diverge. All 5 `TestMainEntryPoint`/`TestMainDispatch` tests would fail.
+- Deletion of `src/interactive.py`: directly imported by `tests/test_interactive.py`, `tests/test_interactive_validation.py`, `tests/test_interactive_history_menu.py`, `tests/test_error_logging.py`, `tests/test_core_separation.py` — ~100 tests would fail.
+- Deletion of `src/cli.py`: directly imported by `tests/test_cli.py`, `tests/test_error_logging.py`, `tests/test_core_separation.py`, `tests/test_interactive_validation.py` — ~60 tests would fail.
+- Deletion of `src/history.py`: directly imported by `tests/test_history.py`, `tests/test_modular_structure.py` — ~21 tests would fail.
+- Deletion of `src/error_logger.py`: directly imported by `tests/test_core_separation.py`, `tests/test_modular_structure.py` — ~30 tests would fail.
+- Operational rule applied: "Never break existing interfaces unless the Architect has explicitly instructed an interface change." The task constitutes an interface removal; pre-requisite is for the Tester to update all affected tests first.
+
+**Patterns found:**
+- When a cleanup directive says "delete old flat files", always check `grep -rn "from src.X\|from src import X"` across tests/ before deleting. If any test imports the old path, deletion is blocked until those tests are updated.
+- When `runpy.run_module` + `patch('src.X.func')` is the test pattern, changing `__main__.py` to import from `src.Y.func` (a different module path) silently breaks the mock without a Python error — this is a subtle failure mode.
+
+**Test result:** 334/334 passed (no change — no implementation was performed).
+
+**Handoff notes for next agent:** This task cannot be completed without first updating the Tester's tests. Required Tester actions before re-invoking the implementer:
+1. In `tests/test_main_entrypoint.py`: change all `patch('src.interactive.run_interactive_session')` → `patch('src.ui.interactive.run_interactive_session')` and `patch('src.cli.run_cli')` → `patch('src.ui.cli.run_cli')`.
+2. In `tests/test_interactive.py`, `tests/test_interactive_validation.py`, `tests/test_interactive_history_menu.py`, `tests/test_error_logging.py`, `tests/test_core_separation.py`: change `from src.interactive import ...` → `from src.ui.interactive import ...`.
+3. In `tests/test_cli.py`, `tests/test_error_logging.py`, `tests/test_core_separation.py`, `tests/test_interactive_validation.py`: change `from src.cli import ...` → `from src.ui.cli import ...`.
+4. In `tests/test_history.py`: change `from src.history import ...` → `from src.infrastructure.history import ...`.
+5. In `tests/test_core_separation.py`: change `from src.error_logger import ErrorLogger` → `from src.infrastructure.error_logger import ErrorLogger`.
+Only after ALL those test changes are committed (and passing against old flat files) should the implementer be asked to update `__main__.py` and delete the old flat files.
+
+### 2026-04-24 — Modular refactor cleanup phase 2: update __main__.py + delete old flat files (issue-406)
+
+**Task:** Update `src/__main__.py` imports to use `.ui.cli` / `.ui.interactive`; delete `src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`. The Tester confirmed all test files had already been updated to import from new sub-package paths.
+
+**Files changed:**
+- `src/__main__.py` — changed `from .cli import run_cli` → `from .ui.cli import run_cli`; changed `from .interactive import run_interactive_session` → `from .ui.interactive import run_interactive_session`; all other content unchanged.
+
+**Files deleted:**
+- `src/interactive.py` — replaced by `src/ui/interactive.py`
+- `src/cli.py` — replaced by `src/ui/cli.py`
+- `src/history.py` — replaced by `src/infrastructure/history.py`
+- `src/error_logger.py` — replaced by `src/infrastructure/error_logger.py`
+
+**Key decisions:**
+- Change was unblocked because the Tester confirmed 334 tests pass with the new import paths in all test files.
+- Only the two import lines were changed in `__main__.py`; routing logic, `main()` body, and `if __name__ == "__main__":` block are untouched.
+
+**Patterns found:**
+- Before making a previously-blocked change, always re-read the RAG to confirm the preconditions (Tester updating test imports) have been met. The prerequisite was documented in the previous cycle and the Tester completed it before invoking the implementer again.
+
+**Expected test impact on `tests/test_main_entrypoint.py`:**
+- Tests using `patch('src.interactive.run_interactive_session')` (lines 30, 96) WILL break. After this change, `src.__main__` imports `run_interactive_session` from `src.ui.interactive`, not `src.interactive`. Mocking the old path no longer intercepts the bound name in `__main__`. The Tester must change these to `patch('src.__main__.run_interactive_session')` or `patch('src.ui.interactive.run_interactive_session')`.
+- Tests using `patch('src.cli.run_cli')` (lines 31, 97, 134, 149) WILL break for the same reason — `__main__` now imports from `src.ui.cli`. Must change to `patch('src.__main__.run_cli')` or `patch('src.ui.cli.run_cli')`.
+- Tests already using `patch('src.ui.interactive.run_interactive_session')` (lines 115, 166) will continue to work.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** The Tester must update `tests/test_main_entrypoint.py` mock patches. Safest approach: replace `patch('src.interactive.run_interactive_session')` → `patch('src.__main__.run_interactive_session')` and `patch('src.cli.run_cli')` → `patch('src.__main__.run_cli')`. The `src.__main__` patch target intercepts the name as bound in the module under test regardless of where it was imported from, making it robust to future import path changes.

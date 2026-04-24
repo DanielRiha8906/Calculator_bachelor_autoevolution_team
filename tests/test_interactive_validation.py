@@ -9,7 +9,7 @@ not incrementing the counter.
 
 from unittest.mock import patch, call
 import pytest
-from src.interactive import run_interactive_session
+from src.ui.interactive import run_interactive_session
 
 
 class TestValidationCounter:
@@ -21,7 +21,7 @@ class TestValidationCounter:
         Scenario: Import interactive module and inspect MAX_ATTEMPTS.
         Expected: MAX_ATTEMPTS exists and equals 5.
         """
-        from src import interactive
+        from src.ui import interactive
         assert hasattr(interactive, 'MAX_ATTEMPTS'), \
             "interactive module should define MAX_ATTEMPTS constant"
         assert interactive.MAX_ATTEMPTS == 5, \
@@ -36,7 +36,7 @@ class TestValidationCounter:
         This test validates counter reset by: valid op -> should trigger counter reset mechanism.
         """
         # Import to check that the counter reset mechanism is implemented
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -59,7 +59,7 @@ class TestValidationCounter:
         Expected: "Invalid operation" displayed, operations list shown, counter increments,
                  valid selection succeeds.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -84,7 +84,7 @@ class TestValidationCounter:
         Expected: "Invalid input" displayed, counter increments to 1, user re-prompted,
                  result calculated successfully.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -110,7 +110,7 @@ class TestValidationCounter:
         Expected: "Invalid input" displayed, counter increments to 1, user re-prompted,
                  then succeeds with valid inputs.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -134,7 +134,7 @@ class TestValidationCounter:
         Expected: "Invalid input" displayed, counter increments to 1, user re-prompted,
                  then succeeds with valid second operand.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -157,7 +157,7 @@ class TestValidationCounter:
                  with valid operands (counter reset to 0).
         Expected: Two "Invalid operation" messages, then successful calculation result.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -241,7 +241,7 @@ class TestValidationCounter:
                  (triggers ZeroDivisionError).
         Expected: Error shown, counter NOT incremented, session continues (no termination).
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -268,7 +268,7 @@ class TestValidationCounter:
         Scenario: User selects sqrt (index 9), enters operand -4 (domain error).
         Expected: Error shown, counter NOT incremented, session continues (no termination).
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -295,7 +295,7 @@ class TestValidationCounter:
         Expected: Available operations list is displayed in output before asking
                  user to select operation again.
         """
-        from src.interactive import run_interactive_session as ris
+        from src.ui.interactive import run_interactive_session as ris
         import inspect
         source = inspect.getsource(ris)
         assert "counter" in source or "MAX_ATTEMPTS" in source, \
@@ -320,8 +320,8 @@ class TestValidationCounter:
         Scenario: CLI invocation with invalid operation or non-numeric operand.
         Expected: Error message, exit code 1, no retry/counter logic.
         """
-        from src.cli import run_cli
-        from src.interactive import run_interactive_session as ris
+        from src.ui.cli import run_cli
+        from src.ui.interactive import run_interactive_session as ris
         import sys
         import inspect
         from io import StringIO

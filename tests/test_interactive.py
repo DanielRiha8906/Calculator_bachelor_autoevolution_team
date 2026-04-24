@@ -7,7 +7,7 @@ Each test feeds input values via side_effect and verifies expected output in pri
 
 from unittest.mock import patch, call
 import pytest
-from src.interactive import run_interactive_session
+from src.ui.interactive import run_interactive_session
 
 
 class TestInteractiveSession:

@@ -1,7 +1,7 @@
 import sys
 from .calculator import Calculator
-from .cli import run_cli
-from .interactive import run_interactive_session
+from .ui.cli import run_cli
+from .ui.interactive import run_interactive_session
 
 
 def main():

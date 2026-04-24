@@ -14,8 +14,8 @@ from io import StringIO
 
 import pytest
 
-from src.cli import run_cli
-from src.interactive import run_interactive_session
+from src.ui.cli import run_cli
+from src.ui.interactive import run_interactive_session
 from src.calculator import Calculator
 
 
