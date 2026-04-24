@@ -149,3 +149,56 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 **Handoff Notes for Next Agent:**
 - **pytest-edge-tester (WRITE phase):** Write 28 test cases in tests/test_batch_cli.py covering all scenarios in Test Specifications section. All tests must initially fail (batch_cli module doesn't exist yet).
 - **python-code-implementer:** After tests are written and failing, implement: (1) Create src/batch_cli.py with parse_batch_args(), execute_batch(), batch_main() functions. (2) Modify src/__main__.py to detect mode and route. Target: all 28 batch tests + all 27 existing interactive tests passing.
+
+### Cycle 5: 2026-04-24 — Issue #392 V3 Task 8 (Input Validation with Retry Capability)
+**Task:** Add input validation with user retry capability to interactive and CLI modes. Max 3 retries per input field; after exhaustion, exit gracefully.
+
+**Analysis of Current State:**
+- `src/calculator.py`: All domain validation (sqrt negative, log non-positive, factorial negative) already present; raises ValueError or ZeroDivisionError
+- `src/cli.py`: Interactive mode already has infinite-loop retries in prompt_for_first_number(), prompt_for_second_number(), prompt_for_operator(). Input validation (numeric, operator name) works correctly but has NO RETRY LIMIT.
+- `src/batch_cli.py`: Batch mode validates input once; no retry on error (correct for non-interactive)
+- `src/__main__.py`: Routes interactive vs batch; error handling in place but needs update for new exception
+- `tests/test_cli.py`: 27 tests all mock valid input directly; no tests for retry limits or exhaustion
+
+**Key Architectural Decisions:**
+1. **Add `MaxRetriesExceeded` exception class** in `src/cli.py`
+   - Raised when user exhausts max retry attempts on any single input field
+   - Propagates up through run_calculator() to main()
+
+2. **Add `max_retries` parameter** to all three prompt functions (default 3)
+   - Track attempt count internally
+   - Before displaying error, check if attempts >= max_retries
+   - If limit reached, raise MaxRetriesExceeded with field-specific message
+   - Enhance error messages with attempt counter: "(Attempt N/3)"
+
+3. **Distinguish retryable errors (user input) from non-retryable errors (domain)**
+   - Retryable: non-numeric operand, invalid operator name
+   - Non-retryable: sqrt of negative, factorial of negative, division by zero (Calculator raises ValueError/ZeroDivisionError directly)
+   - run_calculator() catches Calculator errors and re-raises (doesn't retry)
+   - Prompt functions catch ValueError from float() parsing, retry on that
+
+4. **Update `src/__main__.py`** to catch and handle MaxRetriesExceeded
+   - Import MaxRetriesExceeded from cli
+   - In interactive mode's try/except, add handler: display_error + sys.exit(1)
+   - Ensures explicit exit code 1 on all error paths
+
+5. **Keep batch mode unchanged**
+   - Batch mode is stateless, non-interactive; no retry needed
+   - User provides all args at once; if invalid, exit immediately with code 1
+   - No changes to src/batch_cli.py required
+
+**Patterns Found:**
+- Retry patterns: infinite loop with early termination condition (attempt counter)
+- Exception hierarchy: custom exception (MaxRetriesExceeded) for control flow; standard exceptions (ValueError, ZeroDivisionError) for Calculator domain errors
+- CLI architecture: separation of retryable (prompt functions) vs non-retryable (Calculator operations) error handling
+
+**Risks & Mitigations:**
+- Risk: Existing tests that expect infinite retries fail. Mitigation: tests write new failing tests first; all 27 existing tests mock valid input only, so never trigger retries (backward compatible).
+- Risk: Domain errors become retryable. Mitigation: Calculator raises ValueError/ZeroDivisionError directly; run_calculator() re-raises without catching from within retry loops (tests 11-14 verify).
+- Risk: Unclear error messages. Mitigation: error text includes attempt counter and field name; final message when exhausted explicitly states "Maximum retry attempts exceeded".
+- Risk: Batch mode user confusion. Mitigation: batch mode unchanged; users understand it's non-interactive, no retries (tests 18-19 verify behavior frozen).
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 25 test cases in `tests/test_cli.py` (new file, or append to existing). Cover: (1) Retry limit enforcement per field (3 tests), (2) Successful retries after failures (3 tests), (3) Full workflow retry limits (3 tests), (4) Domain errors vs retryable errors (5 tests), (5) Integration with main() (3 tests), (6) Batch mode unchanged (2 tests), (7) Error message clarity (3 tests), (8) Backward compatibility and integration (4 tests). Expected: 25 new failing tests; all 27 existing tests still pass (no modifications to existing test input mocks needed).
+- **python-code-implementer:** Implement changes per plan: (1) Add MaxRetriesExceeded exception to cli.py, (2) Update three prompt functions with max_retries parameter and attempt tracking, (3) Update cli.py docstrings, (4) Import MaxRetriesExceeded in __main__.py and add exception handler. No changes to calculator.py or batch_cli.py. Target: all 25 new tests passing + all 27 existing tests passing (52 total passing at end of cycle).
+
