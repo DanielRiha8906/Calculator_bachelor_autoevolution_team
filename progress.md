@@ -58,7 +58,7 @@ Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
 - **Risks:** None
 - **Tests passed:** 123 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 381.8s | Cost: $0.789959 USD | Turns: 19
 
 ## Run: update-diagrams — Unit Test Suite PR #376 (2026-04-24)
 
