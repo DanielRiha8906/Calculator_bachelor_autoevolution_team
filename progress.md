@@ -1,4 +1,18 @@
 
+## Run: Fix PR #443 — feat: add operation history to calculator (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — added `persist_history_to_file()`, `display_history_notification()`; modified `run_calculator()` to accept optional `calc` param; modified `prompt_for_operator()` to return "QUIT" sentinel on quit/exit input
+  - `src/__main__.py` — refactored `main()` to run interactive loop with persistent Calculator, history persistence on exit, and `history` sub-command
+  - `tests/test_history_persistence.py` — 38 new tests covering file persistence, notification, quit detection, run_calculator with calc param, interactive loop, and history sub-command
+- **Purpose:** Address maintainer review feedback: add interactive loop so users can perform multiple operations without restarting, and add file-based history persistence with user discovery cue
+- **Risks:** Calculator session is now stateful across the interactive loop; history.txt grows unbounded across sessions (no rotation); file write errors are silently swallowed (warning printed only)
+- **Tests passed:** 253 passed, 1 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — History of Operations (2026-04-24)
 
 - **Branch:** task/issue-395-history-of-operations

@@ -555,3 +555,61 @@ Tests verify that:
 8. Backward compatibility: Existing code without max_retries parameter continues to work ✓
 
 **Conclusion:** All 185 tests pass successfully (1 skipped). The implementer correctly added MaxRetriesExceeded exception and max_retries retry logic to the CLI system. Input validation now retries up to 3 times (configurable) before giving up, with special handling for domain errors. The system gracefully handles max retries exhaustion by exiting with code 1. Batch mode behavior is unchanged (no retries). Full test coverage spans all retry scenarios, edge cases, error handling, domain error behavior, main integration, batch mode preservation, and error message validation.
+
+### 2026-04-24 | task/issue-395-history-of-operations | WRITE | 38 failing tests written, all pass (implementation complete)
+
+**Task:** Write comprehensive failing tests for history persistence features covering file I/O, notification display, quit detection, run_calculator reuse, main interactive loop, and history sub-command.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented (38 tests total across 6 groups):**
+
+Group 1: persist_history_to_file (10 tests)
+- TestPersistHistoryToFileWithData (3 tests): populated calc, multiple operations, format validation
+- TestPersistHistoryEmptyCalculator (1 test): empty calc handling
+- TestPersistHistoryAppendSemantics (1 test): append vs overwrite
+- TestPersistHistoryErrorHandling (3 tests): invalid path, read-only dir, IOError handling
+- TestPersistHistoryCustomFilepath (2 tests): custom filepath, subdirectory support
+
+Group 2: display_history_notification (4 tests)
+- TestDisplayHistoryNotification (4 tests): default filepath, custom filepath, message content validation
+
+Group 3: prompt_for_operator quit/exit detection (9 tests)
+- TestPromptForOperatorQuitDetection (9 tests): lowercase quit/exit, uppercase, case-insensitive, no-retry-consumed, normal invalid increments retry
+
+Group 4: run_calculator with calc parameter (5 tests)
+- TestRunCalculatorWithCalcParameter (5 tests): fresh calc creation, calc reuse, history accumulation across calls, QUIT return, notification display
+
+Group 5: main() interactive loop (6 tests)
+- TestMainInteractiveLoop (6 tests): multiple calculations, loop break on quit, history persistence, keyboard interrupt handling, sys.exit(0) verification
+
+Group 6: main() history sub-command (4 tests)
+- TestMainHistorySubcommand (4 tests): reads/prints file, "No history found" when missing, exits with 0, reads entire content
+
+**Key Findings (Unexpected - Implementation Already Complete):**
+All 38 tests pass immediately, indicating the implementer has successfully completed all required functionality:
+- persist_history_to_file() appends entries correctly with _format_history_entry formatting
+- display_history_notification() prints correct message with filepath and command
+- prompt_for_operator() detects quit/exit (case-insensitive) and returns "QUIT" without consuming retries
+- run_calculator() accepts optional calc parameter, creates Calculator when None, reuses when provided, displays notification after success
+- main() interactive loop maintains single Calculator across session, calls persist_history_to_file in finally block
+- main() handles 'history' sub-command, reads/displays history.txt content
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_history_persistence.py`
+
+**Test Results:**
+- Total new tests: 38
+- Passed: 38 (100%)
+- Failed: 0
+- Unexpected: All tests pass (implementation complete, not failing as expected in WRITE phase)
+
+**Test Coverage Patterns Used:**
+- File I/O with tmp_path fixture for isolated testing
+- Mock input/builtins.input for user interaction simulation
+- capsys fixture for output validation
+- pytest.parametrize for quit variants (quit, exit, QUIT, EXIT)
+- Mock sys.argv for main() entry point routing
+- Mock sys.exit for exit code verification
+- try/finally block in main() verified with capsys/assertions
+
+**Handoff Note:** All 38 tests pass immediately. The implementer successfully completed all history persistence features before tester invocation. This is opposite of expected WRITE phase behavior. Rather than report this as failure, proceeding to VERIFY phase to confirm full suite stability.
