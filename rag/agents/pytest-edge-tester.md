@@ -128,3 +128,72 @@ All 49 new test specifications have been written and are passing. Since the impl
 **Assessment:** The full test suite is GREEN. All 73 tests pass without failure. The Calculator.factorial() implementation is correct and complete for all specified test cases. No regressions in existing tests. No escalations needed.
 
 **Handoff Notes:** Test suite verification complete. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 6 (2026-04-24)
+**Task:** Issue #382 — Advanced Math Operations (Square, Cube, Roots, Logarithms, Power)  
+**Phase:** WRITE  
+**Test Cases Added:** 50 new tests  
+- **Category 8 (Square):** 5 parametrized tests covering zero, positive integers, negative integers, floats, and large numbers  
+- **Category 9 (Cube):** 5 parametrized tests covering similar scenarios  
+- **Category 10 (Square Root):** 7 tests including valid inputs, perfect squares, non-perfect squares, and error handling for negative inputs  
+- **Category 11 (Cube Root):** 8 tests including perfect cubes (positive/negative), non-perfect cubes, and float inputs  
+- **Category 12 (Log Base 10):** 7 tests covering log₁₀(1), log₁₀(10), log₁₀(100), floats, and error handling for zero/negative inputs  
+- **Category 13 (Natural Logarithm):** 7 tests covering ln(1), ln(e), floats, ln(10), and error handling for zero/negative inputs  
+- **Category 14 (Power):** 11 parametrized tests covering positive/negative bases, zero base, fractional exponents, and edge cases
+
+**Test Status:** ALL 50 NEW TESTS FAIL as expected. Each test fails with `AttributeError: 'Calculator' object has no attribute <method>`. This is correct — none of the methods (square, cube, sqrt, cbrt, log10, ln, power) exist yet in src/calculator.py.
+
+**Test File Structure:**
+- All tests use the existing `calc` fixture (Calculator instance)
+- Parametrized tests use `@pytest.mark.parametrize` for data-driven coverage
+- Exception tests use `pytest.raises()` context manager
+- Tests use `pytest.approx()` for floating-point comparisons
+- All test names follow `test_<method>_<scenario>` convention
+- Organized into 7 categories (8-14) with clear section headers
+
+**Patterns Applied:**
+- Consolidated similar test cases into parametrized tests (e.g., 5 square tests in one parametrized test)
+- Each distinct error condition tested exactly once (e.g., sqrt/log with negative/zero inputs)
+- Test naming is descriptive and matches existing conventions
+- Proper use of pytest.approx() for floating-point assertions (sqrt(2), cbrt(2), log10(10.5), ln(2.718), log(4, 0.5))
+
+**Test Results Summary:**
+- Total tests collected: 123 (73 existing + 50 new)
+- Existing tests (73): All pass (confirmed no regressions)
+- New tests (50): All fail with AttributeError (expected)
+
+**Handoff Notes:** 
+50 new tests for advanced math operations written and all confirmed failing. Test file is syntactically valid (123 total tests collected). Ready for python-code-implementer to implement the following methods in Calculator class: square(), cube(), sqrt(), cbrt(), log10(), ln(), power().
+
+### Cycle 7 (2026-04-24)
+**Task:** Issue #382 — Advanced Math Operations (VERIFY Phase)
+**Phase:** VERIFY
+**Test Execution:** Full test suite run via `python -m pytest tests/ -v`
+
+**Results:**
+- Total tests run: 123
+- Tests passing: 123 (100%)
+- Tests failing: 0
+- Suite status: **GREEN** ✓
+
+**Test Breakdown:**
+- Existing tests (73): All pass (no regressions)
+- New advanced math operation tests (50): All pass
+  - test_square (5 parametrized cases): All PASS
+  - test_cube (5 parametrized cases): All PASS
+  - test_sqrt_valid_inputs (4 parametrized cases): All PASS
+  - test_sqrt_non_perfect_square: PASS
+  - test_sqrt_negative_raises_value_error (2 parametrized cases): All PASS
+  - test_cbrt_valid_inputs (7 parametrized cases): All PASS
+  - test_cbrt_non_perfect_cube: PASS
+  - test_log10_valid_inputs (4 parametrized cases): All PASS
+  - test_log10_invalid_raises_value_error (3 parametrized cases): All PASS
+  - test_ln_valid_inputs (2 parametrized cases): All PASS
+  - test_ln_float_input: PASS
+  - test_ln_ten: PASS
+  - test_ln_invalid_raises_value_error (3 parametrized cases): All PASS
+  - test_power (11 parametrized cases): All PASS
+
+**Assessment:** The full test suite is GREEN. All 123 tests pass without failure. The implementations for square(), cube(), sqrt(), cbrt(), log10(), ln(), and power() are correct and complete for all specified test cases. No regressions in existing tests. No escalations needed.
+
+**Handoff Notes:** Test suite verification complete. All 123 tests passing. Ready for orchestrator to finalize commit and PR.
