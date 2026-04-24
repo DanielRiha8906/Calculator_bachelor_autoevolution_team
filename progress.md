@@ -330,3 +330,14 @@ Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
   - `artifacts/sequence_registry_dispatch.puml` — Registry to Operation dispatch sequence
 
 Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
+
+## Run: update-diagrams — Add documentation diagrams (2026-04-24)
+
+- **Branch:** task/issue-408-add-documentation
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — class/component diagram showing module structure, Operation inheritance hierarchy, and dependencies
+  - `artifacts/activity_cli.puml` — activity diagram for CLI mode execution with fail-fast error handling
+  - `artifacts/activity_interactive.puml` — activity diagram for Interactive REPL mode with 3-strike consecutive-failure logic
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
