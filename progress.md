@@ -12,7 +12,7 @@
 - **Risks:** None — backward compatibility maintained via cli.py re-export facade; no breaking API changes
 - **Tests passed:** 294 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 543.6s | Cost: $1.152947 USD | Turns: 18
 
 ## Run: Issue #398 — V3 Task 10 - Naive/team (2026-04-24)
 
