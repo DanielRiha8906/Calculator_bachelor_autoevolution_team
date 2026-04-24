@@ -254,3 +254,50 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Log10: return log base 10 of x, raise ValueError for x <= 0
 - Ln: return natural logarithm of x, raise ValueError for x <= 0
 - 49 failing tests ready for implementation verification
+
+### Cycle 8: 2026-04-24 — Issue #381 Advanced Operations (VERIFY phase)
+
+**Task:** Run full test suite to confirm all 82 tests pass after implementer completion.
+
+**Phase:** VERIFY
+
+**Test Results:**
+- Total tests collected: 82
+- Passed: 82
+- Failed: 0
+- Errors: 0
+- Duration: 0.04s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- 6 tests for addition
+- 6 tests for subtraction
+- 6 tests for multiplication
+- 5 tests for division
+- 10 tests for factorial
+- 5 tests for square
+- 5 tests for cube
+- 6 tests for square root
+- 6 tests for cube root
+- 11 tests for power
+- 8 tests for log10
+- 8 tests for ln
+- **Total: 82 tests, all passing**
+
+**Implementation Verified:**
+- 7 new methods added to Calculator class: square(), cube(), square_root(), cube_root(), power(), log10(), ln()
+- All methods use math module correctly
+- Error handling validates input ranges and raises ValueError appropriately
+- Floating-point comparisons handled correctly
+- All 49 new advanced operation tests pass
+- All 33 prior tests remain passing (no regressions)
+
+**Escalations:** None. All tests pass. No bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Cycle complete. Full test suite verified.
+- Implementation successfully satisfies all 49 new test specifications for advanced operations.
+- Full test suite is clean with 82 passing tests.
+- No regressions detected.
+- Ready for commit and PR.
