@@ -1,0 +1,24 @@
+@startuml sequence_diagram_factorial
+
+participant Caller
+participant Calculator
+participant math
+
+Caller ->> Calculator : factorial(n)
+activate Calculator
+
+alt invalid type (not int, or bool)
+    Calculator -->> Caller : raise TypeError
+else negative int (n < 0)
+    Calculator -->> Caller : raise ValueError
+else valid non-negative int
+    Calculator ->> math : factorial(n)
+    activate math
+    math -->> Calculator : int result
+    deactivate math
+    Calculator -->> Caller : int result
+end
+
+deactivate Calculator
+
+@enduml

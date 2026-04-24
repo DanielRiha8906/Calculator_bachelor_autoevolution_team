@@ -7,11 +7,24 @@ class Calculator {
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
     + divide(a, b) : float
+    + factorial(n: int) : int
 }
 
 note right of Calculator::divide
   Raises ZeroDivisionError
   when b == 0
 end note
+
+note right of Calculator::factorial
+  Raises TypeError if n is not int or is bool
+  Raises ValueError if n < 0
+  Delegates to math.factorial(n)
+end note
+
+package "stdlib" {
+    class math <<module>>
+}
+
+Calculator --> math : uses math.factorial()
 
 @enduml

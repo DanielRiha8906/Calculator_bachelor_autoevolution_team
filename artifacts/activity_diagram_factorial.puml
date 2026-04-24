@@ -1,0 +1,23 @@
+@startuml activity_diagram_factorial
+
+title factorial() Method Flow
+
+start
+
+:Receive n;
+
+if (not isinstance(n, int)\nor isinstance(n, bool)?) then (yes)
+    :Raise TypeError;
+    stop
+else (no)
+    if (n < 0?) then (yes)
+        :Raise ValueError;
+        stop
+    else (no)
+        :Delegate to math.factorial(n);
+        :Return int result;
+        stop
+    endif
+endif
+
+@enduml

@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — Add factorial UML diagrams (2026-04-24)
+
+- **Branch:** task/issue-377-factorial
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — updated class diagram to include factorial method with type hints and math dependency
+  - `artifacts/activity_diagram_factorial.puml` — new activity diagram showing factorial validation flow (type check, sign check, delegation)
+  - `artifacts/sequence_diagram_factorial.puml` — new sequence diagram showing factorial call interaction with error paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #377 — V3 Task 3 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-377-factorial
