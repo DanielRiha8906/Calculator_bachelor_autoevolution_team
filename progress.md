@@ -11,7 +11,7 @@
 - **Risks:** history.txt is a runtime artifact not tracked in .gitignore; file write failures are silently logged to stderr.
 - **Tests passed:** 241 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 624.4s | Cost: $1.142542 USD | Turns: 18
 
 ## Run: Issue #394 — V3 Task 8 - Expert/team (2026-04-24)
 
