@@ -6,6 +6,7 @@ class Calculator {
   + subtract(a: numeric, b: numeric): numeric
   + multiply(a: numeric, b: numeric): numeric
   + divide(a: numeric, b: numeric): numeric
+  + factorial(n: int): int
 }
 
 note right of Calculator::divide
@@ -13,6 +14,13 @@ note right of Calculator::divide
   Behavior is provided natively by
   Python's / operator — no explicit
   guard is required in the implementation.
+end note
+
+note right of Calculator::factorial
+  Rejects invalid inputs: bool, float, str, None,
+  negative integers. Raises ValueError for all
+  invalid cases. Returns 1 for n=0 or n=1.
+  Iterative computation for n >= 2.
 end note
 
 @enduml

@@ -193,3 +193,82 @@ def test_addition_inverse_subtraction(calc):
 def test_multiplication_inverse_division(calc):
     """Test that division is the inverse of multiplication."""
     assert calc.divide(calc.multiply(6, 4), 4) == pytest.approx(6)
+
+
+# ============================================================================
+# CATEGORY 7: FACTORIAL TESTS
+# ============================================================================
+
+# Category 1: Valid Non-Negative Integers
+def test_factorial_zero(calc):
+    """Test factorial of 0 equals 1 (by definition)."""
+    assert calc.factorial(0) == 1
+
+
+def test_factorial_one(calc):
+    """Test factorial of 1 equals 1."""
+    assert calc.factorial(1) == 1
+
+
+@pytest.mark.parametrize("n,expected", [
+    (2, 2),
+    (3, 6),
+    (5, 120),
+    (10, 3628800),
+])
+def test_factorial_positive_integers(calc, n, expected):
+    """Test factorial computation for positive integers."""
+    assert calc.factorial(n) == expected
+
+
+def test_factorial_large_number(calc):
+    """Test factorial of a larger number."""
+    assert calc.factorial(20) == 2432902008176640000
+
+
+# Category 2: Negative Integers
+@pytest.mark.parametrize("n", [-1, -5, -100])
+def test_factorial_negative_integers_raise_value_error(calc, n):
+    """Test that negative integers raise ValueError with 'negative' in message."""
+    with pytest.raises(ValueError) as exc_info:
+        calc.factorial(n)
+    assert "negative" in str(exc_info.value).lower()
+
+
+# Category 3: Non-Integer Types
+def test_factorial_float_raises_error(calc):
+    """Test that float input raises ValueError or TypeError."""
+    with pytest.raises((ValueError, TypeError)):
+        calc.factorial(3.5)
+
+
+def test_factorial_string_raises_error(calc):
+    """Test that string input raises ValueError or TypeError."""
+    with pytest.raises((ValueError, TypeError)):
+        calc.factorial("5")
+
+
+def test_factorial_none_raises_error(calc):
+    """Test that None input raises ValueError or TypeError."""
+    with pytest.raises((ValueError, TypeError)):
+        calc.factorial(None)
+
+
+@pytest.mark.parametrize("b", [True, False])
+def test_factorial_bool_raises_error(calc, b):
+    """Test that bool input raises ValueError or TypeError (bool is subclass of int)."""
+    with pytest.raises((ValueError, TypeError)):
+        calc.factorial(b)
+
+
+# Category 4: Type Consistency
+def test_factorial_returns_int(calc):
+    """Test that factorial always returns int type."""
+    result = calc.factorial(5)
+    assert isinstance(result, int)
+
+
+@pytest.mark.parametrize("n", [0, 1, 5, 10, 15])
+def test_factorial_matches_math_factorial(calc, n):
+    """Test factorial matches math.factorial() for validation."""
+    assert calc.factorial(n) == math.factorial(n)

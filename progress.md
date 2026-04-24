@@ -21,6 +21,20 @@ Duration: 241.5s | Cost: $0.484060 USD | Turns: 16
 
 Duration: 183.4s | Cost: $0.425742 USD | Turns: 14
 
+## Run: Issue #379 — V3 Task 3 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-379-factorial
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `factorial(self, n: int) -> int` method with full input validation (bool, float, str, None, negative) and iterative computation
+  - `src/__main__.py` — added factorial demo print statement
+  - `tests/test_calculator.py` — added 21 factorial tests covering base cases (0, 1), positive integers, large values, negative rejection, non-integer type rejection, return type check, and stdlib cross-validation
+- **Purpose:** Add factorial as a supported calculator operation with correct boundary handling and input validation, per issue #379.
+- **Risks:** None
+- **Tests passed:** 73 passed, 0 failed
+
+Duration: 360.3s | Cost: $0.703439 USD | Turns: 18
+
 ## Run: Issue #376 — V3 Task 2 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-376-unit-test-suite
@@ -43,3 +57,14 @@ Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
   - `artifacts/sequence_diagram.puml` — new sequence diagram for calculator usage sequence
 
 Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
+
+## Run: update-diagrams — Add factorial operation diagrams (2026-04-24)
+
+- **Branch:** task/issue-379-factorial
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — added factorial method signature and validation note
+  - `artifacts/activity_diagram.puml` — added factorial fork branch with validation and base-case guards
+  - `artifacts/sequence_diagram.puml` — added factorial alt block showing error and success paths
+
+Duration: 163.2s | Cost: $0.420227 USD | Turns: 14

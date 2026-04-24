@@ -28,6 +28,14 @@ else b != 0
   calc -->> main : 2.0
 end
 
+alt n invalid (bool, float, str, None, or negative)
+  main ->> calc : factorial(-1)
+  calc -->> main : ValueError (not caught)
+else n valid
+  main ->> calc : factorial(5)
+  calc -->> main : 120
+end
+
 deactivate calc
 
 main ->> Caller : print results
