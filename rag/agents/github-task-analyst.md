@@ -195,3 +195,43 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - "Needs fix" label followed by explicit task statement is the blocking signal for PRs in this pipeline
   - Each task/PR builds on prior features; interdependencies are tracked in issue progression
 - **Label:** `request-changes:expert-team` (blocking; requires modification before merge)
+
+### Cycle: 2026-04-24 — Issue #400: V3 Task 10 - Expert/team
+- **Task Type:** Feature implementation (error logging with file I/O)
+- **Scope:** Add error-only logging to both interactive and CLI modes; record errors to dedicated log file; keep separate from operation history
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit error categories
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "keep error logging separate from user-facing operation history, avoid turning logging into a general persistence system"
+  - Follows completion of issues #376–#397 (all prior calculator features established)
+  - Applies to both interactive mode and CLI mode (dual-mode consistency required)
+- **Key Findings:**
+  1. **Error categories (4 types):** unsupported operations, invalid operand input, incorrect argument counts (CLI), runtime calculation errors (div by zero, invalid math domains)
+  2. **Log destination:** Dedicated local log file (e.g., `error.log`); not merged with `history.txt`
+  3. **Mode coverage:** Both interactive and CLI modes must log consistently
+  4. **Scope boundary:** Errors only; no general persistence, archival, or analytics features
+  5. **Non-functional:** Logging must not interfere with operation, handle I/O failures gracefully, maintain all existing tests green
+- **Ambiguities Flagged:**
+  1. Log file location — assumed project root or cwd; architect to clarify if configurable or fixed
+  2. Log entry format — no specification of timestamp, fields, or verbosity; architect must specify (suggest ISO8601 timestamp + error category + operation + message)
+  3. File I/O error handling — no behavior spec if log write fails; architect to specify (warn user, silent skip, crash)
+  4. Log file persistence — assumed append across sessions; architect to clarify if overwrite each session
+  5. Error message duplication — no spec for interaction with user-facing error messages; assumed independent (both logged and displayed to user)
+  6. CLI stderr behavior — no spec if logged errors also written to stderr; assumed yes for CLI mode
+- **Handoff Notes:**
+  - Architect MUST clarify the 6 ambiguities above; produce design spec with log format, error message content per category, I/O error handling strategy, file location/mode
+  - Architect must produce test specs covering 8 categories: invalid ops (interactive + CLI), invalid operands (interactive + CLI), incorrect arg counts (CLI), runtime errors (interactive + CLI), log format/content, history separation, graceful error handling, test suite regression
+  - Tester will write failing tests for all 8 categories; all tests must fail before handoff to implementer
+  - Implementer will integrate logging subsystem (suggest Python `logging` module) with hook points in `src/interactive.py` and `src/cli.py`; ensure all test-defined error conditions logged; do not modify history-related code unless verification needed
+  - Tester (VERIFY phase) will run full suite; confirm 8 test categories pass and all existing tests remain green
+  - Critical: No test regressions; logging must be transparent to existing functionality
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+- **Recurring Patterns Observed Across Task Progression:**
+  - All issues follow clear, focused scope with explicit constraints
+  - Issues are self-contained (no external doc references required)
+  - Comments from owner are rare; requirements fully in issue body
+  - Each task builds on previous features; dependencies tracked via issue number sequencing
+  - Multi-mode support (interactive + CLI) is common; consistency across modes always required
+  - Tests are high-priority; "maintain tests that accurately reflect current version" is standard closing phrase
+  - Architect ambiguity-resolution pattern: 4–6 open questions per task, mostly around format/location/error-handling
+  - Tester scope: always dual-mode (interactive + CLI) unless issue explicitly singles out one mode

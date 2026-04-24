@@ -705,3 +705,113 @@ Test file is syntactically valid (15 tests collected). Ready for python-code-imp
 **Assessment:** The full test suite is GREEN. All 256 tests pass without failure. The implementations for interactive history menu (display_history_indexed function, help text, and history command detection) are correct and complete for all specified test cases. No regressions in any of the 241 pre-existing tests. No escalations needed.
 
 **Handoff Notes:** Test suite verification complete. All 256 tests passing. Issue #397 complete: session history recording with interactive menu display. Ready for orchestrator to finalize commit and PR.
+
+### Cycle 20 (2026-04-24)
+**Task:** Issue #400 — Error Logging  
+**Phase:** WRITE  
+**Test Cases Added:** 32 test functions
+
+Test organization by class:
+- **TestInvalidOperations (2 tests):** Invalid operation via CLI and interactive mode
+- **TestInvalidOperands (3 tests):** Invalid operands (non-numeric values) in CLI and interactive modes
+- **TestIncorrectArgumentCounts (5 tests):** Argument validation — missing operations, missing operands, too many operands
+- **TestRuntimeCalculationErrors (8 tests):** Domain/runtime errors — division by zero, sqrt of negative, ln of zero, factorial of negative (CLI and interactive)
+- **TestErrorLogFileManagement (12 tests):** File management, format consistency, appending, timestamp format, operation names, operands, error messages, consistency between modes, chronological ordering
+- **TestErrorLoggingEdgeCases (2 tests):** Edge cases with very large numbers and scientific notation
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_error_logging.py`
+
+**Test Status:** 30 FAILED, 2 PASSED
+
+The 30 failing tests indicate missing error logging functionality:
+- Most tests fail because error.log file is not created (expected — logging not yet implemented)
+- 2 tests pass: these test graceful handling of file I/O failures and format consistency checks that don't depend on error.log existing
+
+**Test File Structure:**
+- Uses `temp_log_dir` fixture with `monkeypatch.chdir()` to isolate error.log to temporary directory
+- Helper functions: `get_error_log_content()`, `error_log_exists()`, `get_history_content()`
+- Tests cover both CLI mode (`run_cli()`) and interactive mode (`run_interactive_session()`)
+- Uses `@patch('builtins.input')` and `@patch('builtins.print')` for interactive mode testing
+- Tests validate log entry format (timestamps, operation names, operands, error messages)
+- Tests distinguish between different error categories: invalid operation, invalid operand, argument count, runtime/domain errors
+
+**Patterns Applied:**
+- Comprehensive test coverage across 5 error categories plus edge cases (32 tests total)
+- Error messages are flexibly asserted (multiple acceptable variations like "Domain" or "domain" or specific operation names)
+- Tests verify both file existence and file content (entries with timestamps, operation info, error messages)
+- Tests use `tmp_path` fixture via monkeypatch to avoid polluting project root
+- Tests verify separation of concerns: error.log (failures) vs history.txt (successes)
+
+**Test Results Summary:**
+- Total tests collected: 32
+- Existing tests: 256 (from previous cycles)
+- Total test suite: 288 tests
+- All 256 pre-existing tests still pass (confirmed no regressions)
+- 30 new tests fail as expected (error logging not yet implemented)
+- 2 new tests pass (graceful error handling checks)
+
+**Handoff Notes:** 
+32 new error logging tests written and confirmed failing (30 failures as expected). Test file is syntactically valid. Ready for python-code-implementer to implement error logging functionality in src/cli.py and src/interactive.py. Implementation should:
+
+1. Create an ErrorLogger class in a new module (e.g., src/error_logger.py) with methods to:
+   - Log errors with timestamps, error types, operation names, operands, and error messages
+   - Write to error.log file with append-mode behavior
+   - Handle IO failures gracefully
+   
+2. Modify src/cli.py to catch exceptions and log errors before returning exit code
+
+3. Modify src/interactive.py to catch exceptions and log errors before printing error messages
+
+4. Error log format must include:
+   - Timestamp in [YYYY-MM-DD HH:MM:SS] format
+   - Error type (Invalid Operation, Invalid Operand, Incorrect Argument Count, Runtime Calculation Error)
+   - Operation name
+   - Operand values
+   - Error message text
+
+5. Ensure error logging does not interfere with normal application flow and does not prevent history.txt from being written (keep errors separate from history)
+
+### Cycle 21 (2026-04-24)
+**Task:** Issue #400 — Error Logging (VERIFY Phase)
+**Phase:** VERIFY
+**Test Execution:** Full test suite run via `python -m pytest tests/ -v --tb=short`
+
+**Results:**
+- Total tests run: 288
+- Tests passing: 288 (100%)
+- Tests failing: 0
+- Suite status: **GREEN** ✓
+
+**Test Breakdown by File:**
+- test_calculator.py: 123 tests, all pass (no regressions)
+- test_cli.py: 53 tests, all pass (no regressions)
+- test_interactive.py: 15 tests, all pass (no regressions)
+- test_interactive_validation.py: 14 tests, all pass (no regressions)
+- test_interactive_history_menu.py: 15 tests, all pass (no regressions)
+- test_history.py: 28 tests, all pass (no regressions)
+- test_main_entrypoint.py: 8 tests, all pass (no regressions)
+- test_error_logging.py: 32 new tests, ALL PASS
+  - TestInvalidOperations (2 tests): PASS
+  - TestInvalidOperands (3 tests): PASS
+  - TestIncorrectArgumentCounts (5 tests): PASS
+  - TestRuntimeCalculationErrors (8 tests): PASS
+  - TestErrorLogFileManagement (12 tests): PASS
+  - TestErrorLoggingEdgeCases (2 tests): PASS
+
+**Implementation Complete:**
+The python-code-implementer successfully completed the error logging feature:
+- File created: src/error_logger.py with ErrorLogger class
+- Files modified: src/cli.py and src/interactive.py with error logging hooks
+
+Error logging is now functional:
+- Centralized ErrorLogger class captures errors with timestamps, operation names, operands, and error messages
+- Errors are written to error.log in append mode
+- Format: [YYYY-MM-DD HH:MM:SS] Error Type | Operation: name | Operands: values | Message: text
+- Works in both CLI and interactive modes
+- Gracefully handles file I/O failures without crashing
+- Errors are logged separately from successful operations (error.log vs history.txt)
+- Does not interfere with normal application flow
+
+**Assessment:** The full test suite is GREEN. All 288 tests pass without failure. The implementation for centralized error logging (src/error_logger.py) and integration in src/cli.py and src/interactive.py is correct and complete for all specified test cases. All 256 pre-existing tests continue to pass with no regressions. All 32 new error logging tests pass. No escalations needed.
+
+**Handoff Notes:** Test suite verification complete. All 288 tests passing. Issue #400 complete: centralized error logging with file persistence and graceful error handling. Ready for orchestrator to finalize commit and PR.
