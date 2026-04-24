@@ -1,3 +1,19 @@
+## Run: Issue #396 — V3 Task 9 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-396-operation-history
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/history.py` — new OperationHistory class with record(), get_all(), display(), clear(); in-memory list + file persistence; session isolation via constructor clearing the file
+  - `src/__main__.py` — added history import; extended _run_interactive_loop() with history_file_path param; added "history" command handler; record() called after each successful operation
+  - `tests/test_history.py` — 23 new tests covering recording, display, file persistence, session isolation, failure-counter integration, and edge cases
+  - `rag/codebase_map.md` — updated src/__main__.py entry; added src/history.py and tests/test_history.py entries
+  - `rag/evolution_log.md` — appended cycle entry for Issue #396
+- **Purpose:** Add per-session operation history to interactive mode; display on "history" command; no cross-session persistence; file path injectable for test isolation
+- **Risks:** None — OperationHistory is a new isolated class; __main__.py changes are additive; CLI mode untouched; no new dependencies
+- **Tests passed:** 166 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #393 — V3 Task 8 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-393-input-validation

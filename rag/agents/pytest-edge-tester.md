@@ -657,3 +657,122 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Consecutive failure tracking works correctly for interactive mode.
 - Backward compatibility maintained for CLI mode and existing interactive behavior.
 - Ready for commit and PR.
+
+### Cycle 15: 2026-04-24 — Issue #396 Operation History (WRITE phase)
+
+**Task:** Write failing tests for operation history tracking and persistence. Test specifications: 23 tests across 5 groups covering history recording, display, file persistence, failure tracking integration, and edge cases.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_history.py` with 23 comprehensive tests
+2. Organized into 5 test classes:
+   - `TestHistoryRecordingBasics`: 8 tests covering single/multiple operations, floats, unary operations, and failure non-recording
+   - `TestHistoryDisplay`: 4 tests for history command display and ordering
+   - `TestFilePersistence`: 4 tests for file creation, writing, and session isolation (clear-on-new-session behavior)
+   - `TestHistoryWithFailureTracking`: 2 tests for integration with consecutive failure counter
+   - `TestHistoryEdgeCases`: 5 tests for negative operands, large numbers, float values, custom paths, and quit preservation
+3. Tests import `OperationHistory` class from `src.history` module (not yet created)
+4. Tests use `tmp_path` fixture for injectable file paths
+5. Tests verify history formatting: "operation op1 op2 = result"
+6. Session isolation test verifies new OperationHistory() clears history (overwrites file)
+7. Failure tracking tests verify history is independent from consecutive failure counter
+8. All 23 tests designed to FAIL because OperationHistory class doesn't exist
+
+**Patterns Found:**
+- OperationHistory class must be created in new src/history.py module
+- Class must have:
+  - __init__(file_path: str) constructor that clears/creates history file
+  - record(operation: str, operands: list, result) method to log operations
+  - get_all() method returning list of formatted operation strings
+  - display() method returning human-readable history or "empty" message
+- File persistence: new session starts with empty history (overwrites previous session's file)
+- Failure tracking: history recording is independent from failure counter in interactive loop
+- Edge cases: negative operands, large numbers, floats, and special formatting all work correctly
+
+**Test Results:**
+- 23 new tests written total
+- 23 tests FAILED (as expected — OperationHistory class does not exist)
+- 143 existing tests PASSED (no regressions on prior cycles)
+- Total test suite: 166 tests (23 new + 143 existing)
+- Failure reason: ModuleNotFoundError: No module named 'src.history'
+- Duration: 0.19s (new tests only)
+
+**Status:** READY FOR HANDOFF — All 23 tests fail as expected. Implementation required for OperationHistory class.
+
+**Test Breakdown:**
+- Test Group A (Recording Basics): 8 tests for operation logging and failure non-recording
+- Test Group B (Display): 4 tests for history command output and ordering
+- Test Group C (Persistence): 4 tests for file handling and session isolation
+- Test Group D (Failure Integration): 2 tests for counter independence and exit preservation
+- Test Group E (Edge Cases): 5 tests for special values and injectable paths
+
+**Escalations:** None. All failures are due to missing OperationHistory class (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Create new file src/history.py with OperationHistory class
+- Class must implement:
+  - __init__(file_path: str): Initialize with injected file path; clear/create history file at session start
+  - record(operation: str, operands: list, result): Record "operation op1 op2 ... = result" format to in-memory history and file
+  - get_all() -> list[str]: Return all recorded operations as formatted strings
+  - display() -> str: Return formatted history or empty message for display
+- Session isolation: Each new OperationHistory() should clear/overwrite the file (start fresh)
+- Failure tracking: History recording is independent from consecutive failure counter in interactive loop
+- 23 failing tests ready for implementation verification
+
+### Cycle 16: 2026-04-24 — Issue #396 Operation History (VERIFY phase)
+
+**Task:** Run full test suite to confirm all 166 tests pass after implementer completion.
+
+**Phase:** VERIFY
+
+**Test Results:**
+- Total tests collected: 166
+- Passed: 166
+- Failed: 0
+- Errors: 0
+- Duration: 0.15s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- 82 baseline tests (addition, subtraction, multiplication, division, factorial, advanced operations, interactive loop, CLI mode)
+- 14 tests for consecutive failure tracking (input validation from Issue #393)
+- **23 new tests for operation history** (Issue #396):
+  - 8 tests for recording basics (single/multiple operations, floats, unary ops, failure non-recording)
+  - 4 tests for display functionality (empty history, all operations, order preservation, case insensitivity)
+  - 4 tests for file persistence (file creation, writing, session isolation, file overwriting)
+  - 2 tests for failure tracking integration (counter independence, history survival through failures)
+  - 5 tests for edge cases (negative operands, large numbers, floats, injectable paths, quit preservation)
+- **Total: 166 tests, all passing**
+
+**Implementation Verified:**
+- src/history.py created with OperationHistory class
+  - __init__(file_path: str | None): Initialize with optional file path, clear file at session start
+  - record(operation: str, operands: list, result): Log formatted operations to in-memory list and file
+  - get_all() -> list[str]: Return all recorded operation strings
+  - display() -> str: Return formatted history display or empty message
+  - clear() method for resetting history
+  - Session isolation: Each new OperationHistory instance clears the backing file
+- src/__main__.py modified with history integration:
+  - Imported OperationHistory class
+  - _run_interactive_loop() extended with history_file_path parameter
+  - history = OperationHistory(history_file_path) instantiated at loop start
+  - "history" command handler added to display operation history
+  - history.record(operation, operands, result) called after successful operations
+  - Failed operations (unknown command, invalid operands, domain errors) do not record
+- All 23 new history tests pass
+- All 143 prior tests remain passing (no regressions)
+- File persistence works correctly (session isolation via file overwrite on new session)
+- History recording is independent from consecutive failure counter
+- Edge cases handled correctly (negative operands, floats, large numbers, injectable paths)
+
+**Escalations:** None. All tests pass. No bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Cycle complete. Full test suite verified with all 166 tests passing.
+- Implementation successfully satisfies all 23 new test specifications for operation history.
+- Full test suite is stable with 166 passing tests (143 baseline + 23 new history tests).
+- No regressions detected in any existing tests.
+- File persistence and session isolation working as expected.
+- Ready for commit and PR.
