@@ -52,3 +52,15 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Decision: The invalid-operand path is inside a nested `for` loop over arity, so after the `for` loop exits via `break`, the outer `if error_occurred` guard checks `consecutive_failures >= 3` again to decide whether to `break` the outer `while` loop or `continue`. This two-level break is the minimal change that handles both the "break inner loop" and "break outer loop" requirements without restructuring the existing flow.
 - Pattern: When a counter must trigger a `break` from an inner loop AND also from an enclosing outer loop, use a flag (`error_occurred`) combined with a post-loop guard check — avoids exceptions-as-control-flow and keeps the code readable.
 - Handoff notes: All 143 tests pass (14 in new test file, 129 pre-existing). No interfaces were changed; `_run_interactive_loop()` signature is unchanged.
+
+### 2026-04-24 — issue-396 operation-history
+
+- Task: Create `src/history.py` with `OperationHistory` class and integrate it into `src/__main__.py` `_run_interactive_loop()` to satisfy 23 failing tests in `tests/test_history.py`.
+- Files changed:
+  - `src/history.py` — new file; `OperationHistory` class with `__init__`, `record`, `get_all`, `clear`, `display`, `_format_operation`, `_write_to_file`.
+  - `src/__main__.py` — added `from .history import OperationHistory` import; updated `_run_interactive_loop()` to add `history_file_path: str | None = None` parameter (backward compatible default); initialise `OperationHistory` at loop start; handle "history" special command before registry lookup (reset failure counter, `continue`); call `history.record()` after successful result.
+- Decision: The architect's plan did not mention a `display()` method, but the tests in `TestHistoryDisplay` call `history.display()` directly. Added `display()` as a public method returning a numbered multiline string of entries, or `"History: (empty)"` when empty. This is the minimum addition to satisfy the failing tests.
+- Decision: `_run_interactive_loop()` signature extended with `history_file_path: str | None = None` (default None) rather than accepting a pre-built `OperationHistory` instance. This keeps the interface change backward compatible with all 143 pre-existing tests that call `_run_interactive_loop(registry)` without a second argument.
+- Decision: `history.record()` is called AFTER `consecutive_failures = 0` reset to ensure the counter is only reset on genuine success. Order in loop: execute method → print result → record to history → reset counter.
+- Pattern: When the architect's test-spec plan and the actual test file disagree on a method signature or method existence, always read the actual test file and satisfy it literally — the test file is the source of truth for the implementer.
+- Handoff notes: All 166 tests pass (23 new + 143 pre-existing). `OperationHistory` is importable as `from src.history import OperationHistory`. `_run_interactive_loop` signature change is backward compatible.
