@@ -198,4 +198,4 @@ Duration: 272.2s | Cost: $0.589015 USD | Turns: 4
   - `artifacts/activity_diagram_interactive_history.puml` — activity diagram for interactive mode with history command and operation recording flow
   - `artifacts/sequence_diagram_history.puml` — sequence diagrams for history command and successful calculation recording
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 211.4s | Cost: $0.558391 USD | Turns: 4
