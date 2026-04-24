@@ -13,7 +13,7 @@
 - **Risks:** None — backward compatible; existing tests unmodified
 - **Tests passed:** 291 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1385.9s | Cost: $3.383282 USD | Turns: 16
 
 ## Run: Issue #408 — V3 Task 13 - Structured/team (2026-04-24)
 
