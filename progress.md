@@ -12,7 +12,7 @@
 - **Risks:** None — ErrorLog is a new isolated class; __main__.py changes are additive; no new dependencies; file I/O errors silently swallowed to prevent crashes
 - **Tests passed:** 189 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 591.2s | Cost: $1.437645 USD | Turns: 28
 
 ## Run: Issue #396 — V3 Task 9 - Structured/team (2026-04-24)
 
