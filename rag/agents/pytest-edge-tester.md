@@ -908,3 +908,63 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - No regressions detected in any existing tests.
 - Error logging integration complete for both interactive and CLI modes.
 - Ready for commit and PR.
+
+### Cycle 19: 2026-04-24 — Issue #402 Application Layer Separation (WRITE phase)
+
+**Task:** Write failing tests for Application layer separation. Test specifications: 19 tests covering Calculator independence, Application layer integration, CLI/interactive modes, registry management, and module independence.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_application.py` with 19 comprehensive tests
+2. Organized into 6 test classes:
+   - `TestCalculatorIndependence`: 5 tests verifying Calculator works without UI dependencies
+   - `TestApplicationLayerIntegration`: 3 tests for Application class integration with Calculator
+   - `TestApplicationRegistryArities`: 1 test for registry operation arity validation
+   - `TestApplicationCLIMode`: 2 tests for CLI mode execution
+   - `TestApplicationInteractiveMode`: 2 tests for interactive loop
+   - `TestOperationHistoryIndependence`: 1 test for history independence
+   - `TestErrorLogIndependence`: 1 test for error log independence
+   - `TestImportsAndModules`: 4 tests for module imports
+3. Tests import Application class from `src.application` (not yet created)
+4. Tests verify Calculator operations work in isolation (no UI dependency)
+5. Tests verify Application accepts Calculator instance and manages registry
+6. Tests verify OperationHistory and ErrorLog work independently
+
+**Patterns Found:**
+- Application class must be created in new `src/application.py` module
+- Class must accept Calculator instance in __init__
+- Class must build registry of 12 operations: add, subtract, multiply, divide, factorial, square, cube, square_root, cube_root, power, log10, ln
+- Registry operations must have correct arity (binary or unary)
+- Application must support execute_cli() and run_interactive() methods
+- Tests show clear separation: Calculator is independent, Application wraps Calculator, History/ErrorLog are independent utilities
+
+**Test Results:**
+- 19 total tests written
+- 9 tests FAILED (as expected — src.application module doesn't exist)
+  - ModuleNotFoundError: No module named 'src.application'
+  - All failures are import-time, not logic errors
+- 10 tests PASSED (existing independent functionality)
+  - 5 Calculator independence tests pass
+  - 1 OperationHistory independence test passes
+  - 1 ErrorLog independence test passes
+  - 3 module import tests pass
+- Total test suite: 208 tests (189 existing + 19 new)
+- Duration: 0.10s (new tests only)
+
+**Status:** READY FOR HANDOFF — 9 tests fail as expected. Application class implementation required.
+
+**Escalations:** None. All failures are due to missing Application class (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Create new file `src/application.py` with Application class
+- Class must implement:
+  - __init__(calculator: Calculator): Accept Calculator instance and store as self.calculator
+  - self.registry: dict[str, callable] mapping operation names to Calculator methods
+  - execute_cli(args: list) method: Execute CLI mode with argument parsing
+  - run_interactive() method: Execute interactive mode with user prompts
+- Registry must contain all 12 operations with correct arity:
+  - Binary (2 args): add, subtract, multiply, divide, power
+  - Unary (1 arg): factorial, square, cube, square_root, cube_root, log10, ln
+- 9 failing tests ready for implementation verification
+- 10 passing tests must remain passing after implementation
