@@ -1,0 +1,67 @@
+@startuml sequence_interactive_session
+
+title Interactive Session — One Iteration (with failure paths)
+
+actor User
+participant "_run_interactive_loop" as Loop
+participant "registry" as Registry
+participant "_parse_number" as Parser
+participant "Calculator" as Calc
+
+== Operation Lookup ==
+
+User ->> Loop : enter operation name
+activate Loop
+
+Loop ->> Registry : lookup operation name
+Registry -->> Loop : (method, arity) or KeyError
+
+alt unknown operation
+  Loop -->> User : print "Unknown operation" error
+  note right of Loop : consecutive_failures++\nif >= 3: exit
+end
+
+== Operand Collection ==
+
+loop for each of arity operands
+  Loop -->> User : prompt for operand
+  User ->> Loop : enter raw input
+  Loop ->> Parser : _parse_number(raw)
+  activate Parser
+
+  alt invalid number
+    Parser -->> Loop : raises ValueError
+    deactivate Parser
+    Loop -->> User : print parse error
+    note right of Loop : consecutive_failures++\nerror_occurred = True\nbreak operand loop
+  else valid number
+    Parser -->> Loop : int|float value
+    deactivate Parser
+    Loop -> Loop : append to operands
+  end
+end
+
+== Execution ==
+
+alt error_occurred
+  note right of Loop : if consecutive_failures >= 3: exit\nelse: continue to next iteration
+else all operands parsed
+  Loop ->> Calc : method(*operands)
+  activate Calc
+
+  alt domain error (ValueError / ZeroDivisionError)
+    Calc -->> Loop : raises exception
+    deactivate Calc
+    Loop -->> User : print domain error
+    note right of Loop : consecutive_failures++\nif >= 3: exit
+  else success
+    Calc -->> Loop : result
+    deactivate Calc
+    Loop -->> User : print result
+    note right of Loop : consecutive_failures = 0
+  end
+end
+
+deactivate Loop
+
+@enduml

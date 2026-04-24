@@ -161,3 +161,14 @@ Duration: 498.8s | Cost: $1.150512 USD | Turns: 21
   - `artifacts/cli_mode_sequence.puml` — sequence diagram for successful CLI invocation
 
 Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
+
+## Run: update-diagrams — Input Validation Diagrams (2026-04-24)
+
+- **Branch:** task/issue-393-input-validation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — class diagram with Calculator and __main__ module functions
+  - `artifacts/activity_interactive_loop.puml` — activity diagram for interactive loop with failure counter logic
+  - `artifacts/sequence_interactive_session.puml` — sequence diagram for interactive session iteration
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

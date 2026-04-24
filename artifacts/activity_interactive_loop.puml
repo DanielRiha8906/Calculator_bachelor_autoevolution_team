@@ -1,0 +1,72 @@
+@startuml activity_interactive_loop
+
+title _run_interactive_loop() — Input Validation with Failure Counter
+
+start
+
+:consecutive_failures = 0;
+
+while (True) is (loop)
+
+  :Display operation menu;
+  :Read operation input;
+
+  if (operation == "quit"/"exit"/"q"?) then (yes)
+    :Break — normal exit;
+    stop
+  else (no)
+  endif
+
+  if (operation in registry?) then (no)
+    :Print "Unknown operation" error;
+    :consecutive_failures++;
+    if (consecutive_failures >= 3?) then (yes)
+      :Print "Too many invalid attempts. Exiting.";
+      end
+    else (no)
+    endif
+  else (yes)
+    :error_occurred = False;
+    :operands = [];
+
+    while (for each expected operand) is (iterate)
+      :Prompt for operand;
+      :Read raw input;
+      if (_parse_number(raw) succeeds?) then (no)
+        :Print parse error;
+        :consecutive_failures++;
+        :error_occurred = True;
+        break
+      else (yes)
+        :Append parsed value to operands;
+      endif
+    endwhile (done)
+
+    if (error_occurred?) then (yes)
+      if (consecutive_failures >= 3?) then (yes)
+        :Print "Too many invalid attempts. Exiting.";
+        end
+      else (no)
+      endif
+    else (no)
+      :Call Calculator.method(*operands);
+      if (raises ValueError or ZeroDivisionError?) then (yes)
+        :Print domain error;
+        :consecutive_failures++;
+        if (consecutive_failures >= 3?) then (yes)
+          :Print "Too many invalid attempts. Exiting.";
+          end
+        else (no)
+        endif
+      else (no)
+        :Print result;
+        :consecutive_failures = 0;
+      endif
+    endif
+  endif
+
+endwhile (never — only exits via break or end)
+
+stop
+
+@enduml
