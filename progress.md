@@ -53,3 +53,15 @@ Duration: 348.5s | Cost: $0.711770 USD | Turns: 16
   - `artifacts/sequence_main_usage.puml` — no changes (accurate to main() behavior)
 
 Duration: 239.0s | Cost: $0.551973 USD | Turns: 15
+
+## Run: Issue #380 — V3 Task 4 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-380-add-math-functions
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `progress.md` — run summary appended
+- **Purpose:** Add square, cube, square root, cube root, power, log, and ln to the calculator (issue #380); all seven functions were already implemented in src/calculator.py and fully tested in tests/test_calculator.py as part of issue #374
+- **Risks:** None — no source changes required; all 68 tests already passing
+- **Tests passed:** 68 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
