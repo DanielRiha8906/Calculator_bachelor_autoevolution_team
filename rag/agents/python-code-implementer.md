@@ -95,3 +95,29 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - `SystemExit` is a subclass of `BaseException`, not `Exception` — a bare `except Exception` block will NOT catch it when `sys.exit` is real; but when `sys.exit` is mocked, no exception is raised at all.
   - Architect directives listing "files NOT to touch" may need to be overridden when a test explicitly exercises behavior in those files; document the deviation in the report.
 - **Test result:** 185 passed, 1 skipped (pre-existing skip).
+
+### 2026-04-24 — issue-395: history of operations (PR #443 review feedback)
+
+- **Task:** Add history persistence and interactive loop to satisfy PR review changes.
+- **Files changed:** `src/cli.py`, `src/__main__.py`
+- **Changes made:**
+  - `src/cli.py`:
+    - Added `persist_history_to_file(calc, filepath="history.txt")`: appends all history entries to disk using `_format_history_entry`; swallows `ValueError`/`IOError`/`OSError` with a warning print.
+    - Added `display_history_notification(filepath="history.txt")`: prints one-line message directing user to the history command.
+    - Modified `prompt_for_operator`: checks `raw.lower() in ("quit", "exit")` before the OPERATIONS membership check; returns sentinel `"QUIT"` on match. The `attempts` counter is NOT incremented for quit/exit inputs.
+    - Modified `run_calculator`: added optional `calc: Calculator | None = None` parameter; creates new `Calculator()` only when `calc is None`; returns `"QUIT"` immediately if `prompt_for_operator` returned `"QUIT"`; calls `display_history_notification()` after each successful result display.
+  - `src/__main__.py`:
+    - Added imports: `Calculator` from `.calculator`, `persist_history_to_file` from `.cli`.
+    - Added `history` sub-command: if `sys.argv[1:] == ["history"]`, reads and prints `history.txt` (or "No history found." if absent), then `sys.exit(0)`.
+    - Replaced single `run_calculator()` call with an interactive `while True` loop; one `Calculator` instance shared across iterations.
+    - Inner try/except catches `MaxRetriesExceeded` (break loop) and `ZeroDivisionError`/`ValueError` (continue loop — error already printed by `run_calculator`).
+    - Outer try/except catches `KeyboardInterrupt` (prints "\nExiting...").
+    - `finally` block ensures `persist_history_to_file(calc)` runs regardless of how the loop exits.
+    - `sys.exit(0)` at end of interactive path.
+    - Batch mode routing unchanged.
+- **Patterns found:**
+  - Returning a sentinel string (`"QUIT"`) from `run_calculator` is the cleanest way to propagate quit intent without raising an exception; avoids a custom exception class and keeps callers simple.
+  - The `finally` block in `__main__.main()` guarantees history is saved even on `KeyboardInterrupt` (which is caught by the outer `except KeyboardInterrupt` before falling into `finally`). Note: `KeyboardInterrupt` must be caught in the outer `try` that wraps the entire `while True`, not inside the inner try, so that `finally` still executes.
+  - `persist_history_to_file` silently swallows file I/O errors so a write failure never crashes the calculator session — matches the "warning but no raise" spec requirement.
+  - Quit/exit detection must happen before the `attempts` counter increment; otherwise a user typing "quit" would consume a retry slot unnecessarily.
+- **Test result:** 215 passed, 1 skipped (pre-existing skip).

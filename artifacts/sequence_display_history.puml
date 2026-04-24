@@ -1,0 +1,31 @@
+@startuml sequence_display_history
+
+actor User
+participant "display_history()" as CLI
+participant Calculator
+participant "_format_history_entry()" as Formatter
+participant stdout
+
+User -> CLI : display_history(calc)
+activate CLI
+
+CLI -> Calculator : get_history()
+activate Calculator
+Calculator --> CLI : list[dict]
+deactivate Calculator
+
+alt history is empty
+    CLI -> stdout : print "No operations recorded."
+else history has entries
+    loop for each (index, entry) in history
+        CLI -> Formatter : _format_history_entry(index, entry)
+        activate Formatter
+        Formatter --> CLI : formatted string
+        deactivate Formatter
+        CLI -> stdout : print formatted string
+    end
+end
+
+deactivate CLI
+
+@enduml

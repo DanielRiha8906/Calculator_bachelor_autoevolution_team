@@ -1,0 +1,61 @@
+@startuml class_calculator
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    - _history : list[dict]
+    + __init__() : None
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : numeric
+    + square(a) : numeric
+    + cube(a) : numeric
+    + square_root(a) : numeric
+    + cube_root(a) : numeric
+    + factorial(n) : int
+    + power(base, exp) : numeric
+    + log(a) : float
+    + ln(a) : float
+    + get_history() : list[dict]
+    + clear_history() : None
+    - _record_operation(operation_name: str, operands: list, result: numeric) : None
+}
+
+note right of Calculator::_history
+  Each entry is a dict:
+  {operation: str,
+   operands: list,
+   result: numeric}
+end note
+
+note right of Calculator::square_root
+  raises ValueError if a < 0
+end note
+
+note right of Calculator::factorial
+  raises ValueError for
+  invalid input (negative, non-integer)
+end note
+
+note right of Calculator::log
+  raises ValueError if a <= 0
+end note
+
+note right of Calculator::ln
+  raises ValueError if a <= 0
+end note
+
+note right of Calculator::get_history
+  Returns a defensive copy
+  of the internal _history list.
+  Callers cannot mutate internal state.
+end note
+
+note right of Calculator::_record_operation
+  Called only on the success path.
+  Never called when an exception is raised.
+  Appends entry to _history.
+end note
+
+@enduml

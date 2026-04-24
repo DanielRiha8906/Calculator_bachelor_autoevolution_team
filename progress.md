@@ -1,4 +1,57 @@
 
+## Run: update-diagrams — Operation History diagrams (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** task/issue-395-history-of-operations
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — Calculator class with _history attribute and get_history/clear_history/_record_operation methods
+  - `artifacts/class_cli.puml` — CLI module with display_history and _format_history_entry additions, dependency on Calculator
+  - `artifacts/activity_operation_execution.puml` — Activity diagram: operation execution with success/failure branch and _record_operation call
+  - `artifacts/sequence_display_history.puml` — Sequence diagram: display_history flow from CLI through Calculator to stdout
+
+Duration: 244.3s | Cost: $0.519995 USD | Turns: 5
+
+## Run: Fix PR #443 — feat: add operation history to calculator (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — added `persist_history_to_file()`, `display_history_notification()`; modified `run_calculator()` to accept optional `calc` param; modified `prompt_for_operator()` to return "QUIT" sentinel on quit/exit input
+  - `src/__main__.py` — refactored `main()` to run interactive loop with persistent Calculator, history persistence on exit, and `history` sub-command
+  - `tests/test_history_persistence.py` — 38 new tests covering file persistence, notification, quit detection, run_calculator with calc param, interactive loop, and history sub-command
+- **Purpose:** Address maintainer review feedback: add interactive loop so users can perform multiple operations without restarting, and add file-based history persistence with user discovery cue
+- **Risks:** Calculator session is now stateful across the interactive loop; history.txt grows unbounded across sessions (no rotation); file write errors are silently swallowed (warning printed only)
+- **Tests passed:** 253 passed, 1 skipped
+
+Duration: 519.3s | Cost: $1.092349 USD | Turns: 17
+
+## Run: update-diagrams — History of Operations (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — added/updated Calculator class with history attributes and methods, cli functions, relationships
+  - `artifacts/activity_record_operation.puml` — added/updated activity diagram for record-operation flow
+  - `artifacts/sequence_display_history.puml` — added/updated sequence diagram for display-history interaction
+
+Duration: 212.8s | Cost: $0.436210 USD | Turns: 4
+
+## Run: Issue #395 — V3 Task 9 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added `__init__`, `_record_operation`, `get_history`, `clear_history`; modified all 12 operation methods to record on success path
+  - `src/cli.py` — added `display_history` and `_format_history_entry`
+  - `tests/test_history.py` — 30 new tests for history recording, retrieval, error handling, CLI display
+  - `rag/codebase_map.md` — updated entries for calculator.py and cli.py
+  - `rag/evolution_log.md` — appended cycle entry
+- **Purpose:** Add in-memory operation history to Calculator; users can view past operations in interactive mode via display_history()
+- **Risks:** Calculator is now stateful — callers that create a new instance per operation will not accumulate history across calls; existing tests unaffected as they do not depend on history state
+- **Tests passed:** 215 passed, 0 failed, 1 skipped
+
+Duration: 530.5s | Cost: $1.188065 USD | Turns: 20
+
 ## Run: Issue #392 — V3 Task 8 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-392-input-validation

@@ -202,3 +202,72 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 - **pytest-edge-tester (WRITE phase):** Write 25 test cases in `tests/test_cli.py` (new file, or append to existing). Cover: (1) Retry limit enforcement per field (3 tests), (2) Successful retries after failures (3 tests), (3) Full workflow retry limits (3 tests), (4) Domain errors vs retryable errors (5 tests), (5) Integration with main() (3 tests), (6) Batch mode unchanged (2 tests), (7) Error message clarity (3 tests), (8) Backward compatibility and integration (4 tests). Expected: 25 new failing tests; all 27 existing tests still pass (no modifications to existing test input mocks needed).
 - **python-code-implementer:** Implement changes per plan: (1) Add MaxRetriesExceeded exception to cli.py, (2) Update three prompt functions with max_retries parameter and attempt tracking, (3) Update cli.py docstrings, (4) Import MaxRetriesExceeded in __main__.py and add exception handler. No changes to calculator.py or batch_cli.py. Target: all 25 new tests passing + all 27 existing tests passing (52 total passing at end of cycle).
 
+### Cycle 6: 2026-04-24 — PR #443 Unresolved Feedback (History Persistence & Interactive Loop)
+**Task:** Address two PR #443 review comments: (1) Add interactive loop to CLI so user can perform multiple consecutive operations without restarting, (2) Implement file-based history storage (write to history.txt) with user discovery mechanism.
+
+**Analysis of Current State:**
+- `src/calculator.py`: History infrastructure complete (get_history(), clear_history(), _record_operation() all working); no changes needed
+- `src/cli.py`: Interactive prompt functions exist; display_history() and _format_history_entry() already implemented; has MaxRetriesExceeded exception and retry logic from prior cycle
+- `src/__main__.py`: Entry point calls run_calculator() once in interactive mode, then exits; batch/interactive mode detection already in place
+- `tests/test_history.py`: 30 tests for in-memory history recording; all passing; no changes required
+- Current limitation: run_calculator() executes one operation and returns (no loop); history exists only in-memory during session (not persisted)
+
+**Key Architectural Decisions:**
+1. **Add `persist_history_to_file()` function** in `src/cli.py`
+   - Signature: persist_history_to_file(calc: Calculator, filepath: str = "history.txt") -> None
+   - Behavior: Append all entries from calc.get_history() to filepath in append mode (preserves prior sessions)
+   - Format: flat text, one line per operation (reuse _format_history_entry internally)
+   - Error handling: wrap in try/except; log warning but do not raise (don't crash on I/O errors)
+
+2. **Add `display_history_notification()` function** in `src/cli.py`
+   - Signature: display_history_notification(filepath: str = "history.txt") -> None
+   - Behavior: Print user-friendly message directing them to view history
+   - Output example: "History saved to history.txt. View your history with: python -m calculator history"
+   - Called after each successful operation in interactive mode
+
+3. **Modify `run_calculator()` signature** in `src/cli.py`
+   - New: run_calculator(calc: Calculator | None = None, max_retries: int = 3) -> float
+   - If calc is None: create new Calculator (backward compatible)
+   - If calc provided: reuse it (allows history accumulation across loop iterations)
+   - After operation display, call display_history_notification() before returning result
+   - Return value is still the numeric result (not affected by notification)
+
+4. **Support "quit" and "exit" commands** in prompt_for_operator()
+   - If user enters "quit" or "exit", return special sentinel value (e.g., string "QUIT")
+   - Caller (main loop) interprets "QUIT" to break the interactive loop
+
+5. **Implement interactive loop** in `src/__main__.py`
+   - In interactive mode (len(sys.argv) == 1):
+     - Create single Calculator instance at loop start
+     - while True: call run_calculator(calc) in try block
+     - If result is the "QUIT" sentinel: break loop
+     - If MaxRetriesExceeded or domain error: display error, break (exit with code 1)
+     - After loop exits: call persist_history_to_file(calc) to save accumulated history
+     - Handle Ctrl+C (KeyboardInterrupt): catch, persist history, exit cleanly
+   - Preserve batch mode routing (len(sys.argv) > 1) unchanged
+
+6. **Optional: Add "history" command support** in `src/__main__.py`
+   - Detect if sys.argv[1:] == ['history']
+   - If so: load history.txt from disk, display in human-readable format, exit(0)
+   - This provides user-discovery: after running operations, user can type "python -m calculator history"
+
+7. **No changes to batch_cli.py**
+   - Batch mode remains stateless, non-interactive, single-operation
+   - Batch mode does not write to history.txt (by design: batch is for scripting, not exploration)
+
+**Patterns Found:**
+- Session-level state: main() now maintains a persistent Calculator instance across multiple run_calculator() calls
+- Sentinel-value flow control: "QUIT" string distinguishes user request to exit from normal numeric result
+- Append-based persistence: history.txt grows across sessions (each session appends); no session separation
+- User discovery: notification messages guide users to available features
+
+**Risks & Mitigations:**
+- Risk: run_calculator() signature change breaks existing code. Mitigation: new parameter has default (None), so backward compatible; existing tests mock input and don't rely on shared Calculator instance.
+- Risk: File I/O errors (disk full, permission denied) crash the program. Mitigation: wrap persist_history_to_file() in try/except; log warning but continue (non-critical feature).
+- Risk: Ctrl+C exits without saving history. Mitigation: wrap main loop in try/finally to ensure persist_history_to_file() is always called before exit.
+- Risk: "QUIT" string returned from run_calculator() confuses downstream code. Mitigation: Check return value type in main loop (is it float? or string?); or use exception-based flow (raise QuitRequested) instead.
+- Risk: history.txt grows unbounded across sessions. Mitigation: Not in scope; document as limitation (future: add --clear-history option or max-size limit).
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 10 failing test cases covering: (1) Interactive loop with 3+ operations per session (tests 1-3), (2) History file written and formatted correctly (tests 4-6), (3) User notification message displayed (tests 7-8), (4) Backward compatibility: batch mode unaffected, quit command works (tests 9-10). All 10 tests must initially fail. Expected: no changes to existing 30 history recording tests or 27 CLI prompt tests; all remain passing.
+- **python-code-implementer:** After tests are written and fail, implement per plan: (1) Add persist_history_to_file() and display_history_notification() functions to cli.py, (2) Modify run_calculator() signature to accept optional persistent Calculator, (3) Add "quit"/"exit" sentinel handling to prompt_for_operator(), (4) Implement interactive loop and history file persistence in __main__.py, (5) Optional: add "history" command. No changes to calculator.py or batch_cli.py. Target: all 10 new tests passing + all 57 existing tests (30 history + 27 CLI) passing = 67 total.

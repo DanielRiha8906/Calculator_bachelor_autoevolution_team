@@ -124,3 +124,27 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   5. Validation covers: non-numeric inputs, invalid operation names, operand count mismatches, domain-specific constraints (e.g., factorial of negative)
   6. Implementation: wrap existing input prompts with try-except or validation function + retry loop
 - **Recurring Pattern:** V3 cycle shows incremental refinement. Task 5 (add user input) → Task 7 (add CLI) → Task 8 (add validation/retry). This is a typical "iterative feature enhancement" pattern where basic functionality is added first, then hardened with robustness features like error handling and retry logic.
+
+### Cycle: 2026-04-24 — PR #443: feat: add operation history to calculator (issue #395)
+- **PR Title:** feat: add operation history to calculator (issue #395)
+- **Status:** OPEN (with unresolved feedback from PR author)
+- **Created:** 2026-04-24T18:15:18Z
+- **Label:** ai-implement:naive-team (from linked issue #395)
+- **Current Implementation:** In-memory history tracking (get_history, clear_history, _record_operation), with display_history CLI function. 30 tests added, all 215 tests passing, no regressions.
+- **Unresolved Feedback:** One critical comment from PR author (DanielRiha8906) flags two required fixes:
+  1. **Interactive loop missing** — CLI currently exits after one calculation; must loop to allow multiple consecutive operations
+  2. **History persistence missing** — Need to write history to history.txt file AND provide user-facing cue that history exists/how to access it
+- **Requirements Extracted:**
+  1. CLI interactive loop allowing multiple operations per session without restarting
+  2. Persist all recorded operations to history.txt file for cross-session retention
+  3. Display user cue/prompt indicating history functionality and how to access it
+  4. Expose history display command in interactive CLI
+- **Open Ambiguities:**
+  - History file location: root or home directory? Configurable?
+  - History file format: timestamps, session markers, or flat chronological list?
+  - Loop termination: `quit`/`exit` command or Ctrl+C handling?
+  - History clearing: CLI command to clear? Prompt before overwrite?
+  - Session separation: interleaved or per-session blocks in file?
+- **Dependencies:** Relies on existing calculator.py history internals from PR #443 (no changes needed there); augments CLI behavior
+- **Test Implications:** New tests needed for loop behavior, file I/O, history display command, user prompts (beyond existing 30 in-memory history tests)
+- **Pattern Insight:** This PR is part of V3 Task 9 (#395), coming after Task 8 (validation/retry). The unresolved feedback suggests the initial PR implementation was incomplete relative to the task requirements. The feedback prioritizes UX (user discovery of history) and persistence (history.txt) equally with the in-memory tracking already implemented.
