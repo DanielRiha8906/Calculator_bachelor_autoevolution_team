@@ -275,4 +275,4 @@ Duration: 228.5s | Cost: $0.513488 USD | Turns: 7
   - `artifacts/sequence_diagram_operation.puml` — happy path operation cycle with history recording
   - `artifacts/component_diagram.puml` — module boundaries including history.py and history.txt dependency
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 410.4s | Cost: $0.692189 USD | Turns: 4
