@@ -134,3 +134,41 @@ All 8 test functions in TestDivide class pass:
 - Floating-point inputs and results
 - Proper error handling (ValueError for invalid inputs, ZeroDivisionError for division by zero)
 - Floating-point precision using pytest.approx where needed
+
+### 2026-04-24 | task/issue-383-add-user-input | WRITE | 17 test functions written, all fail as expected
+
+**Task:** Write comprehensive failing tests for CLI user input functions (prompt_for_first_number, prompt_for_operator, prompt_for_second_number, display_result, run_calculator).
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Covered:**
+1. prompt_for_first_number() - basic, negative, float inputs
+2. prompt_for_operator() - single operator, all 4 operators supported
+3. prompt_for_second_number() - basic, negative, float inputs
+4. Invalid inputs - non-numeric first/second numbers, invalid operators (re-prompt behavior)
+5. Negative numbers and float numbers handling
+6. End-to-end workflows for all 4 operations (addition, subtraction, multiplication, division)
+7. Division by zero error handling
+8. Output format for display_result()
+
+**Test Functions Written (17 total):**
+- TestPromptForFirstNumber (4 tests): basic, negative, float, + 3 parametrized invalid inputs
+- TestPromptForOperator (3 tests): basic, 4 operators parametrized, + 4 parametrized invalid operators
+- TestPromptForSecondNumber (4 tests): basic, negative, float, + 3 parametrized invalid inputs
+- TestDisplayResult (1 test): output format check
+- TestFullWorkflow (5 tests): addition, subtraction, multiplication, division, division by zero
+
+**Test Results:**
+- Total test functions: 17
+- Collection error: ModuleNotFoundError (src.cli does not exist yet) - EXPECTED behavior for WRITE phase
+- Status: All tests fail as expected
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_cli.py`
+
+**Parametrization Strategy:**
+- Invalid first number inputs: 3 parametrized cases (abc, xyz, !@#) → each expects re-prompt to valid input
+- Invalid second number inputs: 3 parametrized cases (xyz, abc, !@#) → each expects re-prompt to valid input
+- Invalid operators: 4 parametrized cases (%, &, invalid, bad) → each expects re-prompt to valid operator
+- Supported operators: 4 parametrized cases (+, -, *, /) → each must be accepted without error
+
+**Handoff Note:** 17 failing tests committed. Ready for python-code-implementer to create src/cli.py with all required functions. Test patterns follow existing codebase standards (pytest fixtures, parametrization, mock input via patch). The division_by_zero test allows for either exception or graceful handling.
