@@ -20,3 +20,15 @@ Duration: 241.5s | Cost: $0.484060 USD | Turns: 16
   - `artifacts/sequence_diagram_divide_by_zero_test.puml` — new sequence diagram for divide-by-zero test interaction
 
 Duration: 183.4s | Cost: $0.425742 USD | Turns: 14
+
+## Run: Issue #376 — V3 Task 2 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-376-unit-test-suite
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `tests/test_calculator.py` — added 49 new tests covering all calculator operations (add, subtract, multiply, divide) with normal inputs, edge cases, invalid inputs, floating-point precision, and cross-operation consistency checks
+- **Purpose:** Create a comprehensive unit test suite documenting and verifying the behavior of all currently implemented calculator operations, including division by zero, invalid input types, and floating-point arithmetic.
+- **Risks:** None
+- **Tests passed:** 52 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
