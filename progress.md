@@ -196,4 +196,4 @@ Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
   - `artifacts/component_diagram_entrypoint.puml` — new: module-level component dependencies and routing
   - `artifacts/error_handling_diagram_cli.puml` — new: all run_cli() error paths and exit codes
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
