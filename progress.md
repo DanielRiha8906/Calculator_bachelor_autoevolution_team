@@ -167,4 +167,4 @@ Duration: 538.3s | Cost: $1.167164 USD | Turns: 20
   - `artifacts/activity_diagram_cli.puml` — new activity diagram for run_cli() execution flow
   - `artifacts/sequence_diagram_cli.puml` — new sequence diagram for CLI invocation scenarios
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
