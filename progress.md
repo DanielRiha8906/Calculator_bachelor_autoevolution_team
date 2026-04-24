@@ -121,4 +121,4 @@ Duration: 436.2s | Cost: $0.904403 USD | Turns: 16
   - `artifacts/activity_diagram_repl_loop.puml` — new activity diagram showing REPL loop flow with all error paths
   - `artifacts/sequence_diagram_user_interaction.puml` — new sequence diagram showing user-to-result interaction with error handling
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 216.1s | Cost: $0.546564 USD | Turns: 4
