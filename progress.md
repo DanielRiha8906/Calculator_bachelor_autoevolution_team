@@ -1,3 +1,26 @@
+## Run: Issue #405 — V3 Task 12 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/__init__.py` — new package init; re-exports Calculator for backward compatibility
+  - `src/calculator/core.py` — Calculator class moved here; all 12 methods preserved verbatim
+  - `src/calculator/operations/__init__.py` — Operation ABC and OperationRegistry with register/get/list_all/has
+  - `src/calculator/operations/arithmetic.py` — 6 arithmetic operation classes (Add, Subtract, Multiply, Divide, Factorial, Modulo)
+  - `src/calculator/operations/scientific.py` — 7 scientific operation classes (Square, Cube, SquareRoot, CubeRoot, Power, Log10, Ln)
+  - `src/calculator/validation.py` — InputValidator with static parse_number()
+  - `src/calculator/input_handler.py` — CLIInput and InteractiveInput handler classes
+  - `src/calculator/persistence.py` — thin facade re-exporting OperationHistory and ErrorLog
+  - `src/calculator/main.py` — _build_registry(), cli_mode(), main(), _run_interactive_loop()
+  - `src/calculator.py` — deleted (replaced by src/calculator/ package directory)
+  - `tests/test_modularization.py` — 41 new tests covering module imports, registry, operation hierarchy, validation, input handlers, persistence, core calculator, end-to-end, backward compatibility
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+- **Purpose:** Refactor calculator into modular package with clear separation of core logic, operation registry, validation, input handling, and persistence; extensible for future scientific functionality
+- **Risks:** src/calculator.py deleted and replaced by src/calculator/ package; backward compatibility maintained via __init__.py re-exports
+- **Tests passed:** 246 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #402 — V3 Task 11 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-402-separate-calc-logic
