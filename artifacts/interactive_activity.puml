@@ -1,0 +1,108 @@
+@startuml
+title run_interactive_session() — Interactive Flow with Error Logging (issue #400)
+
+start
+
+:Create Calculator, OperationRegistry,\nOperationHistory, ErrorLogger;
+:retry_count = 0;
+
+repeat
+
+  :Display numbered operation menu;
+
+  repeat
+    :Input: "Select an operation (index): ";
+    if (input == "h" / "history"?) then (yes)
+      :display_history_indexed(history);
+      note right: op_name = SENTINEL; break inner loop
+    elseif (input == "no" / "n"?) then (yes)
+      :history.write_to_file();
+      stop
+    elseif (valid integer index in range?) then (yes)
+      :op_name = operations[index];
+      :retry_count = 0;
+    else (invalid)
+      :retry_count += 1;
+      :error_logger.log_invalid_operation();
+      :print error + show operations;
+      if (retry_count >= MAX_ATTEMPTS (5)?) then (yes)
+        :history.write_to_file();
+        stop
+      endif
+    endif
+  repeat while (valid op_name selected?) is (no)
+  -> yes;
+
+  if (op_name == SENTINEL?) then (yes)
+    repeat
+      :Continue? prompt;
+      if (input == "yes" / "y"?) then (yes)
+      elseif (input == "no" / "n"?) then (yes)
+        :history.write_to_file();
+        stop
+      elseif (input == "h" / "history"?) then (yes)
+        :display_history_indexed(history);
+      endif
+    repeat while (yes/no recognised?) is (no)
+    -> yes — continue;
+  else (no — real operation)
+
+    :arity = registry.get_arity(op_name);
+
+    repeat
+      :Input: "Enter operand: ";
+      if (input == "no" / "n"?) then (yes)
+        :history.write_to_file();
+        stop
+      elseif (parse_operand() succeeds?) then (yes)
+        :operand accepted;
+        :retry_count = 0;
+      else (ValueError)
+        :retry_count += 1;
+        :error_logger.log_invalid_operand();
+        :print error;
+        if (retry_count >= MAX_ATTEMPTS (5)?) then (yes)
+          :history.write_to_file();
+          stop
+        endif
+      endif
+    repeat while (all operands gathered?) is (no)
+    -> yes — operands ready;
+
+    :try registry.call(op_name, *operands);
+
+    if (call succeeds?) then (yes)
+      :print "Result: {result}";
+      :history.record(op_name, operands, result);
+      :retry_count = 0;
+    elseif (ZeroDivisionError?) then (yes)
+      :error_logger.log_runtime_calculation_error()\n"ZeroDivisionError";
+      :print "Division by zero";
+    elseif (ValueError?) then (yes)
+      :error_logger.log_runtime_calculation_error()\n"ValueError";
+      :print specific error;
+    else (other Exception)
+      :error_logger.log_runtime_calculation_error()\n"Exception";
+      :print generic error;
+    endif
+
+    repeat
+      :Continue? prompt;
+      if (input == "yes" / "y"?) then (yes)
+      elseif (input == "no" / "n"?) then (yes)
+        :history.write_to_file();
+        stop
+      elseif (input == "h" / "history"?) then (yes)
+        :display_history_indexed(history);
+      endif
+    repeat while (yes/no recognised?) is (no)
+    -> yes — continue;
+  endif
+
+repeat while (user chose "yes"?) is (yes)
+-> no — exit;
+
+:history.write_to_file();
+stop
+
+@enduml

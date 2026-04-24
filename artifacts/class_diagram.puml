@@ -1,5 +1,5 @@
 @startuml
-title Calculator System — Class Overview (with Session History)
+title Calculator System — Class Overview (with Error Logging)
 
 skinparam classAttributeIconSize 0
 
@@ -44,6 +44,25 @@ note right of OperationRegistry
   Forwards Calculator exceptions on call().
 end note
 
+class ErrorLogger <<new>> {
+  - _log_file: str
+  --
+  + __init__(log_file: str = "error.log")
+  + log_invalid_operation(operation_name, message)
+  + log_invalid_operand(operation_name, operand_value, message)
+  + log_incorrect_argument_count(operation_name, required, actual, message)
+  + log_runtime_calculation_error(operation_name, operands, error_type, message)
+  - _timestamp(): str
+  - _write(entry: str): None
+}
+
+note right of ErrorLogger
+  NEW — independent of Calculator and Registry.
+  Appends timestamped entries to error.log.
+  IOError/PermissionError caught and printed
+  to stderr; never raises to caller.
+end note
+
 class OperationHistory {
   - _entries: list[str]
   --
@@ -58,7 +77,7 @@ note right of OperationHistory
   Independent — no dependency on Calculator
   or OperationRegistry.
   Entries formatted as: op(args) = result.
-  write_to_file() called at all 5 session exit paths.
+  write_to_file() called at all session exit paths.
   IOError on write is silently logged to stderr.
 end note
 
@@ -74,9 +93,6 @@ package "cli (module-level functions)" {
 package "interactive (module-level functions)" {
   class parse_operand <<function>> {
     parse_operand(user_input: str): Union[int, float]
-  }
-  class format_history_entry <<function>> {
-    format_history_entry(operation_name: str, operands: tuple, result: Any): str
   }
   class display_history_indexed <<function>> {
     display_history_indexed(history: OperationHistory): None
@@ -97,14 +113,16 @@ OperationRegistry *-- Calculator : composition\n(holds reference)
 
 run_cli --> Calculator : instantiates per invocation
 run_cli --> OperationRegistry : instantiates per invocation
+run_cli --> ErrorLogger : instantiates per invocation
+run_cli --> OperationHistory : instantiates per invocation
 run_cli ..> parse_cli_operand : calls for each operand
 
 run_interactive_session --> Calculator : creates if None
 run_interactive_session --> OperationRegistry : creates and uses
 run_interactive_session --> OperationHistory : creates per session
+run_interactive_session --> ErrorLogger : creates per session
 run_interactive_session ..> parse_operand : calls for each operand
 run_interactive_session ..> display_history_indexed : calls on "h" command
-run_interactive_session ..> format_history_entry : used by record path
 
 Main --> run_cli : if CLI args present
 Main --> run_interactive_session : if no CLI args

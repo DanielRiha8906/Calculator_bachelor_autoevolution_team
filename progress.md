@@ -291,3 +291,14 @@ Duration: 228.5s | Cost: $0.513488 USD | Turns: 7
   - `artifacts/component_diagram.puml` — module boundaries including history.py and history.txt dependency
 
 Duration: 410.4s | Cost: $0.692189 USD | Turns: 4
+
+## Run: update-diagrams — Error Logging UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-400-error-logging
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — updated to include ErrorLogger class and its relationships with cli.py and interactive.py
+  - `artifacts/cli_activity.puml` — updated CLI activity flow with 6 error paths and ErrorLogger logging calls
+  - `artifacts/interactive_activity.puml` — updated interactive session activity diagram with ErrorLogger logging calls and exit points
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
