@@ -1,4 +1,20 @@
 
+## Run: Issue #395 — V3 Task 9 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/calculator.py` — added `__init__`, `_record_operation`, `get_history`, `clear_history`; modified all 12 operation methods to record on success path
+  - `src/cli.py` — added `display_history` and `_format_history_entry`
+  - `tests/test_history.py` — 30 new tests for history recording, retrieval, error handling, CLI display
+  - `rag/codebase_map.md` — updated entries for calculator.py and cli.py
+  - `rag/evolution_log.md` — appended cycle entry
+- **Purpose:** Add in-memory operation history to Calculator; users can view past operations in interactive mode via display_history()
+- **Risks:** Calculator is now stateful — callers that create a new instance per operation will not accumulate history across calls; existing tests unaffected as they do not depend on history state
+- **Tests passed:** 215 passed, 0 failed, 1 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #392 — V3 Task 8 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-392-input-validation
