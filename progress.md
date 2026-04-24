@@ -53,3 +53,26 @@ Duration: 348.5s | Cost: $0.711770 USD | Turns: 16
   - `artifacts/sequence_main_usage.puml` — no changes (accurate to main() behavior)
 
 Duration: 239.0s | Cost: $0.551973 USD | Turns: 15
+
+## Run: Issue #380 — V3 Task 4 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-380-add-math-functions
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `progress.md` — run summary appended
+- **Purpose:** Add square, cube, square root, cube root, power, log, and ln to the calculator (issue #380); all seven functions were already implemented in src/calculator.py and fully tested in tests/test_calculator.py as part of issue #374
+- **Risks:** None — no source changes required; all 68 tests already passing
+- **Tests passed:** 68 passed, 0 failed
+
+Duration: 200.6s | Cost: $0.439166 USD | Turns: 15
+
+## Run: update-diagrams — Add math functions UML diagrams (2026-04-24)
+
+- **Branch:** task/issue-380-add-math-functions
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — class diagram with all 11 Calculator methods, exception annotations, and math module dependency
+  - `artifacts/activity_diagram_math_operations.puml` — activity flows for domain-validated unary (square_root) and binary divide operations
+  - `artifacts/sequence_diagram_calculator_usage.puml` — sequence diagram showing success and error paths for unary and binary operations
+
+Duration: 187.1s | Cost: $0.457206 USD | Turns: 4

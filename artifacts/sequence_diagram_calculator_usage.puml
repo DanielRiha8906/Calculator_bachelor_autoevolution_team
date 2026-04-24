@@ -1,0 +1,35 @@
+@startuml sequence_diagram_calculator_usage
+
+participant "Client" as Client
+participant "Calculator" as Calc
+
+Client -> Calc : <<create>>
+activate Calc
+
+== Successful unary call ==
+Client ->> Calc : square_root(9)
+activate Calc
+Calc -->> Client : 3.0
+deactivate Calc
+
+== Failed unary call ==
+Client ->> Calc : square_root(-1)
+activate Calc
+Calc -->> Client : raise ValueError("math domain error")
+deactivate Calc
+
+== Successful binary call ==
+Client ->> Calc : divide(10, 2)
+activate Calc
+Calc -->> Client : 5.0
+deactivate Calc
+
+== Failed binary call ==
+Client ->> Calc : divide(10, 0)
+activate Calc
+Calc -->> Client : raise ZeroDivisionError("division by zero")
+deactivate Calc
+
+deactivate Calc
+
+@enduml

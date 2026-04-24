@@ -1,0 +1,33 @@
+@startuml activity_diagram_math_operations
+
+skinparam activityDiamondBackgroundColor #FEFECE
+
+|Unary: square_root(a)|
+start
+:Receive input a;
+
+if (a < 0?) then (yes)
+    :Raise ValueError;
+    stop
+else (no)
+endif
+
+:Compute math.sqrt(a);
+:Return float result;
+stop
+
+|Binary: divide(a, b)|
+start
+:Receive inputs a, b;
+
+:Compute a / b;
+note right
+  Python raises
+  ZeroDivisionError
+  automatically when b == 0
+end note
+
+:Return numeric result;
+stop
+
+@enduml
