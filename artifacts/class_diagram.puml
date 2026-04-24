@@ -1,0 +1,17 @@
+@startuml
+title Calculator Class Structure
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+}
+
+note bottom of Calculator
+  Stateless — no instance state between calls
+end note
+
+@enduml

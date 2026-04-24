@@ -1,0 +1,33 @@
+@startuml
+title Calculator Operation Flow
+
+start
+
+:Create Calculator instance;
+
+:Select operation;
+
+fork
+  :add(a, b);
+  :return a + b;
+fork again
+  :subtract(a, b);
+  :return a - b;
+fork again
+  :multiply(a, b);
+  :return a * b;
+fork again
+  :divide(a, b);
+  if (b == 0?) then (yes)
+    :raise ZeroDivisionError;
+    stop
+  else (no)
+    :return a / b;
+  endif
+end fork
+
+:Return result;
+
+stop
+
+@enduml

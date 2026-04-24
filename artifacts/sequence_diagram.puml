@@ -1,0 +1,36 @@
+@startuml
+title Calculator Usage Sequence
+
+actor Caller
+participant "__main__" as main
+participant "Calculator" as calc
+
+Caller ->> main : invoke
+activate main
+
+main ->> calc : Calculator()
+activate calc
+
+main ->> calc : add(10, 5)
+calc -->> main : 15
+
+main ->> calc : subtract(10, 5)
+calc -->> main : 5
+
+main ->> calc : multiply(10, 5)
+calc -->> main : 50
+
+alt b == 0
+  main ->> calc : divide(10, 0)
+  calc -->> main : ZeroDivisionError (not caught)
+else b != 0
+  main ->> calc : divide(10, 5)
+  calc -->> main : 2.0
+end
+
+deactivate calc
+
+main ->> Caller : print results
+deactivate main
+
+@enduml

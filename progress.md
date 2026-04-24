@@ -32,3 +32,14 @@ Duration: 183.4s | Cost: $0.425742 USD | Turns: 14
 - **Tests passed:** 52 passed, 0 failed
 
 Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
+
+## Run: update-diagrams — Unit Test Suite PR #376 (2026-04-24)
+
+- **Branch:** task/issue-376-unit-test-suite
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — new class diagram for Calculator class structure
+  - `artifacts/activity_diagram.puml` — new activity diagram for calculation operation flow
+  - `artifacts/sequence_diagram.puml` — new sequence diagram for calculator usage sequence
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
