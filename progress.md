@@ -176,3 +176,14 @@ Duration: 211.2s | Cost: $0.496983 USD | Turns: 4
 - **Tests passed:** 152 passed, 0 failed, 1 skipped
 
 Duration: 489.9s | Cost: $1.046504 USD | Turns: 17
+
+## Run: update-diagrams — Add CLI Mode (2026-04-24)
+
+- **Branch:** task/issue-389-add-cli-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_batch_cli.puml` — module dependency diagram for __main__, cli, batch_cli, and Calculator including new batch_cli functions and _BATCH_OPERATIONS dict
+  - `artifacts/activity_diagram_cli_routing.puml` — entry-point routing flow showing interactive vs batch vs help path branching in main()
+  - `artifacts/sequence_diagram_batch_calculation.puml` — batch CLI calculation sequence: __main__ → batch_cli → Calculator → cli display, with help and error alt paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

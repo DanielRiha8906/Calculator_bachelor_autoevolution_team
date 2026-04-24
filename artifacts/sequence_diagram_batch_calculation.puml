@@ -1,0 +1,72 @@
+@startuml sequence_diagram_batch_calculation
+
+participant "User / Shell" as Shell
+participant "__main__" as Main
+participant "batch_cli" as Batch
+participant "Calculator" as Calc
+participant "cli" as CLI
+
+Shell ->> Main : python -m calculator add 5 3
+activate Main
+
+Main ->> Batch : batch_main(["add", "5", "3"])
+activate Batch
+
+Batch ->> Batch : parse_batch_args(argv)
+note right: returns ("add", [5.0, 3.0])
+
+Batch ->> Batch : execute_batch("add", [5.0, 3.0])
+activate Batch
+
+Batch ->> Calc : Calculator()
+activate Calc
+
+Batch ->> Calc : add(5.0, 3.0)
+Calc -->> Batch : 8.0
+deactivate Calc
+
+Batch ->> CLI : display_result_binary("add", 5.0, 3.0, 8.0)
+activate CLI
+CLI -->> Shell : "5.0 + 3.0 = 8.0"
+deactivate CLI
+
+Batch -->> Batch : return 0
+deactivate Batch
+
+Batch -->> Main : sys.exit(0)
+deactivate Batch
+
+Main -->> Shell : exit code 0
+deactivate Main
+
+alt --help flag
+    Shell ->> Main : python -m calculator --help
+    activate Main
+    Main ->> Batch : batch_main(["--help"])
+    activate Batch
+    Batch ->> Batch : parse_batch_args(["--help"])
+    note right: returns None
+    Batch ->> Batch : print_help()
+    Batch -->> Shell : usage text printed
+    Batch -->> Main : sys.exit(0)
+    deactivate Batch
+    deactivate Main
+end
+
+alt error path (e.g. divide by zero)
+    Shell ->> Main : python -m calculator divide 5 0
+    activate Main
+    Main ->> Batch : batch_main(["divide", "5", "0"])
+    activate Batch
+    Batch ->> Calc : Calculator()
+    activate Calc
+    Batch ->> Calc : divide(5.0, 0.0)
+    Calc -->> Batch : raise ZeroDivisionError
+    deactivate Calc
+    Batch -->> Shell : error message to stderr
+    Batch -->> Main : sys.exit(1)
+    deactivate Batch
+    deactivate Main
+end
+
+@enduml
