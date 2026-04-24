@@ -186,4 +186,4 @@ Duration: 489.9s | Cost: $1.046504 USD | Turns: 17
   - `artifacts/activity_diagram_cli_routing.puml` — entry-point routing flow showing interactive vs batch vs help path branching in main()
   - `artifacts/sequence_diagram_batch_calculation.puml` — batch CLI calculation sequence: __main__ → batch_cli → Calculator → cli display, with help and error alt paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 211.9s | Cost: $0.518498 USD | Turns: 5
