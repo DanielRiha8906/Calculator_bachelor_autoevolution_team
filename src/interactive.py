@@ -1,4 +1,23 @@
-"""Interactive command-line session for the Calculator."""
+"""PRESENTATION LAYER — interactive terminal session for the Calculator.
+
+This module is the interactive terminal presentation layer.  It depends on:
+- ``Calculator`` (core) for computation.
+- ``OperationRegistry`` (discovery) to enumerate and invoke operations.
+- ``OperationHistory`` (history) to record and persist session operations.
+- ``ErrorLogger`` (infrastructure) to log invalid inputs and runtime errors.
+
+It does NOT depend on cli.py and must never import from it.
+
+Responsibilities:
+- Display the operation menu and prompt the user for input.
+- Gather operands from the user with validation and retry logic.
+- Execute operations via the OperationRegistry.
+- Display results and error messages.
+- Track the session operation history and persist it on exit.
+- Log invalid inputs and runtime errors via ErrorLogger.
+- Enforce session retry logic: terminate after MAX_ATTEMPTS consecutive
+  invalid inputs across all input phases.
+"""
 
 from typing import Union
 

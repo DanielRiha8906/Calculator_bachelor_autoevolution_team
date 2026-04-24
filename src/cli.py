@@ -1,8 +1,25 @@
-"""Command-line interface for the Calculator.
+"""PRESENTATION LAYER — command-line interface for the Calculator.
 
-Provides a thin CLI wrapper that maps a single operation name and its operands
-(supplied as command-line arguments) to the corresponding Calculator method via
-the OperationRegistry.
+This module is the command-line presentation layer.  It depends on:
+- ``Calculator`` (core) for computation.
+- ``OperationRegistry`` (discovery) to enumerate and invoke operations.
+- ``OperationHistory`` (history) to record and persist the operation.
+- ``ErrorLogger`` (infrastructure) to log invalid inputs and runtime errors.
+
+It does NOT depend on interactive.py and must never import from it.
+
+Invocation::
+
+    python -m src <operation> <operand1> [operand2]
+
+Examples::
+
+    python -m src add 5 3
+    python -m src factorial 7
+    python -m src sqrt 16
+
+Exits with code 0 on success, 1 on any error (unknown operation, wrong
+operand count, invalid operand format, or a domain error from the operation).
 """
 
 import sys
