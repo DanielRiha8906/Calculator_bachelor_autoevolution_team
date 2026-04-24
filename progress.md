@@ -129,4 +129,4 @@ Duration: 263.4s | Cost: $0.560446 USD | Turns: 5
 - **Risks:** None — minimal 2-line change to entry point only; no changes to Calculator, interactive, or operation_registry modules
 - **Tests passed:** 141 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
