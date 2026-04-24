@@ -1,0 +1,17 @@
+@startuml
+start
+
+:Caller invokes divide(a, b);
+
+:Apply Python / operator: a / b;
+
+if (b == 0?) then (yes)
+  :Python runtime raises ZeroDivisionError;
+  :Exception propagates to caller;
+  stop
+else (no)
+  :Return result of a / b;
+  stop
+endif
+
+@enduml

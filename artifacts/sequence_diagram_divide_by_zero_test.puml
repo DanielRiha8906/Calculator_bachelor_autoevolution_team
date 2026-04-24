@@ -1,0 +1,23 @@
+@startuml
+participant TestCase
+participant Calculator
+participant "Python Runtime" as Runtime
+
+TestCase -> Calculator : create instance
+activate Calculator
+
+TestCase -> Calculator : divide(10, 0)
+activate Calculator
+
+Calculator -> Runtime : evaluate 10 / 0
+activate Runtime
+Runtime --> Calculator : raise ZeroDivisionError
+deactivate Runtime
+
+Calculator --> TestCase : ZeroDivisionError propagates
+deactivate Calculator
+
+TestCase -> TestCase : assertRaises(ZeroDivisionError) passes
+deactivate Calculator
+
+@enduml
