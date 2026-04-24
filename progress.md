@@ -69,3 +69,20 @@ Duration: 276.8s | Cost: $0.627102 USD | Turns: 21
   - `artifacts/component_calculator.puml` — component diagram showing Calculator and math stdlib relationship
 
 Duration: 157.2s | Cost: $0.412103 USD | Turns: 7
+
+## Run: Issue #381 — V3 Task 4 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-381-advanced-operations
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added 7 new methods: square, cube, square_root, cube_root, power, log10, ln
+  - `tests/test_calculator.py` — added 7 test classes (49 new tests) covering all new operations
+  - `rag/agents/python-code-implementer.md` — cycle log entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle log entry appended
+  - `rag/agents/github-task-analyst.md` — cycle log entry appended
+  - `rag/agents/system-architect.md` — cycle log entry appended
+- **Purpose:** Add square, cube, square root, cube root, power, log base 10, and natural log as supported calculator operations with proper input validation
+- **Risks:** None — additive change only; no existing methods modified
+- **Tests passed:** 82 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
