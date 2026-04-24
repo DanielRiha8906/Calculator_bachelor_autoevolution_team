@@ -2,17 +2,59 @@ import math
 
 
 class Calculator:
+    """A calculator that supports basic and advanced operations with history tracking."""
+
+    def __init__(self) -> None:
+        """Initialize the calculator with an empty operation history."""
+        self._history: list[dict] = []
+
+    def _record_operation(self, operation_name: str, operands, result) -> None:
+        """Record a successfully completed operation to history.
+
+        Args:
+            operation_name: The name of the operation (e.g. 'add', 'square').
+            operands: A single value or list/tuple of operand values.
+            result: The computed result of the operation.
+        """
+        if not isinstance(operands, (list, tuple)):
+            operands = [operands]
+        self._history.append({
+            "operation": operation_name,
+            "operands": list(operands),
+            "result": result
+        })
+
+    def get_history(self) -> list[dict]:
+        """Return a copy of the operation history.
+
+        Returns:
+            A list of dicts, each with keys 'operation', 'operands', and 'result'.
+        """
+        return self._history.copy()
+
+    def clear_history(self) -> None:
+        """Clear the operation history."""
+        self._history.clear()
+
     def add(self, a, b):
-        return a + b
+        result = a + b
+        self._record_operation("add", [a, b], result)
+        return result
 
     def subtract(self, a, b):
-        return a - b
+        result = a - b
+        self._record_operation("subtract", [a, b], result)
+        return result
 
     def multiply(self, a, b):
-        return a * b
+        result = a * b
+        self._record_operation("multiply", [a, b], result)
+        return result
 
     def divide(self, a, b):
-        return a / b
+        result = a / b
+        self._record_operation("divide", [a, b], result)
+        return result
 
     def square(self, a):
         """Return a squared (a ** 2).
@@ -25,7 +67,9 @@ class Calculator:
         Returns:
             The square of a.
         """
-        return a ** 2
+        result = a ** 2
+        self._record_operation("square", [a], result)
+        return result
 
     def cube(self, a):
         """Return a cubed (a ** 3).
@@ -38,7 +82,9 @@ class Calculator:
         Returns:
             The cube of a.
         """
-        return a ** 3
+        result = a ** 3
+        self._record_operation("cube", [a], result)
+        return result
 
     def square_root(self, a):
         """Return the square root of a.
@@ -54,7 +100,9 @@ class Calculator:
         """
         if a < 0:
             raise ValueError("Cannot take square root of a negative number.")
-        return math.sqrt(a)
+        result = math.sqrt(a)
+        self._record_operation("square_root", [a], result)
+        return result
 
     def cube_root(self, a):
         """Return the cube root of a.
@@ -68,10 +116,13 @@ class Calculator:
             The cube root of a.
         """
         if a == 0:
-            return 0.0
-        if a < 0:
-            return -(abs(a) ** (1 / 3))
-        return a ** (1 / 3)
+            result = 0.0
+        elif a < 0:
+            result = -(abs(a) ** (1 / 3))
+        else:
+            result = a ** (1 / 3)
+        self._record_operation("cube_root", [a], result)
+        return result
 
     def factorial(self, n):
         """Return the factorial of n.
@@ -95,7 +146,9 @@ class Calculator:
             raise ValueError("Factorial is only defined for non-negative integers.")
         if n < 0:
             raise ValueError("Factorial is not defined for negative numbers.")
-        return math.factorial(n)
+        result = math.factorial(n)
+        self._record_operation("factorial", [n], result)
+        return result
 
     def power(self, base, exp):
         """Return base raised to the power of exp.
@@ -107,7 +160,9 @@ class Calculator:
         Returns:
             base ** exp.
         """
-        return base ** exp
+        result = base ** exp
+        self._record_operation("power", [base, exp], result)
+        return result
 
     def log(self, a):
         """Return the base-10 logarithm of a.
@@ -123,7 +178,9 @@ class Calculator:
         """
         if a <= 0:
             raise ValueError("Logarithm is only defined for positive numbers.")
-        return math.log10(a)
+        result = math.log10(a)
+        self._record_operation("log", [a], result)
+        return result
 
     def ln(self, a):
         """Return the natural logarithm of a.
@@ -139,4 +196,6 @@ class Calculator:
         """
         if a <= 0:
             raise ValueError("Natural logarithm is only defined for positive numbers.")
-        return math.log(a)
+        result = math.log(a)
+        self._record_operation("ln", [a], result)
+        return result

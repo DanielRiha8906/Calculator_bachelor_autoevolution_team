@@ -160,6 +160,43 @@ def display_result_binary(operation_key: str, first: float, second: float, resul
     print(f"{first} {symbol} {second} = {result}")
 
 
+def _format_history_entry(index: int, entry: dict) -> str:
+    """Format a single history entry for display.
+
+    Args:
+        index: 1-based position of the entry in the history list.
+        entry: A dict with keys 'operation', 'operands', and 'result'.
+
+    Returns:
+        A formatted string representation of the history entry.
+    """
+    operation = entry["operation"]
+    operands = entry["operands"]
+    result = entry["result"]
+    if len(operands) == 1:
+        return f"{index}. {operation}({operands[0]}) = {result}"
+    else:
+        return f"{index}. {operation}({operands[0]}, {operands[1]}) = {result}"
+
+
+def display_history(calc) -> None:
+    """Print the full operation history of a Calculator instance.
+
+    If no operations have been recorded, prints 'No operations recorded.'
+    Otherwise prints one numbered line per recorded operation.
+
+    Args:
+        calc: A Calculator instance with a get_history() method.
+    """
+    history = calc.get_history()
+    if not history:
+        print("No operations recorded.")
+        return
+    for index, entry in enumerate(history, start=1):
+        formatted = _format_history_entry(index, entry)
+        print(formatted)
+
+
 def display_error(error_message: str) -> None:
     """Print an error message in a user-friendly format.
 
