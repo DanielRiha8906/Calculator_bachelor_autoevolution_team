@@ -1,0 +1,87 @@
+@startuml
+skinparam componentFontSize 13
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+
+title Source Module Dependencies and Exports
+
+package "src/" {
+
+  component "__init__.py\n(Public API Facade)" as init {
+  }
+
+  component "calculator.py" as calc {
+  }
+
+  package "core/" {
+    component "operations.py" as ops {
+    }
+  }
+
+  component "operation_registry.py" as registry {
+  }
+
+  package "ui/" {
+    component "interactive.py" as interactive {
+    }
+    component "cli.py" as cli {
+    }
+  }
+
+  package "infrastructure/" {
+    component "history.py" as history {
+    }
+    component "error_logger.py" as errlog {
+    }
+  }
+
+}
+
+note top of init
+  Exports: Calculator, OperationMode,
+  OperationRegistry, run_interactive_session,
+  run_cli, OperationHistory, ErrorLogger
+end note
+
+note top of calc
+  Exports: Calculator
+  Imports: math (stdlib only)
+end note
+
+note top of ops
+  Exports: OperationType, OperationMode,
+  OperationMetadata
+  Imports: enum, dataclasses (stdlib only)
+end note
+
+note right of registry
+  Exports: OperationRegistry,
+  _LEGACY_OPERATIONS,
+  _OPERATION_METADATA
+end note
+
+note right of interactive
+  Exports: run_interactive_session,
+  _select_mode (private),
+  display_history_indexed,
+  parse_operand
+end note
+
+init --> calc
+init --> ops
+init --> registry
+init --> interactive
+init --> cli
+init --> history
+init --> errlog
+
+registry --> calc
+registry --> ops
+
+interactive --> calc
+interactive --> ops
+interactive --> registry
+interactive --> history
+interactive --> errlog
+
+@enduml

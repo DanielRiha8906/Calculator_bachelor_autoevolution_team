@@ -1,3 +1,14 @@
+## Run: update-diagrams — Calculator Modes (2026-04-24)
+
+- **Branch:** task/issue-412-calculator-modes
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core_domain.puml` — class diagram showing OperationMode enum, OperationMetadata with mode field, Calculator with 6 new trig methods, OperationRegistry with mode-filtering methods
+  - `artifacts/activity_diagram_mode_selection.puml` — activity diagram for interactive mode selection and switching flow
+  - `artifacts/component_diagram_module_architecture.puml` — component diagram showing module dependencies and exports across src/
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #412 — V3 Task 14 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-412-calculator-modes

@@ -1,0 +1,104 @@
+@startuml
+skinparam activityFontSize 13
+skinparam activityDiamondFontSize 12
+
+title Interactive Session Mode Selection and Operation Flow
+
+start
+
+:Create Calculator, OperationRegistry,
+OperationHistory, ErrorLogger;
+:mode = None;
+
+repeat
+
+  if (mode is None?) then (yes)
+    :ops = get_operations()
+    (12 legacy operations);
+  else (no)
+    :ops = get_operations_by_mode(mode);
+  endif
+
+  :Display menu: operation list
+  + "h: View history"
+  + "m: Switch mode";
+  :Prompt: "Select an operation (index): ";
+  :Read user input;
+
+  if (input == "h" or "history"?) then (yes)
+    :display_history_indexed();
+    :Prompt to continue;
+  elseif (input == "no" or "n"?) then (yes)
+    :history.write_to_file();
+    stop
+  elseif (input == "m"?) then (yes)
+    :**_select_mode() subprocess**;
+    note right
+      Display: "0=Normal, 1=Scientific"
+      Loop until valid input:
+        "0"/"normal" → NORMAL
+        "1"/"scientific" → SCIENTIFIC
+        else → re-prompt
+    end note
+    :mode = returned OperationMode;
+  elseif (valid index?) then (yes)
+    :op_name = operations[index];
+
+    :arity = registry.get_arity(op_name);
+
+    fork
+      if (arity == 1?) then (yes)
+        :Prompt: "Enter operand: ";
+        :parse_operand() with retry;
+        :operands = [value];
+      endif
+    fork again
+      if (arity == 2?) then (yes)
+        :Prompt: "Enter first operand: ";
+        :parse_operand() with retry;
+        :Prompt: "Enter second operand: ";
+        :parse_operand() with retry;
+        :operands = [a, b];
+      endif
+    end fork
+
+    :result = registry.call(op_name, *operands);
+
+    if (exception?) then (yes)
+      if (ZeroDivisionError or ValueError?) then (yes)
+        :error_logger.log_runtime_calculation_error();
+      else (Exception)
+        :error_logger.log_runtime_calculation_error();
+      endif
+      :print error message;
+    else (no)
+      :print result;
+      :history.record(op_name, operands, result);
+    endif
+
+    :Prompt: "Continue? (yes/y/no/n/h): ";
+    :Read continue input;
+
+    if (input == "h"?) then (yes)
+      :display_history();
+      :re-prompt continue;
+    elseif (input == "yes" or "y"?) then (yes)
+      :continue with current mode;
+    else (no/n)
+      :history.write_to_file();
+      stop
+    endif
+
+  else (invalid index)
+    :error_logger.log_invalid_operation();
+    :increment retry_count;
+    if (retry_count >= MAX_ATTEMPTS?) then (yes)
+      stop
+    endif
+  endif
+
+repeat while (session active)
+
+stop
+
+@enduml
