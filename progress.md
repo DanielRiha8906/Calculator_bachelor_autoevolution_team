@@ -340,4 +340,4 @@ Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
   - `artifacts/activity_cli.puml` — activity diagram for CLI mode execution with fail-fast error handling
   - `artifacts/activity_interactive.puml` — activity diagram for Interactive REPL mode with 3-strike consecutive-failure logic
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
