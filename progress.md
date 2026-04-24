@@ -247,4 +247,4 @@ Duration: 216.3s | Cost: $0.496068 USD | Turns: 4
   - `artifacts/interactive_session_flow.puml` — added history.record() after successful operation and write_to_file() at all 5 exit points
   - `artifacts/session_state_machine.puml` — updated with RECORDING and PERSISTING states for history lifecycle
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 228.5s | Cost: $0.513488 USD | Turns: 7
