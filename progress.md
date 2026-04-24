@@ -101,4 +101,4 @@ Duration: 343.3s | Cost: $0.705994 USD | Turns: 16
   - `artifacts/activity_diagram_user_session.puml` — activity flow for interactive calculation session
   - `artifacts/sequence_diagram_calculation.puml` — sequence diagram for single calculation interaction
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 256.1s | Cost: $0.503387 USD | Turns: 4
