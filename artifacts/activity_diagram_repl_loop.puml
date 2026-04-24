@@ -1,0 +1,55 @@
+@startuml activity_diagram_repl_loop
+
+title Interactive Calculator REPL Loop Flow
+
+start
+
+:Create Calculator instance;
+:Build operation registry\n(name -> method, arity);
+
+repeat
+    :Show prompt with available operations;
+    :Read user input;
+
+    if (input is exit command?\n"quit" / "exit" / "q") then (yes)
+        stop
+    endif
+
+    if (operation in registry?) then (no)
+        :Print "Unknown operation" error;
+    else (yes)
+        :Lookup method and arity from registry;
+
+        :operands = [];
+
+        repeat
+            :Prompt for next operand;
+            :Read operand input;
+            if (valid number?) then (no)
+                :Print "Invalid number" error;
+                break
+            else (yes)
+                :Append parsed number to operands;
+            endif
+        repeat while (len(operands) < arity) is (yes)
+        ->no;
+
+        if (operand collection aborted?) then (yes)
+            note right: re-show prompt
+        else (no)
+            :Execute method(*operands);
+
+            if (raises ValueError or\nZeroDivisionError?) then (yes)
+                :Print calculation error message;
+            else (no)
+                :Print result;
+            endif
+        endif
+    endif
+
+repeat while (running) is (yes)
+->exit;
+
+stop
+
+@enduml
