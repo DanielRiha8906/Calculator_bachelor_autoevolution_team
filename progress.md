@@ -69,3 +69,32 @@ Duration: 276.8s | Cost: $0.627102 USD | Turns: 21
   - `artifacts/component_calculator.puml` — component diagram showing Calculator and math stdlib relationship
 
 Duration: 157.2s | Cost: $0.412103 USD | Turns: 7
+
+## Run: Issue #381 — V3 Task 4 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-381-advanced-operations
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator.py` — added 7 new methods: square, cube, square_root, cube_root, power, log10, ln
+  - `tests/test_calculator.py` — added 7 test classes (49 new tests) covering all new operations
+  - `rag/agents/python-code-implementer.md` — cycle log entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle log entry appended
+  - `rag/agents/github-task-analyst.md` — cycle log entry appended
+  - `rag/agents/system-architect.md` — cycle log entry appended
+- **Purpose:** Add square, cube, square root, cube root, power, log base 10, and natural log as supported calculator operations with proper input validation
+- **Risks:** None — additive change only; no existing methods modified
+- **Tests passed:** 82 passed, 0 failed
+
+Duration: 395.6s | Cost: $0.776898 USD | Turns: 18
+
+## Run: update-diagrams — Advanced Operations UML Update (2026-04-24)
+
+- **Branch:** task/issue-381-advanced-operations
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — added 7 new methods (square, cube, square_root, cube_root, power, log10, ln) with signatures, return types, and exception conditions
+  - `artifacts/class_diagram.puml` — updated Calculator class to show all 11 methods
+  - `artifacts/activity_diagram.puml` — generalized exception-handling flow to cover ValueError in addition to ZeroDivisionError
+  - `artifacts/component_calculator.puml` — updated operations list to all 11 operations and math dependency note
+
+Duration: 255.8s | Cost: $0.582970 USD | Turns: 6

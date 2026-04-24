@@ -3,9 +3,9 @@
 package "Calculator Application" {
     [Calculator] as Calc
     note right of Calc
-      Exposes 5 operations:
-      add, subtract, multiply,
-      divide, factorial
+      Exposes arithmetic (add, subtract, multiply, divide),
+      power operations (square, cube, square_root, cube_root, power),
+      logarithmic (log10, ln), and special (factorial) operations
     end note
 }
 
@@ -13,6 +13,6 @@ package "Python Standard Library" {
     [math] as Math
 }
 
-Calc --> Math : uses factorial()
+Calc --> Math : uses factorial(), sqrt(), log10(), log()
 
 @enduml

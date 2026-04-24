@@ -76,3 +76,66 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - "ai-implement:structured-team" label consistent across series
 - Pattern: minimal task spec + reliance on prior implementation context
 - Factorial is unary operator (takes one input), unlike binary arithmetic operations
+
+### 2026-04-24 | V3 Task 4 - Structured/team (Issue #381)
+
+**Issue:** Add square, cube, square root, cube root, power, log and ln as supported calculator operations. Make sure the calculator can execute these operations correctly and update the tests to cover the new functionality.
+
+**Key Requirements Identified:**
+- Add seven new mathematical operations: square, cube, square root, cube root, power, log (base 10), ln (natural logarithm)
+- All operations must execute correctly
+- Update test suite to cover all new operations
+- Part of V3 structured team implementation (sequential to Task 3 on factorial)
+
+**Explicit Requirements:**
+- **Functional:** Implement seven mathematical operations (each described below)
+  - Square: x² (unary; returns x × x)
+  - Cube: x³ (unary; returns x × x × x)
+  - Square root: √x (unary; mathematical square root)
+  - Cube root: ∛x (unary; mathematical cube root)
+  - Power: x^y (binary; returns x raised to power y)
+  - Log: log₁₀(x) (unary; base-10 logarithm)
+  - Ln: ln(x) (unary; natural logarithm, base e)
+- **Testing:** Update existing test suite to include coverage for all new operations
+- **Scope:** Must execute correctly; implicitly valid inputs only
+
+**Ambiguities & Gaps:**
+- No comments provided; issue body is minimal
+- No definition of "valid inputs" for each operation:
+  - Square, Cube: any real number (including negative)
+  - Square root, Cube root: constraints unknown (square root undefined for negatives; cube root defined for all reals)
+  - Power: constraints unknown (some bases/exponents may overflow or underflow)
+  - Log, Ln: typically defined for positive numbers only
+- No specification of behavior on invalid inputs (error handling, return value, exception type)
+- No mention of numerical precision, rounding, or floating-point error handling
+- Unclear if operations are in normal mode, scientific mode, or both
+- No maximum value specifications (overflow limits)
+- No test examples or acceptance criteria provided
+- Binary operator (power) vs. unary operators (all others) — ambiguity about how power argument is provided in calculator UI (two separate inputs? operator chaining?)
+
+**Assumed Resolution (for Architect):**
+- **Valid input ranges:**
+  - Square, Cube: all real numbers (−∞ to +∞)
+  - Square root: x ≥ 0 (non-negative reals); error/exception for x < 0
+  - Cube root: all real numbers; note that real cube root of negative is −∛(−x)
+  - Power: x ≥ 0 for positive y; x ≠ 0 for negative y (standard constraint); behavior for x < 0 and fractional exponents TBD
+  - Log: x > 0 (positive reals only); error/exception for x ≤ 0
+  - Ln: x > 0 (positive reals only); error/exception for x ≤ 0
+- **Error handling:** Follow pattern established in Task 1 (#372) on division-by-zero (likely return error message or raise exception)
+- **Test coverage:** Happy path (typical valid inputs), edge cases (zero, large values, small positive values near zero), error conditions (negative square root, non-positive log/ln) to be determined by architect
+- **Operation scope:** Likely scientific mode (all seven operations are advanced mathematical functions)
+- **Power operator input:** Likely requires two operands; behavior depends on calculator architecture (infix: "2 power 3" or function syntax: "power(2, 3)")
+
+**Context from Related Issues:**
+- V3 Task 3 (#378): Factorial implementation (unary operation pattern)
+- V3 Task 2 (#375): Test suite structure and existing test file location
+- V3 Task 1 (#372): Error-handling pattern for invalid inputs
+- V2 Task 14 (#273): Scientific mode architecture may guide operation placement
+
+**Patterns:**
+- V3 Task 4 is broader than Task 3: seven operations vs. one (factorial)
+- Mix of unary and binary operators (all previous tasks dealt with unary or pure arithmetic)
+- Power operation introduces first binary non-arithmetic operation in V3
+- Minimal spec + reliance on prior context consistent with Task 2 and Task 3
+- No mention of operation aliases or alternate names (e.g., sqrt vs. √, log vs. log10)
+- Assumed all operations use standard mathematical definitions

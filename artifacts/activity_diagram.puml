@@ -8,16 +8,22 @@ start
 :Create Calculator() instance;
 :Calculator ready;
 
-if (Is this a division-by-zero test?) then (yes)
-    :Invoke divide(a, 0)\ninside pytest.raises(ZeroDivisionError);
-    :Calculator raises ZeroDivisionError;
+if (Does method raise an exception\nfor this input?) then (yes)
+    :Invoke method inside\npytest.raises(ExceptionType);
+    note right
+      ZeroDivisionError: divide(a, 0)
+      ValueError: square_root(negative),
+        log10/ln(non-positive),
+        power(negative base + non-int exp),
+        factorial(invalid input)
+    end note
+    :Calculator raises exception;
     :pytest.raises() catches exception;
     :Assert exception was raised;
     :PASS;
 else (no)
-    :Invoke calculator method\n(add / subtract / multiply / divide);
-    :Calculator executes arithmetic operator;
-    :Return result to test;
+    :Invoke calculator method\n(add / subtract / multiply / divide /\nsquare / cube / square_root / cube_root /\npower / log10 / ln / factorial);
+    :Calculator executes and returns result;
     :Assert result == expected value;
     :PASS;
 endif
