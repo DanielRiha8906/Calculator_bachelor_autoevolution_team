@@ -1,3 +1,26 @@
+## Run: Issue #406 — V3 Task 12 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-406-modular-refactor
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__init__.py` — added backward-compatibility re-exports for all public classes/functions
+  - `src/core/__init__.py` — new package marker for core layer
+  - `src/core/operations.py` — new OperationType enum and OperationMetadata dataclass
+  - `src/ui/__init__.py` — new package marker for UI layer
+  - `src/ui/interactive.py` — interactive session module moved from src/interactive.py with updated relative imports
+  - `src/ui/cli.py` — CLI module moved from src/cli.py with updated relative imports
+  - `src/infrastructure/__init__.py` — new package marker for infrastructure layer
+  - `src/infrastructure/history.py` — history module moved from src/history.py
+  - `src/infrastructure/error_logger.py` — error logger module moved from src/error_logger.py
+  - `src/session/__init__.py` — new package marker for session layer
+  - `src/session/manager.py` — new SessionManager class for interactive session state
+  - `tests/test_modular_structure.py` — 25 new structural tests for refactored module layout
+- **Purpose:** Refactor calculator into multi-module hierarchy (core, ui, infrastructure, session) with clear separation of concerns and preparation for future normal/scientific mode split via OperationType/OperationMetadata abstractions.
+- **Risks:** Old flat files kept at src/ root to avoid breaking existing tests; future cleanup will require updating existing test imports.
+- **Tests passed:** 334 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #403 — V3 Task 11 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-403-expert-team
