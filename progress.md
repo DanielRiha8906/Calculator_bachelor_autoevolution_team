@@ -1,3 +1,19 @@
+## Run: Issue #399 — V3 Task 10 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-399-error-logging
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/error_logging.py` — new ErrorLog class with lazy file init, pipe-delimited format, ISO 8601 UTC timestamps, silent I/O exception handling
+  - `src/__main__.py` — imported ErrorLog; wired error_log into cli_mode, _parse_cli_arguments, _execute_cli_mode, and _run_interactive_loop with three error categories
+  - `tests/test_error_logging.py` — 23 new tests covering file init, entry format, interactive mode, CLI mode, and edge cases
+  - `rag/codebase_map.md` — updated src/__main__.py entry; added src/error_logging.py and tests/test_error_logging.py entries
+  - `rag/evolution_log.md` — appended cycle entry for Issue #399
+- **Purpose:** Add persistent error logging to calculator; failures and invalid usage recorded to error_log.txt separate from operation history
+- **Risks:** None — ErrorLog is a new isolated class; __main__.py changes are additive; no new dependencies; file I/O errors silently swallowed to prevent crashes
+- **Tests passed:** 189 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #396 — V3 Task 9 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-396-operation-history

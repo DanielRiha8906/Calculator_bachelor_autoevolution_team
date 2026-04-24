@@ -64,3 +64,14 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Decision: `history.record()` is called AFTER `consecutive_failures = 0` reset to ensure the counter is only reset on genuine success. Order in loop: execute method → print result → record to history → reset counter.
 - Pattern: When the architect's test-spec plan and the actual test file disagree on a method signature or method existence, always read the actual test file and satisfy it literally — the test file is the source of truth for the implementer.
 - Handoff notes: All 166 tests pass (23 new + 143 pre-existing). `OperationHistory` is importable as `from src.history import OperationHistory`. `_run_interactive_loop` signature change is backward compatible.
+
+### 2026-04-24 — issue-399 error-logging
+
+- Task: Create `src/error_logging.py` with `ErrorLog` class and integrate it into `src/__main__.py` to satisfy 22 failing tests (+ 1 already passing) in `tests/test_error_logging.py`.
+- Files changed:
+  - `src/error_logging.py` — new file; `ErrorLog` class with `__init__(file_path=None)` (lazy init, default `"error_log.txt"` in cwd) and `log_error(error_category, operation, inputs, error_description)` that appends a pipe-delimited ISO8601-UTC-timestamped line; all I/O exceptions silently swallowed.
+  - `src/__main__.py` — added `from .error_logging import ErrorLog` import; `_parse_cli_arguments` and `_execute_cli_mode` gained an optional `error_log` keyword parameter (backward compatible); `cli_mode()` instantiates `ErrorLog()` and passes it to both helpers; `_run_interactive_loop` instantiates `ErrorLog()` at loop start and calls `log_error` at all three error paths (unsupported operation, invalid input, calculation error).
+- Decision: `_run_interactive_loop` instantiates `ErrorLog()` internally (no new parameter) so that `patch("src.__main__.ErrorLog")` in Group C tests intercepts the instantiation without requiring signature changes to the public interface.
+- Decision: Private helper functions `_parse_cli_arguments` and `_execute_cli_mode` gained an optional `error_log` parameter rather than creating a new `ErrorLog` internally — this avoids creating two instances per `cli_mode()` invocation and keeps the mock-interception at the `cli_mode()` level where `ErrorLog()` is called once.
+- Pattern: When tests patch a class at the module level (`patch("src.__main__.ErrorLog")`), the mock intercepts every instantiation of that class within the module. Place the single `ErrorLog()` call in the top-level function (`cli_mode`, `_run_interactive_loop`) so all subfunction calls receive the already-mocked instance.
+- Handoff notes: All 189 tests pass (23 new + 166 pre-existing). `ErrorLog` is importable as `from src.error_logging import ErrorLog` and also via `from src.__main__ import ErrorLog` (re-exported by the import statement).
