@@ -1,0 +1,48 @@
+@startuml sequence_diagram_calculation
+
+participant "User" as User
+participant "main" as Main
+participant "run_calculator" as RunCalc
+participant "Calculator" as Calc
+participant "display_result" as Display
+
+User -> Main : invoke app
+activate Main
+
+Main -> RunCalc : run_calculator()
+activate RunCalc
+
+RunCalc -> Calc : <<create>>
+activate Calc
+
+RunCalc -> RunCalc : prompt_for_first_number()\n[loop until valid float]
+RunCalc -> RunCalc : prompt_for_operator()\n[loop until operator in SUPPORTED_OPERATORS]
+RunCalc -> RunCalc : prompt_for_second_number()\n[loop until valid float]
+
+RunCalc -> Calc : add(first, second)
+Calc --> RunCalc : result
+deactivate Calc
+
+RunCalc -> Display : display_result(first, operator, second, result)
+activate Display
+Display --> RunCalc : None
+deactivate Display
+
+RunCalc --> Main : result
+deactivate RunCalc
+
+Main --> User : exit
+deactivate Main
+
+alt ZeroDivisionError path
+    RunCalc -> Calc : divide(first, 0)
+    activate Calc
+    Calc --> RunCalc : raise ZeroDivisionError
+    deactivate Calc
+
+    RunCalc --> Main : raise ZeroDivisionError
+    Main -> Main : display_error("division by zero")
+    Main --> User : exit
+end
+
+@enduml

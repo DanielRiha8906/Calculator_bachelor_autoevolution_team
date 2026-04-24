@@ -24,3 +24,38 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Boolean is a subclass of `int` in Python; must check `isinstance(n, bool)` before `isinstance(n, int)` to reject booleans.
   - Negative cube root via `-(abs(a) ** (1/3))` avoids complex-number issues from Python's `(-x) ** (1/3)`.
 - **Test result:** 68/68 passed.
+
+### 2026-04-24 — add CLI module for interactive calculator
+
+- **Task:** Create `src/cli.py` to satisfy 27 failing tests in `tests/test_cli.py`; update `src/__main__.py` entry point.
+- **Files changed:** `src/cli.py` (created), `src/__main__.py` (modified)
+- **Changes made:**
+  - Created `src/cli.py` exporting: `prompt_for_first_number`, `prompt_for_operator`, `prompt_for_second_number`, `display_result`, `display_error`, `run_calculator`.
+  - `prompt_for_first_number` / `prompt_for_second_number`: loop calling `input()`, parse with `float()`, catch `ValueError` and re-prompt.
+  - `prompt_for_operator`: loop calling `input()`, check membership in `SUPPORTED_OPERATORS = {"+", "-", "*", "/"}`, re-prompt on invalid.
+  - `display_result(first, operator, second, result)`: 4-argument signature matching test call `display_result(5, '+', 3, 8)`; prints `"{first} {operator} {second} = {result}"`.
+  - `run_calculator()`: orchestrates the three prompt functions, delegates to `Calculator`, calls `display_result`, returns the numeric result as float.
+  - Updated `src/__main__.py` to call `run_calculator()` from the new CLI module, wrapping in try-except for `ZeroDivisionError` and generic `Exception`.
+- **Patterns found:**
+  - Architect plan used different function names (`get_first_number`, `get_operator`, etc.) than the test file (`prompt_for_first_number`, `prompt_for_operator`, etc.) — always read the actual test file to determine the true required interface; the test file is authoritative.
+  - `display_result` in the plan was described as 1-argument, but the test called it with 4 args — test file is the ground truth.
+  - `run_calculator()` must return the numeric result (not None) so that workflow tests can assert on the value.
+- **Test result:** 95/95 passed (68 existing + 27 new).
+
+### 2026-04-24 — issue-383: add user input (CLI refactor for unary + extended operations)
+
+- **Task:** Refactor `src/cli.py` to replace `SUPPORTED_OPERATORS` with `OPERATIONS` dict supporting 12 operations (4 binary, 8 unary), update `run_calculator` to handle both arities, add `display_result_unary` and `display_result_binary`, add private helper functions.
+- **Files changed:** `src/cli.py`
+- **Changes made:**
+  - Replaced `SUPPORTED_OPERATORS = {"+", "-", "*", "/"}` with `OPERATIONS` dict mapping 12 keys to `(arity, method_name, display_symbol, description)` tuples.
+  - Added three private helpers: `_get_operation_arity`, `_get_calculator_method`, `_get_display_symbol`.
+  - Replaced `prompt_for_operator` body to validate against `OPERATIONS.keys()` and show the extended list in the prompt.
+  - Added `display_result_unary(operation_key, operand, result)` — prints `symbol(operand) = result`.
+  - Added `display_result_binary(operation_key, first, second, result)` — prints `first symbol second = result`.
+  - Refactored `run_calculator()`: uses `getattr(calc, method_name)` for dispatch; branches on arity to call either unary or binary path; wraps in try-except for `ValueError` and `ZeroDivisionError`, calls `display_error` and re-raises.
+  - Preserved `display_result(first, operator, second, result)` (4-argument legacy form) unchanged for backward compatibility.
+- **Patterns found:**
+  - `getattr(calc, method_name)` is a clean dispatch pattern; avoids long if/elif chains and automatically stays in sync with new Calculator methods.
+  - Preserving the legacy `display_result` is essential: existing tests call it with 4 positional args; removing or renaming it would break the prior test suite.
+  - The OPERATIONS dict acts as a self-documenting registry — arity, method name, display symbol, and description in one place makes future extension trivial.
+- **Test result:** pending VERIFY phase.

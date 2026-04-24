@@ -1,0 +1,64 @@
+@startuml class_diagram_cli_components
+
+skinparam classAttributeIconSize 0
+
+class "__main__" <<module>> {
+    + main() : None
+}
+
+note right of "__main__"::main
+  Calls run_calculator().
+  Catches ZeroDivisionError -> display_error().
+  Catches generic Exception -> display_error().
+end note
+
+class "cli" <<module>> {
+    + OPERATIONS : dict[str, tuple[int, str, str, str]]
+
+    + prompt_for_first_number() : float
+    + prompt_for_operator() : str
+    + prompt_for_second_number() : float
+    + display_result(first, operator, second, result) : None
+    + display_result_unary(operation_key, operand, result) : None
+    + display_result_binary(operation_key, first, second, result) : None
+    + display_error(error_message: str) : None
+    + run_calculator() : float
+
+    - _get_operation_arity(key: str) : int
+    - _get_calculator_method(key: str) : str
+    - _get_display_symbol(key: str) : str
+}
+
+note right of "cli"::OPERATIONS
+  12-entry dict.
+  key -> (arity, method_name, symbol, description)
+  Binary (arity 2): "+", "-", "*", "/", "power"
+  Unary  (arity 1): "square", "cube", "sqrt",
+                    "cbrt", "factorial", "log", "ln"
+end note
+
+note right of "cli"::run_calculator
+  Arity-aware dispatch via getattr().
+  Catches ValueError / ZeroDivisionError,
+  calls display_error(), then re-raises.
+end note
+
+class Calculator <<class>> {
+    + add(a: float, b: float) : float
+    + subtract(a: float, b: float) : float
+    + multiply(a: float, b: float) : float
+    + divide(a: float, b: float) : float
+    + power(base: float, exp: float) : float
+    + square(a: float) : float
+    + cube(a: float) : float
+    + square_root(a: float) : float
+    + cube_root(a: float) : float
+    + factorial(n: float|int) : int
+    + log(a: float) : float
+    + ln(a: float) : float
+}
+
+"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error
+"cli" --> Calculator : <<import>>\ncreates instance\ncalls methods via getattr()
+
+@enduml

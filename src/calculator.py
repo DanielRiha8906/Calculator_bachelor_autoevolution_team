@@ -77,15 +77,21 @@ class Calculator:
         """Return the factorial of n.
 
         Args:
-            n: A non-negative integer.
+            n: A non-negative integer or a float representing an integer (e.g., 5.0).
 
         Returns:
             The factorial of n.
 
         Raises:
-            ValueError: If n is negative, not an integer, or is a boolean.
+            ValueError: If n is negative, has a fractional part, or is a boolean.
         """
-        if isinstance(n, bool) or not isinstance(n, int):
+        if isinstance(n, bool):
+            raise ValueError("Factorial is only defined for non-negative integers.")
+        if isinstance(n, float):
+            if n != int(n):
+                raise ValueError("Factorial is only defined for non-negative integers.")
+            n = int(n)
+        elif not isinstance(n, int):
             raise ValueError("Factorial is only defined for non-negative integers.")
         if n < 0:
             raise ValueError("Factorial is not defined for negative numbers.")

@@ -1,0 +1,68 @@
+@startuml activity_diagram_user_session
+
+skinparam activityDiamondBackgroundColor #FEFECE
+
+start
+
+:User invokes app;
+:main() starts;
+:call run_calculator();
+:Create Calculator instance;
+
+while (valid operator?) is (invalid)
+    :prompt_for_operator()\nprint error, retry;
+endwhile (valid)
+:Store operator key;
+:Look up arity from OPERATIONS;
+
+if (arity == 1?) then (yes — unary)
+
+    while (valid operand?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :Store operand;
+
+    :method = getattr(calc, method_name);
+    :result = method(operand);
+
+    if (ValueError raised?) then (yes)
+        :display_error(error_message);
+        :re-raise to main();
+        :main calls display_error();
+        stop
+    else (no)
+    endif
+
+    :display_result_unary(key, operand, result);
+
+else (no — binary)
+
+    while (valid first number?) is (invalid)
+        :prompt_for_first_number()\nprint error, retry;
+    endwhile (valid)
+    :Store first number;
+
+    while (valid second number?) is (invalid)
+        :prompt_for_second_number()\nprint error, retry;
+    endwhile (valid)
+    :Store second number;
+
+    :method = getattr(calc, method_name);
+    :result = method(first, second);
+
+    if (ZeroDivisionError or ValueError?) then (yes)
+        :display_error(error_message);
+        :re-raise to main();
+        :main calls display_error();
+        stop
+    else (no)
+    endif
+
+    :display_result_binary(key, first, second, result);
+
+endif
+
+:return result to main();
+stop
+
+@enduml

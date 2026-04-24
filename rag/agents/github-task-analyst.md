@@ -38,3 +38,16 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Check existing test directory structure to understand baseline coverage
   - Assume "create tests" means write a test suite that covers current functionality comprehensively
   - Include at minimum: basic operations, advanced functions, error conditions (division by zero, invalid inputs), and boundary cases
+
+### Cycle: 2026-04-24 — PR #432: feat: add CLI user input to calculator (issue #383)
+- **PR Title:** feat: add CLI user input to calculator (issue #383)
+- **Created:** 2026-04-24T15:35:01Z
+- **Status:** OPEN (with unresolved feedback)
+- **Key Finding:** One unresolved comment from PR author (DanielRiha8906) flags missing functionality: **existing mathematical operations (cube, and others) that are implemented in the codebase are NOT callable through the CLI interface**.
+- **Unresolved Requirement:** ALL implemented mathematical operations must be callable in the CLI, not just the four basic operators (+, -, *, /).
+- **Feedback Classification:** "Needs fix" — explicit flagging indicates this blocks PR acceptance.
+- **Impact:** The PR's scope was limited to adding user input for basic arithmetic. However, the codebase also includes advanced operations (cube, square, sqrt, cbrt, power, log, ln, factorial). These functions exist but the CLI does not expose them to users.
+- **Architecture Implication:** The CLI module must be extended to support all available Calculator operations, not just binary operators. This may require:
+  - Expanding the operator prompt/selection to include unary and higher-arity operations
+  - Redesigning the orchestrator logic to handle variable-arity operations
+  - Revising the workflow (currently: first_number → operator → second_number → result)
