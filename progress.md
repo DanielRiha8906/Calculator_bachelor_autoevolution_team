@@ -1,3 +1,18 @@
+## Run: Issue #409 — V3 Task 13 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-409-documentation
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `README.md` — complete rewrite with comprehensive User Guide and Developer Guide sections
+  - `tests/test_documentation.py` — 16 new tests validating README content and structure
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+- **Purpose:** Add comprehensive written documentation covering how to run, use, and maintain the calculator application, including interactive mode walkthrough, CLI usage, operations reference, history/error logging behavior, and refactored code structure.
+- **Risks:** None — documentation-only change; no source code modified
+- **Tests passed:** 350 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #453 — Issue #406: Refactor calculator into modular package hierarchy (2026-04-24)
 
 - **Branch:** task/issue-406-modular-refactor
