@@ -153,3 +153,26 @@ def run_calculator() -> float:
     except (ValueError, ZeroDivisionError) as e:
         display_error(str(e))
         raise
+
+
+def main_cli_noninteractive(args: list) -> int:
+    """Non-interactive CLI mode: parse arguments and perform calculation.
+
+    Takes a list of command-line arguments (operation and operands) and
+    performs the calculation without prompting the user.
+
+    Args:
+        args: List of command-line arguments [operation, operand(s)]
+              For unary ops: [operation, operand]
+              For binary ops: [operation, operand1, operand2]
+              Special: [--help] or [-h] for help
+
+    Returns:
+        Exit code (0 for success, 1 for error)
+
+    Raises:
+        ValueError: If domain error occurs (e.g., sqrt of negative)
+        ZeroDivisionError: If division by zero is attempted
+    """
+    # Placeholder: to be implemented by python-code-implementer
+    return 0
