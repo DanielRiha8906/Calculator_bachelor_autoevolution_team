@@ -14,7 +14,7 @@
 - **Risks:** None — all 246 tests pass, 3 skipped as expected; backward compatibility of `python -m src` preserved via shim
 - **Tests passed:** 246 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 246.2s | Cost: $0.822289 USD | Turns: 12
 
 ## Run: update-diagrams — Issue #405 Modular Refactor (2026-04-24)
 
