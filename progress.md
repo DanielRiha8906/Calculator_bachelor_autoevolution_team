@@ -374,4 +374,4 @@ Duration: 282.4s | Cost: $0.580798 USD | Turns: 4
   - `artifacts/activity_diagram_main_flow.puml` — Activity diagram showing entry dispatch and batch/interactive mode flows
   - `artifacts/sequence_diagram_single_operation.puml` — Sequence diagram for single operation execution (binary happy path + error case)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 235.0s | Cost: $0.667638 USD | Turns: 5
