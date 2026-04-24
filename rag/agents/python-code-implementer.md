@@ -65,6 +65,17 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Pattern: When the architect's test-spec plan and the actual test file disagree on a method signature or method existence, always read the actual test file and satisfy it literally — the test file is the source of truth for the implementer.
 - Handoff notes: All 166 tests pass (23 new + 143 pre-existing). `OperationHistory` is importable as `from src.history import OperationHistory`. `_run_interactive_loop` signature change is backward compatible.
 
+### 2026-04-24 — issue-402 separate-calc-logic
+
+- Task: Create `src/application.py` with an `Application` class that encapsulates all user-interaction logic and accepts a `Calculator` instance, to satisfy 9 failing tests in `tests/test_application.py`.
+- Files changed: `src/application.py` — new file; `Application` class with `__init__(calculator)`, `_build_registry()`, `_parse_number()`, `_parse_cli_arguments()`, `_execute_cli_mode()`, `_run_interactive_loop()`, `run_cli_mode()`, `run_interactive()`, `execute_cli(args)`.
+- Decision: The directive also instructed modifying `src/__main__.py` to delegate to `Application`, but the existing test suite (`test_error_logging.py`) imports `_build_registry`, `_run_interactive_loop` directly from `src.__main__` and patches `src.__main__.ErrorLog`. Modifying `__main__.py` to delegate to `Application` would move `ErrorLog` instantiation into `src.application`, breaking those existing mocks. Per the ambiguity-resolution rule ("Change would break an existing interface → preserve the existing interface"), `src/__main__.py` was left unchanged. Flagged for Architect: a follow-up breaking-change cycle would be needed to migrate the test mocks to `src.application` before `__main__.py` can be refactored.
+- Decision: The `registry` in `Application` stores bare callables (bound Calculator methods), not `(callable, arity)` tuples. The `TestApplicationRegistryArities` test uses `inspect.signature(op_func)` on each registry value, which only works with a bare callable. An internal `_ARITY` module-level dict provides arity lookup for methods that need it.
+- Decision: Added a new public method `execute_cli(args: list[str])` not mentioned in the directive but required by `TestApplicationCLIMode`. This is the minimum additive addition needed to make the failing test pass.
+- Pattern: When the test file calls a method not in the architect's plan (`execute_cli`), always add it — the test file is the source of truth for the implementer.
+- Pattern: When a directive instructs changes that would break existing test mocks, the safest minimal fix is to create the new file only and leave the existing file untouched. Document the constraint as a note for the Architect.
+- Handoff notes: All 208 tests pass (9 new + 189 pre-existing). `Application` is importable as `from src.application import Application`. `src/__main__.py` is unchanged and all its existing public interfaces (`cli_mode`, `main`, `_build_registry`, `_run_interactive_loop`, etc.) are preserved.
+
 ### 2026-04-24 — issue-399 error-logging
 
 - Task: Create `src/error_logging.py` with `ErrorLog` class and integrate it into `src/__main__.py` to satisfy 22 failing tests (+ 1 already passing) in `tests/test_error_logging.py`.
