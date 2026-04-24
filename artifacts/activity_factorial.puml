@@ -1,0 +1,25 @@
+@startuml activity_factorial
+
+start
+
+:Caller invokes factorial(n);
+
+if (isinstance(n, int)\nand not isinstance(n, bool)?) then (no)
+    :raise ValueError\n"n must be a non-negative integer";
+    stop
+else (yes)
+endif
+
+if (n < 0?) then (yes)
+    :raise ValueError\n"n must be a non-negative integer";
+    stop
+else (no)
+endif
+
+:compute math.factorial(n);
+
+:return int result to caller;
+
+stop
+
+@enduml

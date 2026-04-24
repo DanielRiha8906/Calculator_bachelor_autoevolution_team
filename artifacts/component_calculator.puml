@@ -1,0 +1,18 @@
+@startuml component_calculator
+
+package "Calculator Application" {
+    [Calculator] as Calc
+    note right of Calc
+      Exposes 5 operations:
+      add, subtract, multiply,
+      divide, factorial
+    end note
+}
+
+package "Python Standard Library" {
+    [math] as Math
+}
+
+Calc --> Math : uses factorial()
+
+@enduml

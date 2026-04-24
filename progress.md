@@ -58,3 +58,14 @@ Duration: 207.8s | Cost: $0.428801 USD | Turns: 4
 - **Tests passed:** 33 passed, 0 failed
 
 Duration: 276.8s | Cost: $0.627102 USD | Turns: 21
+
+## Run: update-diagrams — Add factorial operation diagrams (2026-04-24)
+
+- **Branch:** task/issue-378-factorial
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — class diagram updated with new `factorial` method and `math` dependency
+  - `artifacts/activity_factorial.puml` — new activity diagram for `factorial()` validation and computation flow
+  - `artifacts/component_calculator.puml` — component diagram showing Calculator and math stdlib relationship
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
