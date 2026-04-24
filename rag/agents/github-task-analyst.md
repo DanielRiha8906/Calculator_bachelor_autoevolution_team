@@ -136,3 +136,32 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Implementer will add validation logic to `src/interactive.py` (operation selection, operand parsing); no changes to `src/cli.py` required
   - Critical: All existing tests must remain passing (no regression)
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #397: V3 Task 9 - Expert/team
+- **Task Type:** Feature implementation (session history tracking with file I/O)
+- **Scope:** Add operation history to interactive mode; record all operations in function-style format; persist to file on session end; reset on new session start
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit format examples
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "keep the change scoped to local session history"
+  - Follows completion of issues #376–#394 (core operations, interactive/CLI modes, input validation all established)
+  - Scope is limited to interactive mode only; no CLI history tracking required
+- **Key Findings:**
+  1. **History format:** Function-style notation with all types of operations: `add(2, 3) = 5`, `power(2, 3) = 8`, `sqrt(9) = 3`, `factorial(5) = 120`
+  2. **Display mechanism:** Current session history can be shown on request (command/menu option not specified; implementation discretion)
+  3. **Persistence:** History written to `history.txt` when session ends; file is overwritten (not appended) on subsequent sessions
+  4. **Session lifecycle:** Each new session starts with empty history; no data carried over from previous sessions
+  5. **Success condition:** Only successful operations recorded; computation errors and input validation failures not added to history
+- **Ambiguities Flagged:**
+  1. History display command name/integration — issue does not specify how user requests history display (dedicated command, menu option, etc.); assume architect will determine based on existing interactive mode patterns
+  2. File location — task says "such as history.txt" without specifying exact path; assume project root or cwd, no nested directories
+  3. Error handling on file I/O — no spec for behavior if file write fails (permissions, disk full); assume graceful handling (log, inform user, allow session to end)
+  4. Numeric precision in output — no spec for float formatting (repr vs str vs custom); assume Python default repr() or str()
+  5. Whether computation errors are recorded — not explicitly stated; assume only successful results are recorded
+- **Handoff Notes:**
+  - Architect should clarify: (1) history display command integration point, (2) file write error handling strategy, (3) result numeric formatting preference
+  - Architect must produce test specs covering: recording unary/binary operations, history display functionality, file write on session end, empty history on new session start, graceful error handling for file I/O
+  - Tester will write failing tests for all scenarios above; verify both interactive and existing tests remain passing
+  - Implementer will integrate history recording into `src/interactive.py` (post-operation hook), add history display command, implement file write on session exit
+  - Critical: All existing tests must pass; no unrelated refactoring
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)

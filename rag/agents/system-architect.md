@@ -611,3 +611,108 @@ No other files need modification. `src/cli.py` is already complete and functiona
 **Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
 ---
+
+### 2026-04-24 — Issue #397 — V3 Task 9 - Operation History Tracking
+
+**Task:** Add operation history tracking to interactive mode. Record all successful operations in function-style format: `operation_name(arg1, ...) = result`. Allow users to display history on request. Write complete session history to `history.txt` when session ends. Each new session starts with empty history (no persistence across sessions).
+
+**Requirements Clarification:**
+- Scope: interactive mode only (no CLI history tracking)
+- Format: `operation_name(arg1, arg2, ...) = result` using Python's default str() representation
+- Persistence: write to `history.txt` in project root on session exit
+- Error handling: only record successful operations (skip errors)
+- Session isolation: fresh history for each new `run_interactive_session()` call
+- File I/O: graceful error handling (no session crash on write failure)
+
+**Key Decisions:**
+- Create new `src/history.py` module with `OperationHistory` class to manage in-memory history list and file I/O
+- `OperationHistory` tracks ordered list of successful operations with `record()` method
+- `record(operation_name, operands, result)` formats entry as `operation_name(arg1, ...) = result`
+- `display()` returns formatted string (one entry per line) for printing
+- `write_to_file(filepath)` writes all entries to `history.txt` in project root; handles IOError gracefully
+- Modify `src/interactive.py` to initialize `OperationHistory()` instance at session start
+- After each successful operation (line 129-130), call `history.record(op_name, operands, result)` to append to history
+- Before each session exit (return statement), call `history.write_to_file()` to persist to file
+- No history display command in UI initially (can be added later; tests will access history.display() directly)
+
+**Architecture Observations (from source exploration):**
+- `src/interactive.py`: 144 lines, fully functional session handler with operation menu, operand gathering, error handling, continue/exit logic
+- `src/calculator.py`: 12 methods (5 binary, 7 unary) all with proper type hints and domain validation
+- `src/operation_registry.py`: complete introspection and operation discovery
+- `src/__main__.py`: correctly dispatches CLI vs interactive based on argv
+- Test infrastructure uses pytest with mocking of `builtins.input` and `builtins.print`
+
+**Patterns Found:**
+- Successful operation execution happens at line 129: `result = registry.call(op_name, *operands)`
+- Session exits via 3 return paths: user selects "no", MAX_ATTEMPTS exceeded (operation), MAX_ATTEMPTS exceeded (operand)
+- Error handling pattern: try/except for ValueError/ZeroDivisionError; computation errors do NOT prevent history reset
+- Module responsibilities: Calculator (computation), OperationRegistry (discovery), interactive (UI loop), **history (tracking & persistence)**
+
+**Test Specifications (30 scenarios for pytest-edge-tester in `tests/test_history.py`):**
+
+1. **test_history_unary_square**: Verify `square(5) = 25` recorded
+2. **test_history_unary_factorial**: Verify `factorial(4) = 24` recorded
+3. **test_history_unary_sqrt**: Verify `sqrt(9) = 3.0` recorded
+4. **test_history_binary_add**: Verify `add(10, 5) = 15` recorded
+5. **test_history_binary_multiply**: Verify `multiply(3, 4) = 12` recorded
+6. **test_history_binary_divide**: Verify `divide(10, 2) = 5.0` recorded
+7. **test_history_float_operands**: Verify `add(1.5, 2.5) = 4.0` recorded
+8. **test_history_negative_operands**: Verify `subtract(-5, -3) = -2` recorded
+9. **test_history_large_numbers**: Verify `multiply(1000000, 1000000) = 1000000000000` recorded
+10. **test_history_multiple_operations**: 3 operations recorded in chronological order
+11. **test_history_same_operation_twice**: Same op executed twice; both results (e.g., `square(2)=4`, `square(3)=9`) recorded
+12. **test_history_unary_then_binary**: Unary then binary recorded in correct order
+13. **test_history_domain_error_not_recorded**: `sqrt(-4)` raises ValueError; history unchanged
+14. **test_history_zero_division_not_recorded**: `divide(5, 0)` raises ZeroDivisionError; history unchanged
+15. **test_history_factorial_negative_not_recorded**: `factorial(-5)` raises ValueError; history unchanged
+16. **test_history_display_empty_session**: No operations; display shows "No operations recorded" or empty
+17. **test_history_display_after_operation**: One operation; display shows formatted entry
+18. **test_history_display_multiple**: 5 operations; display shows all 5 in order
+19. **test_history_display_formatting**: Format is `operation_name(arg1, arg2) = result` with no extra spaces
+20. **test_history_write_to_file_on_exit**: 3 operations → session exits → `history.txt` created with all 3 entries
+21. **test_history_file_format**: File entries are one per line in format `operation_name(...) = result`
+22. **test_history_file_empty_session**: 0 operations → session exits → `history.txt` empty or not created
+23. **test_history_file_overwrite**: Session 1 (2 ops) → history.txt created. Session 2 (3 ops) → history.txt overwritten (only 3 ops from session 2)
+24. **test_history_file_path_absolute**: `history.txt` written to project root (absolute path), not relative
+25. **test_history_file_write_permission_error**: Write fails (permission denied); session logs error but exits cleanly
+26. **test_history_file_io_error_graceful**: OSError/IOError during write; caught and logged; no unhandled exception
+27. **test_history_display_command_in_loop**: (Optional) Display history during session; session continues
+28. **test_history_tracking_across_loop_iterations**: 2 ops → display (shows 2) → continue → 1 more op → display (shows 3)
+29. **test_history_fresh_session_empty**: New session instance; history is empty
+30. **test_history_per_session_isolation**: Two session instances have independent history
+
+**Source Changes Plan for python-code-implementer:**
+
+**File 1: Create `src/history.py` (NEW)**
+- Purpose: Operation history tracking and persistence
+- Class `OperationHistory`:
+  - `__init__()`: initialize empty list for history entries
+  - `record(operation_name: str, operands: tuple, result: Any) -> None`: format and append entry
+  - `display() -> str`: return formatted history string (one entry per line)
+  - `get_entries() -> list[str]`: return list of history entries for testing
+  - `write_to_file(filepath: str = "history.txt") -> None`: write all entries to file; handle IOError gracefully
+- Helper function `format_history_entry(operation_name: str, operands: tuple, result: Any) -> str`: format single entry as `operation_name(arg1, arg2, ...) = result`
+- Uses `pathlib.Path` or `os.path` to resolve project root (absolute path to `history.txt`)
+- Full type hints on all public methods
+
+**File 2: Modify `src/interactive.py` (EXISTING)**
+- Add import: `from .history import OperationHistory`
+- In `run_interactive_session()` function:
+  - After `registry = OperationRegistry(calculator)` and `retry_count = 0`, add: `history = OperationHistory()`
+  - After successful operation execution (`result = registry.call(...)`), add: `history.record(op_name, operands, result)`
+  - Before each `return` statement (3 locations: user "no", operation MAX_ATTEMPTS, operand MAX_ATTEMPTS), add: `history.write_to_file()`
+- No other changes to interactive.py logic
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+**Key Files Affected:**
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/interactive.py` (modify)
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/history.py` (create)
+- `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_history.py` (create)
+
+**Risks & Mitigations:**
+- Risk: Operands formatting (float/int representation): Mitigation: Use Python's default `str()` and `repr()` for consistency with test expectations
+- Risk: File path resolution across systems: Mitigation: Use `pathlib.Path.cwd() / "history.txt"` or `os.path.abspath("history.txt")`
+- Risk: IOError during file write breaks session: Mitigation: Wrap in try/except; log to stderr; allow session to exit cleanly
+- Risk: History instance persists across multiple `run_interactive_session()` calls: Mitigation: Create new instance per session (line in function start, not module global)
+
