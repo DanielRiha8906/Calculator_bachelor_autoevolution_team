@@ -11,7 +11,7 @@
 - **Risks:** Calculator session is now stateful across the interactive loop; history.txt grows unbounded across sessions (no rotation); file write errors are silently swallowed (warning printed only)
 - **Tests passed:** 253 passed, 1 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 519.3s | Cost: $1.092349 USD | Turns: 17
 
 ## Run: update-diagrams — History of Operations (2026-04-24)
 
