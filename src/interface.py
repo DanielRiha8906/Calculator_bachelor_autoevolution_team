@@ -6,7 +6,7 @@ calculation workflow.  Mathematical operations are never performed here —
 they are always delegated to :class:`~src.calculator.Calculator` methods.
 """
 
-from .calculator import Calculator
+from .calculator_core import Calculator
 
 
 class MaxRetriesExceeded(Exception):

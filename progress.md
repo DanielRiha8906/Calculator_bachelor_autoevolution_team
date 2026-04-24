@@ -1,4 +1,22 @@
 
+## Run: Issue #404 — V3 Task 12 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-404-refactor-modules
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/basic_operations.py` — new module with pure arithmetic functions: add, subtract, multiply, divide
+  - `src/advanced_operations.py` — new module with pure advanced math functions: square, cube, square_root, cube_root, factorial, power, log, ln
+  - `src/calculator_core.py` — new Calculator class delegating to operation modules with history recording
+  - `src/calculator.py` — converted to backward-compat facade re-exporting Calculator from calculator_core
+  - `src/interface.py` — import updated from calculator to calculator_core
+  - `src/batch_cli.py` — import updated from calculator to calculator_core
+  - `tests/test_modular_structure.py` — 30 new tests verifying module structure, imports, and extensibility
+- **Purpose:** Refactor calculator into separate operation modules (basic, advanced) and introduce calculator_core orchestrator, preparing the structure for a future scientific mode
+- **Risks:** None — backward compatibility maintained via calculator.py re-export facade; all existing imports continue to work unchanged
+- **Tests passed:** 324 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Separate calculator logic from interface (#401) (2026-04-24)
 
 - **Branch:** task/issue-401-separate-calculator-logic

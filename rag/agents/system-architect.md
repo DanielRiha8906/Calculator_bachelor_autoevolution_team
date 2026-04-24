@@ -343,3 +343,85 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 - **pytest-edge-tester (WRITE phase):** Write 15 test cases covering: (1) Separation verification (4 tests: calculator has no UI imports, interface exports all functions, operations dict exists, exception exists), (2) Backward compatibility (3 tests: imports from cli.py still work, run_calculator works same as before, batch_cli imports from interface), (3) Functional equivalence (4 tests: prompts work, displays work, persistence works, orchestration works), (4) No regressions (4 tests: all existing calculator tests pass, all existing cli tests pass, all existing batch_cli tests pass, all existing history tests pass). All new tests must initially fail or verify pre-conditions. Expected: 15 tests covering architecture + verification of no test regressions.
 - **python-code-implementer:** (1) Create `src/interface.py` by copying all UI code from `cli.py` (prompts, displays, operations dict, exception, helper functions, persistence, run_calculator). (2) Convert `src/cli.py` to a facade: remove all impl, add `from .interface import *` with explicit re-exports. (3) Update `src/batch_cli.py`: change imports from `.cli` to `.interface` for operation metadata and display functions. (4) Verify `src/__main__.py` imports work (no changes needed). (5) Run full test suite: all existing tests must pass (zero behavioral changes, only module org). Target: all 15 architecture tests passing + all existing 110+ tests passing.
 
+### Cycle 8: 2026-04-24 — Issue #404 V3 Task 12 (Refactor Calculator into More Modules and Prepare for Scientific Mode)
+**Task:** Refactor calculator into more modules and prepare structural foundation for future scientific mode.
+
+**Analysis of Current State:**
+- `src/calculator.py` is a facade re-exporting Calculator from `calculator.py` (pre-Cycle 8 state: monolithic)
+- `src/interface.py` contains ALL user interface logic (operations dict, prompts, displays, persistence, orchestration)
+- `src/cli.py` is a backward-compatibility facade re-exporting from interface
+- `src/batch_cli.py` imports from interface and uses Calculator
+- `src/__main__.py` routes interactive/batch/history modes
+- All 12 operations (4 basic: add/subtract/multiply/divide; 8 advanced: square/cube/sqrt/cbrt/factorial/power/log/ln) live in a single Calculator class
+- Requirements: Modularize operations into separate modules (basic, advanced); prepare structure for future scientific mode extensibility
+
+**Key Architectural Decisions:**
+1. **Create `src/basic_operations.py`** — Pure functions for arithmetic (add, subtract, multiply, divide)
+   - No imports except math stdlib if needed
+   - No Calculator dependency or history recording
+   - Serves as template for other operation modules
+   
+2. **Create `src/advanced_operations.py`** — Pure functions for advanced math (square, cube, sqrt, cbrt, factorial, power, log, ln)
+   - Imports: math stdlib only
+   - No Calculator dependency or history recording
+   - Demonstrates extensibility: new scientific module can follow same pattern
+   
+3. **Create `src/calculator_core.py`** — Calculator class orchestrator
+   - Imports: basic_operations, advanced_operations (relative imports)
+   - Delegates each operation to corresponding module function
+   - Maintains history recording (core business logic, not UI)
+   - Public interface identical to old Calculator (12 methods + history API)
+   
+4. **Modify `src/calculator.py`** — Become a facade for backward compatibility
+   - Import Calculator from calculator_core
+   - Re-export as before
+   - Ensures existing code continues working
+   
+5. **Modify `src/interface.py`** — Update import source
+   - Change: `from .calculator import Calculator` → `from .calculator_core import Calculator`
+   - Only change: import source (no behavior change)
+   
+6. **Modify `src/batch_cli.py`** — Update import source
+   - Change: `from .calculator import Calculator` → `from .calculator_core import Calculator`
+   - Only change: import source (no behavior change)
+   
+7. **Verify `src/__main__.py`** — No changes needed
+   - Imports from cli (facade) which re-exports; chain still works
+   - If desired for clarity, could update imports but not required
+
+**Module Organization Achieved:**
+```
+basic_operations.py        [NEW] Pure arithmetic: add, subtract, multiply, divide
+advanced_operations.py     [NEW] Pure advanced math: square, cube, sqrt, cbrt, factorial, power, log, ln
+calculator_core.py         [NEW] Calculator orchestrator + history
+calculator.py              [MODIFIED] Facade re-exporting Calculator from calculator_core
+interface.py               [MODIFIED] Import Calculator from calculator_core (not calculator)
+cli.py                     [UNCHANGED] Facade re-exporting from interface
+batch_cli.py               [MODIFIED] Import Calculator from calculator_core (not calculator)
+__main__.py                [UNCHANGED] Entry point (imports via cli)
+```
+
+**Dependency Graph:**
+- basic_operations: no deps → advanced_operations: math stdlib → calculator_core: imports both → calculator: imports calculator_core → interface/batch_cli: import calculator_core → cli: imports interface → __main__: imports cli
+
+**Preparation for Scientific Mode:**
+- Future: Create `src/scientific_operations.py` with trig, stats, etc.
+- Add Calculator methods delegating to scientific_operations (same pattern as basic/advanced)
+- Add operation keys to OPERATIONS dict in interface
+- Zero impact on existing code
+
+**Patterns Found:**
+- Module taxonomy: operation modules (basic, advanced, future scientific) export pure functions; calculator_core orchestrates and adds history
+- Extensibility pattern: new operation modules follow identical structure; Calculator.py adds delegation methods
+- Facade pattern continues: calculator.py, cli.py maintain backward compatibility
+
+**Risks & Mitigations:**
+- Risk: Import cycles. Mitigation: pure function modules have no inter-dependencies; calculator_core imports them one-way; no cycles.
+- Risk: Tests break due to import changes. Mitigation: public API unchanged (Calculator from calculator import); all tests pass unchanged.
+- Risk: Refactoring logic errors. Mitigation: delegation-only changes in calculator_core; no business logic modification.
+- Risk: Performance regression. Mitigation: method call delegation overhead negligible; zero performance impact.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 30 test cases covering: (1) Module imports (tests 1-4: basic_ops, advanced_ops, calculator_core, operations registry can be imported), (2) Backward compatibility (tests 5-9: Calculator still importable from src.calculator, same public API, history works), (3) Operation functions (tests 6-24: basic_ops functions work, advanced_ops functions work, error handling preserved), (4) Extensibility (tests 25-28: operations registry complete, module structure clear, new modules can follow same pattern), (5) No regressions (tests 29-30: all 100+ existing tests still pass, batch_cli works unchanged). All new tests must initially fail or verify pre-conditions.
+- **python-code-implementer:** Implement per plan: (1) Create basic_operations.py with 4 functions, (2) Create advanced_operations.py with 8 functions + math imports, (3) Create calculator_core.py with Calculator class delegating to both modules, (4) Replace calculator.py with facade, (5) Update imports in interface.py and batch_cli.py. Zero behavior changes; all 100+ existing tests pass; architecture clear and extensible.
+
