@@ -1,0 +1,59 @@
+@startuml
+title run_cli() — Error Paths and Exit Codes (issue #391)
+
+skinparam activityDiamondBackgroundColor #FFE4B5
+skinparam activityBackgroundColor #F0F8FF
+
+start
+
+:run_cli(argv) called;
+
+if (argv empty?) then (yes)
+  :stderr: usage message;
+  :exit 1;
+  stop
+endif
+
+if (operation_name in registry?) then (no)
+  :stderr: "Unknown operation: <name>";
+  :exit 1;
+  stop
+endif
+
+if (operand count matches arity?) then (no)
+  :stderr: "Expected <N> operand(s), got <M>";
+  :exit 1;
+  stop
+endif
+
+if (all operands parse as int/float?) then (no)
+  :stderr: "Invalid operand: <value> is not a number";
+  :exit 1;
+  stop
+endif
+
+:registry.call(op, *operands);
+
+if (raises ZeroDivisionError?) then (yes)
+  :stderr: "Error: Division by zero";
+  :exit 1;
+  stop
+endif
+
+if (raises ValueError?) then (yes)
+  :stderr: "Error: <domain error message>";
+  :exit 1;
+  stop
+endif
+
+if (raises other exception?) then (yes)
+  :stderr: "Unexpected error: <message>";
+  :exit 1;
+  stop
+endif
+
+:stdout: result value;
+:exit 0;
+stop
+
+@enduml

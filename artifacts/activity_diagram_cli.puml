@@ -1,7 +1,21 @@
 @startuml
-title run_cli() — Execution Flow (issue #391)
+title Calculator Entry Point & CLI Execution Flow (issue #391)
 
 start
+
+:python -m src [args...];
+
+if (len(sys.argv) > 1?) then (yes)
+  :call run_cli();
+else (no)
+  :call run_interactive_session();
+  stop
+endif
+
+note right
+  CLI mode: arguments
+  passed on command line
+end note
 
 :run_cli(argv=None);
 
@@ -12,6 +26,7 @@ endif
 if (argv empty?) then (yes)
   :print usage to stderr;
   :return 1;
+  :sys.exit(1);
   stop
 endif
 
@@ -24,6 +39,7 @@ Instantiate OperationRegistry(calculator);
 if (operation_name in registry?) then (no)
   :print "Error: Unknown operation" to stderr;
   :return 1;
+  :sys.exit(1);
   stop
 endif
 
@@ -32,38 +48,39 @@ endif
 if (len(operand_args) == arity?) then (no)
   :print arity mismatch error to stderr;
   :return 1;
+  :sys.exit(1);
   stop
 endif
 
 :operands = [];
 
-fork
-  :for each raw operand string;
-  :try parse_cli_operand(raw);
-  if (parse OK?) then (yes)
-    :append value to operands;
-  else (no / ValueError)
-    :print "Error: Invalid operand" to stderr;
-    :return 1;
-    stop
-  endif
-fork again
-  note right
-    All operands are
-    parsed sequentially
-  end note
-end fork
+:for each raw operand string:
+  try parse_cli_operand(raw);
+
+if (parse OK for all operands?) then (yes)
+  :operands list ready;
+else (no / ValueError)
+  :print "Error: Invalid operand" to stderr;
+  :return 1;
+  :sys.exit(1);
+  stop
+endif
 
 :try registry.call(operation_name, *operands);
 
 if (exception raised?) then (yes)
-  :print error message to stderr
-  (ZeroDivisionError / ValueError / other);
+  if (ZeroDivisionError or ValueError?) then (yes)
+    :print specific error message to stderr;
+  else (no / other exception)
+    :print generic error message to stderr;
+  endif
   :return 1;
+  :sys.exit(1);
   stop
 else (no)
   :print result to stdout;
   :return 0;
+  :sys.exit(0);
   stop
 endif
 

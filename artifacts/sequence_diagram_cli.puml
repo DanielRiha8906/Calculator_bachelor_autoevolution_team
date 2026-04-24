@@ -1,81 +1,85 @@
 @startuml
 title CLI Invocation — Sequence Diagram (issue #391)
 
-actor Caller
+actor Shell
+participant "__main__" as Main
 participant "run_cli" as CLI
 participant "OperationRegistry" as Registry
 participant "Calculator" as Calc
 
-Caller ->> CLI : run_cli(argv)
-activate CLI
+Shell ->> Main : python -m src <op> <operands>
+activate Main
 
-CLI ->> Calc : Calculator()
-activate Calc
-Calc -->> CLI : calculator instance
-deactivate Calc
+alt argv present (len(sys.argv) > 1)
 
-CLI ->> Registry : OperationRegistry(calculator)
-activate Registry
-Registry ->> Calc : inspect members & signatures
-activate Calc
-Calc -->> Registry : 12 discovered operations
-deactivate Calc
-Registry -->> CLI : registry ready (12 ops)
-deactivate Registry
+  Main ->> CLI : run_cli(argv)
+  activate CLI
 
-alt Scenario 1: successful binary operation  add 5 7
-
-  CLI ->> Registry : get_operations()
-  activate Registry
-  Registry -->> CLI : ["add", "cbrt", ...] — "add" found
-  deactivate Registry
-
-  CLI ->> Registry : get_arity("add")
-  activate Registry
-  Registry -->> CLI : 2
-  deactivate Registry
-
-  CLI -> CLI : parse_cli_operand("5") → 5
-  CLI -> CLI : parse_cli_operand("7") → 7
-
-  CLI ->> Registry : call("add", 5, 7)
-  activate Registry
-  Registry ->> Calc : add(5, 7)
+  CLI ->> Calc : Calculator()
   activate Calc
-  Calc -->> Registry : 12
+  Calc -->> CLI : calculator instance
   deactivate Calc
-  Registry -->> CLI : 12
-  deactivate Registry
 
-  CLI ->> Caller : stdout: "12"\nreturn 0
-
-else Scenario 2: error case  sqrt -4
-
-  CLI ->> Registry : get_operations()
+  CLI ->> Registry : OperationRegistry(calculator)
   activate Registry
-  Registry -->> CLI : ["add", "sqrt", ...] — "sqrt" found
-  deactivate Registry
-
-  CLI ->> Registry : get_arity("sqrt")
-  activate Registry
-  Registry -->> CLI : 1
-  deactivate Registry
-
-  CLI -> CLI : parse_cli_operand("-4") → -4
-
-  CLI ->> Registry : call("sqrt", -4)
-  activate Registry
-  Registry ->> Calc : sqrt(-4)
+  Registry ->> Calc : inspect members & signatures
   activate Calc
-  Calc -->> Registry : raises ValueError("square root of negative numbers is not supported")
+  Calc -->> Registry : 12 discovered operations
   deactivate Calc
-  Registry -->> CLI : propagates ValueError
+  Registry -->> CLI : registry ready (12 ops)
   deactivate Registry
 
-  CLI ->> Caller : stderr: error message\nreturn 1
+  alt Scenario 1: successful binary operation  add 5 7
+
+    CLI ->> Registry : get_operations()
+    activate Registry
+    Registry -->> CLI : ["add", ...] — "add" found
+    deactivate Registry
+
+    CLI ->> Registry : get_arity("add")
+    activate Registry
+    Registry -->> CLI : 2
+    deactivate Registry
+
+    CLI -> CLI : parse_cli_operand("5") → 5
+    CLI -> CLI : parse_cli_operand("7") → 7
+
+    CLI ->> Registry : call("add", 5, 7)
+    activate Registry
+    Registry ->> Calc : add(5, 7)
+    activate Calc
+    Calc -->> Registry : 12
+    deactivate Calc
+    Registry -->> CLI : 12
+    deactivate Registry
+
+    CLI -->> Main : return 0
+    deactivate CLI
+    Main ->> Shell : stdout: "12"\nsys.exit(0)
+
+  else Scenario 2: domain error  sqrt -4
+
+    CLI ->> Registry : call("sqrt", -4)
+    activate Registry
+    Registry ->> Calc : sqrt(-4)
+    activate Calc
+    Calc -->> Registry : raises ValueError
+    deactivate Calc
+    Registry -->> CLI : propagates ValueError
+    deactivate Registry
+
+    CLI -->> Main : return 1
+    deactivate CLI
+    Main ->> Shell : stderr: error message\nsys.exit(1)
+
+  end
+
+else no argv (interactive mode)
+
+  Main ->> Shell : launches run_interactive_session()
 
 end
 
-deactivate CLI
+deactivate Main
 
 @enduml

@@ -1,0 +1,28 @@
+@startuml
+title Calculator — Module-Level Component Dependencies (issue #391)
+
+skinparam componentStyle rectangle
+
+component "__main__\n(entry point)" as Main
+component "cli" as CLI
+component "interactive" as Interactive
+component "operation_registry" as Registry
+component "calculator" as Calc
+
+note top of Main
+  if CLI args → run_cli(); sys.exit(rc)
+  else → run_interactive_session()
+end note
+
+Main --> CLI : if len(sys.argv) > 1
+Main --> Interactive : else (no args)
+
+CLI --> Registry : instantiates per invocation
+CLI --> Calc : instantiates per invocation
+
+Interactive --> Registry : instantiates once per session
+Interactive --> Calc : instantiates once per session
+
+Registry --> Calc : composition\n(introspects at construction)
+
+@enduml

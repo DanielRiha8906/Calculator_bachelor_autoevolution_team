@@ -184,3 +184,16 @@ Duration: 538.3s | Cost: $1.167164 USD | Turns: 20
   - `artifacts/sequence_diagram_cli.puml` — new sequence diagram for CLI invocation scenarios
 
 Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
+
+## Run: update-diagrams — CLI interface diagrams (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** task/issue-391-cli-interface
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — updated to include CLI module, __main__ dispatch, and interactive module
+  - `artifacts/activity_diagram_cli.puml` — extended with entry point dispatch and all error branches
+  - `artifacts/sequence_diagram_cli.puml` — updated with entry point dispatch intro
+  - `artifacts/component_diagram_entrypoint.puml` — new: module-level component dependencies and routing
+  - `artifacts/error_handling_diagram_cli.puml` — new: all run_cli() error paths and exit codes
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
