@@ -242,3 +242,96 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - "ai-implement:structured-team" label consistent; no new core features
 - Task likely represents completion of input-interface work for V3 (error handling, test coverage, interactive, CLI)
 - Ambiguities are straightforward engineering decisions (CLI format, arg parsing, mode logic); no deep domain confusion
+
+### 2026-04-24 | V3 Task 8 - Structured/team (Issue #393)
+
+**Issue:** Add input validation to the calculator's guided interactive mode so invalid user input does not immediately break the session. Let the user retry after invalid operation or operand input, and stop the session after a fixed number of failed attempts. In CLI mode, invalid input should return a clear error message and exit instead of retrying. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Add input validation and error recovery to interactive mode
+- Interactive mode must allow retry on invalid input (operation or operand)
+- Interactive mode must exit after a fixed maximum number of failed attempts
+- CLI mode must return clear error message and exit immediately on invalid input (no retry)
+- Update tests to reflect dual-mode input validation behavior
+
+**Explicit Requirements - Interactive Mode:**
+- **Functional:** Validate user input for operations and operands
+- **Functional:** Allow user to retry after invalid input
+- **Functional:** Exit session after fixed number of consecutive failures
+- **Error behavior:** Invalid input does not "immediately break the session" (implies graceful error handling, not exception/crash)
+
+**Explicit Requirements - CLI Mode:**
+- **Functional:** Return clear error message to user on invalid input
+- **Functional:** Exit with appropriate status code (non-zero per CLI conventions)
+- **Behavioral:** No retry logic in CLI mode (different from interactive)
+
+**Explicit Requirements - Testing:**
+- **Testing:** Update existing test suite to cover both modes and new validation behavior
+
+**Ambiguities & Gaps:**
+- **"Fixed number" of failed attempts:** No specification of the exact maximum (3? 5? 10?)
+- **"Invalid operation or operand input":** Scope ambiguous:
+  - Invalid operation: unrecognized operation name? Already established from Task 7 error handling
+  - Invalid operand: non-numeric input? Out-of-range input (e.g., negative for square root)? Type mismatch?
+  - Missing operands? Wrong number of operands for operation?
+- **Retry mechanism:** Unclear what "retry" means:
+  - Prompt user again for same input (operation or operand)?
+  - Allow user to restart from operation selection?
+  - Allow user to continue in fresh state after N failures?
+- **Session exit on max failures:** Behavior undefined:
+  - Exit immediately after Nth failure?
+  - Display message before exit? (e.g., "Too many invalid attempts. Goodbye.")
+  - Return specific exit code?
+- **"Clear error message":** No specification of error message format or content (which errors? how detailed?)
+- **Counting failures:** Ambiguous:
+  - Count per session? Per operation? Reset after successful operation?
+  - Count only input parsing failures or also operation-specific errors (e.g., division by zero, invalid math domain)?
+  - Are operation-specific errors (sqrt of negative, log of zero) counted same as invalid syntax?
+- **Error handling precedent:** Task 7 (#390) established CLI error behavior; Task 8 builds on it but differs (retry in interactive vs. exit in CLI)
+- No comments provided; issue body is minimal
+- No test examples or acceptance criteria provided
+- No mention of error message locale, formatting, or content specifics
+
+**Assumed Resolution (for Architect):**
+- **Maximum failed attempts:** Assume 3 consecutive failures (common UX pattern; architect may adjust)
+- **Invalid input categories:**
+  - **Operation:** Unrecognized operation name (handled in Task 7; reuse that validation)
+  - **Operand:** Non-numeric input, or value outside domain of operation (e.g., negative for sqrt, non-positive for log/ln)
+  - **Count:** Track consecutive failures; reset counter to 0 on successful operation
+- **Retry flow (Interactive):**
+  - Detect invalid input → display error message → prompt user again for that input (operation or operand, depending on where error occurred)
+  - Increment failure counter
+  - After 3 consecutive failures, exit with "Too many invalid attempts" message
+- **Exit flow (CLI):**
+  - Invalid input detected → print clear error message to stderr → exit with code 1 (from Task 7 pattern)
+  - No counter; single error triggers exit
+- **Error message content:**
+  - For invalid operation: "Unknown operation: <operation>" or "Operation '<op>' not found"
+  - For invalid operand: "<input> is not a valid number" or "Cannot perform <operation> with value <input>" (operation-specific message)
+  - For max attempts reached: "Too many invalid attempts. Exiting." or "Session terminated due to repeated invalid input."
+- **Scope of "invalid input":**
+  - Include type errors (non-numeric input)
+  - Include domain errors (operation-specific constraints: sqrt(negative), log(non-positive))
+  - Include syntax errors (missing operand, extra operand)
+  - Question: Are operation-specific errors (division by zero) from Task 1 counted as "failed attempt"? Likely yes, bundled with operand validation.
+- **Test updates:** New tests for:
+  - Interactive mode with invalid input → retry prompt
+  - Interactive mode with N-1 failures → success
+  - Interactive mode with N failures → exit message + exit
+  - CLI mode with invalid input → error message + exit code 1
+  - Both modes with various invalid operand types (non-numeric, domain violations)
+
+**Context from Related Issues:**
+- V3 Task 7 (#390): CLI mode and error handling (Task 8 extends this with validation and mode-specific behavior)
+- V3 Task 5 (#384): Interactive mode (Task 8 adds robustness to Task 5's input loop)
+- V3 Task 1 (#372): Division-by-zero error handling (pattern for operation-specific validation)
+- V3 Tasks 2-4: Operation implementations (all must coexist with Task 8's input validation)
+
+**Patterns:**
+- V3 Task 8 is error-handling and robustness task following Task 7 (completes input layer)
+- Task 8 differentiates behavior by mode: interactive (forgiving, retry) vs. CLI (strict, fail-fast)
+- Minimal specification consistent with V3 series; key ambiguity is max-retry count and scope of "invalid input"
+- "ai-implement:structured-team" label consistent; no new operations, pure UX/robustness improvement
+- Task represents completion of V3 input-layer work: error handling (Task 1) → interactive (Task 5) → CLI (Task 7) → validation & recovery (Task 8)
+- Task 8 is final integration task; all prior tasks' features must coexist with new validation behavior
+

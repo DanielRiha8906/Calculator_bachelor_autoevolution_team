@@ -1,3 +1,18 @@
+## Run: Issue #393 — V3 Task 8 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-393-input-validation
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/__main__.py` — added consecutive-failure counter to `_run_interactive_loop()`; exits with "Too many invalid attempts. Exiting." after 3 consecutive failures; resets counter on success
+  - `tests/test_interactive_validation.py` — 14 new tests covering consecutive-failure tracking, backward compatibility, CLI regression, and edge cases
+  - `rag/codebase_map.md` — updated entries for src/__main__.py and new test file
+  - `rag/evolution_log.md` — appended cycle entry for Issue #393
+- **Purpose:** Add input validation with retry limit to interactive mode; CLI mode already exits on first error and was unchanged
+- **Risks:** None — change is localized to one function; CLI mode untouched; no new dependencies
+- **Tests passed:** 143 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #372 — V3 Task 1 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-372-div-by-zero

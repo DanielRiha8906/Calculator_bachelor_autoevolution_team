@@ -44,3 +44,11 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Decision: On `ValueError` or `ZeroDivisionError` from Calculator methods, catch the exception and print `"Error: {exc}"` then `continue` — loop remains alive for the next iteration.
 - Pattern: When tests monkeypatch `builtins.input` with a lambda that ignores its argument, all prompt text intended to be visible in test output must be emitted via `print()` before the `input()` call.
 - Handoff notes: All 107 tests pass (18 new + 89 pre-existing). `main()` is importable as `from src.__main__ import main` (tests rely on this).
+
+### 2026-04-24 — issue-393 interactive-input-validation
+
+- Task: Add consecutive-failure tracking to `_run_interactive_loop()` in `src/__main__.py` to satisfy 6 failing tests. Loop must exit with "Too many invalid attempts. Exiting." after 3 consecutive failures (unknown operation, invalid operand, or domain/execution error). Counter resets to 0 on successful operation.
+- Files changed: `src/__main__.py` — modified `_run_interactive_loop()` only; added `consecutive_failures: int = 0` counter; incremented on all three failure paths (unknown op, invalid operand in parse loop, ValueError/ZeroDivisionError from method call); reset to 0 after `print(f"Result: {result}")`; added `break` with exit message when counter reaches 3.
+- Decision: The invalid-operand path is inside a nested `for` loop over arity, so after the `for` loop exits via `break`, the outer `if error_occurred` guard checks `consecutive_failures >= 3` again to decide whether to `break` the outer `while` loop or `continue`. This two-level break is the minimal change that handles both the "break inner loop" and "break outer loop" requirements without restructuring the existing flow.
+- Pattern: When a counter must trigger a `break` from an inner loop AND also from an enclosing outer loop, use a flag (`error_occurred`) combined with a post-loop guard check — avoids exceptions-as-control-flow and keeps the code readable.
+- Handoff notes: All 143 tests pass (14 in new test file, 129 pre-existing). No interfaces were changed; `_run_interactive_loop()` signature is unchanged.
