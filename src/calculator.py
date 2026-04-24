@@ -1,3 +1,23 @@
+"""Pure calculation core — independent of all UI and infrastructure layers.
+
+This module is the PURE CALCULATION CORE of the calculator system.  It has
+NO dependency on interactive.py, cli.py, history.py, or error_logger.py and
+can be imported and reused in any context without pulling in any UI-layer
+module.
+
+The ``Calculator`` class raises only standard Python exceptions:
+- ``ValueError`` for invalid inputs (e.g. negative factorial, log of zero).
+- ``ZeroDivisionError`` for division by zero.
+
+Supported operation categories
+--------------------------------
+Binary (two operands):
+    add, subtract, multiply, divide, power
+
+Unary (one operand):
+    factorial, square, cube, sqrt, cbrt, ln, log10
+"""
+
 import math
 
 

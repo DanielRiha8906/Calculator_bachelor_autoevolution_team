@@ -1,0 +1,123 @@
+@startuml activity_diagram_interactive_session
+
+title run_interactive_session()
+
+start
+
+:Instantiate Calculator, OperationRegistry,\nOperationHistory, ErrorLogger;
+:retry_count = 0;
+
+repeat
+
+    :Display numbered operation menu\n+ arity labels + "h: View history";
+
+    repeat
+        :Prompt for operation index or "h" or "no";
+        if (input == "no" / "n") then (yes)
+            :history.write_to_file();
+            stop
+        elseif (input == "h" / "history") then (yes)
+            :display_history_indexed(history);
+            :Prompt: continue or exit?;
+            if (user exits) then (yes)
+                :history.write_to_file();
+                stop
+            endif
+        elseif (valid operation index) then (yes)
+            :retry_count = 0;
+        else (invalid)
+            :retry_count += 1;
+            if (retry_count >= MAX_ATTEMPTS) then (yes)
+                :print "Too many invalid inputs";
+                :history.write_to_file();
+                stop
+            endif
+        endif
+    repeat while (operation not selected) is (retry)
+    -> selected;
+
+    :arity = registry.get_arity(operation);
+
+    if (arity == 1) then (unary)
+        repeat
+            :Prompt for single operand;
+            if (input == "no" / "n") then (yes)
+                :history.write_to_file();
+                stop
+            elseif (parse_operand succeeds) then (yes)
+                :retry_count = 0;
+            else (ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS) then (yes)
+                    :history.write_to_file();
+                    stop
+                endif
+            endif
+        repeat while (operand not valid) is (retry)
+        -> operand ready;
+    else (binary)
+        repeat
+            :Prompt for operand 1;
+            if (input == "no" / "n") then (yes)
+                :history.write_to_file();
+                stop
+            elseif (parse_operand succeeds) then (yes)
+                :retry_count = 0;
+            else (ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS) then (yes)
+                    :history.write_to_file();
+                    stop
+                endif
+            endif
+        repeat while (operand 1 not valid) is (retry)
+        -> op1 ready;
+
+        repeat
+            :Prompt for operand 2;
+            if (input == "no" / "n") then (yes)
+                :history.write_to_file();
+                stop
+            elseif (parse_operand succeeds) then (yes)
+                :retry_count = 0;
+            else (ValueError)
+                :retry_count += 1;
+                if (retry_count >= MAX_ATTEMPTS) then (yes)
+                    :history.write_to_file();
+                    stop
+                endif
+            endif
+        repeat while (operand 2 not valid) is (retry)
+        -> op2 ready;
+    endif
+
+    :result = registry.call(operation, *operands);
+
+    if (exception raised) then (yes)
+        :error_logger.log_runtime_calculation_error();
+        :print error message to user;
+    else (success)
+        :history.record(operation, operands, result);
+        :print result to user;
+    endif
+
+    :Prompt: continue (y) / exit (no) / history (h)?;
+
+    if (input == "no" / "n") then (yes)
+        :history.write_to_file();
+        stop
+    elseif (input == "h" / "history") then (yes)
+        :display_history_indexed(history);
+        :Prompt again: continue or exit?;
+        if (user exits) then (yes)
+            :history.write_to_file();
+            stop
+        endif
+    endif
+
+repeat while (user continues) is (yes)
+
+:history.write_to_file();
+stop
+
+@enduml

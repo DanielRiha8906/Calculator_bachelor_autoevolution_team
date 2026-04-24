@@ -1,3 +1,19 @@
+## Run: Issue #403 — V3 Task 11 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-403-expert-team
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — enhanced module docstring declaring pure calculation core, independence from UI layers, operation categories
+  - `src/operation_registry.py` — enhanced module docstring declaring layer-agnostic registry, independence from presentation layers, Registry pattern
+  - `src/interactive.py` — enhanced module docstring declaring presentation layer responsibility, dependency list, no-cli-import constraint
+  - `src/cli.py` — enhanced module docstring declaring CLI presentation layer responsibility, dependency list, no-interactive-import constraint
+  - `tests/test_core_separation.py` — new test file with 21 tests validating separation-of-concerns architecture (core independence, module boundaries, reusability, error handling responsibility)
+- **Purpose:** Formalize and validate the existing separation between core calculation logic and interface concerns (interactive, CLI, session management); all architectural boundaries were already correct — changes document and test those boundaries explicitly.
+- **Risks:** None — changes are docstring enhancements and new tests only; no behavioral code modified.
+- **Tests passed:** 309 passed, 0 failed
+
+Duration: 588.1s | Cost: $1.242995 USD | Turns: 16
+
 ## Run: Issue #400 — Error logging for calculator application (2026-04-24)
 
 - **Branch:** task/issue-400-error-logging
@@ -302,3 +318,14 @@ Duration: 410.4s | Cost: $0.692189 USD | Turns: 4
   - `artifacts/interactive_activity.puml` — updated interactive session activity diagram with ErrorLogger logging calls and exit points
 
 Duration: 296.6s | Cost: $0.709031 USD | Turns: 4
+
+## Run: update-diagrams — Expert team layer separation diagrams (2026-04-24)
+
+- **Branch:** task/issue-403-expert-team
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_architecture.puml` — class diagram showing Calculator, OperationRegistry, OperationHistory, ErrorLogger with layer grouping and isolation invariants
+  - `artifacts/sequence_diagram_cli_flow.puml` — sequence diagram for CLI add operation with error path alt fragment
+  - `artifacts/activity_diagram_interactive_session.puml` — activity diagram for interactive session with retry logic and history branch
+
+Duration: 332.4s | Cost: $0.659363 USD | Turns: 6

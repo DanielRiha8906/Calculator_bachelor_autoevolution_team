@@ -1,0 +1,110 @@
+@startuml class_diagram_calculator_architecture
+
+skinparam packageStyle rectangle
+skinparam classBackgroundColor #FEFEFE
+skinparam classBorderColor #555555
+skinparam ArrowColor #333333
+
+package "Core" <<Core>> {
+    class Calculator {
+        + add(a, b) : float
+        + subtract(a, b) : float
+        + multiply(a, b) : float
+        + divide(a, b) : float
+        + power(base, exp) : float
+        + factorial(n) : int
+        + square(x) : float
+        + cube(x) : float
+        + sqrt(x) : float
+        + cbrt(x) : float
+        + ln(x) : float
+        + log10(x) : float
+        --
+        raises: ValueError
+        raises: ZeroDivisionError
+        note: no src imports
+    }
+}
+
+package "Discovery" <<Discovery>> {
+    class OperationRegistry {
+        - _operations : dict[str, int]
+        - _sorted_names : List[str]
+        --
+        + __init__(calculator: Calculator)
+        + get_operations() : List[str]
+        + get_arity(name: str) : int
+        + call(name, *args) : Any
+    }
+}
+
+package "Infrastructure" <<Infrastructure>> {
+    class OperationHistory {
+        - _entries : list[str]
+        --
+        + __init__()
+        + record(op, operands, result)
+        + get_entries() : list[str]
+        + display()
+        + write_to_file(filepath)
+    }
+
+    note bottom of OperationHistory
+      Module function:
+      format_history_entry(op, operands, result) -> str
+      no src imports
+    end note
+
+    class ErrorLogger {
+        - log_file : str
+        --
+        + __init__(log_file: str)
+        + log_invalid_operation()
+        + log_invalid_operand()
+        + log_incorrect_argument_count()
+        + log_runtime_calculation_error()
+        --
+        note: no src imports
+    }
+}
+
+package "Presentation" <<Presentation>> {
+    class "cli module" as cli <<module>> {
+        + parse_cli_operand(s) : Union[int, float]
+        + run_cli(argv) : int
+    }
+
+    class "interactive module" as interactive <<module>> {
+        + MAX_ATTEMPTS : int = 5
+        + display_history_indexed(history)
+        + parse_operand(s) : Union[int, float]
+        + run_interactive_session(calculator)
+    }
+
+    note "cli and interactive\ndo NOT import each other" as isolation_note
+    cli .. isolation_note
+    interactive .. isolation_note
+}
+
+package "Entry Point" <<EntryPoint>> {
+    class "__main__ module" as main <<module>> {
+        dispatches run_cli() if len(sys.argv) > 1
+        else run_interactive_session()
+    }
+}
+
+' Relationships
+OperationRegistry --> Calculator : uses / introspects
+cli --> Calculator : instantiates / uses
+cli --> OperationRegistry : instantiates / uses
+cli --> OperationHistory : instantiates / uses
+cli --> ErrorLogger : instantiates / uses
+interactive --> Calculator : instantiates / uses
+interactive --> OperationRegistry : instantiates / uses
+interactive --> OperationHistory : instantiates / uses
+interactive --> ErrorLogger : instantiates / uses
+main --> Calculator : instantiates
+main --> cli : calls run_cli()
+main --> interactive : calls run_interactive_session()
+
+@enduml

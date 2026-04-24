@@ -1,4 +1,17 @@
-"""Registry that introspects a Calculator instance to discover its public operations."""
+"""Layer-agnostic operation discovery and invocation registry.
+
+This module is INDEPENDENT of interactive.py, cli.py, history.py, and
+error_logger.py.  It sits between the calculation core and any presentation
+layer, providing a single, uniform way to discover and call Calculator
+operations without coupling callers to the Calculator class directly.
+
+Both the interactive terminal layer (interactive.py) and the command-line
+layer (cli.py) use this module to discover available operations and invoke
+them by name.
+
+Design pattern: Registry — operations are registered once at construction
+time via introspection and looked up by name at call time.
+"""
 
 import inspect
 from typing import Any, List
