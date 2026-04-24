@@ -8,14 +8,22 @@ class "__main__" <<module>> {
 
 note right of "__main__"::main
   Routes on sys.argv:
-  len > 1 → batch_main(sys.argv[1:])
-  else     → run_calculator()
-  Catches Exception → display_error()
+  len > 1 -> batch_main(sys.argv[1:])
+  else     -> run_calculator(max_retries=3)
+
+  Catches MaxRetriesExceeded -> display_error() -> sys.exit(1)
+  Catches ZeroDivisionError, Exception -> display_error() -> sys.exit(1)
 end note
 
 class "cli" <<module>> {
     + OPERATIONS : dict
-    + run_calculator() : float
+    + MaxRetriesExceeded : exception
+
+    + prompt_for_operator(max_retries=3) : str
+    + prompt_for_first_number(max_retries=3) : float
+    + prompt_for_second_number(max_retries=3) : float
+
+    + run_calculator(max_retries=3) : float
     + display_result_unary(key, operand, result) : None
     + display_result_binary(key, first, second, result) : None
     + display_error(error_message: str) : None
@@ -23,10 +31,17 @@ class "cli" <<module>> {
 
 note right of "cli"::OPERATIONS
   12-entry dict:
-  key → (arity, method_name, symbol, description)
+  key -> (arity, method_name, symbol, description)
   Binary (arity 2): "+", "-", "*", "/", "power"
   Unary  (arity 1): "square", "cube", "sqrt",
                     "cbrt", "factorial", "log", "ln"
+end note
+
+note right of "cli"::run_calculator
+  Interactive mode: arity-aware dispatch.
+  Passes max_retries to all prompt functions.
+  Raises MaxRetriesExceeded if any prompt exhausted.
+  Raises ValueError/ZeroDivisionError from Calculator.
 end note
 
 class "batch_cli" <<module>> {
@@ -35,8 +50,16 @@ class "batch_cli" <<module>> {
     + parse_batch_args(argv: list) : tuple | None
     + print_help() : None
     + execute_batch(operation_key: str, operands: list) : int
-    + batch_main(argv: list) : int
+    + batch_main(argv: list) : None
 }
+
+note right of "batch_cli"
+  BATCH MODE IS NON-INTERACTIVE:
+  No retry logic, no MaxRetriesExceeded.
+  All arguments provided at once.
+  Validates operand count and types once.
+  On error: prints to stderr, returns 1.
+end note
 
 note right of "batch_cli"::_BATCH_OPERATIONS
   12-op dict mirroring cli.OPERATIONS:
@@ -48,13 +71,14 @@ note right of "batch_cli"::execute_batch
   Validates op and operand count.
   Calls Calculator method via getattr().
   Delegates display to cli.display_result_*.
-  Catches exceptions → stderr → return 1.
+  Catches exceptions -> stderr -> return 1.
+  No retry behavior.
 end note
 
 note right of "batch_cli"::batch_main
   Calls parse_batch_args().
-  None returned → print_help() → sys.exit(0).
-  Otherwise → execute_batch() → sys.exit(code).
+  None returned -> print_help() -> sys.exit(0).
+  Otherwise -> execute_batch() -> sys.exit(code).
 end note
 
 class Calculator <<class>> {
@@ -72,7 +96,7 @@ class Calculator <<class>> {
     + ln(a: float) : float
 }
 
-"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error
+"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error\nMaxRetriesExceeded
 "__main__" --> "batch_cli" : <<import>>\nbatch_main
 "batch_cli" --> Calculator : <<import>>\ncreates instance
 "batch_cli" --> "cli" : <<import>>\nOPERATIONS\ndisplay_result_unary\ndisplay_result_binary
