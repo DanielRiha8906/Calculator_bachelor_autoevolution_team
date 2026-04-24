@@ -1,0 +1,53 @@
+@startuml
+title Scientific Calculation Sequence: sin(x) Example
+
+actor User
+participant "__main__" as main
+participant "interface\n(run_calculator)" as interface
+participant "Calculator\n(calculator_core)" as calc
+participant "scientific_operations" as sci
+participant "History\n(internal)" as history
+
+main -> interface : run_calculator(mode="scientific")
+activate interface
+
+interface -> User : "Enter operator:"
+User -> interface : "sin"
+
+note right of interface
+  Looks up "sin" in SCIENTIFIC_OPERATIONS:
+  arity = 1, method_name = "sin"
+end note
+
+interface -> User : "Enter the first number:"
+User -> interface : "0.5"
+
+interface -> calc : sin(0.5)
+activate calc
+
+calc -> sci : sin(0.5)
+activate sci
+sci -> sci : math.sin(0.5)
+sci --> calc : 0.4794255...
+deactivate sci
+
+calc -> history : _record_operation("sin", [0.5], 0.4794255...)
+activate history
+history --> calc : appended to _history
+deactivate history
+
+calc --> interface : 0.4794255...
+deactivate calc
+
+interface -> User : "sin(0.5) = 0.4794255..."
+interface -> User : "History saved to history.txt"
+
+interface --> main : 0.4794255... (float)
+deactivate interface
+
+note over main
+  Result is not "QUIT" or "MODE_TOGGLE"
+  → loop continues
+end note
+
+@enduml

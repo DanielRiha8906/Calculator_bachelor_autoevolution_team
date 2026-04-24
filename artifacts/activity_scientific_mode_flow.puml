@@ -1,0 +1,55 @@
+@startuml
+title Scientific Mode Toggle and Calculation Flow
+
+start
+
+:Initialize Calculator;
+:mode = "normal";
+
+repeat
+    :prompt_for_operator(mode);
+    :result = user selection;
+
+    if (result == "QUIT"?) then (yes)
+        break
+    elseif (result == "MODE_TOGGLE"?) then (yes)
+        :toggle_scientific_mode();
+        :display_mode_change();
+    else (operation key)
+        :Lookup arity and method\nfrom OPERATIONS or SCIENTIFIC_OPERATIONS dict;
+
+        if (arity == 0?) then (yes)
+            note right: pi, e — constants
+            :invoke method();
+            :display "operation = result";
+            :record history;
+        elseif (arity == 1?) then (yes)
+            note right: sin, square, factorial, etc.
+            :prompt first number (operand);
+            :invoke method(operand);
+            :display result;
+            :record history;
+        else (arity == 2)
+            note right: +, -, *, /, power, etc.
+            :prompt first number (a);
+            :prompt second number (b);
+            :invoke method(a, b);
+            :display result;
+            :record history;
+        endif
+    endif
+
+backward: continue loop;
+repeat while (loop running?)
+
+:persist_history_to_file(calc);
+
+stop
+
+note left
+  Error handling:
+  - MaxRetriesExceeded → display error, break loop
+  - ValueError / ZeroDivisionError → display error, continue loop
+end note
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml
+title Scientific Mode Architecture: Calculator with Scientific Operations Delegation
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+class Calculator {
+    - _history : list[dict]
+    - _scientific_mode : bool
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + square(a)
+    + cube(a)
+    + square_root(a)
+    + cube_root(a)
+    + factorial(n)
+    + power(base, exp)
+    + log(a)
+    + ln(a)
+    + sin(x)
+    + cos(x)
+    + tan(x)
+    + asin(x)
+    + acos(x)
+    + atan(x)
+    + sinh(x)
+    + cosh(x)
+    + tanh(x)
+    + exp(x)
+    + get_pi()
+    + get_e()
+    + enable_scientific_mode()
+    + disable_scientific_mode()
+    + toggle_scientific_mode()
+    + is_scientific_mode() : bool
+    - _record_operation(operation_name, operands, result)
+    + get_history() : list[dict]
+    + clear_history()
+}
+
+class BasicOperations {
+    + {static} add(a, b)
+    + {static} subtract(a, b)
+    + {static} multiply(a, b)
+    + {static} divide(a, b)
+}
+
+class AdvancedOperations {
+    + {static} square(a)
+    + {static} cube(a)
+    + {static} square_root(a)
+    + {static} cube_root(a)
+    + {static} factorial(n)
+    + {static} power(base, exp)
+    + {static} log(a)
+    + {static} ln(a)
+}
+
+class ScientificOperations {
+    + {static} sin(x)
+    + {static} cos(x)
+    + {static} tan(x)
+    + {static} asin(x)
+    + {static} acos(x)
+    + {static} atan(x)
+    + {static} sinh(x)
+    + {static} cosh(x)
+    + {static} tanh(x)
+    + {static} exp(x)
+    + {static} pi()
+    + {static} e()
+}
+
+note bottom of ScientificOperations
+  Pure functions, no state.
+  asin/acos validate domain: x in [-1, 1].
+  Callable regardless of Calculator._scientific_mode;
+  mode controls UI visibility only.
+end note
+
+note right of Calculator
+  _history stores dicts:
+  { operation, operands, result }
+end note
+
+Calculator --> BasicOperations : delegates to
+Calculator --> AdvancedOperations : delegates to
+Calculator --> ScientificOperations : delegates to\n(scientific methods)
+
+@enduml

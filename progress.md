@@ -392,3 +392,14 @@ Duration: 282.4s | Cost: $0.580798 USD | Turns: 4
   - `artifacts/sequence_diagram_single_operation.puml` — Sequence diagram for single operation execution (binary happy path + error case)
 
 Duration: 235.0s | Cost: $0.667638 USD | Turns: 5
+
+## Run: update-diagrams — Scientific Mode UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_scientific_mode.puml` — class diagram showing Calculator delegation to ScientificOperations, BasicOperations, AdvancedOperations with scientific mode attributes and methods
+  - `artifacts/activity_scientific_mode_flow.puml` — activity diagram showing interactive loop mode toggling, arity-0/1/2 dispatch, and error handling
+  - `artifacts/sequence_scientific_calculation.puml` — sequence diagram tracing sin(x) from user input through interface, Calculator, scientific_operations, and history recording
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
