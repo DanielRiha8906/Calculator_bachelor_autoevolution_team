@@ -1,3 +1,19 @@
+## Run: Issue #402 — V3 Task 11 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-402-separate-calc-logic
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/application.py` — new Application class encapsulating all UI/interaction logic (CLI dispatch, interactive REPL, input parsing, operation registry, history and error log integration)
+  - `tests/test_application.py` — 19 new tests verifying Application layer separation, Calculator independence, registry arity, CLI mode, interactive mode, and module imports
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+- **Purpose:** Separate calculation logic from user interaction and interface handling per issue #402; Calculator domain layer now fully decoupled from Application/UI layer
+- **Risks:** src/__main__.py not refactored to delegate to Application due to existing test mocks targeting __main__ internals; full delegation is a follow-up task
+- **Tests passed:** 208 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Error Logging UML Diagrams (2026-04-24)
 
 - **Branch:** task/issue-399-error-logging
