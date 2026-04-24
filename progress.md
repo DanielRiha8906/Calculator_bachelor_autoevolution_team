@@ -135,3 +135,14 @@ Duration: 216.1s | Cost: $0.546564 USD | Turns: 4
 - **Tests passed:** 129 passed, 0 failed
 
 Duration: 498.8s | Cost: $1.150512 USD | Turns: 21
+
+## Run: update-diagrams — CLI Mode Diagrams (2026-04-24)
+
+- **Branch:** task/issue-390-cli-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/cli_mode_structure.puml` — component/structure diagram for __main__.py dual-mode dispatch
+  - `artifacts/cli_mode_activity.puml` — activity diagram for CLI mode execution flow
+  - `artifacts/cli_mode_sequence.puml` — sequence diagram for successful CLI invocation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

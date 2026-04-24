@@ -1,0 +1,69 @@
+@startuml cli_mode_sequence
+
+title CLI Mode Successful Invocation: End-to-End Interaction
+
+actor Shell
+participant "__main__" as Main
+participant "cli_mode" as CliMode
+participant "Calculator" as Calc
+participant "_build_registry" as BuildReg
+participant "_parse_cli_arguments" as ParseArgs
+participant "_execute_cli_mode" as ExecCli
+participant "stdout" as Stdout
+participant "stderr" as Stderr
+
+Shell ->> Main : python -m src add 5 3
+activate Main
+
+Main ->> CliMode : cli_mode()
+activate CliMode
+
+CliMode ->> Calc : Calculator()
+activate Calc
+Calc --> CliMode : instance
+deactivate Calc
+
+CliMode ->> BuildReg : _build_registry(calculator)
+activate BuildReg
+BuildReg --> CliMode : registry (12 operations)
+deactivate BuildReg
+
+CliMode ->> ParseArgs : _parse_cli_arguments(registry)
+activate ParseArgs
+
+alt invalid operation
+    ParseArgs ->> Stderr : error message
+    ParseArgs ->> Main : sys.exit(1)
+    deactivate ParseArgs
+else valid args
+    ParseArgs --> CliMode : ('add', [5, 3])
+    deactivate ParseArgs
+end
+
+CliMode ->> ExecCli : _execute_cli_mode('add', [5, 3], registry)
+activate ExecCli
+
+ExecCli ->> Calc : add(5, 3)
+activate Calc
+
+alt execution error (ValueError / ZeroDivisionError)
+    Calc --> ExecCli : raises exception
+    deactivate Calc
+    ExecCli ->> Stderr : error message
+    ExecCli ->> Main : sys.exit(1)
+    deactivate ExecCli
+else success
+    Calc --> ExecCli : 8
+    deactivate Calc
+    ExecCli ->> Stdout : print 8
+    ExecCli --> CliMode : return
+    deactivate ExecCli
+end
+
+CliMode --> Main : return
+deactivate CliMode
+
+Main ->> Shell : exit 0
+deactivate Main
+
+@enduml
