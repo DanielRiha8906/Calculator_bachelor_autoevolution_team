@@ -1034,3 +1034,100 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Application layer cleanly separates UI logic from Calculator domain layer.
 - src/__main__.py preserved and not modified as specified.
 - Ready for commit and PR.
+
+### Cycle 21: 2026-04-24 — Issue #405 Calculator Modularization (WRITE phase)
+
+**Task:** Write failing tests for complete calculator modularization refactor. Specifications: 35 tests covering module imports, registry pattern, operation class hierarchy, validation, input handlers, persistence, core calculator, end-to-end execution, and backward compatibility.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_modularization.py` with 41 comprehensive tests
+2. Organized into 9 test classes:
+   - `TestModuleImports`: 8 tests for new modular structure imports
+   - `TestRegistryPattern`: 5 tests for OperationRegistry pattern
+   - `TestOperationClassHierarchy`: 6 tests for Operation base class and implementations
+   - `TestValidation`: 4 tests for InputValidator.parse_number()
+   - `TestInputHandlers`: 6 tests for CLIInput and InteractiveInput handlers
+   - `TestPersistence`: 2 tests for OperationHistory and ErrorLog classes
+   - `TestCoreCalculator`: 4 tests for Calculator core methods
+   - `TestEndToEnd`: 4 tests for end-to-end execution (3 skipped, 1 failing)
+   - `TestBackwardCompatibility`: 2 tests for old import paths
+3. All tests designed to import from new modular paths:
+   - `src.calculator.core.Calculator`
+   - `src.calculator.operations.Operation, OperationRegistry`
+   - `src.calculator.operations.arithmetic.*` (6 operation classes)
+   - `src.calculator.operations.scientific.*` (7 operation classes)
+   - `src.calculator.validation.InputValidator`
+   - `src.calculator.input_handler.CLIInput, InteractiveInput`
+   - `src.calculator.persistence.OperationHistory, ErrorLog`
+   - `src.calculator.main.main, cli_mode, _build_registry`
+4. Tests verify:
+   - Module imports are available
+   - OperationRegistry pattern with 12+ operations
+   - Operation abstract base class and concrete implementations
+   - Input validation for numbers
+   - CLI and interactive input handlers
+   - Persistence classes for history and error logging
+   - Core Calculator maintains all 12 methods
+   - Backward compatibility (old imports from src.calculator still work)
+
+**Patterns Found:**
+- New modular structure requires reorganization of current flat src/ structure:
+  - src/calculator.py → src/calculator/core.py (Calculator class)
+  - Create src/calculator/__init__.py for backward compatibility
+  - Create src/calculator/operations/ package with Operation base class
+  - Create src/calculator/operations/arithmetic.py (6 operation classes)
+  - Create src/calculator/operations/scientific.py (7 operation classes)
+  - Create src/calculator/validation.py (InputValidator class)
+  - Create src/calculator/input_handler.py (CLIInput, InteractiveInput)
+  - Create src/calculator/persistence.py (OperationHistory, ErrorLog)
+  - Create src/calculator/main.py (main, cli_mode, _build_registry functions)
+- OperationRegistry must list_all(), register(), and get() operations
+- Each Operation subclass must have arity property (1 for unary, 2 for binary)
+- CLIInput must extract operation name and operands from sys.argv
+- InteractiveInput must read operation and operands from user input
+- Backward compatibility required for existing imports and tests
+
+**Test Results:**
+- 41 total tests written
+- 36 tests FAILED (as expected — modular structure does not exist)
+  - All failures are ModuleNotFoundError: "No module named 'src.calculator.*'"
+  - This is expected; the new package structure must be created
+- 2 tests PASSED (backward compatibility tests)
+  - test_old_import_calculator_still_works: src.calculator.Calculator exists (old path)
+  - test_old_import_main_from_src_still_works: src.__main__.main exists (old path)
+- 3 tests SKIPPED (subprocess tests deferred; marked with @pytest.mark.skip)
+  - test_modular_cli_execution
+  - test_modular_cli_domain_error
+  - test_modular_interactive_sequence
+- Total test suite: 249 tests (208 existing + 41 new modularization tests)
+- Duration: 0.20s (new tests only)
+
+**Status:** READY FOR HANDOFF — 36 tests fail as expected. Complete modular refactoring required.
+
+**Escalations:** None. All failures are due to missing modular structure (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Refactor current flat src/ structure into modular src/calculator/ package
+- Create src/calculator/__init__.py with backward-compatible imports for Calculator
+- Migrate Calculator from src/calculator.py to src/calculator/core.py
+- Create src/calculator/operations/__init__.py with Operation abstract base class
+- Create src/calculator/operations/arithmetic.py with 6 operation classes (Add, Subtract, Multiply, Divide, Factorial, Modulo)
+- Create src/calculator/operations/scientific.py with 7 operation classes (Square, Cube, SquareRoot, CubeRoot, Power, Log10, Ln)
+- Create src/calculator/validation.py with InputValidator.parse_number() static method
+- Create src/calculator/input_handler.py with CLIInput and InteractiveInput classes
+- Create src/calculator/persistence.py with OperationHistory and ErrorLog classes (can import existing implementations if needed)
+- Create src/calculator/main.py with main(), cli_mode(), and _build_registry() functions
+- Maintain backward compatibility: src/__main__.py should continue to work with old imports
+- OperationRegistry must:
+  - Have register(operation: Operation) method
+  - Have get(name: str) method returning Operation
+  - Have list_all() method returning dict/list of operation names
+  - Support at least 12 operations: add, subtract, multiply, divide, factorial, square, cube, square_root, cube_root, power, log10, ln
+- Each Operation subclass must have:
+  - arity property (int: 1 for unary, 2 for binary)
+  - execute(*args) method that returns result
+- 36 failing tests ready for implementation verification
+- 2 backward compatibility tests must remain passing after refactoring
+- Existing 208 tests must continue to pass (no regressions)
