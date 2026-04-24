@@ -1,0 +1,17 @@
+@startuml activity_divide
+
+start
+
+:Caller invokes divide(a, b);
+
+if (b == 0?) then (yes)
+    :raise ZeroDivisionError;
+    :Exception propagates to caller;
+    stop
+else (no)
+    :compute a / b;
+    :return float result to caller;
+    stop
+endif
+
+@enduml
