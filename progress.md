@@ -401,4 +401,4 @@ Duration: 509.7s | Cost: $0.996440 USD | Turns: 7
   - `artifacts/dependency_flow.puml` — new sequence diagram for interactive session runtime flow
   - `artifacts/import_graph.puml` — new component diagram showing module import dependencies
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 217.7s | Cost: $0.525866 USD | Turns: 5
