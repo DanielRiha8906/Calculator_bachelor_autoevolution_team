@@ -1,4 +1,16 @@
 
+## Run: update-diagrams — Operation History diagrams (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** task/issue-395-history-of-operations
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — Calculator class with _history attribute and get_history/clear_history/_record_operation methods
+  - `artifacts/class_cli.puml` — CLI module with display_history and _format_history_entry additions, dependency on Calculator
+  - `artifacts/activity_operation_execution.puml` — Activity diagram: operation execution with success/failure branch and _record_operation call
+  - `artifacts/sequence_display_history.puml` — Sequence diagram: display_history flow from CLI through Calculator to stdout
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #443 — feat: add operation history to calculator (2026-04-24)
 
 - **Branch:** task/issue-395-history-of-operations

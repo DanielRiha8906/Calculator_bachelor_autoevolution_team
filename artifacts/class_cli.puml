@@ -1,0 +1,71 @@
+@startuml class_cli
+
+skinparam classAttributeIconSize 0
+
+exception MaxRetriesExceeded {
+    Raised when a prompt function
+    exhausts max_retries attempts
+    on invalid input
+}
+
+class Calculator <<external>> {
+    + get_history() : list[dict]
+    + clear_history() : None
+}
+
+class "cli" <<module>> {
+    ' Registry
+    + OPERATIONS : dict
+
+    ' Prompt functions
+    + prompt_for_first_number(max_retries: int) : float
+    + prompt_for_operator(max_retries: int) : str
+    + prompt_for_second_number(max_retries: int) : float
+
+    ' Display functions
+    + display_result_unary(operation_key: str, operand: float, result: float) : None
+    + display_result_binary(operation_key: str, first: float, second: float, result: float) : None
+    + display_history(calc: Calculator) : None
+    + display_error(error_message: str) : None
+    + display_history_notification(filepath: str) : None
+
+    ' Persistence
+    + persist_history_to_file(calc: Calculator, filepath: str) : None
+
+    ' Orchestrator
+    + run_calculator(calc: Calculator, max_retries: int) : float | str
+
+    ' Private helpers
+    - _get_operation_arity(operation_key: str) : int
+    - _get_calculator_method(operation_key: str) : str
+    - _get_display_symbol(operation_key: str) : str
+    - _format_history_entry(index: int, entry: dict) : str
+}
+
+note right of "cli"::OPERATIONS
+  Module-level registry:
+  symbol -> (arity, method_name,
+             display_symbol, description)
+  Binary (arity 2): "+", "-", "*", "/", "power"
+  Unary  (arity 1): "square", "cube", "sqrt",
+                    "cbrt", "factorial", "log", "ln"
+end note
+
+note right of "cli"::display_history
+  NEW in issue #395.
+  Calls calc.get_history(),
+  loops over entries calling
+  _format_history_entry() for each.
+  Prints "No operations recorded." if empty.
+end note
+
+note right of "cli"::_format_history_entry
+  NEW in issue #395.
+  Formats one history dict as:
+  "1. add(2, 3) = 5"
+end note
+
+"cli" --> Calculator : <<uses>>\nget_history() / clear_history()
+"cli" ..> MaxRetriesExceeded : <<raises>>
+
+@enduml

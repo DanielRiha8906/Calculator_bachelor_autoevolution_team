@@ -1,0 +1,29 @@
+@startuml activity_operation_execution
+
+start
+
+:Caller invokes calc.<operation>(operands);
+
+:Compute result from operands;
+
+if (Did computation succeed?) then (yes)
+    :Call _record_operation(
+      operation_name,
+      operands,
+      result
+    );
+    :Append entry to _history
+    {operation, operands, result};
+    :Return result to caller;
+    stop
+else (no — exception raised)
+    :Raise exception to caller
+    (ValueError / ZeroDivisionError);
+    note right
+      _history is NOT updated.
+      Failed operations are never recorded.
+    end note
+    stop
+endif
+
+@enduml
