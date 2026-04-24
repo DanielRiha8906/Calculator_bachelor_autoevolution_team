@@ -1035,6 +1035,59 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - src/__main__.py preserved and not modified as specified.
 - Ready for commit and PR.
 
+### Cycle 22: 2026-04-24 — Issue #405 Test Import Path Updates (VERIFY phase)
+
+**Task:** Update test file imports after modularization. The implementer moved functions from `src.__main__` to `src.calculator.main` and changed `_build_registry()` signature. Tests must be updated to import from new locations and call with correct signatures.
+
+**Phase:** VERIFY (Import Path Update)
+
+**Key Changes Made:**
+1. Updated `tests/test_interactive_validation.py` line 11:
+   - Old: `from src.__main__ import _run_interactive_loop, cli_mode, _build_registry`
+   - New: `from src.calculator.main import _run_interactive_loop, cli_mode, _build_registry`
+2. Updated `tests/test_calculator.py` line 4:
+   - Old: `from src.__main__ import main`
+   - New: `from src.calculator.main import main`
+3. Updated `tests/test_error_logging.py` (6 test methods + 3 patch statements):
+   - Changed all imports: `from src.__main__` → `from src.calculator.main`
+   - Changed all patches: `patch("src.__main__.` → `patch("src.calculator.main.`
+4. Updated `tests/test_history.py` (3 test methods + 3 patch statements):
+   - Changed all imports: `from src.__main__` → `from src.calculator.main`
+   - Changed all patches: `patch("src.__main__.` → `patch("src.calculator.main.`
+5. Updated `tests/test_modularization.py` (1 test method):
+   - Changed import: `from src.__main__ import main` → `from src.calculator.main import main`
+6. Updated `_build_registry()` calls throughout test files:
+   - Changed from `_build_registry(calculator)` to `_build_registry()`
+   - Affected files: test_interactive_validation.py, test_error_logging.py, test_history.py
+   - Removed unnecessary `calculator = Calculator()` instantiations where they only served _build_registry()
+
+**Test Results:**
+- Total tests collected: 249
+- Passed: 246
+- Skipped: 3
+- Failed: 0
+- Duration: 0.37s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- All 82 baseline calculator operation tests passing
+- All 14 consecutive failure tracking tests passing
+- All 23 operation history tests passing
+- All 23 error logging tests passing
+- All 19 Application layer tests passing
+- All 15 modularization tests passing (3 skipped as expected)
+- All backward compatibility tests passing
+
+**Escalations:** None. All import path updates completed successfully. No production code bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Task complete. All tests passing with updated import paths.
+- All functions correctly imported from `src.calculator.main` module.
+- Function signatures match new modular architecture.
+- No regressions detected in any existing tests.
+- Ready for commit and PR.
+
 ### Cycle 21: 2026-04-24 — Issue #405 Calculator Modularization (WRITE phase)
 
 **Task:** Write failing tests for complete calculator modularization refactor. Specifications: 35 tests covering module imports, registry pattern, operation class hierarchy, validation, input handlers, persistence, core calculator, end-to-end execution, and backward compatibility.

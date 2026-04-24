@@ -1,3 +1,21 @@
+## Run: Fix PR #452 — feat: modular calculator package structure (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/main.py` — removed dead import `from src.calculator.core import Calculator`
+  - `src/__main__.py` — replaced 321-line legacy implementation with 9-line thin shim delegating to `src.calculator.main.cli_mode`
+  - `tests/test_interactive_validation.py` — updated imports from `src.__main__` to `src.calculator.main`; removed `Calculator()` instantiations; updated `_build_registry()` calls
+  - `tests/test_calculator.py` — updated `main` import from `src.__main__` to `src.calculator.main`
+  - `tests/test_error_logging.py` — updated 6 imports and 3 patch targets from `src.__main__` to `src.calculator.main`; updated `_build_registry()` calls
+  - `tests/test_history.py` — updated 3 imports and 3 patch targets from `src.__main__` to `src.calculator.main`; updated `_build_registry()` calls
+  - `tests/test_modularization.py` — updated `main` import from `src.__main__` to `src.calculator.main`
+- **Purpose:** Address PR review feedback: remove dual entry point, eliminate dead import, establish single authoritative entry point at src.calculator.main
+- **Risks:** None — all 246 tests pass, 3 skipped as expected; backward compatibility of `python -m src` preserved via shim
+- **Tests passed:** 246 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Issue #405 Modular Refactor (2026-04-24)
 
 - **Branch:** task/issue-405-modular-refactor

@@ -363,7 +363,7 @@ class TestHistoryWithFailureTracking:
         Expected: Valid operation IS recorded; failure counter resets to 0
         """
         from src.history import OperationHistory
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
 
         history_file = str(tmp_path / "history.txt")
         history = OperationHistory(history_file)
@@ -386,7 +386,7 @@ class TestHistoryWithFailureTracking:
         Expected: Loop exits gracefully; history preserved (no crash)
         """
         from src.history import OperationHistory
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
 
         history_file = str(tmp_path / "history.txt")
         history = OperationHistory(history_file)
@@ -400,7 +400,7 @@ class TestHistoryWithFailureTracking:
         inputs = iter(['invalid_op', 'invalid_op', 'invalid_op'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Run interactive loop; should exit after 3 failures
         try:
@@ -505,7 +505,7 @@ class TestHistoryEdgeCases:
         Expected: History preserved before exit; no crash
         """
         from src.history import OperationHistory
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
 
         history_file = str(tmp_path / "history.txt")
         history = OperationHistory(history_file)
@@ -519,7 +519,7 @@ class TestHistoryEdgeCases:
         inputs = iter(['quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Run interactive loop; should exit on 'quit'
         try:

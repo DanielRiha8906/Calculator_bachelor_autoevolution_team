@@ -7,7 +7,6 @@ OperationRegistry rather than the legacy dict-based registry in
 
 import sys
 
-from src.calculator.core import Calculator
 from src.calculator.operations import OperationRegistry
 from src.calculator.operations.arithmetic import (
     ArithmeticAdd,

@@ -224,7 +224,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with mock inputs for operation "add", then non-numeric operand "abc", then "quit"
         Expected output: error_log.txt contains an entry with `invalid_input` category; operation history unchanged
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -235,10 +235,10 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Patch error logging into the interactive loop
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             _run_interactive_loop(registry, str(history_path))
 
@@ -251,7 +251,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with mock input for unknown operation "unknown_op", then "quit"
         Expected output: error_log.txt contains an entry with `unsupported_operation` category
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -262,10 +262,10 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Patch error logging into the interactive loop
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             _run_interactive_loop(registry, str(history_path))
 
@@ -278,7 +278,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with mock inputs for "divide", "5", "0", then "quit"
         Expected output: error_log.txt contains an entry with `calculation_error` category
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -289,10 +289,10 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Patch error logging into the interactive loop
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             _run_interactive_loop(registry, str(history_path))
 
@@ -305,7 +305,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with mock inputs for "square_root", "-1", then "quit"
         Expected output: error_log.txt contains an entry with `calculation_error` category
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -316,10 +316,10 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Patch error logging into the interactive loop
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             _run_interactive_loop(registry, str(history_path))
 
@@ -332,7 +332,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with mock inputs for "add", "5", "3", then "quit"
         Expected output: error_log.txt does NOT exist or has no entries; operation recorded in history
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -343,7 +343,7 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Run interactive loop - errors are logged separately
         _run_interactive_loop(registry, str(history_path))
@@ -365,7 +365,7 @@ class TestErrorLoggingInteractiveMode:
         Input: Interactive mode called with one error (invalid input) then one success (add 5 3)
         Expected output: error_log.txt contains only the error entry; history file contains only the success entry
         """
-        from src.__main__ import _run_interactive_loop, _build_registry
+        from src.calculator.main import _run_interactive_loop, _build_registry
         from src.calculator import Calculator
 
         error_log_path = tmp_path / "error_log.txt"
@@ -376,10 +376,10 @@ class TestErrorLoggingInteractiveMode:
         monkeypatch.setattr("builtins.input", lambda _: next(mock_inputs))
 
         calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         # Patch error logging
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             _run_interactive_loop(registry, str(history_path))
 
@@ -403,7 +403,7 @@ class TestErrorLoggingCLIMode:
         Input: CLI mode with args ["add", "5", "abc"]
         Expected output: error_log.txt contains entry with `invalid_input` category; SystemExit raised
         """
-        from src.__main__ import cli_mode
+        from src.calculator.main import cli_mode
 
         error_log_path = tmp_path / "error_log.txt"
 
@@ -414,7 +414,7 @@ class TestErrorLoggingCLIMode:
         )
 
         # Patch error logging and expect SystemExit
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             with pytest.raises(SystemExit) as exc_info:
                 cli_mode()
@@ -426,7 +426,7 @@ class TestErrorLoggingCLIMode:
         Input: CLI mode with args ["divide", "5", "0"]
         Expected output: error_log.txt contains entry with `calculation_error` category; SystemExit raised
         """
-        from src.__main__ import cli_mode
+        from src.calculator.main import cli_mode
 
         error_log_path = tmp_path / "error_log.txt"
 
@@ -437,7 +437,7 @@ class TestErrorLoggingCLIMode:
         )
 
         # Patch error logging and expect SystemExit
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             with pytest.raises(SystemExit) as exc_info:
                 cli_mode()
@@ -449,7 +449,7 @@ class TestErrorLoggingCLIMode:
         Input: CLI mode with args ["unknown_op", "5", "3"]
         Expected output: error_log.txt contains entry with `unsupported_operation` category; SystemExit raised
         """
-        from src.__main__ import cli_mode
+        from src.calculator.main import cli_mode
 
         error_log_path = tmp_path / "error_log.txt"
 
@@ -460,7 +460,7 @@ class TestErrorLoggingCLIMode:
         )
 
         # Patch error logging and expect SystemExit
-        with patch("src.__main__.ErrorLog") as MockErrorLog:
+        with patch("src.calculator.main.ErrorLog") as MockErrorLog:
             mock_error_log = MockErrorLog.return_value
             with pytest.raises(SystemExit) as exc_info:
                 cli_mode()

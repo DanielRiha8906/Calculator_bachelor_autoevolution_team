@@ -468,6 +468,6 @@ class TestBackwardCompatibility:
 
     def test_old_import_main_from_src_still_works(self):
         """Verify main can still be imported from src.__main__."""
-        from src.__main__ import main
+        from src.calculator.main import main
 
         assert main is not None

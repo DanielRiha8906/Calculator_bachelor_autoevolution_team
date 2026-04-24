@@ -86,3 +86,13 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Decision: Private helper functions `_parse_cli_arguments` and `_execute_cli_mode` gained an optional `error_log` parameter rather than creating a new `ErrorLog` internally — this avoids creating two instances per `cli_mode()` invocation and keeps the mock-interception at the `cli_mode()` level where `ErrorLog()` is called once.
 - Pattern: When tests patch a class at the module level (`patch("src.__main__.ErrorLog")`), the mock intercepts every instantiation of that class within the module. Place the single `ErrorLog()` call in the top-level function (`cli_mode`, `_run_interactive_loop`) so all subfunction calls receive the already-mocked instance.
 - Handoff notes: All 189 tests pass (23 new + 166 pre-existing). `ErrorLog` is importable as `from src.error_logging import ErrorLog` and also via `from src.__main__ import ErrorLog` (re-exported by the import statement).
+
+### 2026-04-24 — issue-405 modular-refactor cleanup (dead import + thin shim)
+
+- Task: Remove dead `from src.calculator.core import Calculator` import from `src/calculator/main.py` and replace `src/__main__.py` with a thin shim delegating to `src.calculator.main.cli_mode`.
+- Files changed:
+  - `src/calculator/main.py` — deleted one import line (`from src.calculator.core import Calculator`); `Calculator` was never instantiated in that module.
+  - `src/__main__.py` — complete replacement; old 321-line legacy implementation replaced with a 9-line thin shim that imports and delegates to `src.calculator.main.cli_mode`.
+- Decision: The old `src/__main__.py` contained the full legacy implementation (dict-based registry, inline `Calculator` instantiation, full REPL). After replacement all public functions previously in that module (`main`, `cli_mode`, `_build_registry`, `_run_interactive_loop`, `_parse_cli_arguments`, `_execute_cli_mode`, `_parse_number`, `ErrorLog`, `OperationHistory`) are no longer exported from `src.__main__`. Any test that imports those names directly from `src.__main__` will now fail. This is the expected outcome of the migration; the Tester's WRITE report should identify which tests are affected.
+- Pattern: When replacing a legacy entry point with a thin shim, the shim's only job is `from <new_module> import <entry>` + `if __name__ == "__main__": <entry>()`. No logic in the shim.
+- Handoff notes: Tests that previously imported symbols from `src.__main__` (e.g. `_build_registry`, `_run_interactive_loop`, `ErrorLog`) will fail — those are the expected failing tests identified in the Tester's WRITE phase. The new canonical source of `cli_mode` is `src.calculator.main`.
