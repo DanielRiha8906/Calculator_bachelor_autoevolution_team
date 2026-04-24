@@ -350,4 +350,4 @@ Duration: 172.3s | Cost: $0.461259 USD | Turns: 4
   - `artifacts/activity_diagram_operation.puml` — activity diagram for interactive binary operation flow
   - `artifacts/sequence_diagram_operation.puml` — sequence diagram for add(5,3) interaction
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 282.4s | Cost: $0.580798 USD | Turns: 4
