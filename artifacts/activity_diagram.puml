@@ -24,6 +24,19 @@ fork again
   else (no)
     :return a / b;
   endif
+fork again
+  :factorial(n);
+  if (n is bool, float, str, None, or negative?) then (yes)
+    :raise ValueError;
+    stop
+  else (no)
+    if (n == 0 or n == 1?) then (yes)
+      :return 1;
+    else (no)
+      :Iterate: result *= i for i in 2..n;
+      :return result;
+    endif
+  endif
 end fork
 
 :Return result;

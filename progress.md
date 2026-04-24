@@ -57,3 +57,14 @@ Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
   - `artifacts/sequence_diagram.puml` — new sequence diagram for calculator usage sequence
 
 Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
+
+## Run: update-diagrams — Add factorial operation diagrams (2026-04-24)
+
+- **Branch:** task/issue-379-factorial
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — added factorial method signature and validation note
+  - `artifacts/activity_diagram.puml` — added factorial fork branch with validation and base-case guards
+  - `artifacts/sequence_diagram.puml` — added factorial alt block showing error and success paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
