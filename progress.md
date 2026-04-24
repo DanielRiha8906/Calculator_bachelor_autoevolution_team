@@ -215,4 +215,4 @@ Duration: 211.9s | Cost: $0.518498 USD | Turns: 5
   - `artifacts/activity_diagram_user_session.puml` — added attempt_count tracking in retry loops, explicit exit conditions when max_retries exhausted, MaxRetriesExceeded exception flow
   - `artifacts/class_diagram_batch_cli.puml` — added note that batch mode has no retry logic, updated __main__ note to reflect MaxRetriesExceeded handling
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 255.0s | Cost: $0.666930 USD | Turns: 11
