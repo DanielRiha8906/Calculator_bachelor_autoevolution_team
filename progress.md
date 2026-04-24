@@ -146,4 +146,4 @@ Duration: 289.9s | Cost: $0.657900 USD | Turns: 4
 - **Risks:** None — change is additive; all existing tests still pass; boolean inputs still rejected
 - **Tests passed:** 121 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 331.0s | Cost: $0.765543 USD | Turns: 13
