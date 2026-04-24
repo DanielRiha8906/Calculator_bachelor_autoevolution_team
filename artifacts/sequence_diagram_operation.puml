@@ -1,0 +1,37 @@
+@startuml sequence_diagram_operation
+
+skinparam sequenceMessageAlign center
+skinparam participantFontSize 13
+
+actor User
+participant interface
+participant Calculator
+participant basic_operations
+
+User -> interface : enter operator "+"
+activate interface
+
+interface -> interface : determine arity = 2
+
+User -> interface : enter first number 5
+User -> interface : enter second number 3
+
+interface -> Calculator : add(5, 3)
+activate Calculator
+
+Calculator -> basic_operations : add(5, 3)
+activate basic_operations
+basic_operations --> Calculator : return 8
+deactivate basic_operations
+
+Calculator -> Calculator : _record_operation("add", [5, 3], 8)
+
+Calculator --> interface : return 8
+deactivate Calculator
+
+interface -> User : display result "5 + 3 = 8"
+
+interface -> interface : persist_history_to_file()
+deactivate interface
+
+@enduml
