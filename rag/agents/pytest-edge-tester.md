@@ -205,3 +205,52 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Full test suite is verified as stable with 33 passing tests.
 - No regressions detected in existing tests.
 - Ready for commit and PR.
+
+### Cycle 7: 2026-04-24 — Issue #381 Advanced Operations (WRITE phase)
+
+**Task:** Write failing tests for 7 advanced calculator methods: square(), cube(), square_root(), cube_root(), power(), log10(), and ln(). Comprehensive test suite covering happy-path and error conditions for each operation.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created 7 new test classes: `TestCalculatorSquare`, `TestCalculatorCube`, `TestCalculatorSquareRoot`, `TestCalculatorCubeRoot`, `TestCalculatorPower`, `TestCalculatorLog10`, `TestCalculatorLn`
+2. 49 new tests total covering:
+   - Square (5 tests): positive int, negative int, zero, float, small float
+   - Cube (5 tests): positive int, negative int, zero, float, negative float
+   - Square Root (6 tests): perfect square, non-perfect, zero, float, negative int errors (2 variants)
+   - Cube Root (6 tests): positive int, non-perfect, negative int, zero, negative float, float
+   - Power (11 tests): positive exponent, zero exponent, exponent one, negative exponent, float base, float exponent, negative base with even exponent, negative base with odd exponent, negative base with float exponent (error), zero base with positive exponent, zero base with zero exponent
+   - Log10 (8 tests): log10(10), log10(1), log10(100), float value, small positive, zero error, negative int error, negative float error
+   - Ln (8 tests): ln(e), ln(1), small positive, large positive, float near e, zero error, negative int error, negative float error
+3. All tests use existing `calculator` fixture
+4. Error tests use `pytest.raises(ValueError)` for assertions
+5. Floating-point comparisons use `pytest.approx()`
+6. Followed naming convention: `test_<method>_<scenario>`
+
+**Patterns Found:**
+- All 7 methods (square, cube, square_root, cube_root, power, log10, ln) do not exist yet on Calculator class
+- All 49 tests fail with AttributeError (expected behavior for WRITE phase)
+- Test structure is consistent with existing test classes in the suite
+
+**Test Results:**
+- 49 new tests written
+- 49 tests FAILED (as expected — implementation does not exist)
+- 33 tests PASSED (all existing tests remain passing — no regressions)
+- Total tests in suite: 82 (49 new + 33 existing)
+- Failure reason: AttributeError: 'Calculator' object has no attribute '<method_name>'
+- Duration: 0.29s
+
+**Status:** READY FOR HANDOFF — All 49 new tests fail as expected. Implementation required for all 7 methods.
+
+**Escalations:** None. All failures are due to missing methods (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Implement 7 new Calculator methods to satisfy all 49 test specifications
+- Square: return x^2 for any numeric input
+- Cube: return x^3 for any numeric input, handle negative numbers correctly (preserve sign)
+- Square Root: return sqrt(x) for x >= 0, raise ValueError for x < 0
+- Cube Root: return cbrt(x) for any numeric input, handle negative numbers correctly
+- Power: return base^exponent, handle negative base with float exponent (raise ValueError), handle (0, 0) → 1
+- Log10: return log base 10 of x, raise ValueError for x <= 0
+- Ln: return natural logarithm of x, raise ValueError for x <= 0
+- 49 failing tests ready for implementation verification
