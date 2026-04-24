@@ -10,6 +10,7 @@ else (no)
 endif
 
 :Create OperationRegistry(calculator);
+:Create OperationHistory();
 
 repeat
 
@@ -19,8 +20,13 @@ repeat
   repeat
     :Prompt: "Select operation by number:";
     :Read user input;
-  repeat while (valid integer in range?) is (no — invalid)
+  repeat while (valid integer in range AND\nretry_count < MAX_ATTEMPTS?) is (no — invalid)
   -> yes — valid index;
+
+  if (MAX_ATTEMPTS exceeded for op selection?) then (yes)
+    :history.write_to_file();
+    stop
+  endif
 
   :Resolve operation name from index;
   :arity = registry.get_arity(op_name);
@@ -30,7 +36,7 @@ repeat
     repeat
       :Prompt: "Enter operand:";
       :Read user input;
-    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    repeat while (parse_operand() succeeds AND\nretry_count < MAX_ATTEMPTS?) is (no — ValueError)
     -> yes — parsed;
     :operands = [parsed_value];
 
@@ -39,27 +45,35 @@ repeat
     repeat
       :Prompt: "Enter operand 1:";
       :Read user input;
-    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    repeat while (parse_operand() succeeds AND\nretry_count < MAX_ATTEMPTS?) is (no — ValueError)
     -> yes — parsed;
     :store operand1;
 
     repeat
       :Prompt: "Enter operand 2:";
       :Read user input;
-    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    repeat while (parse_operand() succeeds AND\nretry_count < MAX_ATTEMPTS?) is (no — ValueError)
     -> yes — parsed;
     :operands = [operand1, parsed_value];
 
+  endif
+
+  if (MAX_ATTEMPTS exceeded for operand input?) then (yes)
+    :history.write_to_file();
+    stop
   endif
 
   :registry.call(op_name, *operands);
 
   if (call succeeds?) then (yes)
     :Print "Result: {result}";
+    :history.record(op_name, operands, result);
   elseif (ZeroDivisionError?) then (yes)
     :Print "Error: Division by zero";
+    note right: no history.record() on error
   else (other exception)
     :Print "Error: {exc}";
+    note right: no history.record() on error
   endif
 
   repeat
@@ -70,6 +84,8 @@ repeat
 
 repeat while (user chose yes or y?) is (yes — continue)
 -> no/n — exit;
+
+:history.write_to_file();
 
 stop
 

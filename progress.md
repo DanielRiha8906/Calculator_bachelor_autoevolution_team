@@ -237,3 +237,14 @@ Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
   - `artifacts/retry_sequence.puml` — sequence diagram for user session hitting retry limit
 
 Duration: 216.3s | Cost: $0.496068 USD | Turns: 4
+
+## Run: update-diagrams — Session History Diagrams (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/interactive_class.puml` — added OperationHistory class with attributes and methods, dependency from interactive session
+  - `artifacts/interactive_session_flow.puml` — added history.record() after successful operation and write_to_file() at all 5 exit points
+  - `artifacts/session_state_machine.puml` — updated with RECORDING and PERSISTING states for history lifecycle
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

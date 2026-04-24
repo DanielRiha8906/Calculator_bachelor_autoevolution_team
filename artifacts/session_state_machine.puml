@@ -1,26 +1,37 @@
 @startuml
-title Interactive Session — State Machine
+title Interactive Session — State Machine (with History)
 
-[*] --> MenuDisplay : session starts
+[*] --> MenuDisplay : session starts\n(Calculator + OperationRegistry\n+ OperationHistory created)
 
 MenuDisplay --> OperationSelection : show numbered menu
 
-OperationSelection --> OperationSelection : invalid index\n(re-prompt)
+OperationSelection --> OperationSelection : invalid index\n(re-prompt, retry_count++)
+OperationSelection --> Terminating : MAX_ATTEMPTS exceeded
 OperationSelection --> OperandInput : valid index selected
 
-OperandInput --> OperandInput : invalid operand\n(ValueError — re-prompt)
-OperandInput --> Execution : valid operand(s) provided
+OperandInput --> OperandInput : invalid operand\n(ValueError — re-prompt, retry_count++)
+OperandInput --> Terminating : MAX_ATTEMPTS exceeded
+OperandInput --> Computing : valid operand(s) provided
 
-Execution --> ResultDisplay : success
-Execution --> ResultDisplay : ZeroDivisionError\n("Error: Division by zero")
-Execution --> ResultDisplay : other exception\n("Error: {exc}")
+Computing --> Recording : registry.call() success
+Computing --> ContinuePrompt : exception\n(no history entry)
 
-ResultDisplay --> ContinuePrompt : result printed
+Recording --> ContinuePrompt : history.record() called\n(entry appended to _entries)
 
 ContinuePrompt --> ContinuePrompt : unrecognised input\n(re-prompt)
 ContinuePrompt --> MenuDisplay : yes / y
-ContinuePrompt --> Exit : no / n
+ContinuePrompt --> Terminating : no / n
 
-Exit --> [*]
+Terminating --> Persisting : history.write_to_file()\n(errors caught, logged to stderr)
+Persisting --> [*] : session returns
+
+note bottom of Persisting
+  write_to_file() is called at ALL 5 exit points:
+  1. User selects "no" at continue prompt
+  2. MAX_ATTEMPTS exceeded during op selection
+  3. MAX_ATTEMPTS exceeded during operand 1 input
+  4. MAX_ATTEMPTS exceeded during operand 2 input
+  5. Any unhandled early-exit path
+end note
 
 @enduml
