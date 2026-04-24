@@ -44,4 +44,4 @@ Duration: 209.6s | Cost: $0.525387 USD | Turns: 24
   - `artifacts/activity_diagram.puml` — new activity diagram showing test execution flow with normal and exception paths
   - `artifacts/sequence_diagram.puml` — new sequence diagram showing pytest/fixture/Calculator interaction for normal and division-by-zero tests
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 207.8s | Cost: $0.428801 USD | Turns: 4
