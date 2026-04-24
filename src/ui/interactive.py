@@ -21,10 +21,10 @@ Responsibilities:
 
 from typing import Union
 
-from .calculator import Calculator
-from .error_logger import ErrorLogger
-from .history import OperationHistory
-from .operation_registry import OperationRegistry
+from ..calculator import Calculator
+from ..infrastructure.error_logger import ErrorLogger
+from ..infrastructure.history import OperationHistory
+from ..operation_registry import OperationRegistry
 
 MAX_ATTEMPTS = 5
 

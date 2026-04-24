@@ -8,7 +8,7 @@ of operations (1-based indexing) or shows "No operations recorded yet."
 
 from unittest.mock import patch
 import pytest
-from src.interactive import run_interactive_session
+from src.ui.interactive import run_interactive_session
 
 
 class TestHistoryViewCommand:

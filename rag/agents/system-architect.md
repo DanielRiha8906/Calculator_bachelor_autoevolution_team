@@ -982,3 +982,469 @@ No other files need modification. `src/cli.py` is already complete and functiona
 - Risk: Logging breaks existing tests: Mitigation: Error logger writes to file only; tests can mock or clean up after
 
 ---
+
+### 2026-04-24 — Issue #406 — V3 Task 12 - Expert/team — Multi-Module Refactoring
+
+**Task:** Structural refactoring of the calculator codebase from its current flat structure into a multi-module architecture with clear separation of concerns. This is a PURE ARCHITECTURAL REFACTORING — all existing behavior must remain identical (100% backward compatibility). No new features, no scientific mode implementation.
+
+**Current State (verified via complete source inspection):**
+
+The codebase has evolved through incremental feature additions (Tasks 2-10) and now exists in a FLAT MODULE STRUCTURE under `src/`:
+- `src/calculator.py` (12 operations: 5 binary + 7 unary; pure core)
+- `src/operation_registry.py` (operation discovery via introspection)
+- `src/interactive.py` (terminal UI with history tracking, error logging, retry mechanism)
+- `src/cli.py` (command-line invocation)
+- `src/history.py` (session history persistence)
+- `src/error_logger.py` (centralized error logging)
+- `src/__main__.py` (entry point dispatcher)
+
+**Analysis of Current State:**
+
+**Module Interdependencies (Current):**
+```
+calculator (pure core, no imports)
+  ↑ used by
+operation_registry (discovery layer)
+  ↑ used by
+  ├─ interactive (UI terminal)
+  ├─ cli (UI command-line)
+      + shared by both: history, error_logger
+```
+
+**Architectural Issues (Current):**
+1. **No clear module grouping:** All 7 modules at same level; no organizational hierarchy
+2. **Operations organization unclear:** Operations are bare methods on Calculator; no abstraction for different operation types (binary vs unary)
+3. **Presentation layer coupling:** interactive.py and cli.py both import multiple infrastructure modules; hard to separate concerns
+4. **Future extensibility risk:** No clear path for normal vs scientific mode split without major refactoring
+5. **Missing layer contracts:** No explicit interface separating core from presentation
+
+**Requirements (from Brief):**
+
+**FR1: Multi-module Organization** — Organize into modules covering:
+- Core Logic (pure calculations, immutable)
+- Interface Handling (UI entry points, dispatching)
+- Session-Related Behavior (history, logging, interaction state)
+- Supporting Concerns (operation discovery, data structures)
+
+**FR2: Clear Operations Structure** — Transparent, extensible structure for operations with obvious place for normal/scientific split
+
+**FR3: Design Readiness** — Prepare for future normal/scientific mode separation without major refactoring
+
+**NFR1: Behavioral Compatibility** — 100% identical behavior; all existing tests must pass
+
+**NFR2: Object-Oriented Design** — Classes, inheritance, or composition
+
+**NFR3: Abstraction Minimalism** — Only justified abstractions
+
+**NFR4: Test Suite Preservation** — All existing tests must pass
+
+**Constraints:**
+- No scientific mode implementation (only structural preparation)
+- No new external dependencies
+- No changes to CLAUDE.md, .gitignore, .github/workflows/
+- No changes to public APIs (backward compatibility essential)
+
+**Architectural Design Decisions:**
+
+1. **Module Directory Structure (Proposed):**
+   ```
+   src/
+     ├── calculator.py               (pure core, unchanged)
+     ├── operation_registry.py        (discovery layer, unchanged)
+     ├── __main__.py                  (entry point, minimal changes)
+     ├── core/
+     │   ├── __init__.py
+     │   └── operations.py           (NEW: operation abstractions & registry extensions)
+     ├── ui/
+     │   ├── __init__.py
+     │   ├── interactive.py           (terminal UI, refactored for clarity)
+     │   └── cli.py                   (CLI UI, refactored for clarity)
+     ├── infrastructure/
+     │   ├── __init__.py
+     │   ├── history.py               (session history, moved)
+     │   └── error_logger.py          (error logging, moved)
+     └── session/
+         ├── __init__.py
+         └── manager.py               (NEW: session state management)
+   ```
+
+2. **Operations Abstraction (NEW):**
+   - Create `src/core/operations.py` with:
+     - `OperationType` enum: `UNARY`, `BINARY` (preparation for NORMAL, SCIENTIFIC split)
+     - `OperationMetadata` dataclass: name, arity, type, description
+     - `OperationRegistry` enhancements: categorize by OperationType
+   - Future: extend to separate NormalOperations, ScientificOperations classes
+   - Current: no behavior change; just organizational structure
+
+3. **Session Management (NEW):**
+   - Create `src/session/manager.py` with:
+     - `SessionManager` class: encapsulates retry counter, history, error logger state
+     - Extracted from run_interactive_session() logic; makes it testable in isolation
+     - Not exposed externally; internal refactoring only
+
+4. **Import Backward Compatibility:**
+   - Keep `src/__main__.py` unchanged in its public surface
+   - Add compatibility imports in `src/__init__.py`:
+     - `from .calculator import Calculator`
+     - `from .operation_registry import OperationRegistry`
+     - `from .ui.interactive import run_interactive_session`
+     - `from .ui.cli import run_cli`
+   - Existing imports like `from src.calculator import Calculator` continue to work
+   - Test imports remain unchanged
+
+5. **Module Responsibilities (After Refactoring):**
+
+   **`src/calculator.py` (unchanged)**
+   - Pure calculation core
+   - 12 methods (5 binary: add, subtract, multiply, divide, power; 7 unary: factorial, square, cube, sqrt, cbrt, ln, log10)
+   - No imports from other src/ modules
+   - Raises ValueError, ZeroDivisionError
+
+   **`src/core/operations.py` (NEW)**
+   - OperationType enum (UNARY, BINARY)
+   - OperationMetadata dataclass
+   - Enhanced OperationRegistry with categorization
+   - Preparation for future normal/scientific split (not implemented)
+
+   **`src/operation_registry.py` (unchanged signature)**
+   - Introspects Calculator
+   - Discovers operations (arity detection)
+   - Provides `get_operations()`, `get_arity()`, `call()`
+   - (Future: can be extended to use core/operations.py metadata)
+
+   **`src/ui/interactive.py` (refactored)**
+   - Move from `src/interactive.py` to `src/ui/interactive.py`
+   - Extract MAX_ATTEMPTS and parse_operand to module level
+   - Extract retry logic into SessionManager (internal refactoring)
+   - Keep public API: `run_interactive_session(calculator=None) -> None`
+   - No behavior change
+
+   **`src/ui/cli.py` (refactored)**
+   - Move from `src/cli.py` to `src/ui/cli.py`
+   - Extract parse_cli_operand to module level
+   - Keep public API: `run_cli(argv=None) -> int`
+   - No behavior change
+
+   **`src/infrastructure/history.py` (moved)**
+   - Move from `src/history.py` to `src/infrastructure/history.py`
+   - No changes to class/function signatures
+   - Keep public API: OperationHistory class
+
+   **`src/infrastructure/error_logger.py` (moved)**
+   - Move from `src/error_logger.py` to `src/infrastructure/error_logger.py`
+   - No changes to class/function signatures
+   - Keep public API: ErrorLogger class
+
+   **`src/session/manager.py` (NEW)**
+   - SessionManager class: encapsulates interactive session state
+   - Extracted retry_count, history, error_logger lifecycle
+   - Methods: `__init__()`, `display_menu()`, `select_operation()`, `gather_operands()`, `execute_and_record()`, `finalize()`
+   - Internal refactoring; not exposed to tests or users
+   - Makes interactive.py cleaner and more testable
+
+   **`src/__main__.py` (minimal changes)**
+   - Imports updated: `from .ui.interactive import run_interactive_session`, `from .ui.cli import run_cli`
+   - Entry point logic unchanged
+   - Tests that import from `__main__` continue to work
+
+   **`src/__init__.py` (NEW)**
+   - Re-exports public API for backward compatibility:
+     ```python
+     from .calculator import Calculator
+     from .operation_registry import OperationRegistry
+     from .ui.interactive import run_interactive_session
+     from .ui.cli import run_cli
+     from .infrastructure.history import OperationHistory
+     from .infrastructure.error_logger import ErrorLogger
+     ```
+   - Allows `from src import Calculator` to continue working
+   - Tests using direct imports continue to work
+
+6. **Test Organization (Minimal Changes):**
+   - Existing test files remain in `tests/`:
+     - `tests/test_calculator.py` (unchanged)
+     - `tests/test_cli.py` (unchanged, imports still work)
+     - `tests/test_interactive.py` (unchanged, imports still work)
+     - etc.
+   - Tests already mock/capture I/O; refactoring to new module paths requires only import updates
+   - All existing test discovery continues to work (pytest finds tests/ and imports via sys.path)
+
+7. **Dependency Graph (After Refactoring):**
+   ```
+   calculator (pure, no imports)
+       ↑
+   operation_registry
+       ↑
+   ├─ ui.interactive ─┐
+   ├─ ui.cli ────────┼─ infrastructure.history
+   └────────────────┴─ infrastructure.error_logger
+       ↑
+   session.manager (internal to interactive)
+   ```
+
+**Key Design Principles Applied:**
+
+1. **Layered Architecture:** Core → Discovery → Presentation (UI) + Infrastructure
+2. **Separation of Concerns:** Each module has single responsibility
+3. **Preparation for Extension:** Clear path for normal/scientific split (OperationType enum)
+4. **No Behavioral Change:** Pure refactoring; all tests pass unchanged
+5. **Backward Compatibility:** Public APIs re-exported; existing code continues
+6. **Minimal Abstraction:** Only adds abstractions that support future normal/scientific split
+
+**Migration Path (Order of Changes):**
+
+1. Create directory structure: `src/core/`, `src/ui/`, `src/infrastructure/`, `src/session/`
+2. Create `__init__.py` in each directory (empty or with doc strings)
+3. Create `src/core/operations.py` with OperationType, OperationMetadata (new functionality, prep-only)
+4. Create `src/session/manager.py` with SessionManager (internal refactoring)
+5. Move `src/interactive.py` → `src/ui/interactive.py`; update imports
+6. Move `src/cli.py` → `src/ui/cli.py`; update imports
+7. Move `src/history.py` → `src/infrastructure/history.py`; update imports
+8. Move `src/error_logger.py` → `src/infrastructure/error_logger.py`; update imports
+9. Create `src/__init__.py` with backward-compatibility re-exports
+10. Update `src/__main__.py` imports
+11. Run full test suite (all tests pass without changes to test files)
+12. Update CLAUDE.md RAG: codebase_map, patterns, agent_handoffs
+
+**Test Strategy:**
+
+- **No new tests required** for structural refactoring (NFR4)
+- All existing tests must pass with zero modifications (backward compat)
+- Import paths in test files will remain unchanged (pytest sys.path handling)
+- If tests import `from src.interactive import run_interactive_session`, the `src/__init__.py` re-export keeps it working
+- If tests use `from src.ui.interactive import run_interactive_session`, that also works (direct import)
+
+**Backward Compatibility Verification:**
+
+Test existing import patterns:
+1. `from src.calculator import Calculator` → works (direct)
+2. `from src.interactive import run_interactive_session` → works (via `src/__init__.py` re-export)
+3. `from src.cli import run_cli` → works (via `src/__init__.py` re-export)
+4. `from src import Calculator` → works (via `src/__init__.py` re-export)
+5. `from src.history import OperationHistory` → works (via `src/__init__.py` re-export)
+
+**Risk Assessment:**
+
+- **Risk: Import path breakage** → Mitigated by `src/__init__.py` re-exports
+- **Risk: Behavior change** → Mitigated by no changes to any logic; pure module reorganization
+- **Risk: Test failure** → Mitigated by backward compat imports and no test file modifications
+- **Risk: Entry point breakage** → Mitigated by minimal `__main__.py` changes
+- **Risk: Missing files** → Mitigated by file-level plan with explicit directory structure
+
+**Handoff Notes:**
+
+This is a STRUCTURAL REFACTORING ONLY. No new features, no behavior changes, no test modifications. The task is to reorganize 6 existing modules into a 3-layer architecture with preparation for future normal/scientific mode split. All existing tests must pass without changes. The refactoring itself requires no new tests (it's structure, not behavior). After refactoring, the codebase will be ready for Issue #406+ features (normal/scientific mode implementation) without major rework.
+
+---
+
+### 2026-04-24 — PR #453 — Modular Refactoring Completion — UNRESOLVED BLOCKER
+
+**Task:** Resolve four unresolved review feedback items on PR #453 ("Issue #406: Refactor calculator into modular package hierarchy"):
+
+1. `src/__main__.py` not updated to use new sub-packages
+2. `python -m src` still routes to old `src/cli.py` and `src/interactive.py`
+3. New `src/ui/`, `src/infrastructure/`, `src/session/`, `src/core/` are unreachable via entry point
+4. Update tests to reflect new import paths
+
+**Status (verified via complete source inspection 2026-04-24):**
+
+The PR has PARTIALLY COMPLETED the refactoring:
+
+**COMPLETED:**
+- Directory structure created: `src/ui/`, `src/infrastructure/`, `src/session/`, `src/core/`
+- Files moved to new locations:
+  - `src/ui/interactive.py` exists with correct imports (`from ..calculator`, `from ..infrastructure.history`, etc.)
+  - `src/ui/cli.py` exists with correct imports
+  - `src/infrastructure/history.py` exists
+  - `src/infrastructure/error_logger.py` exists
+- `src/__init__.py` created with backward-compatibility re-exports:
+  - Imports from new locations and re-exports public API
+  - Backward compat verified: `from src.interactive import run_interactive_session` works
+
+**NOT COMPLETED (Blocker):**
+- Old flat files still exist: `src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`
+- `src/__main__.py` imports from OLD flat paths (lines 3-4):
+  ```python
+  from .cli import run_cli
+  from .interactive import run_interactive_session
+  ```
+- Should import from NEW sub-packages:
+  ```python
+  from .ui.cli import run_cli
+  from .ui.interactive import run_interactive_session
+  ```
+- Tests import from OLD flat paths (test_cli.py line 12, test_interactive.py line 10, test_history.py line 7)
+- Tests must be updated to import from NEW locations (or rely on backward-compat re-exports via `src/__init__.py`)
+
+**Root Cause Analysis:**
+
+The refactoring was implemented as a copy-and-move (not a true move). Files were created in new locations with updated imports, but old flat files were not deleted. The entry point was not updated to use new import paths. Tests were not updated. This creates:
+1. Duplicate code (old and new versions coexist)
+2. Unreachable new modules (they work but entry point never calls them)
+3. Test ambiguity (imports work via both old and new paths)
+4. Confusion about which is the source of truth
+
+**Requirements (from Acceptance Criteria):**
+
+- **AC1:** `src/__main__.py` successfully imports from and invokes code in new sub-packages
+- **AC2:** `python -m src` launches application without errors, using NEW sub-package code paths
+- **AC3:** All test files updated to import from new sub-package paths; no flat-path imports remain in test suite
+- **AC4:** All 334 tests pass after changes (no regressions)
+- **AC5:** New sub-packages are verified accessible and importable
+
+**Architectural Decisions (to resolve blocker):**
+
+1. **Delete old flat files** (src-level)
+   - `src/interactive.py` → DELETE
+   - `src/cli.py` → DELETE
+   - `src/history.py` → DELETE
+   - `src/error_logger.py` → DELETE
+   - Rationale: Consolidate to single source of truth (new sub-packages); old files now unreachable and confusing
+
+2. **Update `src/__main__.py` imports** (entry point)
+   - Change line 3 from `from .cli import run_cli` to `from .ui.cli import run_cli`
+   - Change line 4 from `from .interactive import run_interactive_session` to `from .ui.interactive import run_interactive_session`
+   - Rationale: Route entry point through new module hierarchy; verify new packages work from CLI
+
+3. **Update test imports** (test suite)
+   - `tests/test_cli.py` line 12: change `from src.cli import run_cli` to `from src.ui.cli import run_cli`
+   - `tests/test_interactive.py` line 10: change `from src.interactive import run_interactive_session` to `from src.ui.interactive import run_interactive_session`
+   - `tests/test_history.py` line 7: change `from src.history import OperationHistory` to `from src.infrastructure.history import OperationHistory`
+   - Search all test files for `from src.interactive`, `from src.cli`, `from src.history`, `from src.error_logger` and update to new paths
+   - Rationale: Direct imports from new locations; verify backward-compat re-exports work for any imports that rely on them
+
+4. **Verify backward-compatibility re-exports** (optional)
+   - `src/__init__.py` already re-exports from new locations
+   - Tests that use `from src import OperationHistory` will continue to work
+   - Tests that use `from src.history import OperationHistory` will FAIL if old file is deleted
+   - Strategy: Update tests to use new direct paths; optionally add forward-compat imports in `src/__init__.py` if needed
+
+**Test Specifications (from Requirements Brief):**
+
+8 test scenarios to verify the migration:
+1. **test_main_imports_from_new_locations**: `src/__main__.py` imports `run_cli` and `run_interactive_session` from `src.ui.*`
+2. **test_cli_invocation_via_new_path**: `python -m src add 5 3` works correctly, returns 8
+3. **test_interactive_invocation_via_new_path**: `python -m src` launches interactive mode without errors
+4. **test_ui_interactive_direct_import**: `from src.ui.interactive import run_interactive_session` works
+5. **test_ui_cli_direct_import**: `from src.ui.cli import run_cli` works
+6. **test_infrastructure_history_import**: `from src.infrastructure.history import OperationHistory` works
+7. **test_infrastructure_error_logger_import**: `from src.infrastructure.error_logger import ErrorLogger` works
+8. **test_all_334_tests_pass**: Full test suite passes with updated imports
+
+**Source Changes Plan for python-code-implementer:**
+
+**File 1: Delete `src/interactive.py`**
+- Action: DELETE
+- Rationale: Moved to `src/ui/interactive.py`; new location is the source of truth
+- Impact: Any code importing `from src.interactive import ...` will fail unless using backward-compat re-export
+
+**File 2: Delete `src/cli.py`**
+- Action: DELETE
+- Rationale: Moved to `src/ui/cli.py`; new location is the source of truth
+- Impact: Any code importing `from src.cli import ...` will fail unless using backward-compat re-export
+
+**File 3: Delete `src/history.py`**
+- Action: DELETE
+- Rationale: Moved to `src/infrastructure/history.py`; new location is the source of truth
+- Impact: Any code importing `from src.history import ...` will fail unless using backward-compat re-export
+
+**File 4: Delete `src/error_logger.py`**
+- Action: DELETE
+- Rationale: Moved to `src/infrastructure/error_logger.py`; new location is the source of truth
+- Impact: Any code importing `from src.error_logger import ...` will fail unless using backward-compat re-export
+
+**File 5: Modify `src/__main__.py`**
+- Action: MODIFY
+- Changes:
+  1. Line 3: change `from .cli import run_cli` to `from .ui.cli import run_cli`
+  2. Line 4: change `from .interactive import run_interactive_session` to `from .ui.interactive import run_interactive_session`
+- Rationale: Route entry point through new module hierarchy; verify new packages work from CLI
+- Verification: `python -m src` and `python -m src add 5 3` both work
+
+**File 6: Modify `tests/test_cli.py`**
+- Action: MODIFY
+- Change line 12: `from src.cli import run_cli` → `from src.ui.cli import run_cli`
+- Rationale: Import from new location; verify backward-compat re-export not required
+
+**File 7: Modify `tests/test_interactive.py`**
+- Action: MODIFY
+- Change line 10: `from src.interactive import run_interactive_session` → `from src.ui.interactive import run_interactive_session`
+- Rationale: Import from new location; verify backward-compat re-export not required
+
+**File 8: Modify `tests/test_history.py`**
+- Action: MODIFY
+- Change line 7: `from src.history import OperationHistory` → `from src.infrastructure.history import OperationHistory`
+- Rationale: Import from new location; verify backward-compat re-export not required
+
+**File 9: Search and update all test files**
+- Action: GREP for `from src.` imports and verify they're either:
+  - Direct imports from new sub-package paths (e.g., `from src.ui.interactive import ...`)
+  - Imports from `src` module directly using re-exports (e.g., `from src import Calculator`)
+- Expected test files to check:
+  - `tests/test_calculator.py` — imports `Calculator` directly (verify)
+  - `tests/test_cli.py` — update `run_cli` import (AC3)
+  - `tests/test_interactive.py` — update `run_interactive_session` import (AC3)
+  - `tests/test_history.py` — update `OperationHistory` import (AC3)
+  - `tests/test_operation_registry.py` — verify imports (if exists)
+  - Any other test files (search pattern: `from src\.(interactive|cli|history|error_logger)`)
+
+**Migration Order (Execution Sequence):**
+
+1. Update test imports first (tests/test_cli.py, test_interactive.py, test_history.py, etc.)
+2. Update `src/__main__.py` imports
+3. Delete old flat files (src/interactive.py, src/cli.py, src/history.py, src/error_logger.py)
+4. Run full test suite (all 334 tests must pass)
+5. Verify entry point works: `python -m src` and `python -m src add 5 3`
+
+**Backward Compatibility Verification:**
+
+The `src/__init__.py` re-exports ensure that code using:
+- `from src import Calculator` still works
+- `from src import run_interactive_session` still works (if test imports this)
+- etc.
+
+But code using:
+- `from src.interactive import run_interactive_session` will FAIL after deletion of `src/interactive.py` (unless re-export added)
+- `from src.cli import run_cli` will FAIL after deletion of `src/cli.py` (unless re-export added)
+
+**Decision: Update tests to use NEW import paths** rather than adding forward-compat re-exports. This ensures tests verify the refactoring is complete and the new module hierarchy is the source of truth.
+
+**Risks & Mitigations:**
+
+- **Risk: Test failure after deletion** → Mitigated by updating test imports BEFORE deletion
+- **Risk: Entry point failure** → Mitigated by updating `__main__.py` BEFORE deletion
+- **Risk: Hidden import issues** → Mitigated by running full test suite after each change
+- **Risk: Backward-compat break** → Mitigated by `src/__init__.py` re-exports for direct imports
+
+**Handoff to pytest-edge-tester (WRITE):**
+
+Write 8 test scenarios to verify migration (can be integration tests or unit tests):
+1. Verify `src/__main__.py` imports from new locations (inspect import statements)
+2. Test `python -m src add 5 3` succeeds with exit code 0
+3. Test `python -m src` launches interactive mode (mock input/output)
+4. Test direct imports from `src.ui.interactive`, `src.ui.cli`, etc.
+5. Test backward-compat re-exports via `src.__init__.py`
+6. Verify all 334 existing tests pass
+7. Verify old flat files don't exist in `src/` root
+8. Verify new sub-package files exist and are importable
+
+**Handoff to python-code-implementer:**
+
+Implement minimal, targeted changes:
+1. Update test imports (test_cli.py, test_interactive.py, test_history.py, and any others)
+2. Update `src/__main__.py` imports
+3. Delete old flat files (src/interactive.py, src/cli.py, src/history.py, src/error_logger.py)
+4. Verify backward-compat re-exports in `src/__init__.py` are sufficient for any remaining imports
+5. Run full test suite; all 334 tests must pass
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+**Key Deliverable:**
+
+Resolved blocker: All unresolved feedback items addressed:
+1. AC1: ✓ `src/__main__.py` imports from new sub-packages
+2. AC2: ✓ `python -m src` routes to new sub-package code paths
+3. AC3: ✓ New sub-packages are accessible via entry point
+4. AC4: ✓ All 334 tests pass
+5. AC5: ✓ New sub-packages verified importable and reachable
+

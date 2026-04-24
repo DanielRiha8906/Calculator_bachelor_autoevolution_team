@@ -1,0 +1,72 @@
+@startuml
+title Package Architecture — Issue #406 Modular Refactor
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+' ─── Packages ───────────────────────────────────────────────
+package "src (root)" as Root {
+  component "__init__.py\n[backward-compat re-exports]" as Init
+  component "calculator.py\n[Calculator]" as Calc
+  component "operation_registry.py\n[OperationRegistry]" as Reg
+  component "__main__.py\n[entry point]" as Main
+}
+
+package "src.core\n[Calculation Core]" as Core {
+  component "operations.py\n[OperationType, OperationMetadata]" as Ops
+}
+
+package "src.ui\n[Presentation]" as UI {
+  component "interactive.py\n[run_interactive_session]" as Iact
+  component "cli.py\n[run_cli]" as Cli
+}
+
+package "src.infrastructure\n[Support]" as Infra {
+  component "history.py\n[OperationHistory]" as Hist
+  component "error_logger.py\n[ErrorLogger]" as ELog
+}
+
+package "src.session\n[Session State]" as Session {
+  component "manager.py\n[SessionManager]" as Mgr
+}
+
+' ─── Dependencies ────────────────────────────────────────────
+Main --> Iact : invokes
+Main --> Cli  : invokes
+
+Iact --> Calc : creates
+Iact --> Reg  : creates
+Iact --> Hist : creates
+Iact --> ELog : creates
+
+Cli --> Calc : creates
+Cli --> Reg  : creates
+Cli --> Hist : creates
+Cli --> ELog : creates
+
+Reg  --> Calc : wraps
+
+Mgr  --> Calc : injected
+Mgr  --> ELog : injected
+Mgr  --> Hist : injected
+
+' backward-compat re-exports
+Init ..> Calc : re-exports
+Init ..> Reg  : re-exports
+Init ..> Iact : re-exports
+Init ..> Cli  : re-exports
+Init ..> Hist : re-exports
+Init ..> ELog : re-exports
+
+note as N1
+  Layers
+  ──────────────────────────────────────
+  Calculation Core : src.calculator
+  Discovery        : src.operation_registry
+  Presentation     : src.ui.*
+  Support          : src.infrastructure.*
+  Session State    : src.session.*
+end note
+
+@enduml

@@ -1,0 +1,40 @@
+@startuml
+title Infrastructure Classes — Issue #406
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src.infrastructure" {
+
+  class OperationHistory {
+    - _entries: list[str]
+    + record(operation_name, operands, result)
+    + get_entries(): list[str]
+    + display(): str
+    + write_to_file(filepath: str = "history.txt")
+  }
+
+  class ErrorLogger {
+    - _log_file: str
+    + log_invalid_operation(op_name, msg)
+    + log_invalid_operand(op_name, operand, msg)
+    + log_incorrect_argument_count(op_name, required, actual, msg)
+    + log_runtime_calculation_error(op_name, operands, error_type, msg)
+    - _timestamp(): str
+    - _write(entry: str)
+  }
+
+}
+
+note bottom of OperationHistory
+  Module-level helper:
+  format_history_entry(operation_name,
+    operands, result) -> str
+end note
+
+note bottom of ErrorLogger
+  Writes timestamped entries to a plain-text
+  log file; no coupling to any other module.
+end note
+
+@enduml

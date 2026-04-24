@@ -1,0 +1,67 @@
+@startuml
+title Module Import Graph — Issue #406
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+component "src.__init__" as Init
+component "src.calculator" as Calc
+component "src.operation_registry" as Reg
+component "src.__main__" as Main
+component "src.core.operations" as Ops
+component "src.ui.interactive" as UIIact
+component "src.ui.cli" as UICli
+component "src.infrastructure.history" as Hist
+component "src.infrastructure.error_logger" as ELog
+component "src.session.manager" as Mgr
+
+' __init__ re-exports
+Init --> Calc    : imports
+Init --> Reg     : imports
+Init --> UIIact  : imports
+Init --> UICli   : imports
+Init --> Hist    : imports
+Init --> ELog    : imports
+
+' __main__ entry point
+Main --> UIIact  : imports
+Main --> UICli   : imports
+
+' ui modules
+UIIact --> Calc  : imports
+UIIact --> Reg   : imports
+UIIact --> Hist  : imports
+UIIact --> ELog  : imports
+
+UICli  --> Calc  : imports
+UICli  --> Reg   : imports
+UICli  --> Hist  : imports
+UICli  --> ELog  : imports
+
+' registry
+Reg --> Calc     : imports
+
+' session manager (injection — no static imports)
+Mgr ..> Calc  : injected at runtime
+Mgr ..> ELog  : injected at runtime
+Mgr ..> Hist  : injected at runtime
+
+' stdlib-only leaves (no arrows needed)
+note bottom of Calc
+  stdlib only (math)
+end note
+
+note bottom of Ops
+  stdlib only — not yet
+  imported by other modules
+end note
+
+note bottom of Hist
+  stdlib only
+end note
+
+note bottom of ELog
+  stdlib only
+end note
+
+@enduml

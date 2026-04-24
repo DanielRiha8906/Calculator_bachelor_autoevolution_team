@@ -226,12 +226,113 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Tester (VERIFY phase) will run full suite; confirm 8 test categories pass and all existing tests remain green
   - Critical: No test regressions; logging must be transparent to existing functionality
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
-- **Recurring Patterns Observed Across Task Progression:**
-  - All issues follow clear, focused scope with explicit constraints
-  - Issues are self-contained (no external doc references required)
-  - Comments from owner are rare; requirements fully in issue body
-  - Each task builds on previous features; dependencies tracked via issue number sequencing
-  - Multi-mode support (interactive + CLI) is common; consistency across modes always required
-  - Tests are high-priority; "maintain tests that accurately reflect current version" is standard closing phrase
-  - Architect ambiguity-resolution pattern: 4–6 open questions per task, mostly around format/location/error-handling
-  - Tester scope: always dual-mode (interactive + CLI) unless issue explicitly singles out one mode
+
+### Cycle: 2026-04-24 — Issue #406: V3 Task 12 - Expert/team (CURRENT)
+- **Task Type:** Architectural refactoring (module organization and operations structure design)
+- **Scope:** Refactor calculator codebase into multiple well-organized modules; establish clear separation between core logic, interface handling, session-related behavior, and supporting utilities; introduce clean operations structure ready for future normal/scientific mode separation
+- **Key Patterns:**
+  - No comments or linked issues; all requirements in issue body
+  - Explicitly excludes full scientific mode implementation; only the structural boundary should be prepared
+  - Task is NOT a feature addition; it is a structural/organizational task
+  - Explicit scope constraint: "preserve current behavior of existing features"
+  - Prerequisite tasks completed: issues #376–#400 establish all current features (basic ops, factorial, 8 scientific ops, interactive mode, CLI mode, input validation, history tracking, error logging)
+  - Design-first task; requires architect approval before implementation proceeds
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Refactor calculator into **multiple modules** with clear separation of concerns
+  2. **FR2 (MUST HAVE):** Organize into conceptual areas: **core logic**, **interface handling**, **session-related behavior**, **supporting concerns**
+  3. **FR3 (MUST HAVE):** Introduce a **clearer operations structure** for currently implemented features
+  4. **FR4 (MUST HAVE):** Design operations structure so **future normal/scientific separation has an obvious place** in module layout
+  5. **NFR1:** Preserve 100% current behavior of existing features (no user-visible changes)
+  6. **NFR2:** Maintain object-oriented design throughout
+  7. **NFR3:** Introduce abstractions only where they clearly support maintainability and extensibility
+  8. **NFR4:** Maintain all existing tests; tests must accurately reflect current version
+  9. **SC1:** Do NOT implement full scientific mode unless necessary for structural boundaries
+- **Discovered Files/Modules (from prior task context):**
+  - `src/__main__.py` (application entry point)
+  - `src/interactive.py` (interactive session mode)
+  - `src/cli.py` (CLI argument parsing and execution)
+  - `src/operation_registry.py` (operation registration and lookup)
+  - `src/history.py` (session history tracking and persistence)
+  - Implicit: core calculator logic, possibly spread across multiple files
+- **Ambiguities Flagged:**
+  1. **Exact module boundaries:** Which operations/components belong in which modules? What naming convention? (e.g., `src/core/`, `src/interface/`, `src/session/`, `src/utils/` or flat structure?)
+  2. **Operations structure specifics:** Should operations be organized as classes (Strategy pattern), a factory/registry, a dispatch table, or something else?
+  3. **Normal vs scientific separation point:** Where should the abstraction/separation exist for future scientific mode? (e.g., inherit from base Operation, use operation type tags, separate registries?)
+  4. **Backward compatibility of imports:** Should existing imports from refactored modules still work (compatibility layer), or is breaking API acceptable?
+  5. **Test file reorganization:** Should tests be refactored to match new module structure, or remain as-is (accepting that test organization might diverge from source)?
+  6. **Dependencies between modules:** Are there circular dependency risks or ordering constraints in the new structure?
+- **Constraints:**
+  - Must not implement scientific mode operations (only structural readiness)
+  - Must not break any existing test
+  - Must preserve all user-facing behavior (interactive mode, CLI, history, logging, input validation)
+  - No changes to CLAUDE.md, .gitignore, or workflow files
+- **Acceptance Criteria (inferred):**
+  - AC1: Codebase organized into well-named modules with clear purpose
+  - AC2: Each module exhibits single responsibility (core, interface, session, supporting)
+  - AC3: Operations can be trivially separated into normal/scientific without refactoring module structure
+  - AC4: All existing tests pass (no regression)
+  - AC5: Code is readable, maintainable, and OOP design is evident
+  - AC6: No user-visible behavior change (feature parity maintained)
+- **Handoff Notes for Next Agent (Architect):**
+  - This task is a DESIGN task; produce architectural plan BEFORE implementation starts
+  - Architect must address the 6 ambiguities above in the design document
+  - Architect should produce a module dependency diagram showing refactored structure
+  - Architect should specify test refactoring strategy (mirror source structure or keep as-is?)
+  - Architect should propose operation structure (e.g., base class, registry pattern, etc.) that clearly accommodates future normal/scientific separation
+  - Tester will write NO new tests (test suite is stable); only verify refactored code passes all existing tests in VERIFY phase
+  - Implementer will refactor according to architect's design; file moves and reorganization is the primary work
+  - Critical: This is a large-scope refactoring; must keep commits atomic and reversible
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+- **Patterns Observed:**
+  - Issue #406 is the first structuring/architectural task in the progression (all prior tasks were feature additions)
+  - Task represents a significant shift from feature-driven to design-driven work
+  - Successor tasks (if any) will likely assume this refactored structure as a foundation
+
+### Cycle: 2026-04-24 — PR #453 Review: Unresolved Feedback on Issue #406 Implementation
+- **Task Type:** PR review feedback analysis (identify unresolved requirements)
+- **Scope:** Extract and structure unresolved owner feedback on PR #453 (Issue #406 modular refactoring implementation)
+- **PR Status:** OPEN with label `request-changes:expert-team` (blocking feedback present)
+- **PR Test Results:** 334 tests passed, 0 failed; test suite passes completely
+- **PR Implementation Summary:**
+  - Introduces `src/core/`, `src/ui/`, `src/infrastructure/`, `src/session/` sub-packages
+  - Moves UI logic (`interactive.py`, `cli.py`) to `src/ui/`
+  - Moves supporting logic (`history.py`, `error_logger.py`) to `src/infrastructure/`
+  - Adds `OperationType` enum and `OperationMetadata` dataclass in `src/core/operations.py`
+  - Adds `SessionManager` class in `src/session/manager.py`
+  - Implements backward-compatibility re-exports in `src/__init__.py`
+  - Preserves old flat files at `src/` root to avoid breaking ~90 existing tests
+- **UNRESOLVED BLOCKER (Critical):**
+  - **Owner Comment:** "NEEDS FIX" with explicit task list:
+    1. `__main__.py` not updated to use new sub-packages
+    2. `python -m src` still routes to old `src/cli.py` and `src/interactive.py`
+    3. New `src/ui/`, `src/infrastructure/`, `src/session/`, `src/core/` are unreachable via entry point
+    4. Update tests to reflect new import paths
+  - **Status:** Single unresolved comment; no review comments or review threads marked as resolved
+- **Requirements Extracted from Unresolved Feedback:**
+  1. **FR1 (MUST HAVE):** Update `src/__main__.py` to import and invoke entry points from the NEW sub-packages (`src.ui.interactive`, `src.ui.cli`) instead of old flat imports
+  2. **FR2 (MUST HAVE):** Verify that `python -m src` launches application using NEW sub-package code paths (new interactive and/or CLI implementations)
+  3. **FR3 (MUST HAVE):** Update ~90 existing test files to import from new sub-package paths instead of old flat `src/` paths (e.g., `from src.ui.interactive import ...` instead of `from src.interactive import ...`)
+  4. **FR4 (SHOULD HAVE):** Consider whether old flat files (`src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`) should be deleted after test imports updated, or kept for gradual migration
+  5. **NFR1:** No test regressions; all 334 passing tests must remain passing after changes
+  6. **NFR2:** Verify entry point accessibility: new sub-packages must be reachable and executable via `python -m src`
+- **Critical Ambiguities Requiring Architect/Implementer Clarification:**
+  1. **Entry point routing:** Should `src/__main__.py` unconditionally launch interactive mode, support both modes via CLI args, or auto-detect based on environment?
+  2. **Test import update scope:** Should all ~90 tests be updated at once, or in phases? Which tests are highest priority?
+  3. **Old flat file retention:** PR preserves old files for backward compatibility; should they be removed, deprecated with warnings, or kept indefinitely?
+  4. **Import path strategy:** Should `src/__init__.py` re-exports remain as primary API, or should new sub-package imports be preferred?
+  5. **Backward-compatibility guarantees:** Does the project commit to supporting old flat-file imports indefinitely, or is this a one-time migration window?
+- **Owner Expectations Inferred:**
+  - Entry point MUST be updated; new packages MUST be reachable; tests MUST reflect new structure
+  - Owner sees this as a necessary completion step for the refactoring to be functional
+  - Four-part task list suggests implementer should handle all four items (not piecemeal)
+- **Handoff Notes:**
+  - For system architect: Clarify entry point strategy and test migration plan; produce implementation spec for `src/__main__.py` and test update approach
+  - For implementer: Update `src/__main__.py` to route to new sub-package entry points; update all ~90 test imports to use new paths; verify `python -m src` invokes new code; ensure no test regressions
+  - For tester: Verify all 334 tests pass after changes; confirm entry point works as expected; test both interactive and CLI modes (if supported)
+  - Critical: Four-part task is tightly coupled; all parts must be completed together; partial completion is not acceptable per owner feedback
+- **Label:** `request-changes:expert-team` (blocking feedback; requires fixes before merge)
+- **Patterns Observed:**
+  - PR was generated by Claude Code (autonomous agent); owner (DanielRiha8906) provides corrective feedback
+  - Feedback is actionable and specific (task list provided)
+  - Test suite passing does not guarantee full task completion (tests still used old imports, so they don't validate new sub-package accessibility)
+  - Backward-compatibility re-exports masked the incomplete entry point update (tests passed but entry point was not updated)

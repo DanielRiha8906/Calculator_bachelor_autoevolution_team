@@ -9,7 +9,7 @@ and argument validation.
 import pytest
 from io import StringIO
 from unittest.mock import patch
-from src.cli import run_cli
+from src.ui.cli import run_cli
 
 
 class TestCLIBinaryOperations:
