@@ -91,3 +91,14 @@ Duration: 187.1s | Cost: $0.457206 USD | Turns: 4
 - **Tests passed:** 95 passed, 0 failed
 
 Duration: 343.3s | Cost: $0.705994 USD | Turns: 16
+
+## Run: update-diagrams — Add User Input CLI Module (2026-04-24)
+
+- **Branch:** task/issue-383-add-user-input
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — class diagram for Calculator, cli, and __main__ modules
+  - `artifacts/activity_diagram_user_session.puml` — activity flow for interactive calculation session
+  - `artifacts/sequence_diagram_calculation.puml` — sequence diagram for single calculation interaction
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

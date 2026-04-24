@@ -1,0 +1,77 @@
+@startuml class_diagram_cli
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    + add(a: float, b: float) : float
+    + subtract(a: float, b: float) : float
+    + multiply(a: float, b: float) : float
+    + divide(a: float, b: float) : float
+    + square(a: float) : float
+    + cube(a: float) : float
+    + square_root(a: float) : float
+    + cube_root(a: float) : float
+    + factorial(n: int) : int
+    + power(base: float, exp: float) : float
+    + log(a: float) : float
+    + ln(a: float) : float
+}
+
+note right of Calculator::divide
+  Raises ZeroDivisionError
+  when b == 0
+end note
+
+note right of Calculator::square_root
+  Raises ValueError when a < 0
+end note
+
+note right of Calculator::log
+  Raises ValueError when a <= 0
+end note
+
+note right of Calculator::ln
+  Raises ValueError when a <= 0
+end note
+
+note right of Calculator::factorial
+  Raises ValueError for
+  boolean, non-integer, or n < 0
+end note
+
+class "cli" <<module>> {
+    + SUPPORTED_OPERATORS : set
+    + prompt_for_first_number() : float
+    + prompt_for_operator() : str
+    + prompt_for_second_number() : float
+    + display_result(first, operator, second, result) : None
+    + display_error(error_message: str) : None
+    + run_calculator() : float
+}
+
+note right of "cli"::SUPPORTED_OPERATORS
+  {"+", "-", "*", "/"}
+end note
+
+note right of "cli"::prompt_for_first_number
+  Loops until valid float input
+end note
+
+note right of "cli"::prompt_for_operator
+  Loops until operator in
+  SUPPORTED_OPERATORS
+end note
+
+class "__main__" <<module>> {
+    + main() : None
+}
+
+class "__init__" <<module>> {
+    ' re-exports Calculator
+}
+
+"cli" --> Calculator : <<import>>\nCalculator
+"__main__" --> "cli" : <<import>>\nrun_calculator, display_error
+"__init__" --> Calculator : <<import>>\nCalculator
+
+@enduml

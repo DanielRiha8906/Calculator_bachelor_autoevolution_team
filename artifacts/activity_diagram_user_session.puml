@@ -1,0 +1,50 @@
+@startuml activity_diagram_user_session
+
+skinparam activityDiamondBackgroundColor #FEFECE
+
+start
+
+:User invokes app;
+:main() starts;
+:call run_calculator();
+:Create Calculator instance;
+
+while (valid first number?) is (invalid)
+    :prompt_for_first_number()\nprint error, retry;
+endwhile (valid)
+:Store first number;
+
+while (valid operator?) is (invalid)
+    :prompt_for_operator()\nprint error, retry;
+endwhile (valid)
+:Store operator;
+
+while (valid second number?) is (invalid)
+    :prompt_for_second_number()\nprint error, retry;
+endwhile (valid)
+:Store second number;
+
+if (operator == "+") then (yes)
+    :calc.add(first, second);
+elseif (operator == "-") then (yes)
+    :calc.subtract(first, second);
+elseif (operator == "*") then (yes)
+    :calc.multiply(first, second);
+else (operator == "/")
+    :calc.divide(first, second);
+    note right
+      May raise
+      ZeroDivisionError
+    end note
+endif
+
+if (exception raised?) then (yes)
+    :display_error(error_message);
+    stop
+else (no)
+    :display_result(first, operator, second, result);
+    :return result to main();
+    stop
+endif
+
+@enduml
