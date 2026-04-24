@@ -14,7 +14,7 @@
 - **Risks:** None — backward-compatible; get_operations() still returns legacy 12 ops; existing interactive tests unaffected by optional mode selection
 - **Tests passed:** 415 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1271.6s | Cost: $2.754782 USD | Turns: 15
 
 ## Run: update-diagrams — Issue #409 Documentation UML diagrams (2026-04-24)
 
