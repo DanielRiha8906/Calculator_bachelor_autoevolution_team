@@ -252,4 +252,4 @@ Duration: 211.4s | Cost: $0.558391 USD | Turns: 4
   - `artifacts/activity_diagram_interactive_loop.puml` — new activity diagram for Application interactive REPL loop with consecutive-failure tracking
   - `artifacts/sequence_diagram_interactive_calculation.puml` — new sequence diagram for one successful interactive calculation with history recording
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
