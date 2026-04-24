@@ -11,7 +11,7 @@
 - **Risks:** None — documentation-only change; no source code modified
 - **Tests passed:** 350 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 591.9s | Cost: $1.262945 USD | Turns: 16
 
 ## Run: Fix PR #453 — Issue #406: Refactor calculator into modular package hierarchy (2026-04-24)
 
