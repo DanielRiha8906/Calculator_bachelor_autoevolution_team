@@ -587,3 +587,75 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Ambiguities are typical for documentation tasks: audience, level of detail, scope are creative decisions, not technical ambiguities
 - Similar to Task 6 (PlantUML diagrams) but higher-level; diagrams are visual aids, Task 13 is narrative documentation
 
+### 2026-04-24 | V3 Task 14 - Structured/team (Issue #411)
+
+**Issue:** Add a scientific mode to the calculator and allow the user to switch between normal and scientific functionality in interactive mode. Keep normal mode limited to the standard calculator operations, and make scientific mode provide an expanded set of advanced mathematical functions. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Partition calculator operations into two distinct functional groups: normal (arithmetic only) and scientific (advanced math)
+- Allow user to switch between modes in interactive REPL session
+- Normal mode: add, subtract, multiply, divide (4 operations)
+- Scientific mode: factorial, square, cube, sqrt, cbrt, power, log, ln (8 operations)
+- All 12 operations implemented in prior tasks (Tasks 1-4); Task 14 introduces mode partitioning and mode-switching capability
+- Update tests to verify mode-aware behavior and mode switching
+
+**Explicit Requirements:**
+- **Functional:** Mode partitioning — normal vs. scientific operation availability
+- **Functional:** Interactive mode switching (via command or menu)
+- **Functional:** Operation availability validation (reject op not in current mode with clear error)
+- **Functional:** CLI mode defaults to normal mode (stateless, no mode switching in CLI)
+- **Testing:** Update tests to cover mode partitioning, switching, error handling
+
+**Ambiguities & Gaps:**
+- **Mode-switch command syntax:** Unspecified how user switches modes in interactive mode
+  - Examples: `mode scientific`, `switch sci`, `scientific`, menu-driven (1=normal, 2=scientific), numbered commands
+  - Current assumption: architect to decide based on existing command patterns (e.g., "history" command from Task 9)
+- **CLI mode behavior:** Unclear if CLI should accept mode flag (e.g., `--mode scientific factorial 5`) or always default to normal
+  - Current assumption: CLI always normal mode; if scientific op requested, error returned (op not found in normal mode)
+- **Current mode display:** No spec on whether mode is shown in interactive prompts or only on switch
+  - Examples: `[Normal] >> `, `[Scientific] >> `, or only in feedback ("Switched to Scientific Mode")
+- **Session state after mode switch:** Unclear if mode switch should clear session state, reset history, etc.
+  - Current assumption: Fresh state on mode switch (no carryover of intermediate results or partial operations)
+- **Operation registry refactoring:** No spec on how to implement mode-scoped operation lookup
+  - Options: single registry with mode metadata, separate registries per mode, registry.get_operation(name, mode=x), or registry[mode][name]
+- **Mode persistence:** Should mode choice persist across session restarts or reset to normal mode each time?
+  - Current assumption: Reset to normal mode on session start (stateless)
+- **History/logging behavior:** Should history and error log be mode-aware?
+  - Current assumption: History and error logging operate independently of mode; records include operation name (implicitly mode-identified by operation)
+- No comments provided; issue body is minimal
+- No test examples or acceptance criteria provided
+- No mention of whether mode-switching should affect other features (validation, error handling, etc.)
+
+**Assumed Resolution (for Architect):**
+- **Mode partitioning:**
+  - Normal mode: add, subtract, multiply, divide
+  - Scientific mode: factorial, square, cube, sqrt, cbrt, power, log, ln
+- **Mode-switch mechanism (TBD):** Recommend a command like "mode <name>" (e.g., "mode scientific", "mode normal") consistent with "history" pseudo-command from Task 9
+- **CLI default:** Always normal mode; no CLI flag for mode selection (engineering simplification; supports stateless operation)
+- **Operation validation:** When user enters operation, check against current mode's operation set; if not found, return error like "factorial not available in normal mode"
+- **Mode display:** Recommend showing current mode in interactive prompt (e.g., `Normal >> `) or in mode-switch feedback
+- **Session state:** Mode switch clears any pending state; user starts fresh in new mode
+- **Operation registry:** Suggest refactoring `_build_registry()` to return mode-scoped registry or add mode parameter to operation lookup method
+- **History/Error logging:** No changes to history or error logging mechanisms; record operation name (implicitly identifies mode)
+- **Test coverage:** New tests should verify:
+  - Operations in normal mode work; scientific ops rejected with clear error
+  - Operations in scientific mode work; arithmetic ops accessible but may require testing mode-switch path
+  - Mode-switch command parsing and execution
+  - Error message for unavailable operation in current mode
+  - Backward compatibility: all existing tests pass
+
+**Context from Related Issues:**
+- V3 Task 13 (#408): Documentation (README already mentions normal vs. scientific modes from this Task 14 implementation; may need clarification of mode-switch syntax in docs)
+- V3 Task 12 (#405): Modular refactoring (Task 14 builds on refactored architecture)
+- V3 Tasks 1-11: All prior features (error handling, operations, validation, logging, refactoring) must coexist with mode partitioning
+- V2 Task 14 (#273): Earlier scientific mode task (suggests scientific mode is a long-standing feature request; V3 Task 14 formalizes mode switching)
+
+**Patterns:**
+- V3 Task 14 is organizational/feature-refinement task, not feature-addition task
+- Task 14 concludes V3 structured/team cycle; represents finalization of calculator feature set (no new operations, just mode organization)
+- V3 sequence: error handling (1) → test suite (2) → operations (3-4) → interactive (5) → CLI (7) → validation (8) → logging (9-10) → refactoring (11) → documentation (13) → mode-switching (14)
+- Minimal specification consistent with V3 series; key ambiguities are mode-switch syntax and CLI behavior
+- "ai-implement:structured-team" label consistent; no new operations, pure organizational/UX refinement
+- Task 14 likely final V3 task; represents completion of calculator feature work and mode organization
+- Ambiguities are straightforward engineering decisions (command syntax, registry design); no domain confusion
+- Task builds on all prior work; must integrate with existing error handling, validation, history, logging, and refactored architecture

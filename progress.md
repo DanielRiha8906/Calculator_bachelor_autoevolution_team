@@ -1,3 +1,20 @@
+## Run: Issue #411 — V3 Task 14 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/main.py` — added mode constants (MODE_NORMAL/MODE_SCIENTIFIC), mode-aware `_build_registry()`, mode switching command parsing in interactive loop, CLI mode defaulting to MODE_NORMAL
+  - `src/__main__.py` — updated wrapper to provide backward-compatible CLI with full scientific ops
+  - `tests/test_mode_switching.py` — 20 new tests for mode initialization, switching, operation filtering, failure counting, CLI behavior
+  - `tests/test_mode_operations.py` — 8 new parametrized tests for operation availability in each mode
+  - `rag/agents/python-code-implementer.md` — cycle log entry
+  - `rag/agents/pytest-edge-tester.md` — cycle log entry
+- **Purpose:** Add scientific mode to calculator with interactive mode switching; normal mode restricts to arithmetic operations, scientific mode enables all 13 operations
+- **Risks:** None — backward compatible; existing tests unmodified
+- **Tests passed:** 291 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #408 — V3 Task 13 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-408-add-documentation
