@@ -11,7 +11,7 @@
 - **Risks:** None — change is localized to one function; CLI mode untouched; no new dependencies
 - **Tests passed:** 143 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 461.7s | Cost: $1.122245 USD | Turns: 26
 
 ## Run: Issue #372 — V3 Task 1 - Structured/team (2026-04-24)
 
