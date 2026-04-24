@@ -226,12 +226,64 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Tester (VERIFY phase) will run full suite; confirm 8 test categories pass and all existing tests remain green
   - Critical: No test regressions; logging must be transparent to existing functionality
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
-- **Recurring Patterns Observed Across Task Progression:**
-  - All issues follow clear, focused scope with explicit constraints
-  - Issues are self-contained (no external doc references required)
-  - Comments from owner are rare; requirements fully in issue body
-  - Each task builds on previous features; dependencies tracked via issue number sequencing
-  - Multi-mode support (interactive + CLI) is common; consistency across modes always required
-  - Tests are high-priority; "maintain tests that accurately reflect current version" is standard closing phrase
-  - Architect ambiguity-resolution pattern: 4–6 open questions per task, mostly around format/location/error-handling
-  - Tester scope: always dual-mode (interactive + CLI) unless issue explicitly singles out one mode
+
+### Cycle: 2026-04-24 — Issue #406: V3 Task 12 - Expert/team (CURRENT)
+- **Task Type:** Architectural refactoring (module organization and operations structure design)
+- **Scope:** Refactor calculator codebase into multiple well-organized modules; establish clear separation between core logic, interface handling, session-related behavior, and supporting utilities; introduce clean operations structure ready for future normal/scientific mode separation
+- **Key Patterns:**
+  - No comments or linked issues; all requirements in issue body
+  - Explicitly excludes full scientific mode implementation; only the structural boundary should be prepared
+  - Task is NOT a feature addition; it is a structural/organizational task
+  - Explicit scope constraint: "preserve current behavior of existing features"
+  - Prerequisite tasks completed: issues #376–#400 establish all current features (basic ops, factorial, 8 scientific ops, interactive mode, CLI mode, input validation, history tracking, error logging)
+  - Design-first task; requires architect approval before implementation proceeds
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Refactor calculator into **multiple modules** with clear separation of concerns
+  2. **FR2 (MUST HAVE):** Organize into conceptual areas: **core logic**, **interface handling**, **session-related behavior**, **supporting concerns**
+  3. **FR3 (MUST HAVE):** Introduce a **clearer operations structure** for currently implemented features
+  4. **FR4 (MUST HAVE):** Design operations structure so **future normal/scientific separation has an obvious place** in module layout
+  5. **NFR1:** Preserve 100% current behavior of existing features (no user-visible changes)
+  6. **NFR2:** Maintain object-oriented design throughout
+  7. **NFR3:** Introduce abstractions only where they clearly support maintainability and extensibility
+  8. **NFR4:** Maintain all existing tests; tests must accurately reflect current version
+  9. **SC1:** Do NOT implement full scientific mode unless necessary for structural boundaries
+- **Discovered Files/Modules (from prior task context):**
+  - `src/__main__.py` (application entry point)
+  - `src/interactive.py` (interactive session mode)
+  - `src/cli.py` (CLI argument parsing and execution)
+  - `src/operation_registry.py` (operation registration and lookup)
+  - `src/history.py` (session history tracking and persistence)
+  - Implicit: core calculator logic, possibly spread across multiple files
+- **Ambiguities Flagged:**
+  1. **Exact module boundaries:** Which operations/components belong in which modules? What naming convention? (e.g., `src/core/`, `src/interface/`, `src/session/`, `src/utils/` or flat structure?)
+  2. **Operations structure specifics:** Should operations be organized as classes (Strategy pattern), a factory/registry, a dispatch table, or something else?
+  3. **Normal vs scientific separation point:** Where should the abstraction/separation exist for future scientific mode? (e.g., inherit from base Operation, use operation type tags, separate registries?)
+  4. **Backward compatibility of imports:** Should existing imports from refactored modules still work (compatibility layer), or is breaking API acceptable?
+  5. **Test file reorganization:** Should tests be refactored to match new module structure, or remain as-is (accepting that test organization might diverge from source)?
+  6. **Dependencies between modules:** Are there circular dependency risks or ordering constraints in the new structure?
+- **Constraints:**
+  - Must not implement scientific mode operations (only structural readiness)
+  - Must not break any existing test
+  - Must preserve all user-facing behavior (interactive mode, CLI, history, logging, input validation)
+  - No changes to CLAUDE.md, .gitignore, or workflow files
+- **Acceptance Criteria (inferred):**
+  - AC1: Codebase organized into well-named modules with clear purpose
+  - AC2: Each module exhibits single responsibility (core, interface, session, supporting)
+  - AC3: Operations can be trivially separated into normal/scientific without refactoring module structure
+  - AC4: All existing tests pass (no regression)
+  - AC5: Code is readable, maintainable, and OOP design is evident
+  - AC6: No user-visible behavior change (feature parity maintained)
+- **Handoff Notes for Next Agent (Architect):**
+  - This task is a DESIGN task; produce architectural plan BEFORE implementation starts
+  - Architect must address the 6 ambiguities above in the design document
+  - Architect should produce a module dependency diagram showing refactored structure
+  - Architect should specify test refactoring strategy (mirror source structure or keep as-is?)
+  - Architect should propose operation structure (e.g., base class, registry pattern, etc.) that clearly accommodates future normal/scientific separation
+  - Tester will write NO new tests (test suite is stable); only verify refactored code passes all existing tests in VERIFY phase
+  - Implementer will refactor according to architect's design; file moves and reorganization is the primary work
+  - Critical: This is a large-scope refactoring; must keep commits atomic and reversible
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+- **Patterns Observed:**
+  - Issue #406 is the first structuring/architectural task in the progression (all prior tasks were feature additions)
+  - Task represents a significant shift from feature-driven to design-driven work
+  - Successor tasks (if any) will likely assume this refactored structure as a foundation

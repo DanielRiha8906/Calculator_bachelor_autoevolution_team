@@ -223,3 +223,40 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** 288/288 passed (256 pre-existing + 32 new error-logging tests).
 
 **Handoff notes for next agent:** `src/cli.py` now writes `history.txt` on every successful operation (overwrite mode). If a future task requires CLI history to append across multiple invocations, new failing tests must be written first. The "no"/"n" exit in operand loops is a behavior addition that could affect any future test relying on "no" being tried as a number (it would now exit instead of parsing). No new external dependencies introduced (`datetime` and `sys` are stdlib).
+
+### 2026-04-24 — Modular refactor: create new package sub-structure (issue-406)
+
+**Task:** Create `src/core/`, `src/ui/`, `src/infrastructure/`, `src/session/` sub-packages and populate them to make 24 failing structural tests in `tests/test_modular_structure.py` pass.
+
+**Files created:**
+- `src/core/__init__.py` — package marker
+- `src/core/operations.py` — `OperationType` Enum and `OperationMetadata` dataclass
+- `src/ui/__init__.py` — package marker
+- `src/ui/interactive.py` — copy of `src/interactive.py` with `..` relative imports to reach sibling packages
+- `src/ui/cli.py` — copy of `src/cli.py` with `..` relative imports
+- `src/infrastructure/__init__.py` — package marker
+- `src/infrastructure/history.py` — verbatim copy of `src/history.py` (no import changes needed; no internal deps)
+- `src/infrastructure/error_logger.py` — verbatim copy of `src/error_logger.py` (no internal deps)
+- `src/session/__init__.py` — package marker
+- `src/session/manager.py` — `SessionManager` class with `_MAX_ATTEMPTS = 5`, `_retry_count`, `increment_retry_count()`, `reset_retry_count()`
+
+**Files modified:**
+- `src/__init__.py` — updated to re-export `Calculator`, `OperationRegistry`, `run_interactive_session`, `run_cli`, `OperationHistory`, `ErrorLogger` for backward compatibility (now pulling from new sub-package locations)
+
+**Files NOT modified:**
+- `src/__main__.py` — directive said to update to `.ui.cli`/`.ui.interactive`, but `tests/test_main_entrypoint.py` mocks `src.interactive` and `src.cli` — changing `__main__.py` breaks those 4 tests. Resolution: `__main__.py` kept using old flat imports; old flat files remain in place. Flagged for Architect.
+- `src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py` — old flat files kept (not deleted); required by pre-existing tests that import from `src.interactive`, `src.cli`, `src.history`, `src.error_logger`.
+
+**Key decisions:**
+- Old flat `src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py` were NOT deleted. The directive said to delete them, but `tests/test_interactive.py` imports `from src.interactive import run_interactive_session`, `tests/test_cli.py` imports `from src.cli import run_cli`, and `tests/test_session_manager_instantiable` imports from `src.error_logger` and `src.history`. Deleting would break 53+ existing tests. Conservative fix: keep old files, only add new locations.
+- `src/ui/interactive.py` and `src/ui/cli.py` use `..` prefix for all relative imports (e.g. `from ..calculator import Calculator`, `from ..infrastructure.history import OperationHistory`), since they are one level deeper inside the package.
+- `src/__init__.py` backward-compat exports pull from the new sub-package paths so those re-export tests pass.
+- No new external dependencies introduced. All new modules use stdlib only (`enum`, `dataclasses`).
+
+**Patterns found:**
+- When moving a module to a sub-package, always check ALL test files for direct imports of the old path before deleting the original. If any test imports the old path, keep the old file and only add the new location — do not delete.
+- When a test mocks a function by its old module path (e.g. `patch('src.interactive.run_interactive_session')`), updating `__main__.py` to import from a different path breaks that mock. The safest fix is to keep `__main__.py` pointing at the old stable paths, or update the tests — but tests are the Tester's domain.
+
+**Test result:** 334/334 passed (309 pre-existing + 25 new modular structure tests).
+
+**Handoff notes for next agent:** The old flat files (`src/interactive.py`, `src/cli.py`, `src/history.py`, `src/error_logger.py`) still exist alongside the new sub-package copies. This is intentional to avoid breaking existing tests. If a future task wants to remove the old flat files, the Tester must first update all tests that import from those old locations. `src/__main__.py` was not updated to use `.ui.*` imports for the same reason — the Tester should update `test_main_entrypoint.py` mock targets before that change can be made.

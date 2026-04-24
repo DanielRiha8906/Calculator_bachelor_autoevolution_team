@@ -982,3 +982,256 @@ No other files need modification. `src/cli.py` is already complete and functiona
 - Risk: Logging breaks existing tests: Mitigation: Error logger writes to file only; tests can mock or clean up after
 
 ---
+
+### 2026-04-24 — Issue #406 — V3 Task 12 - Expert/team — Multi-Module Refactoring
+
+**Task:** Structural refactoring of the calculator codebase from its current flat structure into a multi-module architecture with clear separation of concerns. This is a PURE ARCHITECTURAL REFACTORING — all existing behavior must remain identical (100% backward compatibility). No new features, no scientific mode implementation.
+
+**Current State (verified via complete source inspection):**
+
+The codebase has evolved through incremental feature additions (Tasks 2-10) and now exists in a FLAT MODULE STRUCTURE under `src/`:
+- `src/calculator.py` (12 operations: 5 binary + 7 unary; pure core)
+- `src/operation_registry.py` (operation discovery via introspection)
+- `src/interactive.py` (terminal UI with history tracking, error logging, retry mechanism)
+- `src/cli.py` (command-line invocation)
+- `src/history.py` (session history persistence)
+- `src/error_logger.py` (centralized error logging)
+- `src/__main__.py` (entry point dispatcher)
+
+**Analysis of Current State:**
+
+**Module Interdependencies (Current):**
+```
+calculator (pure core, no imports)
+  ↑ used by
+operation_registry (discovery layer)
+  ↑ used by
+  ├─ interactive (UI terminal)
+  ├─ cli (UI command-line)
+      + shared by both: history, error_logger
+```
+
+**Architectural Issues (Current):**
+1. **No clear module grouping:** All 7 modules at same level; no organizational hierarchy
+2. **Operations organization unclear:** Operations are bare methods on Calculator; no abstraction for different operation types (binary vs unary)
+3. **Presentation layer coupling:** interactive.py and cli.py both import multiple infrastructure modules; hard to separate concerns
+4. **Future extensibility risk:** No clear path for normal vs scientific mode split without major refactoring
+5. **Missing layer contracts:** No explicit interface separating core from presentation
+
+**Requirements (from Brief):**
+
+**FR1: Multi-module Organization** — Organize into modules covering:
+- Core Logic (pure calculations, immutable)
+- Interface Handling (UI entry points, dispatching)
+- Session-Related Behavior (history, logging, interaction state)
+- Supporting Concerns (operation discovery, data structures)
+
+**FR2: Clear Operations Structure** — Transparent, extensible structure for operations with obvious place for normal/scientific split
+
+**FR3: Design Readiness** — Prepare for future normal/scientific mode separation without major refactoring
+
+**NFR1: Behavioral Compatibility** — 100% identical behavior; all existing tests must pass
+
+**NFR2: Object-Oriented Design** — Classes, inheritance, or composition
+
+**NFR3: Abstraction Minimalism** — Only justified abstractions
+
+**NFR4: Test Suite Preservation** — All existing tests must pass
+
+**Constraints:**
+- No scientific mode implementation (only structural preparation)
+- No new external dependencies
+- No changes to CLAUDE.md, .gitignore, .github/workflows/
+- No changes to public APIs (backward compatibility essential)
+
+**Architectural Design Decisions:**
+
+1. **Module Directory Structure (Proposed):**
+   ```
+   src/
+     ├── calculator.py               (pure core, unchanged)
+     ├── operation_registry.py        (discovery layer, unchanged)
+     ├── __main__.py                  (entry point, minimal changes)
+     ├── core/
+     │   ├── __init__.py
+     │   └── operations.py           (NEW: operation abstractions & registry extensions)
+     ├── ui/
+     │   ├── __init__.py
+     │   ├── interactive.py           (terminal UI, refactored for clarity)
+     │   └── cli.py                   (CLI UI, refactored for clarity)
+     ├── infrastructure/
+     │   ├── __init__.py
+     │   ├── history.py               (session history, moved)
+     │   └── error_logger.py          (error logging, moved)
+     └── session/
+         ├── __init__.py
+         └── manager.py               (NEW: session state management)
+   ```
+
+2. **Operations Abstraction (NEW):**
+   - Create `src/core/operations.py` with:
+     - `OperationType` enum: `UNARY`, `BINARY` (preparation for NORMAL, SCIENTIFIC split)
+     - `OperationMetadata` dataclass: name, arity, type, description
+     - `OperationRegistry` enhancements: categorize by OperationType
+   - Future: extend to separate NormalOperations, ScientificOperations classes
+   - Current: no behavior change; just organizational structure
+
+3. **Session Management (NEW):**
+   - Create `src/session/manager.py` with:
+     - `SessionManager` class: encapsulates retry counter, history, error logger state
+     - Extracted from run_interactive_session() logic; makes it testable in isolation
+     - Not exposed externally; internal refactoring only
+
+4. **Import Backward Compatibility:**
+   - Keep `src/__main__.py` unchanged in its public surface
+   - Add compatibility imports in `src/__init__.py`:
+     - `from .calculator import Calculator`
+     - `from .operation_registry import OperationRegistry`
+     - `from .ui.interactive import run_interactive_session`
+     - `from .ui.cli import run_cli`
+   - Existing imports like `from src.calculator import Calculator` continue to work
+   - Test imports remain unchanged
+
+5. **Module Responsibilities (After Refactoring):**
+
+   **`src/calculator.py` (unchanged)**
+   - Pure calculation core
+   - 12 methods (5 binary: add, subtract, multiply, divide, power; 7 unary: factorial, square, cube, sqrt, cbrt, ln, log10)
+   - No imports from other src/ modules
+   - Raises ValueError, ZeroDivisionError
+
+   **`src/core/operations.py` (NEW)**
+   - OperationType enum (UNARY, BINARY)
+   - OperationMetadata dataclass
+   - Enhanced OperationRegistry with categorization
+   - Preparation for future normal/scientific split (not implemented)
+
+   **`src/operation_registry.py` (unchanged signature)**
+   - Introspects Calculator
+   - Discovers operations (arity detection)
+   - Provides `get_operations()`, `get_arity()`, `call()`
+   - (Future: can be extended to use core/operations.py metadata)
+
+   **`src/ui/interactive.py` (refactored)**
+   - Move from `src/interactive.py` to `src/ui/interactive.py`
+   - Extract MAX_ATTEMPTS and parse_operand to module level
+   - Extract retry logic into SessionManager (internal refactoring)
+   - Keep public API: `run_interactive_session(calculator=None) -> None`
+   - No behavior change
+
+   **`src/ui/cli.py` (refactored)**
+   - Move from `src/cli.py` to `src/ui/cli.py`
+   - Extract parse_cli_operand to module level
+   - Keep public API: `run_cli(argv=None) -> int`
+   - No behavior change
+
+   **`src/infrastructure/history.py` (moved)**
+   - Move from `src/history.py` to `src/infrastructure/history.py`
+   - No changes to class/function signatures
+   - Keep public API: OperationHistory class
+
+   **`src/infrastructure/error_logger.py` (moved)**
+   - Move from `src/error_logger.py` to `src/infrastructure/error_logger.py`
+   - No changes to class/function signatures
+   - Keep public API: ErrorLogger class
+
+   **`src/session/manager.py` (NEW)**
+   - SessionManager class: encapsulates interactive session state
+   - Extracted retry_count, history, error_logger lifecycle
+   - Methods: `__init__()`, `display_menu()`, `select_operation()`, `gather_operands()`, `execute_and_record()`, `finalize()`
+   - Internal refactoring; not exposed to tests or users
+   - Makes interactive.py cleaner and more testable
+
+   **`src/__main__.py` (minimal changes)**
+   - Imports updated: `from .ui.interactive import run_interactive_session`, `from .ui.cli import run_cli`
+   - Entry point logic unchanged
+   - Tests that import from `__main__` continue to work
+
+   **`src/__init__.py` (NEW)**
+   - Re-exports public API for backward compatibility:
+     ```python
+     from .calculator import Calculator
+     from .operation_registry import OperationRegistry
+     from .ui.interactive import run_interactive_session
+     from .ui.cli import run_cli
+     from .infrastructure.history import OperationHistory
+     from .infrastructure.error_logger import ErrorLogger
+     ```
+   - Allows `from src import Calculator` to continue working
+   - Tests using direct imports continue to work
+
+6. **Test Organization (Minimal Changes):**
+   - Existing test files remain in `tests/`:
+     - `tests/test_calculator.py` (unchanged)
+     - `tests/test_cli.py` (unchanged, imports still work)
+     - `tests/test_interactive.py` (unchanged, imports still work)
+     - etc.
+   - Tests already mock/capture I/O; refactoring to new module paths requires only import updates
+   - All existing test discovery continues to work (pytest finds tests/ and imports via sys.path)
+
+7. **Dependency Graph (After Refactoring):**
+   ```
+   calculator (pure, no imports)
+       ↑
+   operation_registry
+       ↑
+   ├─ ui.interactive ─┐
+   ├─ ui.cli ────────┼─ infrastructure.history
+   └────────────────┴─ infrastructure.error_logger
+       ↑
+   session.manager (internal to interactive)
+   ```
+
+**Key Design Principles Applied:**
+
+1. **Layered Architecture:** Core → Discovery → Presentation (UI) + Infrastructure
+2. **Separation of Concerns:** Each module has single responsibility
+3. **Preparation for Extension:** Clear path for normal/scientific split (OperationType enum)
+4. **No Behavioral Change:** Pure refactoring; all tests pass unchanged
+5. **Backward Compatibility:** Public APIs re-exported; existing code continues
+6. **Minimal Abstraction:** Only adds abstractions that support future normal/scientific split
+
+**Migration Path (Order of Changes):**
+
+1. Create directory structure: `src/core/`, `src/ui/`, `src/infrastructure/`, `src/session/`
+2. Create `__init__.py` in each directory (empty or with doc strings)
+3. Create `src/core/operations.py` with OperationType, OperationMetadata (new functionality, prep-only)
+4. Create `src/session/manager.py` with SessionManager (internal refactoring)
+5. Move `src/interactive.py` → `src/ui/interactive.py`; update imports
+6. Move `src/cli.py` → `src/ui/cli.py`; update imports
+7. Move `src/history.py` → `src/infrastructure/history.py`; update imports
+8. Move `src/error_logger.py` → `src/infrastructure/error_logger.py`; update imports
+9. Create `src/__init__.py` with backward-compatibility re-exports
+10. Update `src/__main__.py` imports
+11. Run full test suite (all tests pass without changes to test files)
+12. Update CLAUDE.md RAG: codebase_map, patterns, agent_handoffs
+
+**Test Strategy:**
+
+- **No new tests required** for structural refactoring (NFR4)
+- All existing tests must pass with zero modifications (backward compat)
+- Import paths in test files will remain unchanged (pytest sys.path handling)
+- If tests import `from src.interactive import run_interactive_session`, the `src/__init__.py` re-export keeps it working
+- If tests use `from src.ui.interactive import run_interactive_session`, that also works (direct import)
+
+**Backward Compatibility Verification:**
+
+Test existing import patterns:
+1. `from src.calculator import Calculator` → works (direct)
+2. `from src.interactive import run_interactive_session` → works (via `src/__init__.py` re-export)
+3. `from src.cli import run_cli` → works (via `src/__init__.py` re-export)
+4. `from src import Calculator` → works (via `src/__init__.py` re-export)
+5. `from src.history import OperationHistory` → works (via `src/__init__.py` re-export)
+
+**Risk Assessment:**
+
+- **Risk: Import path breakage** → Mitigated by `src/__init__.py` re-exports
+- **Risk: Behavior change** → Mitigated by no changes to any logic; pure module reorganization
+- **Risk: Test failure** → Mitigated by backward compat imports and no test file modifications
+- **Risk: Entry point breakage** → Mitigated by minimal `__main__.py` changes
+- **Risk: Missing files** → Mitigated by file-level plan with explicit directory structure
+
+**Handoff Notes:**
+
+This is a STRUCTURAL REFACTORING ONLY. No new features, no behavior changes, no test modifications. The task is to reorganize 6 existing modules into a 3-layer architecture with preparation for future normal/scientific mode split. All existing tests must pass without changes. The refactoring itself requires no new tests (it's structure, not behavior). After refactoring, the codebase will be ready for Issue #406+ features (normal/scientific mode implementation) without major rework.
+
