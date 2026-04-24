@@ -1,45 +1,75 @@
 @startuml
-title Calculator Operation Flow
+title run_interactive_session() — Activity Flow
 
 start
 
-:Create Calculator instance;
+if (calculator is None?) then (yes)
+  :Create Calculator();
+else (no)
+  :Use provided Calculator;
+endif
 
-:Select operation;
+:Create OperationRegistry(calculator);
 
-fork
-  :add(a, b);
-  :return a + b;
-fork again
-  :subtract(a, b);
-  :return a - b;
-fork again
-  :multiply(a, b);
-  :return a * b;
-fork again
-  :divide(a, b);
-  if (b == 0?) then (yes)
-    :raise ZeroDivisionError;
-    stop
-  else (no)
-    :return a / b;
+repeat
+
+  :Get operations list from registry;
+  :Display numbered menu\n(index | name | unary/binary label);
+
+  repeat
+    :Prompt: "Select operation by number:";
+    :Read user input;
+  repeat while (input is valid integer in range?) is (no — invalid)
+  -> yes — valid index;
+
+  :Resolve operation name from index;
+  :get_arity(op_name) → arity;
+
+  if (arity == 1?) then (yes)
+
+    repeat
+      :Prompt: "Enter operand:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :operands = [parsed value];
+
+  else (no — arity == 2)
+
+    repeat
+      :Prompt: "Enter operand 1:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :store operand1;
+
+    repeat
+      :Prompt: "Enter operand 2:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :operands = [operand1, parsed value];
+
   endif
-fork again
-  :factorial(n);
-  if (n is bool, float, str, None, or negative?) then (yes)
-    :raise ValueError;
-    stop
-  else (no)
-    if (n == 0 or n == 1?) then (yes)
-      :return 1;
-    else (no)
-      :Iterate: result *= i for i in 2..n;
-      :return result;
-    endif
-  endif
-end fork
 
-:Return result;
+  :registry.call(op_name, *operands);
+
+  if (call succeeds?) then (yes)
+    :Print "Result: {result}";
+  elseif (ZeroDivisionError?) then (yes)
+    :Print "Error: Division by zero";
+  else (other exception)
+    :Print "Error: {exc}";
+  endif
+
+  repeat
+    :Prompt: "Continue? (yes/no):";
+    :Read user input (lowercase);
+  repeat while (input is yes/y or no/n?) is (no — unrecognised)
+  -> yes — recognised;
+
+repeat while (user chose yes/y?) is (yes — continue)
+-> no/n — exit;
 
 stop
 

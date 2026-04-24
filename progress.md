@@ -106,3 +106,14 @@ Duration: 243.0s | Cost: $0.521679 USD | Turns: 5
 - **Tests passed:** 138 passed, 0 failed
 
 Duration: 508.8s | Cost: $0.950293 USD | Turns: 18
+
+## Run: update-diagrams — Interactive input diagrams (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — new class diagram: Calculator and OperationRegistry with relationships
+  - `artifacts/activity_diagram.puml` — new activity diagram: run_interactive_session() flow with loops and error paths
+  - `artifacts/sequence_diagram.puml` — new sequence diagram: binary operation happy path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
