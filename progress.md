@@ -402,4 +402,4 @@ Duration: 235.0s | Cost: $0.667638 USD | Turns: 5
   - `artifacts/activity_scientific_mode_flow.puml` — activity diagram showing interactive loop mode toggling, arity-0/1/2 dispatch, and error handling
   - `artifacts/sequence_scientific_calculation.puml` — sequence diagram tracing sin(x) from user input through interface, Calculator, scientific_operations, and history recording
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 211.6s | Cost: $0.600988 USD | Turns: 5
