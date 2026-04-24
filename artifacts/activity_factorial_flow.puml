@@ -1,0 +1,31 @@
+@startuml activity_factorial_flow
+
+start
+
+:Receive input n;
+
+if (Is n a boolean?) then (yes)
+    :Raise ValueError;
+    stop
+else (no)
+endif
+
+if (Is n an integer?) then (no)
+    :Raise ValueError;
+    stop
+else (yes)
+endif
+
+if (Is n < 0?) then (yes)
+    :Raise ValueError;
+    stop
+else (no)
+endif
+
+:Compute math.factorial(n);
+
+:Return int result;
+
+stop
+
+@enduml

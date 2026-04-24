@@ -41,3 +41,15 @@ Duration: 177.9s | Cost: $0.499701 USD | Turns: 13
 - **Tests passed:** 68 passed, 0 failed
 
 Duration: 348.5s | Cost: $0.711770 USD | Turns: 16
+
+## Run: update-diagrams — Update Calculator PlantUML diagrams to reflect full 11-method class (2026-04-24)
+
+- **Branch:** task/issue-374-create-calculator-tests
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — updated to show all 11 Calculator methods with exception annotations
+  - `artifacts/activity_divide_flow.puml` — deleted (replaced)
+  - `artifacts/activity_factorial_flow.puml` — new activity diagram showing 3-stage factorial validation flow
+  - `artifacts/sequence_main_usage.puml` — no changes (accurate to main() behavior)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
