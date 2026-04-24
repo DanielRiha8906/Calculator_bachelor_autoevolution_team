@@ -1,3 +1,19 @@
+## Run: Fix PR #436 — Add CLI entry point for bash-based calculator invocation (#391) (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — add `import sys`, import `run_cli`, add `if len(sys.argv) > 1` conditional to dispatch to CLI mode; else fallback to interactive session
+  - `tests/test_main_entrypoint.py` — fix existing test to patch `sys.argv`; add 5 new dispatch tests for CLI/interactive routing and exit code propagation
+  - `rag/agents/system-architect.md` — updated RAG with cycle entry
+  - `rag/agents/python-code-implementer.md` — updated RAG with cycle entry
+  - `rag/agents/pytest-edge-tester.md` — updated RAG with cycle entry
+- **Purpose:** Wire `src/__main__.py` to `run_cli()` so that `python -m src <op> <operands>` invokes CLI mode instead of launching interactive session; interactive mode preserved when no args given.
+- **Risks:** None
+- **Tests passed:** 199 passed, 0 failed
+
+Duration: 321.3s | Cost: $0.685884 USD | Turns: 16
+
 ## Run: Issue #373 — V3 Task 1 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-373-division-by-zero
@@ -144,3 +160,40 @@ Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
   - `artifacts/session_state_machine.puml` — State machine diagram of interactive session states and transitions
 
 Duration: 318.7s | Cost: $0.692764 USD | Turns: 5
+
+## Run: Issue #391 — V3 Task 7 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/cli.py` — new CLI module with `parse_cli_operand()` and `run_cli()` functions
+  - `tests/test_cli.py` — 53 test cases covering all CLI behaviors (binary ops, unary ops, errors, validation)
+- **Purpose:** Add bash-based CLI entry point so the calculator can be invoked as `python -m src <operation> <operands>` without changing the interactive mode or core calculator logic.
+- **Risks:** None
+- **Tests passed:** 194 passed, 0 failed
+
+Duration: 538.3s | Cost: $1.167164 USD | Turns: 20
+
+## Run: update-diagrams — CLI Interface Diagrams (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — new class diagram for CLI module and relationships
+  - `artifacts/activity_diagram_cli.puml` — new activity diagram for run_cli() execution flow
+  - `artifacts/sequence_diagram_cli.puml` — new sequence diagram for CLI invocation scenarios
+
+Duration: 240.4s | Cost: $0.576351 USD | Turns: 4
+
+## Run: update-diagrams — CLI interface diagrams (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** task/issue-391-cli-interface
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — updated to include CLI module, __main__ dispatch, and interactive module
+  - `artifacts/activity_diagram_cli.puml` — extended with entry point dispatch and all error branches
+  - `artifacts/sequence_diagram_cli.puml` — updated with entry point dispatch intro
+  - `artifacts/component_diagram_entrypoint.puml` — new: module-level component dependencies and routing
+  - `artifacts/error_handling_diagram_cli.puml` — new: all run_cli() error paths and exit codes
+
+Duration: 236.4s | Cost: $0.590013 USD | Turns: 4

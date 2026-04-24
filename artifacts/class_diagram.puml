@@ -1,16 +1,16 @@
 @startuml
-title Calculator System — Class Overview
+title Calculator System — Class Overview (with CLI & Entry Point)
 
 skinparam classAttributeIconSize 0
 
 class Calculator {
-  .. 5 binary operations ..
+  .. binary operations (arity=2) ..
   + add(a, b)
   + subtract(a, b)
   + multiply(a, b)
   + divide(a, b)
   + power(base, exponent)
-  .. 7 unary operations ..
+  .. unary operations (arity=1) ..
   + factorial(n)
   + square(x)
   + cube(x)
@@ -22,27 +22,36 @@ class Calculator {
 
 note bottom of Calculator
   Stateless — no instance state between calls.
-  Binary operations take two operands (arity=2).
-  Unary operations take one operand (arity=1).
+  divide raises ZeroDivisionError; domain ops
+  raise ValueError on invalid input.
 end note
 
 class OperationRegistry {
   - _calculator: Calculator
-  - _operations: dict
+  - _operations: dict[str, int]
   - _sorted_names: List[str]
   --
   + __init__(calculator: Calculator)
   + get_operations(): List[str]
-  + get_arity(operation_name: str): int
-  + call(operation_name: str, *args): Any
+  + get_arity(name: str): int
+  + call(name: str, *args): Any
 }
 
 note right of OperationRegistry
-  Uses Python inspect module to scan
-  Calculator at construction time.
+  Uses Python inspect module at construction
+  to discover operations and their arity.
   Raises KeyError for unknown operations.
   Forwards Calculator exceptions on call().
 end note
+
+package "cli (module-level functions)" {
+  class parse_cli_operand <<function>> {
+    parse_cli_operand(operand_str: str): Union[int, float]
+  }
+  class run_cli <<function>> {
+    run_cli(argv: list[str] | None = None): int
+  }
+}
 
 package "interactive (module-level functions)" {
   class parse_operand <<function>> {
@@ -53,9 +62,24 @@ package "interactive (module-level functions)" {
   }
 }
 
+class "__main__\n(entry point dispatcher)" as Main <<module>> {
+  if len(sys.argv) > 1:
+    run_cli() → sys.exit(rc)
+  else:
+    run_interactive_session()
+}
+
 OperationRegistry *-- Calculator : composition\n(holds reference)
-run_interactive_session --> OperationRegistry : creates and uses
+
+run_cli --> Calculator : instantiates per invocation
+run_cli --> OperationRegistry : instantiates per invocation
+run_cli ..> parse_cli_operand : calls for each operand
+
 run_interactive_session --> Calculator : creates if None
+run_interactive_session --> OperationRegistry : creates and uses
 run_interactive_session ..> parse_operand : calls for each operand
+
+Main --> run_cli : if CLI args present
+Main --> run_interactive_session : if no CLI args
 
 @enduml
