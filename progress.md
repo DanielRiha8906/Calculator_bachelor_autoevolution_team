@@ -1,3 +1,14 @@
+## Run: update-diagrams — Issue #405 Modular Refactor (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_package.puml` — class diagram for refactored calculator package with Operation hierarchy and OperationRegistry
+  - `artifacts/activity_diagram_calculation_flow.puml` — activity diagram for CLI and interactive calculation flow
+  - `artifacts/component_diagram_calculator_modules.puml` — component/package dependency diagram for src/calculator/ modules
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #405 — V3 Task 12 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-405-modular-refactor

@@ -1,0 +1,43 @@
+@startuml component_diagram_calculator_modules
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+
+title src/calculator Package — Module Dependency Map
+
+package "src/calculator" {
+    component [__init__] as init
+    component [core\n(Calculator)] as core
+    component [validation\n(InputValidator)] as validation
+    component [input_handler\n(CLIInput, InteractiveInput)] as input_handler
+    component [persistence\n(facade)] as persistence
+    component [main\n(entry point)] as main
+
+    package "operations" {
+        component [operations/__init__\n(Operation ABC,\nOperationRegistry)] as ops_init
+        component [operations/arithmetic\n(Add, Subtract, Multiply,\nDivide, Factorial, Modulo)] as arithmetic
+        component [operations/scientific\n(Square, Cube, SquareRoot,\nCubeRoot, Power, Log10, Ln)] as scientific
+    }
+}
+
+package "src (external)" {
+    component [history\n(OperationHistory)] as history
+    component [error_logging\n(ErrorLog)] as error_logging
+}
+
+' Internal dependencies
+init --> core
+arithmetic --> ops_init
+scientific --> ops_init
+persistence --> history
+persistence --> error_logging
+
+main --> core
+main --> ops_init
+main --> arithmetic
+main --> scientific
+main --> validation
+main --> history
+main --> error_logging
+
+@enduml

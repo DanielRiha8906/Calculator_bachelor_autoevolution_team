@@ -1,0 +1,120 @@
+@startuml activity_diagram_calculation_flow
+
+title Calculation Flow — CLI Mode and Interactive Mode
+
+start
+
+:Build OperationRegistry;
+note right: Register all 13 operations\n(6 arithmetic + 7 scientific)
+
+if (CLI arguments provided?) then (yes)
+
+    partition "CLI Mode" {
+        :Extract operation name\nand raw operands from argv;
+
+        if (Registry.has(name)?) then (no)
+            :Log error (unknown operation);
+            :exit(1);
+            stop
+        else (yes)
+        endif
+
+        :Get Operation from registry;
+
+        if (Arity matches operand count?) then (no)
+            :Print arity mismatch error;
+            :exit(1);
+            stop
+        else (yes)
+        endif
+
+        :Validate each operand\nvia InputValidator.parse_number();
+
+        if (Invalid input?) then (yes)
+            :Log error (invalid operand);
+            :exit(1);
+            stop
+        else (no)
+        endif
+
+        :operation.execute(*operands);
+
+        if (Execution error?) then (yes)
+            :Log error (execution failure);
+            :exit(1);
+            stop
+        else (no)
+        endif
+
+        :Print result;
+        :exit(0);
+    }
+
+else (no)
+
+    partition "Interactive Mode" {
+        :Initialize OperationHistory;
+        :Initialize ErrorLog;
+
+        repeat
+            :Show available operations;
+            :Read operation name from stdin;
+
+            if (Input is "quit"?) then (yes)
+                break
+            else (no)
+            endif
+
+            if (Input is "history"?) then (yes)
+                :Display history;
+            else (no)
+                if (Operation registered?) then (no)
+                    :Log error (unknown operation);
+                    :Increment failure counter;
+                    if (failures >= 3?) then (yes)
+                        :Print "Too many invalid attempts";
+                        break
+                    else (no)
+                    endif
+                else (yes)
+                    :Read operands from stdin;
+
+                    :Validate each operand\nvia InputValidator.parse_number();
+
+                    if (Validation error?) then (yes)
+                        :Log error (invalid input);
+                        :Increment failure counter;
+                        if (failures >= 3?) then (yes)
+                            :Print "Too many invalid attempts";
+                            break
+                        else (no)
+                        endif
+                    else (no)
+                        :operation.execute(*operands);
+
+                        if (Execution error?) then (yes)
+                            :Log error (execution failure);
+                            :Increment failure counter;
+                            if (failures >= 3?) then (yes)
+                                :Print "Too many invalid attempts";
+                                break
+                            else (no)
+                            endif
+                        else (no)
+                            :Print result;
+                            :OperationHistory.record(...);
+                            :Reset failure counter to 0;
+                        endif
+                    endif
+                endif
+            endif
+        repeat while (continue loop)
+
+        :End session;
+    }
+
+endif
+
+stop
+
+@enduml
