@@ -8,7 +8,7 @@
   - `artifacts/activity_diagram_factorial.puml` — new activity diagram showing factorial validation flow (type check, sign check, delegation)
   - `artifacts/sequence_diagram_factorial.puml` — new sequence diagram showing factorial call interaction with error paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 157.2s | Cost: $0.406029 USD | Turns: 4
 
 ## Run: Issue #377 — V3 Task 3 - Naive/team (2026-04-24)
 
