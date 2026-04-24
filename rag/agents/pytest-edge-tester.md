@@ -413,3 +413,59 @@ test_cli_full_workflow_factorial now expects ValueError because factorial() requ
 - All 121 existing calculator/CLI tests continue to pass (no regression)
 
 **Conclusion:** All 152 tests pass successfully (1 skipped). The implementer correctly created the batch CLI mode with proper argument parsing, operation dispatch, error handling, and exit codes. The system now supports both interactive CLI mode (no arguments) and batch mode (with arguments). Full test coverage spans 12 operations (5 binary + 7 unary), help functionality, error handling, and argument validation.
+
+### 2026-04-24 | task/issue-392-input-validation | WRITE | 33 failing tests written
+
+**Task:** Write comprehensive failing tests for max_retries input validation feature covering 25 test scenarios.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Covered:**
+- Max_retries semantics: 3 invalid attempts exhaust limit, 4th raises MaxRetriesExceeded
+- Prompt functions: first_number, second_number, operator with retry behavior
+- Integration: run_calculator() with max_retries parameter
+- Domain errors: sqrt/log/ln/factorial domain errors bypass retry logic
+- Main function: handles MaxRetriesExceeded by calling sys.exit(1)
+- Batch mode: behavior unchanged (no retries in batch mode)
+- Error messages: validation messages during retries, content verification
+
+**Test Functions Written (33 total):**
+- TestMaxRetriesFirstNumber (6 tests): limit reached, success at attempt 2/3, success immediate, boundary cases
+- TestMaxRetriesSecondNumber (4 tests): limit reached, success at attempt 2/3, success immediate
+- TestMaxRetriesOperator (4 tests): limit reached, success at attempt 2/3, success immediate
+- TestRunCalculatorWithMaxRetries (7 tests): exhaust first/second operand/operator, recovery, backward compat
+- TestDomainErrorsNotRetryable (4 tests): sqrt/log/ln/factorial domain errors raise directly
+- TestMainWithMaxRetries (3 tests): main() calls sys.exit(1) on MaxRetriesExceeded
+- TestBatchModeBehaviorPreserved (2 tests): batch mode no retry, help flag unchanged
+- TestErrorMessagesWithMaxRetries (3 tests): message content for non-numeric, invalid operator, exhausted retries
+
+**Test Results:**
+- Total tests in file: 68 (35 existing + 33 new)
+- Collection status: ImportError (MaxRetriesExceeded not yet implemented) - EXPECTED
+- All new tests fail as expected during import phase
+- Existing tests: 35 from previous cycles
+- All test syntax valid (verified with ast.parse)
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_cli.py`
+
+**Key Test Patterns:**
+1. Retry limit tests: 4 invalid inputs → MaxRetriesExceeded on 4th
+2. Success tests: N-1 invalid inputs → success on attempt N
+3. Domain error tests: uses pytest.raises for ValueError/ZeroDivisionError (not retryable)
+4. Main function tests: mocks sys.exit and verifies exit(1) called
+5. Error message tests: capsys fixture captures output, asserts content
+6. Batch mode tests: verifies existing behavior unchanged
+
+**Handoff Note:** 33 failing tests committed successfully. Ready for python-code-implementer to add:
+1. MaxRetriesExceeded exception class to src/cli.py
+2. max_retries parameter to prompt_for_first_number, prompt_for_operator, prompt_for_second_number, run_calculator
+3. Retry counter logic (track invalid attempts, raise on max_retries exceeded)
+4. src/__main__.py modification to catch MaxRetriesExceeded and call sys.exit(1)
+
+Tests verify that:
+- Input validation retries up to max_retries times (default 3)
+- Domain errors (ValueError/ZeroDivisionError) bypass retry logic
+- Error messages provide feedback during retries
+- main() gracefully handles MaxRetriesExceeded with exit code 1
+- Batch mode behavior unchanged (no interactive retries)
+- Backward compatibility: existing tests continue to work
