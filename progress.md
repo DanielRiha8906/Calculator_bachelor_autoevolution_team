@@ -65,3 +65,14 @@ Duration: 239.0s | Cost: $0.551973 USD | Turns: 15
 - **Tests passed:** 68 passed, 0 failed
 
 Duration: 200.6s | Cost: $0.439166 USD | Turns: 15
+
+## Run: update-diagrams — Add math functions UML diagrams (2026-04-24)
+
+- **Branch:** task/issue-380-add-math-functions
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — class diagram with all 11 Calculator methods, exception annotations, and math module dependency
+  - `artifacts/activity_diagram_math_operations.puml` — activity flows for domain-validated unary (square_root) and binary divide operations
+  - `artifacts/sequence_diagram_calculator_usage.puml` — sequence diagram showing success and error paths for unary and binary operations
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

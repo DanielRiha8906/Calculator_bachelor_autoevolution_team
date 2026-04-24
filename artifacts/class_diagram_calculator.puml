@@ -3,25 +3,21 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
-    ' Basic Arithmetic
+    ' Binary Operations
     + add(a, b) : numeric
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
-    + divide(a, b) : float
+    + divide(a, b) : numeric
+    + power(base, exp) : numeric
 
-    ' Power & Root
+    ' Unary Operations
     + square(a) : numeric
     + cube(a) : numeric
     + square_root(a) : float
     + cube_root(a) : float
-    + power(base, exp) : numeric
-
-    ' Logarithmic
+    + factorial(n) : int
     + log(a) : float
     + ln(a) : float
-
-    ' Combinatorial
-    + factorial(n) : int
 }
 
 note right of Calculator::divide
@@ -55,5 +51,10 @@ note right of Calculator::ln
   Natural logarithm
   Raises ValueError when a <= 0
 end note
+
+package "math" <<module>> {
+}
+
+Calculator ..> math : uses\nsqrt, factorial,\nlog10, log
 
 @enduml
