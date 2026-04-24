@@ -7,7 +7,7 @@
   - `artifacts/activity_diagram_mode_selection.puml` — activity diagram for interactive mode selection and switching flow
   - `artifacts/component_diagram_module_architecture.puml` — component diagram showing module dependencies and exports across src/
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 321.8s | Cost: $0.684742 USD | Turns: 4
 
 ## Run: Issue #412 — V3 Task 14 - Expert/team (2026-04-24)
 
