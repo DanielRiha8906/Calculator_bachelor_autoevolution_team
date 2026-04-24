@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — History of Operations (2026-04-24)
+
+- **Branch:** task/issue-395-history-of-operations
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_calculator.puml` — added/updated Calculator class with history attributes and methods, cli functions, relationships
+  - `artifacts/activity_record_operation.puml` — added/updated activity diagram for record-operation flow
+  - `artifacts/sequence_display_history.puml` — added/updated sequence diagram for display-history interaction
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #395 — V3 Task 9 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-395-history-of-operations

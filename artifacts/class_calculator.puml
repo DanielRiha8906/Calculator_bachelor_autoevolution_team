@@ -1,0 +1,63 @@
+@startuml class_calculator
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    - _history : list[dict]
+    + __init__() : None
+    + get_history() : list[dict]
+    + clear_history() : None
+    + add(a, b) : numeric
+    + subtract(a, b) : numeric
+    + multiply(a, b) : numeric
+    + divide(a, b) : numeric
+    + square(a) : numeric
+    + cube(a) : numeric
+    + square_root(a) : numeric
+    + cube_root(a) : numeric
+    + factorial(n) : int
+    + power(base, exp) : numeric
+    + log(a) : numeric
+    + ln(a) : numeric
+    - _record_operation(operation_name: str, operands: list, result: numeric) : None
+}
+
+note right of Calculator::_history
+  Stores list of dicts:
+  {operation, operands, result}
+end note
+
+note right of Calculator::_record_operation
+  Called internally by every
+  operation method on success.
+  Never called when an exception
+  is raised.
+end note
+
+class MaxRetriesExceeded <<Exception>> {
+}
+
+package "cli.py" <<module>> {
+    class CLIFunctions <<utility>> {
+        + run_calculator() : None
+        + display_history(calc: Calculator) : None
+        + prompt_for_first_number() : numeric
+        + prompt_for_operator() : str
+        + prompt_for_second_number() : numeric
+        + display_result(result: numeric) : None
+        + display_error(error: Exception) : None
+        - _format_history_entry(index: int, entry: dict) : str
+    }
+}
+
+CLIFunctions --> Calculator : uses
+CLIFunctions ..> MaxRetriesExceeded : raises
+
+note on link
+  display_history() calls
+  get_history() then
+  _format_history_entry()
+  for each entry
+end note
+
+@enduml

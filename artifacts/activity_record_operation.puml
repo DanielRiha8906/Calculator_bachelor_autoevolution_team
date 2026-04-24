@@ -1,0 +1,28 @@
+@startuml activity_record_operation
+
+start
+
+:User calls operation method
+(e.g. calc.add(5, 3));
+
+:Perform calculation
+with given operands;
+
+if (Exception raised?) then (yes)
+    :Raise exception to caller;
+    stop
+else (no)
+    :Call _record_operation(
+      operation_name,
+      operands,
+      result
+    );
+
+    :Append entry to _history
+    {operation, operands, result};
+
+    :Return result to caller;
+    stop
+endif
+
+@enduml
