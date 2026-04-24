@@ -171,4 +171,4 @@ Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
   - `artifacts/activity_interactive_loop.puml` — activity diagram for interactive loop with failure counter logic
   - `artifacts/sequence_interactive_session.puml` — sequence diagram for interactive session iteration
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 272.2s | Cost: $0.589015 USD | Turns: 4
