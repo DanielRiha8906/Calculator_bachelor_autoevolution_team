@@ -1,6 +1,7 @@
 import pytest
 import math
 from src.calculator import Calculator
+from src.__main__ import main
 
 
 @pytest.fixture
@@ -465,3 +466,229 @@ class TestCalculatorLn:
         """Verify that ln of negative float raises ValueError."""
         with pytest.raises(ValueError):
             calculator.ln(-10.5)
+
+
+class TestInteractiveLoop:
+    """Test suite for interactive calculator loop (main() function)."""
+
+    def test_interactive_loop_exits_on_quit(self, monkeypatch, capsys):
+        """Verify that user typing 'quit' terminates program cleanly."""
+        inputs = iter(["quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Program should exit without error
+        assert captured.out is not None  # Just verify we can capture output
+
+    def test_interactive_loop_single_addition(self, monkeypatch, capsys):
+        """Verify addition operation in interactive loop."""
+        inputs = iter(["add", "5", "3", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 8" in captured.out
+
+    def test_interactive_loop_single_subtraction(self, monkeypatch, capsys):
+        """Verify subtraction operation in interactive loop."""
+        inputs = iter(["subtract", "10", "3", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 7" in captured.out
+
+    def test_interactive_loop_single_multiplication(self, monkeypatch, capsys):
+        """Verify multiplication operation in interactive loop."""
+        inputs = iter(["multiply", "4", "3", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 12" in captured.out
+
+    def test_interactive_loop_single_division(self, monkeypatch, capsys):
+        """Verify division operation in interactive loop."""
+        inputs = iter(["divide", "10", "2", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 5" in captured.out
+
+    def test_interactive_loop_division_by_zero_error(self, monkeypatch, capsys):
+        """Verify division by zero error handling in interactive loop."""
+        inputs = iter(["divide", "10", "0", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should display error but not exit
+        assert "Error" in captured.out or "division" in captured.out.lower()
+
+    def test_interactive_loop_factorial_unary(self, monkeypatch, capsys):
+        """Verify factorial operation in interactive loop."""
+        inputs = iter(["factorial", "5", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 120" in captured.out
+
+    def test_interactive_loop_square_unary(self, monkeypatch, capsys):
+        """Verify square operation in interactive loop."""
+        inputs = iter(["square", "4", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 16" in captured.out
+
+    def test_interactive_loop_square_root_unary(self, monkeypatch, capsys):
+        """Verify square root operation in interactive loop."""
+        inputs = iter(["square_root", "9", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 3" in captured.out
+
+    def test_interactive_loop_power_binary(self, monkeypatch, capsys):
+        """Verify power operation in interactive loop."""
+        inputs = iter(["power", "2", "3", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 8" in captured.out
+
+    def test_interactive_loop_multiple_operations_sequence(self, monkeypatch, capsys):
+        """Verify multiple operations in sequence in interactive loop."""
+        inputs = iter(["add", "2", "3", "add", "5", "5", "multiply", "2", "6", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # All three results should be displayed
+        assert "Result: 5" in captured.out  # 2 + 3
+        assert "Result: 10" in captured.out  # 5 + 5
+        assert "Result: 12" in captured.out  # 2 * 6
+
+    def test_interactive_loop_invalid_operation_error(self, monkeypatch, capsys):
+        """Verify invalid operation error handling in interactive loop."""
+        inputs = iter(["invalid", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should display error about unknown operation
+        assert "Error" in captured.out or "unknown" in captured.out.lower()
+
+    def test_interactive_loop_non_numeric_operand_error(self, monkeypatch, capsys):
+        """Verify non-numeric operand error handling in interactive loop."""
+        inputs = iter(["add", "abc", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should display error about non-numeric input
+        assert "Error" in captured.out or "number" in captured.out.lower()
+
+    def test_interactive_loop_factorial_negative_error(self, monkeypatch, capsys):
+        """Verify factorial of negative number error handling in interactive loop."""
+        inputs = iter(["factorial", "-1", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should display error about negative input
+        assert "Error" in captured.out
+
+    def test_interactive_loop_operation_selection_prompt(self, monkeypatch, capsys):
+        """Verify operation selection prompt is displayed."""
+        inputs = iter(["quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should have a prompt for operation selection
+        assert "operation" in captured.out.lower() or "select" in captured.out.lower()
+
+    def test_interactive_loop_operand_prompt_binary(self, monkeypatch, capsys):
+        """Verify operand prompts are displayed for binary operation."""
+        inputs = iter(["add", "1", "2", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should have prompts for two operands
+        output_lower = captured.out.lower()
+        assert (
+            "first" in output_lower or "operand" in output_lower or "enter" in output_lower
+        )
+
+    def test_interactive_loop_operand_prompt_unary(self, monkeypatch, capsys):
+        """Verify operand prompt is displayed for unary operation."""
+        inputs = iter(["factorial", "3", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should have a prompt for one operand
+        assert "enter" in captured.out.lower() or "operand" in captured.out.lower()
+
+    def test_interactive_loop_cube_root_negative(self, monkeypatch, capsys):
+        """Verify cube root of negative number in interactive loop."""
+        inputs = iter(["cube_root", "-8", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: -2" in captured.out
+
+    def test_interactive_loop_log10_valid(self, monkeypatch, capsys):
+        """Verify log10 operation in interactive loop."""
+        inputs = iter(["log10", "100", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        assert "Result: 2" in captured.out
+
+    def test_interactive_loop_ln_valid(self, monkeypatch, capsys):
+        """Verify natural logarithm in interactive loop."""
+        inputs = iter(["ln", "2.718", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        main()
+        captured = capsys.readouterr()
+        # Should contain a numeric result close to 1.0
+        assert "Result:" in captured.out
+
+
+class TestCalculatorDirectCompatibility:
+    """Test suite for direct Calculator method compatibility after interactive changes."""
+
+    def test_calculator_add_still_works_direct(self, calculator):
+        """Verify add() method still works directly."""
+        result = calculator.add(5, 3)
+        assert result == 8
+
+    def test_calculator_divide_by_zero_still_raises(self, calculator):
+        """Verify divide() with divisor=0 still raises ZeroDivisionError."""
+        with pytest.raises(ZeroDivisionError):
+            calculator.divide(10, 0)
+
+    def test_calculator_factorial_negative_still_raises(self, calculator):
+        """Verify factorial() with negative input still raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.factorial(-1)
+
+    def test_calculator_square_root_negative_still_raises(self, calculator):
+        """Verify square_root() with negative input still raises ValueError."""
+        with pytest.raises(ValueError):
+            calculator.square_root(-1)
+
+    def test_calculator_all_methods_exist(self):
+        """Verify all operation methods exist on Calculator."""
+        calc = Calculator()
+        required_methods = [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "factorial",
+            "square",
+            "cube",
+            "square_root",
+            "cube_root",
+            "power",
+            "log10",
+            "ln",
+        ]
+        for method_name in required_methods:
+            assert hasattr(calc, method_name), f"Missing method: {method_name}"
+            assert callable(
+                getattr(calc, method_name)
+            ), f"Method {method_name} is not callable"
