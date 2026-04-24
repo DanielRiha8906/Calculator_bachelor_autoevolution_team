@@ -13,7 +13,7 @@
 - **Risks:** The tests call log_error() directly rather than through calculator/cli/batch_cli integration; the src/ modules are not wired to call error_logger automatically. The logging infrastructure is in place but requires a follow-up integration step to be fully operational end-to-end.
 - **Tests passed:** 278 passed, 1 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 496.3s | Cost: $1.238884 USD | Turns: 18
 
 ## Run: update-diagrams — Operation History diagrams (2026-04-24)
 
