@@ -118,4 +118,4 @@ Duration: 256.1s | Cost: $0.503387 USD | Turns: 4
 - **Risks:** None — Calculator class unchanged; backward-compatible display_result() preserved; all tests pass
 - **Tests passed:** 121 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 416.6s | Cost: $0.814535 USD | Turns: 14
