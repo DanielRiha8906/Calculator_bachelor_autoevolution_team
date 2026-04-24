@@ -6,54 +6,110 @@ start
 
 :User invokes app;
 :main() starts;
-:call run_calculator();
+:call run_calculator(max_retries=3);
 :Create Calculator instance;
+:attempt_count = 0;
 
 while (valid operator?) is (invalid)
-    :prompt_for_operator()\nprint error, retry;
+
+    :attempt_count++;
+
+    if (attempt_count > max_retries?) then (yes)
+        :Raise MaxRetriesExceeded;
+        :return exception to main();
+        stop
+    else (no)
+    endif
+
+    :prompt_for_operator(max_retries=3)\nprint: "Invalid operator.\nAttempt N/3.";
+    :retry;
+
 endwhile (valid)
+
 :Store operator key;
 :Look up arity from OPERATIONS;
 
-if (arity == 1?) then (yes — unary)
+if (arity == 1?) then (yes - unary)
+
+    :attempt_count = 0;
 
     while (valid operand?) is (invalid)
-        :prompt_for_first_number()\nprint error, retry;
-    endwhile (valid)
-    :Store operand;
 
+        :attempt_count++;
+
+        if (attempt_count > max_retries?) then (yes)
+            :Raise MaxRetriesExceeded;
+            :return exception to main();
+            stop
+        else (no)
+        endif
+
+        :prompt_for_first_number(max_retries=3)\nprint: "Invalid number.\nAttempt N/3.";
+        :retry;
+
+    endwhile (valid)
+
+    :Store operand;
     :method = getattr(calc, method_name);
     :result = method(operand);
 
     if (ValueError raised?) then (yes)
         :display_error(error_message);
         :re-raise to main();
-        :main calls display_error();
+        :main calls display_error() -> sys.exit(1);
         stop
     else (no)
     endif
 
     :display_result_unary(key, operand, result);
 
-else (no — binary)
+else (no - binary)
+
+    :attempt_count = 0;
 
     while (valid first number?) is (invalid)
-        :prompt_for_first_number()\nprint error, retry;
+
+        :attempt_count++;
+
+        if (attempt_count > max_retries?) then (yes)
+            :Raise MaxRetriesExceeded;
+            :return exception to main();
+            stop
+        else (no)
+        endif
+
+        :prompt_for_first_number(max_retries=3)\nprint: "Invalid number.\nAttempt N/3.";
+        :retry;
+
     endwhile (valid)
+
     :Store first number;
+    :attempt_count = 0;
 
     while (valid second number?) is (invalid)
-        :prompt_for_second_number()\nprint error, retry;
-    endwhile (valid)
-    :Store second number;
 
+        :attempt_count++;
+
+        if (attempt_count > max_retries?) then (yes)
+            :Raise MaxRetriesExceeded;
+            :return exception to main();
+            stop
+        else (no)
+        endif
+
+        :prompt_for_second_number(max_retries=3)\nprint: "Invalid number.\nAttempt N/3.";
+        :retry;
+
+    endwhile (valid)
+
+    :Store second number;
     :method = getattr(calc, method_name);
     :result = method(first, second);
 
     if (ZeroDivisionError or ValueError?) then (yes)
         :display_error(error_message);
         :re-raise to main();
-        :main calls display_error();
+        :main calls display_error() -> sys.exit(1);
         stop
     else (no)
     endif

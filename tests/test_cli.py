@@ -1,4 +1,5 @@
 import pytest
+import sys
 from unittest.mock import patch
 from src.cli import (
     prompt_for_first_number,
@@ -8,6 +9,7 @@ from src.cli import (
     display_result_unary,
     display_result_binary,
     run_calculator,
+    MaxRetriesExceeded,
 )
 
 
@@ -275,3 +277,261 @@ class TestDisplayResultBinary:
         display_result_binary("/", 10.0, 2.0, 5.0)
         captured = capsys.readouterr()
         assert "10.0 / 2.0 = 5.0" in captured.out
+
+
+class TestMaxRetriesFirstNumber:
+    """Test suite for max_retries behavior on first number prompts."""
+
+    def test_prompt_first_number_retry_limit(self):
+        """Test that prompt_for_first_number raises MaxRetriesExceeded after 3 invalid attempts.
+
+        Default max_retries=3 means 3 invalid attempts exhaust the limit.
+        On the 4th attempt, MaxRetriesExceeded should be raised.
+        """
+        with patch('builtins.input', side_effect=['abc', 'def', 'xyz', '!@#', '5']):
+            with pytest.raises(MaxRetriesExceeded):
+                prompt_for_first_number(max_retries=3)
+
+    def test_prompt_first_number_retry_success_on_second(self):
+        """Test that prompt_for_first_number succeeds on 2nd attempt without exception."""
+        with patch('builtins.input', side_effect=['abc', '5.5']):
+            result = prompt_for_first_number(max_retries=3)
+            assert result == 5.5
+
+    def test_prompt_first_number_retry_success_on_third(self):
+        """Test that prompt_for_first_number succeeds on 3rd attempt without exception."""
+        with patch('builtins.input', side_effect=['abc', 'def', '-3.14']):
+            result = prompt_for_first_number(max_retries=3)
+            assert result == -3.14
+
+    def test_prompt_first_number_retry_success_first(self):
+        """Test that prompt_for_first_number succeeds immediately without retries needed."""
+        with patch('builtins.input', side_effect=['42.5']):
+            result = prompt_for_first_number(max_retries=3)
+            assert result == 42.5
+
+    def test_prompt_first_number_retry_limit_at_boundary(self):
+        """Test retry behavior exactly at the retry limit boundary."""
+        # 3 invalid, then valid on 4th (should succeed at limit)
+        with patch('builtins.input', side_effect=['a', 'b', 'c', '10']):
+            result = prompt_for_first_number(max_retries=3)
+            assert result == 10.0
+
+    def test_prompt_first_number_retry_exhausted_at_boundary(self):
+        """Test that 4 invalid attempts with max_retries=3 raises exception."""
+        # 4 invalid inputs should trigger MaxRetriesExceeded
+        with patch('builtins.input', side_effect=['a', 'b', 'c', 'd', '5']):
+            with pytest.raises(MaxRetriesExceeded):
+                prompt_for_first_number(max_retries=3)
+
+
+class TestMaxRetriesSecondNumber:
+    """Test suite for max_retries behavior on second number prompts."""
+
+    def test_prompt_second_number_retry_limit(self):
+        """Test that prompt_for_second_number raises MaxRetriesExceeded after 3 invalid attempts."""
+        with patch('builtins.input', side_effect=['abc', 'def', 'xyz', '!@#', '5']):
+            with pytest.raises(MaxRetriesExceeded):
+                prompt_for_second_number(max_retries=3)
+
+    def test_prompt_second_number_retry_success_on_second(self):
+        """Test that prompt_for_second_number succeeds on 2nd attempt without exception."""
+        with patch('builtins.input', side_effect=['xyz', '7.5']):
+            result = prompt_for_second_number(max_retries=3)
+            assert result == 7.5
+
+    def test_prompt_second_number_retry_success_on_third(self):
+        """Test that prompt_for_second_number succeeds on 3rd attempt without exception."""
+        with patch('builtins.input', side_effect=['abc', 'def', '-2.5']):
+            result = prompt_for_second_number(max_retries=3)
+            assert result == -2.5
+
+    def test_prompt_second_number_retry_success_first(self):
+        """Test that prompt_for_second_number succeeds immediately without retries needed."""
+        with patch('builtins.input', side_effect=['9.0']):
+            result = prompt_for_second_number(max_retries=3)
+            assert result == 9.0
+
+
+class TestMaxRetriesOperator:
+    """Test suite for max_retries behavior on operator prompts."""
+
+    def test_prompt_operator_retry_limit(self):
+        """Test that prompt_for_operator raises MaxRetriesExceeded after 3 invalid attempts."""
+        with patch('builtins.input', side_effect=['%', '&', '@', '!', '+']):
+            with pytest.raises(MaxRetriesExceeded):
+                prompt_for_operator(max_retries=3)
+
+    def test_prompt_operator_retry_success_on_second(self):
+        """Test that prompt_for_operator succeeds on 2nd attempt without exception."""
+        with patch('builtins.input', side_effect=['%', '-']):
+            result = prompt_for_operator(max_retries=3)
+            assert result == '-'
+
+    def test_prompt_operator_retry_success_on_third(self):
+        """Test that prompt_for_operator succeeds on 3rd attempt without exception."""
+        with patch('builtins.input', side_effect=['%', '&', '*']):
+            result = prompt_for_operator(max_retries=3)
+            assert result == '*'
+
+    def test_prompt_operator_retry_success_first(self):
+        """Test that prompt_for_operator succeeds immediately without retries needed."""
+        with patch('builtins.input', side_effect=['+']):
+            result = prompt_for_operator(max_retries=3)
+            assert result == '+'
+
+
+class TestRunCalculatorWithMaxRetries:
+    """Test suite for run_calculator with max_retries parameter."""
+
+    def test_run_calculator_exhausts_first_operand(self):
+        """Test full workflow where user exhausts retries on first operand."""
+        with patch('builtins.input', side_effect=['sqrt', 'a', 'b', 'c', 'd']):
+            with pytest.raises(MaxRetriesExceeded):
+                run_calculator(max_retries=3)
+
+    def test_run_calculator_exhausts_second_operand(self):
+        """Test full workflow where user exhausts retries on second operand."""
+        with patch('builtins.input', side_effect=['+', '5', 'a', 'b', 'c', 'd']):
+            with pytest.raises(MaxRetriesExceeded):
+                run_calculator(max_retries=3)
+
+    def test_run_calculator_exhausts_operator(self):
+        """Test full workflow where user exhausts retries on operator."""
+        with patch('builtins.input', side_effect=['%', '&', '@', '!', '+', '10', '5']):
+            with pytest.raises(MaxRetriesExceeded):
+                run_calculator(max_retries=3)
+
+    def test_run_calculator_invalid_operator_then_valid(self):
+        """Test that one invalid operator input recovers and completes successfully."""
+        with patch('builtins.input', side_effect=['%', '+', '10', '5']):
+            result = run_calculator(max_retries=3)
+            assert result == 15.0
+
+    def test_run_calculator_one_retry_first_operand(self):
+        """Test integration with one invalid input on first operand, then success."""
+        with patch('builtins.input', side_effect=['*', 'a', '5', '3']):
+            result = run_calculator(max_retries=3)
+            assert result == 15.0
+
+    def test_run_calculator_max_retries_exhausted_first_operand(self):
+        """Test full workflow where retries exhausted on first operand."""
+        with patch('builtins.input', side_effect=['*', 'a', 'b', 'c', 'd']):
+            with pytest.raises(MaxRetriesExceeded):
+                run_calculator(max_retries=3)
+
+    def test_run_calculator_backward_compatibility_valid_input(self):
+        """Test backward compatibility with all valid inputs on first attempt."""
+        with patch('builtins.input', side_effect=['+', '10', '5']):
+            result = run_calculator(max_retries=3)
+            assert result == 15.0
+
+
+class TestDomainErrorsNotRetryable:
+    """Test suite verifying domain errors (not input errors) are not subject to retry limit."""
+
+    def test_domain_error_sqrt_negative_not_retryable(self):
+        """Test that sqrt of negative (domain error) raises ValueError immediately, not MaxRetriesExceeded."""
+        with patch('builtins.input', side_effect=['sqrt', '-4']):
+            with pytest.raises(ValueError):
+                run_calculator(max_retries=3)
+
+    def test_domain_error_factorial_negative_not_retryable(self):
+        """Test that factorial of negative (domain error) raises ValueError immediately."""
+        with patch('builtins.input', side_effect=['factorial', '-5']):
+            with pytest.raises(ValueError):
+                run_calculator(max_retries=3)
+
+    def test_domain_error_log_zero_not_retryable(self):
+        """Test that log of zero (domain error) raises ValueError immediately."""
+        with patch('builtins.input', side_effect=['log', '0']):
+            with pytest.raises(ValueError):
+                run_calculator(max_retries=3)
+
+    def test_domain_error_division_by_zero_not_retryable(self):
+        """Test that division by zero (domain error) raises ZeroDivisionError immediately."""
+        with patch('builtins.input', side_effect=['/', '10', '0']):
+            with pytest.raises(ZeroDivisionError):
+                run_calculator(max_retries=3)
+
+
+class TestMainWithMaxRetries:
+    """Test suite for main() function handling MaxRetriesExceeded."""
+
+    def test_main_interactive_max_retries_first_operand(self):
+        """Test main() in interactive mode with user exhausting retries on first operand."""
+        with patch('builtins.input', side_effect=['sqrt', 'a', 'b', 'c', 'd']):
+            with patch('sys.exit') as mock_exit:
+                from src.__main__ import main
+                main()
+                mock_exit.assert_called_once_with(1)
+
+    def test_main_interactive_max_retries_operator(self):
+        """Test main() in interactive mode with user exhausting retries on operator."""
+        with patch('builtins.input', side_effect=['%', '&', '@', '!', '5']):
+            with patch('sys.exit') as mock_exit:
+                from src.__main__ import main
+                main()
+                mock_exit.assert_called_once_with(1)
+
+    def test_main_interactive_domain_error(self):
+        """Test main() in interactive mode with domain error (sqrt of negative)."""
+        with patch('builtins.input', side_effect=['sqrt', '-9']):
+            with patch('sys.exit') as mock_exit:
+                from src.__main__ import main
+                main()
+                mock_exit.assert_called_once_with(1)
+
+
+class TestBatchModeBehaviorPreserved:
+    """Test suite verifying batch mode behavior is unchanged by max_retries changes."""
+
+    def test_batch_mode_no_retry(self):
+        """Test batch mode processes once with invalid input; no retry.
+
+        Batch mode should not retry on invalid numeric input.
+        Domain errors still raise immediately (unchanged behavior).
+        """
+        with patch('sys.argv', ['calculator', 'sqrt', '-5']):
+            with patch('sys.exit') as mock_exit:
+                from src.__main__ import main
+                main()
+                # Should exit with code 1 (domain error)
+                mock_exit.assert_called_once_with(1)
+
+    def test_batch_mode_help_unchanged(self):
+        """Test batch mode --help flag works as before."""
+        with patch('sys.argv', ['calculator', '--help']):
+            with patch('sys.exit') as mock_exit:
+                from src.__main__ import main
+                main()
+                # Should exit with code 0 (help displayed)
+                mock_exit.assert_called_once_with(0)
+
+
+class TestErrorMessagesWithMaxRetries:
+    """Test suite for error message content during retries."""
+
+    def test_error_message_non_numeric_first(self, capsys):
+        """Test error message for non-numeric first operand includes guidance and attempt counter."""
+        with patch('builtins.input', side_effect=['abc', '5']):
+            result = prompt_for_first_number(max_retries=3)
+            captured = capsys.readouterr()
+            # Should contain guidance about numeric input and/or attempt info
+            assert 'numeric' in captured.out.lower() or 'invalid' in captured.out.lower()
+            assert result == 5.0
+
+    def test_error_message_invalid_operator(self, capsys):
+        """Test error message for invalid operator shows attempt info."""
+        with patch('builtins.input', side_effect=['%', '+']):
+            result = prompt_for_operator(max_retries=3)
+            captured = capsys.readouterr()
+            # Should mention invalid operator
+            assert 'invalid' in captured.out.lower() or 'operator' in captured.out.lower()
+            assert result == '+'
+
+    def test_error_message_max_retries_exhausted(self):
+        """Test error message when max retries exhausted explicitly states the condition."""
+        with patch('builtins.input', side_effect=['a', 'b', 'c', 'd']):
+            with pytest.raises(MaxRetriesExceeded):
+                prompt_for_first_number(max_retries=3)

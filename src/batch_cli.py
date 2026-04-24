@@ -148,6 +148,7 @@ def batch_main(argv: list[str]) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+        return
 
     operation_key, operands = parse_batch_args(argv)
 
@@ -155,6 +156,7 @@ def batch_main(argv: list[str]) -> None:
         # Help flag was present.
         print_help()
         sys.exit(0)
+        return
 
     exit_code = execute_batch(operation_key, operands)
     sys.exit(exit_code)

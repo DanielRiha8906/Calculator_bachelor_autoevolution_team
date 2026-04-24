@@ -2,6 +2,11 @@
 
 skinparam classAttributeIconSize 0
 
+exception MaxRetriesExceeded {
+    Raised when a prompt function exhausts
+    max_retries attempts on invalid input
+}
+
 class Calculator {
     + add(a, b) : numeric
     + subtract(a, b) : numeric
@@ -18,13 +23,16 @@ class Calculator {
 }
 
 class "cli" <<module>> {
+    ' Exception
+    + MaxRetriesExceeded : exception
+
     ' Registry
     + OPERATIONS : dict
 
-    ' Prompt functions
-    + prompt_for_operator() : str
-    + prompt_for_first_number() : float
-    + prompt_for_second_number() : float
+    ' Prompt functions with retry limits
+    + prompt_for_operator(max_retries=3) : str
+    + prompt_for_first_number(max_retries=3) : float
+    + prompt_for_second_number(max_retries=3) : float
 
     ' Display functions
     + display_result(first, operator, second, result) : None
@@ -38,7 +46,7 @@ class "cli" <<module>> {
     - _get_display_symbol(key) : str
 
     ' Orchestrator
-    + run_calculator() : float
+    + run_calculator(max_retries=3) : float
 }
 
 note right of "cli"::OPERATIONS
@@ -49,10 +57,26 @@ note right of "cli"::OPERATIONS
                     "cbrt", "factorial", "log", "ln"
 end note
 
+note right of "cli"::prompt_for_operator
+  Loops until valid operator or max_retries hit.
+  Tracks attempt count.
+  Raises MaxRetriesExceeded if limit exhausted.
+  Displays attempt counter in error message.
+end note
+
+note right of "cli"::prompt_for_first_number
+  Loops until valid float or max_retries hit.
+  Tracks attempt count.
+  Raises MaxRetriesExceeded if limit exhausted.
+  Displays attempt counter in error message.
+end note
+
 note right of "cli"::run_calculator
   Arity-aware dispatch via getattr().
-  Catches ValueError / ZeroDivisionError,
+  Passes max_retries to all prompt functions.
+  Catches ValueError/ZeroDivisionError from Calculator,
   calls display_error(), then re-raises.
+  MaxRetriesExceeded propagates uncaught to main().
 end note
 
 class "__main__" <<module>> {
@@ -60,12 +84,15 @@ class "__main__" <<module>> {
 }
 
 note right of "__main__"::main
-  Calls run_calculator().
+  Calls run_calculator(max_retries=3).
+  Catches MaxRetriesExceeded -> display_error() -> sys.exit(1).
   Catches ZeroDivisionError and Exception,
-  calls display_error().
+  calls display_error() -> sys.exit(1).
 end note
 
 "cli" --> Calculator : <<import>>\nCalculator
-"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error
+"cli" --> MaxRetriesExceeded : <<raises>>
+"__main__" --> "cli" : <<import>>\nrun_calculator\ndisplay_error\nMaxRetriesExceeded
+"__main__" --> MaxRetriesExceeded : <<catches>>
 
 @enduml

@@ -1,4 +1,22 @@
 
+## Run: Issue #392 — V3 Task 8 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-392-input-validation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/cli.py` — added `MaxRetriesExceeded` exception class; added `max_retries=3` parameter to `prompt_for_first_number`, `prompt_for_operator`, `prompt_for_second_number`, and `run_calculator`; retry counter logic with attempt feedback messages
+  - `src/__main__.py` — imported `MaxRetriesExceeded`; added explicit handler for `MaxRetriesExceeded` and `sys.exit(1)` to all error paths
+  - `src/batch_cli.py` — added `return` after `sys.exit()` calls to prevent test harness fallthrough
+  - `tests/test_cli.py` — 33 new tests for retry limit behavior, domain error non-retryability, main integration, and batch mode preservation
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Add input validation with retry limit (max 3 attempts) to interactive calculator; graceful exit with error message after limit exceeded
+- **Risks:** None — domain errors (ValueError, ZeroDivisionError) still propagate without retry; batch mode unchanged
+- **Tests passed:** 185 passed, 0 failed, 1 skipped
+
+Duration: 687.9s | Cost: $1.521183 USD | Turns: 18
+
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-371-division-incorrect-inputs
@@ -187,3 +205,14 @@ Duration: 489.9s | Cost: $1.046504 USD | Turns: 17
   - `artifacts/sequence_diagram_batch_calculation.puml` — batch CLI calculation sequence: __main__ → batch_cli → Calculator → cli display, with help and error alt paths
 
 Duration: 211.9s | Cost: $0.518498 USD | Turns: 5
+
+## Run: update-diagrams — Input Validation Retry Logic (2026-04-24)
+
+- **Branch:** task/issue-392-input-validation
+- **PR target:** task/issue-392-input-validation
+- **Files changed:**
+  - `artifacts/class_diagram_cli.puml` — added MaxRetriesExceeded exception class, max_retries parameter to all prompt functions, clarified exception propagation notes
+  - `artifacts/activity_diagram_user_session.puml` — added attempt_count tracking in retry loops, explicit exit conditions when max_retries exhausted, MaxRetriesExceeded exception flow
+  - `artifacts/class_diagram_batch_cli.puml` — added note that batch mode has no retry logic, updated __main__ note to reflect MaxRetriesExceeded handling
+
+Duration: 255.0s | Cost: $0.666930 USD | Turns: 11
