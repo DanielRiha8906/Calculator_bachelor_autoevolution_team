@@ -175,4 +175,4 @@ Duration: 211.2s | Cost: $0.496983 USD | Turns: 4
 - **Risks:** None — interactive mode unchanged; batch mode is additive
 - **Tests passed:** 152 passed, 0 failed, 1 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 489.9s | Cost: $1.046504 USD | Turns: 17
