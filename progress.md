@@ -301,4 +301,4 @@ Duration: 410.4s | Cost: $0.692189 USD | Turns: 4
   - `artifacts/cli_activity.puml` — updated CLI activity flow with 6 error paths and ErrorLogger logging calls
   - `artifacts/interactive_activity.puml` — updated interactive session activity diagram with ErrorLogger logging calls and exit points
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 296.6s | Cost: $0.709031 USD | Turns: 4
