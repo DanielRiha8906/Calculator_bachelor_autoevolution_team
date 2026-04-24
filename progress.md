@@ -110,4 +110,4 @@ Duration: 255.8s | Cost: $0.582970 USD | Turns: 6
 - **Risks:** None — Calculator class unchanged; only entry point modified
 - **Tests passed:** 107 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 436.2s | Cost: $0.904403 USD | Turns: 16
