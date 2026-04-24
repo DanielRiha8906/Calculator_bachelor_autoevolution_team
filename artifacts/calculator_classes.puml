@@ -1,0 +1,92 @@
+@startuml calculator_classes
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle Bold
+skinparam packageStyle rectangle
+
+package "src/calculator.py" {
+    class Calculator {
+        + add(a, b) : float
+        + subtract(a, b) : float
+        + multiply(a, b) : float
+        + divide(a, b) : float
+        + power(base, exponent) : float
+        + factorial(n) : int
+        + square(x) : float
+        + cube(x) : float
+        + sqrt(x) : float
+        + cbrt(x) : float
+        + log10(x) : float
+        + ln(x) : float
+    }
+}
+
+package "src/operation_registry.py" {
+    class OperationRegistry {
+        - _calculator : Calculator
+        - _operations : dict[str, int]
+        - _sorted_names : List[str]
+        + __init__(calculator)
+        + get_operations() : List[str]
+        + get_arity(name) : int
+        + call(name, *args) : Any
+    }
+}
+
+package "src/infrastructure/" {
+    class OperationHistory {
+        - _entries : list[str]
+        + __init__()
+        + record(operation_name, operands, result)
+        + get_entries() : list[str]
+        + display() : str
+        + write_to_file(filepath)
+    }
+
+    class ErrorLogger {
+        - _log_file : str
+        + __init__(log_file)
+        + log_invalid_operation(name, msg)
+        + log_invalid_operand(name, value, msg)
+        + log_incorrect_argument_count(name, required, actual, msg)
+        + log_runtime_calculation_error(name, operands, error_type, msg)
+        - _timestamp() : str
+        - _write(entry)
+    }
+}
+
+package "src/ui/" {
+    class "interactive.py" as Interactive << (M,orchid) module >> {
+        + run_interactive_session()
+    }
+    class "cli.py" as CLI << (M,orchid) module >> {
+        + run_cli(argv)
+    }
+}
+
+OperationRegistry "1" o-- "1" Calculator : aggregates
+
+Interactive ..> Calculator : uses
+Interactive ..> OperationRegistry : uses
+Interactive ..> OperationHistory : uses
+Interactive ..> ErrorLogger : uses
+
+CLI ..> Calculator : uses
+CLI ..> OperationRegistry : uses
+CLI ..> OperationHistory : uses
+CLI ..> ErrorLogger : uses
+
+note bottom of Calculator
+  Stateless core.
+  Raises ZeroDivisionError,
+  ValueError on bad input.
+end note
+
+note right of OperationHistory
+  Module-level helper:
+  format_history_entry(
+    operation_name,
+    operands, result) : str
+end note
+
+@enduml

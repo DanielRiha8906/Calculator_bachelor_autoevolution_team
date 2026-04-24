@@ -1,0 +1,83 @@
+@startuml interactive_session_activity
+
+skinparam ActivityFontSize 13
+skinparam ActivityDiamondFontSize 12
+skinparam ArrowFontSize 11
+
+title Interactive Session Loop
+|#LightBlue|Session|
+
+start
+
+:Initialize Calculator, OperationRegistry,\nOperationHistory, ErrorLogger;
+:retry_count = 0;
+
+repeat
+    :Display operation menu\n(all operations with unary/binary labels);
+    :Prompt for selection\n(index, "h" for history, "n" to quit);
+
+    if (Input is valid index?) then (yes)
+        :reset retry_count = 0;
+        :Get arity from registry\n(1 = unary, 2 = binary);
+
+        :Prompt for operand(s);
+
+        if (Operand input valid?) then (yes)
+            :registry.call(operation_name, *operands);
+
+            if (Calculation succeeded?) then (yes)
+                :Print result;
+                :history.record(operation_name, operands, result);
+            else (no)
+                :error_logger.log_runtime_calculation_error();
+                :Print error message;
+            endif
+
+        elseif (Input is "no"?) then (yes)
+            :history.write_to_file();
+            stop
+        else (invalid)
+            :retry_count += 1;
+            :error_logger.log_invalid_operand();
+            if (retry_count >= 5?) then (yes)
+                :history.write_to_file();
+                stop
+            endif
+        endif
+
+    elseif (Input is "h"?) then (yes)
+        :Display history;
+        :Prompt "Continue? (y/n/h)";
+        if (User chooses "no"?) then (yes)
+            :history.write_to_file();
+            stop
+        endif
+
+    elseif (Input is "no"?) then (yes)
+        :history.write_to_file();
+        stop
+
+    else (invalid)
+        :retry_count += 1;
+        :error_logger.log_invalid_operation();
+        if (retry_count >= 5?) then (yes)
+            :history.write_to_file();
+            stop
+        endif
+    endif
+
+    :Prompt "Continue? (y/n/h)";
+
+    if (User says "no"?) then (yes)
+        :history.write_to_file();
+        stop
+    elseif (User says "h"?) then (yes)
+        :Display history;
+    endif
+
+repeat while (User continues?) is (yes)
+
+:history.write_to_file();
+stop
+
+@enduml

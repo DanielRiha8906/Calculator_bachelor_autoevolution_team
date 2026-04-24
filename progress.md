@@ -1,3 +1,14 @@
+## Run: update-diagrams — Issue #409 Documentation UML diagrams (2026-04-24)
+
+- **Branch:** task/issue-409-documentation
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/calculator_classes.puml` — class diagram for Calculator, OperationRegistry, OperationHistory, ErrorLogger with associations
+  - `artifacts/interactive_session_activity.puml` — activity diagram for interactive session loop with retry logic and exit paths
+  - `artifacts/cli_execution_sequence.puml` — sequence diagram for CLI execution flow with error handling branches
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #409 — V3 Task 13 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-409-documentation
