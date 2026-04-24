@@ -1,0 +1,62 @@
+@startuml class_error_logger
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor White
+  BorderColor Black
+}
+skinparam note {
+  BackgroundColor LightYellow
+  BorderColor DarkGoldenRod
+}
+
+class "error_logger" as EL << module >> {
+  + error_logger : object
+  --
+  + setup_logging() : None
+  + log_error(operation, operands, error_type, error_message, filepath) : None
+  + log_calculation_error(operation, operands, error_type, error_message) : None
+  + log_input_error(field_name, input_value, error_type, error_message) : None
+  + log_retry_attempt(field_name, attempt_num, max_retries) : None
+  + log_max_retries_exceeded(field_name, error_message) : None
+  + log_batch_error(operation, operands, error_type, error_message) : None
+}
+
+class "datetime" as DT << stdlib >> {
+}
+
+class "error.log" as LOG << file >> {
+}
+
+class "calculator" as CALC << module >> {
+}
+
+class "cli" as CLI << module >> {
+}
+
+class "batch_cli" as BATCH << module >> {
+}
+
+class "__main__" as MAIN << module >> {
+}
+
+EL --> DT : imports
+EL --> LOG : appends to
+
+EL <.. CALC : planned wiring
+EL <.. CLI : planned wiring
+EL <.. BATCH : planned wiring
+EL <.. MAIN : planned wiring
+
+note bottom of EL
+  File-per-call pattern: each log_error() call
+  opens error.log in append mode, writes one line,
+  then closes the file.
+
+  Log line format (pipe-delimited):
+  [YYYY-MM-DD HH:MM:SS] [ERROR] Operation: {op} |
+  Operands: {operands} | Error type: {type} |
+  Error message: {msg}
+end note
+
+@enduml

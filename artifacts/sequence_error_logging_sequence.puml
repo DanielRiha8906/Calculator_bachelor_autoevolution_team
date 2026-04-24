@@ -1,0 +1,28 @@
+@startuml sequence_error_logging_sequence
+
+participant Caller
+participant "error_logger" as EL
+participant "datetime" as DT
+participant "FileSystem" as FS
+
+Caller ->> EL : log_error(operation, operands, error_type, error_message)
+activate EL
+
+EL ->> DT : datetime.now()
+activate DT
+DT -->> EL : datetime object
+deactivate DT
+
+EL -> EL : strftime("%Y-%m-%d %H:%M:%S")
+EL -> EL : format log line\n"[timestamp] [ERROR] Operation: ... | Operands: ... |\nError type: ... | Error message: ..."
+
+EL ->> FS : open(filepath, "a")
+activate FS
+EL ->> FS : f.write(formatted_line)
+EL ->> FS : close  (end of with block)
+deactivate FS
+
+EL -->> Caller : return None
+deactivate EL
+
+@enduml
