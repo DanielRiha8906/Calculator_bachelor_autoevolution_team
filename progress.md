@@ -12,7 +12,7 @@
 - **Risks:** None — additive change only; existing behavior unchanged; all 241 prior tests continue to pass.
 - **Tests passed:** 256 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 719.0s | Cost: $1.328373 USD | Turns: 14
 
 ## Run: Issue #397 — V3 Task 9 - Expert/team (2026-04-24)
 
