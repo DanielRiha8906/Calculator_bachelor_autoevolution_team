@@ -8,6 +8,7 @@ so that existing callers of ``src.cli`` continue to work without changes.
 from .interface import (
     MaxRetriesExceeded,
     OPERATIONS,
+    SCIENTIFIC_OPERATIONS,
     prompt_for_first_number,
     prompt_for_operator,
     prompt_for_second_number,
@@ -17,6 +18,7 @@ from .interface import (
     display_error,
     display_history,
     display_history_notification,
+    display_mode_change,
     persist_history_to_file,
     run_calculator,
     _format_history_entry,
@@ -28,6 +30,7 @@ from .interface import (
 __all__ = [
     "MaxRetriesExceeded",
     "OPERATIONS",
+    "SCIENTIFIC_OPERATIONS",
     "prompt_for_first_number",
     "prompt_for_operator",
     "prompt_for_second_number",
@@ -37,6 +40,7 @@ __all__ = [
     "display_error",
     "display_history",
     "display_history_notification",
+    "display_mode_change",
     "persist_history_to_file",
     "run_calculator",
     "_format_history_entry",

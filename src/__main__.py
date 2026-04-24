@@ -2,6 +2,7 @@ import sys
 
 from .calculator import Calculator
 from .cli import run_calculator, display_error, MaxRetriesExceeded, persist_history_to_file
+from .interface import display_mode_change
 
 
 def main() -> None:
@@ -15,6 +16,9 @@ def main() -> None:
     full session so that history accumulates across operations. When the
     session ends (user quits, Ctrl-C, or max retries exceeded), history
     is persisted to disk via persist_history_to_file().
+
+    Supports switching between 'normal' and 'scientific' mode via 'mode'/'sci'
+    input at the operator prompt.
     """
     if len(sys.argv) > 1:
         if sys.argv[1:] == ["history"]:
@@ -30,12 +34,17 @@ def main() -> None:
         batch_main(sys.argv[1:])
     else:
         calc = Calculator()
+        mode = "normal"
         try:
             while True:
                 try:
-                    result = run_calculator(calc=calc, max_retries=3)
+                    result = run_calculator(calc=calc, max_retries=3, mode=mode)
                     if result == "QUIT":
                         break
+                    if result == "MODE_TOGGLE":
+                        mode = "scientific" if mode == "normal" else "normal"
+                        display_mode_change(mode)
+                        continue
                 except MaxRetriesExceeded as e:
                     display_error(str(e))
                     break
