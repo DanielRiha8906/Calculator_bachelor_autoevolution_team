@@ -1,0 +1,18 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Calculator {
+  + add(a: numeric, b: numeric): numeric
+  + subtract(a: numeric, b: numeric): numeric
+  + multiply(a: numeric, b: numeric): numeric
+  + divide(a: numeric, b: numeric): numeric
+}
+
+note right of Calculator::divide
+  Raises ZeroDivisionError when b == 0.
+  Behavior is provided natively by
+  Python's / operator — no explicit
+  guard is required in the implementation.
+end note
+
+@enduml
