@@ -16,6 +16,19 @@ Because of that, safety, traceability, and reproducibility are critical: careles
 
 ---
 
+## Self-maintained RAG knowledge base
+- **Shared files:** `rag/index.md` (master index), `rag/codebase_map.md` (per-file summaries), `rag/evolution_log.md` (per-cycle log), `rag/patterns.md` (patterns anti-patterns), `rag/agent_handoffs.md` (inter-agent handoff patterns).
+- **Per-agent files:** `rag/agents/github-task-analyst.md`, `rag/agents/system-architect.md`, `rag/agents/python-code-implementer.md`, `rag/agents/pytest-edge-tester.md`. Each agent owns its file exclusively; no other agent writes to it.
+- **Start of run (shared):** if `rag/index.md` is missing — create all five shared files from current `src/` + `tests/`, commit as `initialize RAG knowledge base`, then proceed. If present — read `rag/index.md` + relevant `rag/*.md` files before opening any source file.
+- **Start of run (per-agent):** each agent reads its own `rag/agents/<name>.md` before doing any work. If the file does not exist, create it with the header template and proceed.
+- **During run:** use RAG as primary context. Open source files only when RAG is stale or the task needs exact implementation details.
+- **End of run (shared, after tests pass, before PR):** update `rag/codebase_map.md` for changed files, append entry to `rag/evolution_log.md`, update `rag/patterns.md` and `rag/agent_handoffs.md` if new patterns found. Commit as a **separate** commit: `update RAG after <task-name>`.
+- **End of run (per-agent):** each agent appends a new cycle entry to its own `rag/agents/<name>.md` before returning. Entry format: date, issue/task title, key decisions made, patterns found, handoff notes for the next agent invocation.
+- A RAG entry is stale if its `last-updated` cycle is older than the file's last modification. Re-read the source file and refresh the entry before relying on it.
+- Do NOT store: verbatim source code, full stack traces, secrets.
+
+---                                           
+
 ## Safe change rules
 
 These rules exist because the subject of this project is code that modifies itself. Any unsafe practice here undermines both the research integrity and reproducibility.
@@ -35,10 +48,12 @@ These rules exist because the subject of this project is code that modifies itse
 
 ## Testing
 
+- **Follow the Red-Green-Refactor cycle:** write a failing test first, then write the minimum code to make it pass, then refactor. Never write implementation code without a failing test that justifies it.
+- For refactoring and modularization tasks, the existing passing test suite is a safety net. **KEEP ALL TESTS GREEN THROUGHOUT**. Do not write new failing tests for structural changes.
 - All self-modification outputs (generated code, patches) must have a corresponding test asserting the output is syntactically valid Python before it is written to disk.
+- A failing test committed before implementation is expected and correct, it is a starting point of the cycle, not a broken state.
 - Tests live alongside source code; do not delete tests to make a failing suite pass.
-- Coverage is not the goal — correctness of the self-evolution loop is. Prioritize integration tests over unit tests for the core mutation/patch pipeline.
-- If a test is skipped, it must have a comment explaining why with a TODO referencing what needs to change for it to be re-enabled.
+- If a test is skipped, it must have a comment explaining why with a TODO referencing what needs to be changed for it to be re-enabled.
 
 ---
 
@@ -84,7 +99,7 @@ These rules exist to preserve experiment isolation, reproducibility, and valid t
 
 ## Self-evolving system specific rules
 
-- **Immutable core principle:** the self-evolution loop must not directly modify `CLAUDE.md`, `.gitignore`, thesis documentation, or branch-policy files during normal operation.
+- **Immutable core principle:** the self-evolution loop must not directly modify `CLAUDE.md`, `.gitignore`, thesis documentation, or branch-policy files during normal operation. rag/ are exception, they are designed to be modified in the loop.
 - **Project level behavioral changes:** If project-level behavioral changes are needed, they must be proposed in `suggestions/update_claude.md` instead of being applied automatically.
 - **All patches produced by the system must be diff-format artifacts** stored under `patches/` or `output/` — not silently applied.
 - **Every evolution cycle must be logged** (inputs, outputs, diffs, timestamps) so experiments can be reproduced and cited in the thesis.
@@ -109,7 +124,9 @@ In this project, Claude (this instance) **is** the self-evolution engine. It is 
 
 - **Read the task carefully before acting.** The workflow will pass a task description; treat it as the sole source of truth for what needs to change.
 - **Produce the smallest change that satisfies the task.** Avoid touching files outside the task scope.
+- **Follow the TDD pipeline order strictly:** pytest-edge-tester must write and confirm failing tests before python-code-implementer writes any implementation code. See the Multi-agent pipeline section.
 - **Always run tests before committing.** A cycle that breaks tests must not produce a commit — it must log the failure and stop.
+- **New Features** must have a failing test before implementation begins.
 - **Write a summary to `progress.md`** at the end of every run (files changed, purpose, risks, test results, number of tokens used, cost in USD, number of turns). This is required for thesis reproducibility.
 - **Open a PR, never merge.** The PR description must include: what changed, why, which tests passed, and any risks or open questions.
 - **If the task is ambiguous or unsafe, do nothing and leave a comment** on the triggering issue/PR explaining what clarification is needed.
@@ -136,20 +153,33 @@ In this project, Claude (this instance) **is** the self-evolution engine. It is 
 
 ## Multi-agent pipeline
 
-When operating as an orchestrator coordinating github-task-analyst, system-architect, python-code-implementer, and pytest-edge-tester:
+When operating as an orchestrator coordinating github-task-analyst, system-architect, pytest-edge-tester and python-code-implementer:
+
+### TDD pipeline order (mandatory)
+
+The pipeline follows strict Red-Green-Refactor ordering:
+
+1. **github-task-analyst** — analyze issue, produce requirements brief
+2. **system-architect** — produce architectural plan; the plan MUST include a "Test Specifications" section listing every behavior to be tested (inputs, expected outputs, error conditions) before listing `src/` file changes
+3. **pytest-edge-tester (phase: WRITE)** — write failing tests from the architect's test specs; all written tests MUST fail before handoff; the tester commits the failing tests and reports the test file location and failing count
+4. **python-code-implementer** — implement the minimum `src/` code to make the failing tests pass; receives the architect's src-only plan AND the tester's WRITE report
+5. **pytest-edge-tester (phase: VERIFY)** — run the full test suite; all tests must pass; if any test fails the tester escalates back to the implementer
+6. **orchestrator** — commit all changes, open PR
+
+Calling python-code-implementer before pytest-edge-tester has written failing tests is a pipeline violation.
 
 ### Agent boundaries — hard rules
 
-- **python-code-implementer** owns `src/` and `artifacts/` only. It must never receive instructions to create, modify, or run files under `tests/`. Strip all test-related steps from the architect's plan before passing it to the implementer.
-- **pytest-edge-tester** owns `tests/` only. All test creation, modification, and execution is its exclusive responsibility. Pass it the stripped test steps from the architect's plan plus the implementer's report.
-- **system-architect** produces a full plan covering both source and test changes. This is correct — the orchestrator is responsible for routing source steps to the implementer and test steps to the tester. Do not interpret the architect's plan as instructions for the implementer verbatim.
+- **python-code-implementer** owns `src/` and `artifacts/` only. It must never receive instructions to create, modify, or run files under `tests/`. Strip all test-related steps from the architect's plan before passing it to the implementer. The implementer receives the tester's WRITE report so it knows which failing tests it must satisfy.
+- **pytest-edge-tester** owns `tests/` only. All test creation, modification, and execution is its exclusive responsibility. In WRITE phase it produces failing tests from the architect's test specs. In VERIFY phase it confirms all tests pass.
+- **system-architect** produces a full plan covering test specifications AND source changes. The test specs section feeds directly into pytest-edge-tester (WRITE). The src section feeds into python-code-implementer. Do not pass the full plan to either agent unfiltered.
 - **github-task-analyst** receives only the issue text. It must not be told to read source files.
 
 ### Orchestrator filtering responsibility
 
-Before invoking python-code-implementer, the orchestrator must explicitly separate the architect's plan into two parts:
-1. Source/artifact steps → passed to python-code-implementer
-2. Test steps (anything touching `tests/`) → held back and passed to pytest-edge-tester
+Before invoking python-code-implementer, the orchestrator must explicitly separate the architect's plan into:
+1. Test specifications → passed to pytest-edge-tester (WRITE phase)
+2. Source/artifact steps → passed to python-code-implementer (along with tester's WRITE report)
 
 Passing the full architect plan to the implementer unfiltered is a pipeline violation and causes unnecessary cost.
 
@@ -197,7 +227,6 @@ Before any commit, append a run summary to `progress.md` including:
 - **Activity Diagram** Create diagrams only for the important runtime flows or user-visible mechanics relevant to the current change.
 - **Sequence Diagram** Create diagrams only for the key interaction requests in the current run or architecture.
 - **Optimize Diagrams** for human readability, not exhaustivness
-
 ---
 
 ## File placement
@@ -207,6 +236,7 @@ Before any commit, append a run summary to `progress.md` including:
 - Development artifacts go in `artifacts/`
 - Suggested policy or workflow changes go in `suggestions/`
 - Keep source code, tests, and generated artifacts separate
+- RAG knowledge base files go in `rag/` 
 
 ---
 

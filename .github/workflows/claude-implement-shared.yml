@@ -80,20 +80,22 @@ jobs:
             The standard pipeline is:
             0. YOU (orchestrator) — immediately create and check out a task branch named exactly `task/issue-${{ inputs.issue_number }}-<short-description>` off ${{ inputs.branch }}. Do this before invoking any agent. All subsequent work happens on this branch only.
             1. github-task-analyst — analyze the issue and produce a requirements brief
-            2. system-architect — produce a file-level architectural plan
-            3. python-code-implementer — implement the changes
-            4. pytest-edge-tester — write and run tests
-            5. YOU (orchestrator) — commit all changes and open a pull request targeting ${{ inputs.branch }}
+            2. system-architect — produce a plan with two sections: (a) Test Specifications, (b) Source Changes
+            3. pytest-edge-tester phase=WRITE — write failing tests from the architect's Test Specifications; every new test MUST fail before handoff
+            4. python-code-implementer — implement minimum src/ code to make the failing tests pass
+            5. pytest-edge-tester phase=VERIFY — run the full test suite; all tests must pass before proceeding
+            6. YOU (orchestrator) — commit all changes and open a pull request targeting ${{ inputs.branch }}
 
             Follow this sequence by default. You may ONLY invoke these four agents: github-task-analyst, system-architect, python-code-implementer, pytest-edge-tester.
             Do NOT invoke any other agent (Explore, general-purpose, Plan, or any other) for any reason — not for codebase exploration, not in parallel, not as a shortcut.
-            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester finds a bug → programmer fixes it). Facilitate those. Nothing else.
+            Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester VERIFY finds a bug → programmer fixes it → tester VERIFY again). Facilitate those. Nothing else.
 
             When invoking each agent, pass ONLY what is listed here — nothing more:
             - github-task-analyst: pass the issue number, title, and body only. Do NOT tell it to read source files or explore the repo.
             - system-architect: pass the analyst's requirements brief only.
-            - python-code-implementer: pass the architect's file-level plan only. Before passing, remove every step that creates or modifies any file under tests/ — do not summarize, paraphrase, or delegate those steps. The implementer must receive zero test-related instructions. Tests are exclusively the pytest-edge-tester's responsibility.
-            - pytest-edge-tester: pass the implementer's report (changed files and test targets) plus the test-related steps from the architect's plan that were stripped from the implementer's instructions.
+            - pytest-edge-tester (phase=WRITE): pass the architect's Test Specifications section only. Tell it phase=WRITE explicitly.
+            - python-code-implementer: pass the architect's Source Changes section only (strip all test-related steps) AND the tester's WRITE report (failing test file path and count). The implementer must receive zero test-writing instructions.
+            - pytest-edge-tester (phase=VERIFY): pass the implementer's report (files changed). Tell it phase=VERIFY explicitly.
 
             Constraints:
             - Never push directly to main
