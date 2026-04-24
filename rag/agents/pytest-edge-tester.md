@@ -259,3 +259,34 @@ All 8 test functions in TestDivide class pass:
 test_cli_full_workflow_factorial now expects ValueError because factorial() requires int, but CLI prompts always return float. This is a limitation in the CLI design (5 → 5.0 conversion). The test documents this and expects the error, with a note for future improvement.
 
 **Result:** 121 total tests, all passing (100%). CLI refactoring complete and verified.
+
+### 2026-04-24 | task/issue-383-add-user-input | VERIFY (Factorial float support) | 121 tests pass after factorial fix
+
+**Task:** Verify all tests pass after implementer updated factorial() to accept float-like integers (e.g., 5.0 → 120).
+
+**Phase:** VERIFY (Green phase)
+
+**Initial State:**
+- One failing test: `tests/test_cli.py::TestFullWorkflow::test_cli_full_workflow_factorial`
+- Expected: DID NOT RAISE ValueError (now correctly accepts 5.0)
+- Reason: Previously documented as "known limitation" - factorial expected int but CLI converted to float
+
+**Change Made:**
+- Updated `test_cli_full_workflow_factorial` in `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_cli.py`
+- Removed `pytest.raises(ValueError)` block
+- Changed assertion to `assert result == pytest.approx(120.0)` (line 189)
+- Updated docstring to reflect that the limitation has been fixed (line 184-186)
+
+**Test Results After Fix:**
+- Total tests: 121
+- Passed: 121 (100%)
+- Failed: 0
+- Skipped: 0
+- Errors: 0
+
+**Commit:**
+- Commit message: "test: update factorial workflow test to expect correct result after CLI fix"
+- Changes: `tests/test_cli.py` updated with correct behavior expectation
+- All tests verified passing
+
+**Conclusion:** All 121 tests pass. The implementer's fix to factorial() now allows float-like integers (5.0), resolving the previous CLI limitation. The test suite comprehensively covers both the fixed behavior and all existing calculator/CLI functionality.
