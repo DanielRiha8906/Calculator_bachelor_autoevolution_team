@@ -9,12 +9,12 @@ Per-file summaries of `src/`. Update after any cycle that modifies a listed file
 - **Known constraints:** No input type validation; relies on Python's native arithmetic
 
 ## src/__main__.py
-- **Last updated:** 2026-04-24 (cycle: Issue #390)
+- **Last updated:** 2026-04-24 (cycle: Issue #393)
 - **Purpose:** Calculator entry point supporting both CLI mode and interactive REPL mode
 - **Public interface:** `cli_mode()` (argv-aware dispatch), `main()` (interactive REPL only), `_build_registry(calculator)`, `_parse_cli_arguments(registry)`, `_execute_cli_mode(operation, operands, registry)`, `_run_interactive_loop(registry)`, `_parse_number(raw)`
 - **CLI syntax:** `python -m src <operation> <operand1> [<operand2>]` — prints result to stdout, exits 0; errors go to stderr with exit 1
-- **Interactive mode:** unchanged REPL loop invoked when no CLI args are present
-- **Known constraints:** `if __name__ == "__main__"` calls `cli_mode()`; existing tests that call `main()` directly still work unchanged
+- **Interactive mode:** REPL with consecutive-failure tracking; exits with "Too many invalid attempts. Exiting." after 3 consecutive failures; counter resets on successful operation
+- **Known constraints:** `if __name__ == "__main__"` calls `cli_mode()`; CLI mode has no retry logic (fail-fast); interactive mode never crashes on invalid input
 
 ## tests/test_cli_mode.py
 - **Last updated:** 2026-04-24 (cycle: Issue #390)
@@ -27,3 +27,9 @@ Per-file summaries of `src/`. Update after any cycle that modifies a listed file
 - **Purpose:** Full unit test suite for Calculator class covering all four operations
 - **Test classes:** `TestCalculatorAdd` (6 tests), `TestCalculatorSubtract` (6 tests), `TestCalculatorMultiply` (6 tests), `TestCalculatorDivide` (5 tests)
 - **Coverage:** positive/negative integers, floats, zero, mixed signs, identity operations, ZeroDivisionError
+
+## tests/test_interactive_validation.py
+- **Last updated:** 2026-04-24 (cycle: Issue #393)
+- **Purpose:** 14-test suite covering interactive mode input validation with consecutive-failure tracking
+- **Test groups:** Group A (6 tests): consecutive failure counting/exit; Group B (5 tests): backward compatibility; Group C (2 tests): CLI regression; Group D (1 test): edge cases
+- **Coverage:** three consecutive failures → exit; counter reset on success; invalid op/operand/domain errors; quit before limit; CLI mode unchanged

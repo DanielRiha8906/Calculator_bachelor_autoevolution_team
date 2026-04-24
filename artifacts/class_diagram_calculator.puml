@@ -1,0 +1,52 @@
+@startuml class_diagram_calculator
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+}
+
+class Calculator {
+    + add(a, b) : int|float
+    + subtract(a, b) : int|float
+    + multiply(a, b) : int|float
+    + divide(a, b) : int|float
+    + factorial(n) : int
+    + square(x) : int|float
+    + cube(x) : int|float
+    + square_root(x) : float
+    + cube_root(x) : float
+    + power(base, exp) : int|float
+    + log10(x) : float
+    + ln(x) : float
+}
+
+note right of Calculator
+  divide()     raises ZeroDivisionError
+  factorial()  raises ValueError (negative / non-int)
+  square_root() raises ValueError (negative)
+  power()      raises ValueError (negative base + non-int exp)
+  log10()      raises ValueError (non-positive)
+  ln()         raises ValueError (non-positive)
+end note
+
+class "__main__ module" as Main {
+    + cli_mode() : void
+    + main() : void
+    ~ _build_registry(calculator) : dict
+    ~ _parse_number(raw) : int|float
+    ~ _parse_cli_arguments(registry) : tuple|None
+    ~ _execute_cli_mode(operation, operands, registry) : void
+    ~ _run_interactive_loop(registry) : void  <<MODIFIED>>
+}
+
+note bottom of Main
+  _run_interactive_loop() now tracks
+  consecutive_failures: int (resets on
+  success; exits after 3 failures)
+end note
+
+Main --> Calculator : creates & calls methods
+Main ..> Calculator : via registry dispatch
+
+@enduml

@@ -10,6 +10,12 @@ Per-cycle entries appended by the orchestrator after each completed run.
 - **Notes:** <anything significant>
 -->
 
+### Cycle: 2026-04-24 — Issue #393: V3 Task 8 - Structured/team (input validation)
+- **Branch:** task/issue-393-input-validation
+- **Files changed:** `src/__main__.py` (consecutive-failure counter in `_run_interactive_loop`), `tests/test_interactive_validation.py` (14 new tests)
+- **Tests:** 143 passed, 0 failed
+- **Notes:** Added `consecutive_failures` counter to interactive loop; increments on unknown op, invalid operand, domain/math error; resets on success; exits gracefully after 3 consecutive failures. CLI mode unchanged.
+
 ### Cycle: 2026-04-24 — Issue #390: V3 Task 7 - Structured/team (CLI mode)
 - **Branch:** task/issue-390-cli-mode
 - **Files changed:** `src/__main__.py` (CLI + interactive refactor), `tests/test_cli_mode.py` (22 new tests)
