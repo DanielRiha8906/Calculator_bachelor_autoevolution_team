@@ -19,7 +19,7 @@
 - **Risks:** src/calculator.py deleted and replaced by src/calculator/ package; backward compatibility maintained via __init__.py re-exports
 - **Tests passed:** 246 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 768.3s | Cost: $1.722454 USD | Turns: 15
 
 ## Run: Issue #402 — V3 Task 11 - Structured/team (2026-04-24)
 
