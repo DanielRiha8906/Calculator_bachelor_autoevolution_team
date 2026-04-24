@@ -1,3 +1,19 @@
+## Run: Fix PR #444 — feat: add session operation history to interactive mode (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/interactive.py` — added `display_history_indexed()` helper, menu help text "h: View operation history", and command recognition for "h"/"H"/"history" in selection loop
+  - `tests/test_interactive_history_menu.py` — 15 new tests covering history viewing command, indexed display, empty history, case-insensitive matching, session flow, format verification
+  - `rag/agents/github-task-analyst.md` — updated cycle entry
+  - `rag/agents/system-architect.md` — updated cycle entry
+  - `rag/agents/python-code-implementer.md` — updated cycle entry
+- **Purpose:** Address reviewer feedback requesting a user-facing option to view operation history with an index; users now type "h" or "history" during the session to see a numbered list of past operations.
+- **Risks:** None — additive change only; existing behavior unchanged; all 241 prior tests continue to pass.
+- **Tests passed:** 256 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #397 — V3 Task 9 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-397-session-history
