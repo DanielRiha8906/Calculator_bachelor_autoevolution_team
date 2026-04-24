@@ -1,4 +1,16 @@
 
+## Run: Issue #377 — V3 Task 3 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-377-add-factorial
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `progress.md` — run summary appended
+- **Purpose:** Add factorial to the calculator — feature was already fully implemented in src/calculator.py and tests/test_calculator.py from issue #374; no code changes required
+- **Risks:** None
+- **Tests passed:** 68 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-371-division-incorrect-inputs
