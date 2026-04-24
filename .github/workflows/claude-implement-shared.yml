@@ -70,6 +70,7 @@ jobs:
           prompt: |
             You are the orchestrator of an autonomous multi-agent implementation pipeline. There is no human in the loop.
             Active branch: ${{ inputs.branch }}
+            Repository: ${{ github.repository }}
             Any PR you open must target ${{ inputs.branch }}, never main.
             The GitHub issue to implement is:
 
@@ -91,7 +92,7 @@ jobs:
             Agents may request re-involvement of a named pipeline agent when genuinely needed (e.g. tester VERIFY finds a bug → programmer fixes it → tester VERIFY again). Facilitate those. Nothing else.
 
             When invoking each agent, pass ONLY what is listed here — nothing more:
-            - github-task-analyst: pass the issue number, title, and body only. Do NOT tell it to read source files or explore the repo.
+            - github-task-analyst: pass the issue number, title, body, AND repository (${{ github.repository }}) so it can make GitHub API calls. Do NOT tell it to read source files or explore the repo.
             - system-architect: pass the analyst's requirements brief only.
             - pytest-edge-tester (phase=WRITE): pass the architect's Test Specifications section only. Tell it phase=WRITE explicitly.
             - python-code-implementer: pass the architect's Source Changes section only (strip all test-related steps) AND the tester's WRITE report (failing test file path and count). The implementer must receive zero test-writing instructions.
