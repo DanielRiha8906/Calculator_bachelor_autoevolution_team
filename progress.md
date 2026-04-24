@@ -242,3 +242,14 @@ Duration: 272.2s | Cost: $0.589015 USD | Turns: 4
   - `artifacts/sequence_diagram_history.puml` — sequence diagrams for history command and successful calculation recording
 
 Duration: 211.4s | Cost: $0.558391 USD | Turns: 4
+
+## Run: update-diagrams — separate-calc-logic architecture diagrams (2026-04-24)
+
+- **Branch:** task/issue-402-separate-calc-logic
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_architecture.puml` — new class diagram showing three-layer architecture (Domain/Application/Infrastructure)
+  - `artifacts/activity_diagram_interactive_loop.puml` — new activity diagram for Application interactive REPL loop with consecutive-failure tracking
+  - `artifacts/sequence_diagram_interactive_calculation.puml` — new sequence diagram for one successful interactive calculation with history recording
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

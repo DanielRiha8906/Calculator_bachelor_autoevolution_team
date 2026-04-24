@@ -1,0 +1,80 @@
+@startuml class_diagram_architecture
+
+skinparam classBackgroundColor<<Domain>> #DDEEFF
+skinparam classBackgroundColor<<Application>> #DDFFDD
+skinparam classBackgroundColor<<Infrastructure>> #FFFFCC
+skinparam classBorderColor #555555
+skinparam arrowColor #333333
+skinparam packageBorderColor #888888
+
+package "Domain Layer" <<Domain>> {
+    class Calculator <<Domain>> {
+        + add(a, b)
+        + subtract(a, b)
+        + multiply(a, b)
+        + divide(a, b)
+        + factorial(n)
+        + square(x)
+        + cube(x)
+        + square_root(x)
+        + cube_root(x)
+        + power(base, exponent)
+        + log10(x)
+        + ln(x)
+    }
+}
+
+package "Application Layer" <<Application>> {
+    class Application <<Application>> {
+        + calculator : Calculator
+        + registry : dict
+        --
+        + run_cli_mode()
+        + run_interactive()
+        + execute_cli(args : list)
+    }
+}
+
+package "Infrastructure Layer" <<Infrastructure>> {
+    class OperationHistory <<Infrastructure>> {
+        + __init__(file_path)
+        + record(operation, operands, result)
+        + get_all()
+        + clear()
+        + display()
+    }
+
+    class ErrorLog <<Infrastructure>> {
+        + __init__(file_path)
+        + log_error(error_category, operation, inputs, error_description)
+    }
+}
+
+Application --> Calculator : uses (injected)
+Application --> OperationHistory : creates and uses
+Application --> ErrorLog : creates and uses
+
+note bottom of Calculator
+  Stateless pure computation.
+  No dependencies on other classes.
+end note
+
+note right of Application
+  Encapsulates all UI/interaction logic
+  via dependency injection.
+  Owns CLI dispatch and interactive REPL.
+end note
+
+note bottom of OperationHistory
+  Orthogonal infrastructure.
+  No coupling to Calculator
+  or ErrorLog.
+end note
+
+note bottom of ErrorLog
+  Orthogonal infrastructure.
+  No coupling to Calculator
+  or OperationHistory.
+end note
+
+@enduml
