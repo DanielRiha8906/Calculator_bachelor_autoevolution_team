@@ -1,0 +1,65 @@
+@startuml sequence_diagram_error_logging
+
+title Invalid Input Error Logging — Interactive Mode
+
+actor User as user
+participant "_run_interactive_loop()" as loop
+participant "_parse_number()" as parse
+participant "ErrorLog" as errlog
+database "error_log.txt" as logfile
+
+== Setup ==
+
+note over loop
+  Calculator, ErrorLog, and OperationHistory
+  already instantiated. consecutive_failures = 0.
+end note
+
+== Operand Parsing Failure ==
+
+user ->> loop : enter operation "add"
+activate loop
+
+loop ->> loop : look up "add" in registry (found, arity=2)
+loop --> user : prompt for operands
+
+user ->> loop : enter operand "abc"
+
+loop ->> parse : _parse_number("abc")
+activate parse
+parse --> loop : raises ValueError("invalid literal ...")
+deactivate parse
+
+loop ->> errlog : log_error("invalid_input", "add", ["abc"], "invalid literal ...")
+activate errlog
+
+errlog -> errlog : check if error_log.txt exists
+note right of errlog
+  Lazy init: file is created
+  only on the first log_error() call.
+end note
+
+alt file does not exist (first call)
+    errlog ->> logfile : create error_log.txt
+    activate logfile
+end
+
+errlog ->> logfile : append pipe-delimited entry\n"2026-04-24T..Z | invalid_input | add | abc | invalid literal ..."
+logfile --> errlog : write complete
+deactivate logfile
+
+errlog --> loop : (returns silently; I/O errors swallowed)
+deactivate errlog
+
+loop -> loop : consecutive_failures += 1
+loop --> user : print "Error: could not parse 'abc' as a number"
+
+note over loop
+  Loop continues.
+  If consecutive_failures >= 3 on
+  the NEXT check, loop will exit.
+end note
+
+deactivate loop
+
+@enduml

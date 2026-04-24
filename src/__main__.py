@@ -11,6 +11,7 @@ Provides two modes of operation:
 import sys
 
 from .calculator import Calculator
+from .error_logging import ErrorLog
 from .history import OperationHistory
 
 
@@ -68,11 +69,14 @@ def _parse_number(raw: str) -> int | float:
 
 def _parse_cli_arguments(
     registry: dict[str, tuple],
+    error_log: "ErrorLog | None" = None,
 ) -> tuple[str, list[int | float]] | None:
     """Parse and validate command-line arguments for CLI mode.
 
     Args:
         registry: The operation registry mapping name to (callable, arity).
+        error_log: Optional :class:`~src.error_logging.ErrorLog` instance used
+            to record validation failures before exiting.
 
     Returns:
         A (operation_name, operands) tuple on success, or ``None`` when no
@@ -90,6 +94,9 @@ def _parse_cli_arguments(
     operation = sys.argv[1].lower()
 
     if operation not in registry:
+        error_msg = f"Unknown operation '{operation}'."
+        if error_log is not None:
+            error_log.log_error("unsupported_operation", operation, [], error_msg)
         print(
             f"Error: Unknown operation '{operation}'. "
             f"Available operations: {list(registry.keys())}",
@@ -113,8 +120,11 @@ def _parse_cli_arguments(
         try:
             operands.append(_parse_number(raw))
         except ValueError:
+            error_msg = f"Invalid number '{raw}'. Please enter a numeric value."
+            if error_log is not None:
+                error_log.log_error("invalid_input", operation, list(sys.argv[2:]), error_msg)
             print(
-                f"Error: Invalid number '{raw}'. Please enter a numeric value.",
+                f"Error: {error_msg}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -126,6 +136,7 @@ def _execute_cli_mode(
     operation: str,
     operands: list[int | float],
     registry: dict[str, tuple],
+    error_log: "ErrorLog | None" = None,
 ) -> None:
     """Execute a single CLI operation and print the result.
 
@@ -133,6 +144,8 @@ def _execute_cli_mode(
         operation: The validated operation name (lowercase).
         operands: The parsed operand list.
         registry: The operation registry mapping name to (callable, arity).
+        error_log: Optional :class:`~src.error_logging.ErrorLog` instance used
+            to record calculation failures before exiting.
 
     Side-effects:
         Prints the result to *stdout*.  On ``ValueError`` or
@@ -144,6 +157,8 @@ def _execute_cli_mode(
         result = method(*operands)
         print(result)
     except (ValueError, ZeroDivisionError) as exc:
+        if error_log is not None:
+            error_log.log_error("calculation_error", operation, operands, str(exc))
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
@@ -166,11 +181,12 @@ def cli_mode() -> None:
     """
     calculator = Calculator()
     registry = _build_registry(calculator)
+    error_log = ErrorLog()
 
-    parsed = _parse_cli_arguments(registry)
+    parsed = _parse_cli_arguments(registry, error_log)
     if parsed is not None:
         operation, operands = parsed
-        _execute_cli_mode(operation, operands, registry)
+        _execute_cli_mode(operation, operands, registry, error_log)
         return
 
     # --- Interactive (REPL) fallback ---
@@ -209,6 +225,7 @@ def _run_interactive_loop(
     decide how to handle a closed stdin.
     """
     history = OperationHistory(history_file_path)
+    error_log = ErrorLog()
     consecutive_failures: int = 0
 
     while True:
@@ -231,6 +248,8 @@ def _run_interactive_loop(
             continue
 
         if operation not in registry:
+            error_msg = f"Unknown operation '{operation}'."
+            error_log.log_error("unsupported_operation", operation, [], error_msg)
             print(f"Error: Unknown operation '{operation}'. Please try again.")
             consecutive_failures += 1
             if consecutive_failures >= 3:
@@ -252,7 +271,9 @@ def _run_interactive_loop(
             try:
                 operands.append(_parse_number(raw))
             except ValueError:
-                print(f"Error: Invalid number '{raw}'. Please enter a numeric value.")
+                error_msg = f"Invalid number '{raw}'. Please enter a numeric value."
+                error_log.log_error("invalid_input", operation, [raw], error_msg)
+                print(f"Error: {error_msg}")
                 consecutive_failures += 1
                 error_occurred = True
                 if consecutive_failures >= 3:
@@ -271,6 +292,7 @@ def _run_interactive_loop(
             history.record(operation, operands, result)
             consecutive_failures = 0
         except (ValueError, ZeroDivisionError) as exc:
+            error_log.log_error("calculation_error", operation, operands, str(exc))
             print(f"Error: {exc}")
             consecutive_failures += 1
             if consecutive_failures >= 3:

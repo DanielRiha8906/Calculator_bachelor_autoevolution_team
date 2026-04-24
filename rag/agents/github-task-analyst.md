@@ -335,3 +335,92 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Task represents completion of V3 input-layer work: error handling (Task 1) → interactive (Task 5) → CLI (Task 7) → validation & recovery (Task 8)
 - Task 8 is final integration task; all prior tasks' features must coexist with new validation behavior
 
+### 2026-04-24 | V3 Task 10 - Structured/team (Issue #399)
+
+**Issue:** Add error logging to the calculator so failures and invalid usage can be recorded in a local log file. Log relevant problems such as invalid input, unsupported operations, and calculation errors without mixing them with normal operation history. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Implement persistent error logging (separate from session-scoped operation history of Task 9)
+- Log three explicit error categories: invalid input, unsupported operations, calculation errors
+- Error log must be distinct from operation history file (Task 9)
+- Update test suite to verify error logging behavior and maintain consistency
+
+**Explicit Requirements:**
+- **Functional:** Create and maintain persistent error log file
+- **Functional:** Log invalid input errors (non-numeric, type mismatches, missing/wrong operand count)
+- **Functional:** Log unsupported operation errors (unrecognized operation names/symbols)
+- **Functional:** Log calculation errors (division by zero, domain violations, overflow/underflow)
+- **Functional:** Separate error log from operation history; no mixing of error records with successful operation entries
+- **Testing:** Update tests to verify error logging and maintain consistency
+
+**Ambiguities & Gaps:**
+- **Error log file location:** No specification of where log file should be created (current working directory? app directory? configurable?)
+- **Error log file naming:** No specification (error_log.txt? errors.log? calculator_errors.log?)
+- **Log file format:** No specification of format (plain text, CSV, JSON, structured?)
+- **Log entry content:** Ambiguous what metadata to include:
+  - Timestamp (ISO 8601? Unix epoch? Human-readable? Timezone?)
+  - Operation name (or "unknown" if unrecognized?)
+  - Input values (full values or sanitized?)
+  - Error reason/description (stack trace? Summary only?)
+  - Error category identifier?
+- **Log retention policy:** Unclear if error log should persist across sessions or reset:
+  - Task 9 history is session-scoped (cleared between sessions)
+  - Should error log accumulate indefinitely or implement rotation/archival?
+  - If persistent, should old errors be purged?
+- **Log file lifecycle:** Should log file be created only on first error (lazy init) or at application startup?
+- **Error detail level:** For operation-specific errors (domain violations), log the numeric value, the operation, or both?
+- **Coverage of input validation errors:** Task 8 introduces input validation and retry logic:
+  - Does "max retry attempts reached" count as one error or multiple?
+  - Should final "session terminated" message be logged?
+  - Are validation errors (invalid input) distinct from domain errors (e.g., sqrt of negative)?
+- **Performance impact:** Should error logging be synchronous or buffered? Required to block on write or can be asynchronous?
+- **Mode coverage:** Should both interactive (Task 5) and CLI (Task 7) modes log errors? Or only specific modes?
+- No comments provided; issue body is minimal
+- No test examples or acceptance criteria provided
+- No mention of error message locale or i18n
+
+**Assumed Resolution (for Architect):**
+- **File location:** Same directory as operation history (Task 9); likely current working directory or configurable
+- **File name:** `error_log.txt` (consistent with `history.txt` from Task 9)
+- **Format:** Structured text/CSV with pipe-delimited fields: `timestamp | error_category | operation | inputs | error_description`
+- **Timestamp:** ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ) for consistency and reproducibility
+- **Log entry examples:**
+  - `2026-04-24T13:33:29Z | invalid_input | unknown | ['abc', '5'] | non-numeric input: 'abc'`
+  - `2026-04-24T13:33:45Z | unsupported_operation | invalidop | [] | operation 'invalidop' not recognized`
+  - `2026-04-24T13:34:01Z | calculation_error | divide | [10, 0] | division by zero`
+  - `2026-04-24T13:34:15Z | calculation_error | sqrt | [-4] | cannot compute square root of negative number`
+- **Persistence:** Append to error log file across sessions (do not clear); error log is persistent unlike operation history
+- **Lazy initialization:** Create error log file on first error occurrence (not at startup)
+- **Performance:** Synchronous write for consistency and auditability (errors are important)
+- **Mode coverage:** Both interactive and CLI modes must log errors
+- **Error categories (from Tasks 1, 7, 8):**
+  - **invalid_input:** Task 8 validation errors (non-numeric, type mismatch, missing operand, wrong operand count)
+  - **unsupported_operation:** Task 7 CLI mode or interactive mode unrecognized operation
+  - **calculation_error:** Task 1 error handling (division by zero), Task 4 domain violations (sqrt negative, log non-positive), any math overflow/underflow
+- **Test updates:** New tests should verify:
+  - Error log file created on first error
+  - Correct error category logged for each error type
+  - Error log entries include timestamp, operation, inputs, and description
+  - Operation history (Task 9) remains unaffected (no errors in history file)
+  - Error log remains separate from history (distinct files, no cross-contamination)
+  - Both interactive and CLI modes log errors
+  - Multiple errors accumulate in log file
+
+**Context from Related Issues:**
+- V3 Task 9 (#396): Operation history file (Task 10 must coexist and not mix with history)
+- V3 Task 8 (#393): Input validation (error log must capture all validation failures)
+- V3 Task 7 (#390): CLI mode (error log must cover CLI errors)
+- V3 Task 5 (#384): Interactive mode (error log must cover interactive errors)
+- V3 Task 1 (#372): Division-by-zero error handling (establishes what constitutes an error)
+- V3 Tasks 2-4: Operation implementations (error log must capture errors from all operations)
+
+**Patterns:**
+- V3 Task 10 is logging/observability task following Task 9 (operation history)
+- Task 10 consolidates error handling from Tasks 1, 7, 8 into structured, persistent log file
+- V3 sequence: error handling (1) → test suite (2) → operations (3-4) → interactive UI (5) → CLI (7) → input validation (8) → operation history (9) → error logging (10)
+- Task 10 is likely final integration/observability task for V3
+- Minimal specification consistent with V3 series; key ambiguities are file location, format, retention policy
+- "ai-implement:structured-team" label consistent; no new operations, pure observability/logging addition
+- Task 10 must coexist with Task 9's operation history; both mechanisms must be independent and non-interfering
+- Error logging is distinct from operation history: history is session-scoped and contains successful operations; error log is persistent and contains failures
+

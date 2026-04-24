@@ -1,0 +1,85 @@
+@startuml class_diagram_error_logging
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    .. Arithmetic ..
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    .. Power & Logarithm ..
+    + power(base, exponent)
+    + square_root(x)
+    + ln(x)
+    + log10(x)
+    .. Special ..
+    + modulo(a, b)
+    + absolute_value(x)
+    + factorial(n)
+    + is_prime(n)
+    --
+    raises: ValueError
+    raises: ZeroDivisionError
+}
+
+class ErrorLog {
+    .. Lazy init — file created on first log_error() call ..
+    - _file_path: str
+    --
+    + __init__(file_path: str = "error_log.txt")
+    + log_error(error_category: str, operation: str,\n  inputs: list, description: str)
+    --
+    error_categories: invalid_input | unsupported_operation\n               | calculation_error
+    format: ISO8601_UTC | category | operation\n       | inputs_csv | description
+    note: file I/O exceptions silently swallowed
+}
+
+class OperationHistory {
+    .. Eager truncation — file cleared at __init__() ..
+    - _file_path: str
+    --
+    + __init__(file_path: str = "history.txt")
+    + add_entry(operation: str, inputs: list, result)
+    --
+    records: SUCCESSFUL operations only
+    note: file I/O errors logged, not propagated
+}
+
+class "__main__" as main <<module>> {
+    + cli_mode(args)
+    + interactive_mode()
+    - _parse_cli_arguments(args, error_log)
+    - _execute_cli_mode(operation, operands, calc, error_log)
+    - _run_interactive_loop(calc, error_log, history)
+    - _parse_number(value: str) : float
+}
+
+database "error_log.txt" as error_file {
+}
+
+database "history.txt" as history_file {
+}
+
+main --> Calculator : instantiates
+main --> ErrorLog : instantiates
+main --> OperationHistory : instantiates (interactive only)
+
+main ..> ErrorLog : passes error_log to\n_parse_cli_arguments()\n_execute_cli_mode()\n_run_interactive_loop()
+
+main ..> OperationHistory : passes history to\n_run_interactive_loop() only\n(not used in CLI mode)
+
+ErrorLog --> error_file : appends on first call\n(lazy init)
+OperationHistory --> history_file : truncates at init,\nthen appends
+
+Calculator -[hidden]right- ErrorLog
+ErrorLog -[hidden]right- OperationHistory
+
+note bottom of Calculator
+  No dependency on ErrorLog
+  or OperationHistory.
+  Raises exceptions; caller
+  decides how to handle them.
+end note
+
+@enduml

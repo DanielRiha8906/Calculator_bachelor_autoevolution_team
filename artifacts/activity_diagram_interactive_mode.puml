@@ -1,0 +1,71 @@
+@startuml activity_diagram_interactive_mode
+
+start
+
+:Create Calculator instance;
+:Create ErrorLog instance;
+:Create OperationHistory instance\n(file truncated at init);
+:consecutive_failures = 0;
+
+repeat
+
+    :Prompt for operation name;
+    :Read input;
+
+    if (EOFError?) then (yes)
+        :Exit loop (EOF);
+        break
+    endif
+
+    if (input is "quit"?) then (yes)
+        :Exit loop (graceful quit);
+        break
+    endif
+
+    if (operation in registry?) then (no)
+        :error_log.log_error(\n  "unsupported_operation", input, [], msg);
+        :consecutive_failures += 1;
+        :Print "Unknown operation" error;
+        if (consecutive_failures >= 3?) then (yes)
+            :Print "Too many invalid attempts. Exiting.";
+            :Exit loop (failure limit);
+            break
+        endif
+    else (yes)
+        :Prompt for operands (arity from registry);
+        :Parse each operand via _parse_number();
+
+        if (parse fails — ValueError?) then (yes)
+            :error_log.log_error(\n  "invalid_input", operation, raw_inputs, str(e));
+            :consecutive_failures += 1;
+            :Print parse error message;
+            if (consecutive_failures >= 3?) then (yes)
+                :Print "Too many invalid attempts. Exiting.";
+                :Exit loop (failure limit);
+                break
+            endif
+        else (no)
+            :Call Calculator method(operands);
+
+            if (raises ValueError or ZeroDivisionError?) then (yes)
+                :error_log.log_error(\n  "calculation_error", operation, inputs, str(e));
+                :consecutive_failures += 1;
+                :Print error message;
+                if (consecutive_failures >= 3?) then (yes)
+                    :Print "Too many invalid attempts. Exiting.";
+                    :Exit loop (failure limit);
+                    break
+                endif
+            else (no)
+                :Print result;
+                :history.add_entry(operation, inputs, result);
+                :consecutive_failures = 0;
+            endif
+        endif
+    endif
+
+repeat while (continue loop)
+
+stop
+
+@enduml

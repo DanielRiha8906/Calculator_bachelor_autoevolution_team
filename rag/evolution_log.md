@@ -10,6 +10,12 @@ Per-cycle entries appended by the orchestrator after each completed run.
 - **Notes:** <anything significant>
 -->
 
+### Cycle: 2026-04-24 — Issue #399: V3 Task 10 - Structured/team (error logging)
+- **Branch:** task/issue-399-error-logging
+- **Files changed:** `src/error_logging.py` (new: ErrorLog class), `src/__main__.py` (added ErrorLog import + injection into cli_mode and _run_interactive_loop), `tests/test_error_logging.py` (23 new tests)
+- **Tests:** 189 passed, 0 failed
+- **Notes:** Added `ErrorLog` class with lazy file initialization, pipe-delimited format, ISO 8601 UTC timestamps, silent exception handling. Error logging is orthogonal to computation — no changes to Calculator class or OperationHistory. Three error categories: `invalid_input`, `unsupported_operation`, `calculation_error`. Error log (`error_log.txt`) completely separate from operation history (`history.txt`).
+
 ### Cycle: 2026-04-24 — Issue #396: V3 Task 9 - Structured/team (operation history)
 - **Branch:** task/issue-396-operation-history
 - **Files changed:** `src/history.py` (new: OperationHistory class), `src/__main__.py` (added history integration + "history" command), `tests/test_history.py` (23 new tests)
