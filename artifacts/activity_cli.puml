@@ -1,0 +1,62 @@
+@startuml activity_cli
+
+title CLI Mode Execution Flow
+
+start
+
+:Entry: python -m src <op> <operand1> [<operand2>];
+note right: src/__main__.py\ncalls cli_mode()
+
+:Check sys.argv length;
+
+if (argc <= 1?) then (yes)
+    :Delegate to\nInteractive REPL mode;
+    stop
+else (no)
+    :Build OperationRegistry\n(all 13 operations);
+    :Create ErrorLog instance;
+    :Retrieve op name = argv[1].lower();
+endif
+
+if (operation in registry?) then (no)
+    :log_error("unsupported_operation");
+    :Print error to stderr;
+    :exit(1);
+    stop
+else (yes)
+    :Retrieve Operation object;
+endif
+
+if (len(argv[2:]) == operation.arity?) then (no)
+    :Print arity mismatch to stderr;
+    :exit(1);
+    stop
+else (yes)
+    :Collect raw operand strings;
+endif
+
+:Parse each operand with\nInputValidator.parse_number();
+
+if (ValueError raised?) then (yes)
+    :log_error("invalid_input");
+    :Print error to stderr;
+    :exit(1);
+    stop
+else (no)
+    :Operands parsed successfully;
+endif
+
+:operation.execute(*operands);
+
+if (ValueError or ZeroDivisionError?) then (yes)
+    :log_error("calculation_error");
+    :Print error to stderr;
+    :exit(1);
+    stop
+else (no)
+    :Print result to stdout;
+    :exit(0);
+    stop
+endif
+
+@enduml

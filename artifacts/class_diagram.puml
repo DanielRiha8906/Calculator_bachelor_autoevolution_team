@@ -1,81 +1,164 @@
 @startuml class_diagram
 
 skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
 
-class Calculator {
-    .. Binary Arithmetic ..
-    + add(a: int|float, b: int|float) : int|float
-    + subtract(a: int|float, b: int|float) : int|float
-    + multiply(a: int|float, b: int|float) : int|float
-    + divide(a: int|float, b: int|float) : float
-    .. Unary Algebraic ..
-    + square(x: int|float) : int|float
-    + cube(x: int|float) : int|float
-    + square_root(x: int|float) : float
-    + cube_root(x: int|float) : float
-    .. Binary Power ..
-    + power(base: int|float, exponent: int|float) : int|float
-    .. Unary Logarithm ..
-    + log10(x: int|float) : float
-    + ln(x: int|float) : float
-    .. Unary Special ..
-    + factorial(n: int) : int
+package "src/calculator/operations" {
+    abstract class Operation <<abstract>> {
+        + {abstract} name: str
+        + {abstract} arity: int
+        + {abstract} execute(*args: float): float
+    }
+
+    package "arithmetic.py" {
+        class ArithmeticAdd {
+            + name = "add"
+            + arity = 2
+            + execute(a, b): float
+        }
+        class ArithmeticSubtract {
+            + name = "subtract"
+            + arity = 2
+            + execute(a, b): float
+        }
+        class ArithmeticMultiply {
+            + name = "multiply"
+            + arity = 2
+            + execute(a, b): float
+        }
+        class ArithmeticDivide {
+            + name = "divide"
+            + arity = 2
+            + execute(a, b): float
+            .. raises ZeroDivisionError if b==0 ..
+        }
+        class ArithmeticFactorial {
+            + name = "factorial"
+            + arity = 1
+            + execute(n): int
+            .. raises ValueError if invalid ..
+        }
+        class ArithmeticModulo {
+            + name = "modulo"
+            + arity = 2
+            + execute(a, b): float
+            .. raises ZeroDivisionError if b==0 ..
+        }
+    }
+
+    package "scientific.py" {
+        class ScientificSquare {
+            + name = "square"
+            + arity = 1
+            + execute(x): float
+        }
+        class ScientificCube {
+            + name = "cube"
+            + arity = 1
+            + execute(x): float
+        }
+        class ScientificSquareRoot {
+            + name = "square_root"
+            + arity = 1
+            + execute(x): float
+            .. raises ValueError if x<0 ..
+        }
+        class ScientificCubeRoot {
+            + name = "cube_root"
+            + arity = 1
+            + execute(x): float
+        }
+        class ScientificPower {
+            + name = "power"
+            + arity = 2
+            + execute(base, exp): float
+        }
+        class ScientificLog10 {
+            + name = "log10"
+            + arity = 1
+            + execute(x): float
+            .. raises ValueError if x<=0 ..
+        }
+        class ScientificLn {
+            + name = "ln"
+            + arity = 1
+            + execute(x): float
+            .. raises ValueError if x<=0 ..
+        }
+    }
+
+    class OperationRegistry {
+        - _ops: dict[str, Operation]
+        + register(operation, name=None)
+        + get(name: str): Operation
+        + list_all(): list[str]
+        + has(name: str): bool
+    }
 }
 
-note right of Calculator::divide
-  raises ZeroDivisionError
-  when b == 0
-end note
+package "src/calculator" {
+    class InputValidator {
+        + {static} parse_number(raw: str): int|float
+    }
 
-class "calculator()" as fixture <<fixture>> {
-    + returns: Calculator
+    class Calculator <<legacy>> {
+        + add(a, b): int|float
+        + subtract(a, b): int|float
+        + multiply(a, b): int|float
+        + divide(a, b): float
+        + factorial(n): int
+        + square(x): int|float
+        + cube(x): int|float
+        + square_root(x): float
+        + cube_root(x): float
+        + power(base, exponent): int|float
+        + log10(x): float
+        + ln(x): float
+    }
+
+    note right of Calculator : Legacy class — not\nused in main flow
 }
 
-class TestCalculatorAdd <<test>> {
-    + test_addition_positive_integers()
-    + test_addition_negative_integers()
-    + test_addition_mixed_signs()
-    + test_addition_with_floats()
-    + test_addition_with_zero()
-    + test_addition_zero_to_zero()
+package "src" {
+    class OperationHistory {
+        - _file_path: Path
+        - _entries: list[str]
+        + record(operation, operands, result)
+        + get_all(): list[str]
+        + clear()
+        + display(): str
+    }
+
+    class ErrorLog {
+        - _file_path: Path
+        + log_error(error_category, operation, inputs, error_description)
+    }
+
+    note right of ErrorLog : Format: ISO8601_UTC | category\n| operation | inputs | description
 }
 
-class TestCalculatorSubtract <<test>> {
-    + test_subtraction_positive_integers()
-    + test_subtraction_negative_result()
-    + test_subtraction_negative_operands()
-    + test_subtraction_with_floats()
-    + test_subtraction_with_zero_minuend()
-    + test_subtraction_with_zero_subtrahend()
-}
+' Inheritance
+Operation <|-- ArithmeticAdd
+Operation <|-- ArithmeticSubtract
+Operation <|-- ArithmeticMultiply
+Operation <|-- ArithmeticDivide
+Operation <|-- ArithmeticFactorial
+Operation <|-- ArithmeticModulo
+Operation <|-- ScientificSquare
+Operation <|-- ScientificCube
+Operation <|-- ScientificSquareRoot
+Operation <|-- ScientificCubeRoot
+Operation <|-- ScientificPower
+Operation <|-- ScientificLog10
+Operation <|-- ScientificLn
 
-class TestCalculatorMultiply <<test>> {
-    + test_multiplication_positive_integers()
-    + test_multiplication_negative_integers()
-    + test_multiplication_mixed_signs()
-    + test_multiplication_with_floats()
-    + test_multiplication_by_zero()
-    + test_multiplication_by_one()
-}
+' Composition
+OperationRegistry *-- Operation : stores 13 instances
 
-class TestCalculatorDivide <<test>> {
-    + test_division_by_zero()
-    + test_division_normal()
-    + test_division_with_floats()
-    + test_division_negative_divisor()
-    + test_division_zero_dividend()
-}
-
-fixture ..> Calculator : instantiates
-
-TestCalculatorAdd ..> fixture : uses
-TestCalculatorSubtract ..> fixture : uses
-TestCalculatorMultiply ..> fixture : uses
-TestCalculatorDivide ..> fixture : uses
-
-TestCalculatorAdd ..> Calculator : invokes add()
-TestCalculatorSubtract ..> Calculator : invokes subtract()
-TestCalculatorMultiply ..> Calculator : invokes multiply()
-TestCalculatorDivide ..> Calculator : invokes divide()
+' Dependencies of main.py functions
+OperationRegistry <.. "cli_mode()\n_run_interactive_loop()\n[main.py]" : uses
+InputValidator <.. "cli_mode()\n_run_interactive_loop()\n[main.py]" : uses
+OperationHistory <.. "_run_interactive_loop()\n[main.py]" : uses
+ErrorLog <.. "cli_mode()\n_run_interactive_loop()\n[main.py]" : uses
 
 @enduml

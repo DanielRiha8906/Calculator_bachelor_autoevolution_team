@@ -502,3 +502,88 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - No mention of performance optimization or new dependencies; refactoring is purely structural
 - Task is about code organization and maintainability, not behavior change
 
+### 2026-04-24 | V3 Task 13 - Structured/team (Issue #408)
+
+**Issue:** Add written documentation for the calculator application so its features, usage, and project structure are easier to understand. Document how to run and use the calculator, including its available functionality and supported interaction modes. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Create written documentation for calculator application
+- Document features (arithmetic operations, advanced math, error handling, validation)
+- Document usage (how to run, interaction modes, user workflows)
+- Document project structure (modules, architecture, organization)
+- Update tests if needed to remain consistent
+
+**Explicit Requirements:**
+- **Documentation:** Written documentation covering:
+  - Features: What the calculator can do (operations, modes, capabilities)
+  - Usage: How to run and use (CLI mode, interactive mode, mode switching)
+  - Project structure: How code is organized (module layout, architecture)
+  - Interaction modes: CLI mode vs. interactive mode; normal vs. scientific mode
+- **Testing:** Update relevant tests if application behavior changed or documentation requirements necessitate test changes
+
+**Ambiguities & Gaps:**
+- **Documentation format:** No specification of format (Markdown? HTML? Plain text? Multiple formats?)
+- **Documentation location:** Unclear where documentation should be placed (README.md? docs/? separate files?)
+- **Documentation scope:** Incomplete specification of what exactly must be documented:
+  - Should it cover all operations individually or just mention operation categories?
+  - Should error messages and error handling be documented?
+  - Should it include code examples or interactive sessions?
+  - Should it document the full project history or only current state?
+- **Intended audience:** Not specified (developers? end users? both?)
+- **Level of detail:** Unclear how deep documentation should go:
+  - Installation/setup instructions?
+  - Architecture diagrams reference?
+  - Configuration options?
+  - Troubleshooting guide?
+  - Development/extension guidelines?
+- **Test updates scope:** Unclear what test updates are needed:
+  - Are there documentation-specific tests?
+  - Should tests change or just be made consistent if code changed?
+  - Are docstring/doctest requirements implied?
+- **Integration with existing docs:** Unclear if this supplements or replaces any existing documentation from Task 6 (PlantUML diagrams, Issue #249)
+- No comments provided; issue body is minimal
+- No acceptance criteria or examples of target documentation quality provided
+- No mention of whether documentation should be versioned or kept in sync with code changes
+
+**Assumed Resolution (for Architect):**
+- **Format:** Markdown (standard for GitHub projects, readable in text editors and on GitHub web)
+- **Location:** Root-level `README.md` file as primary documentation; may supplement with `docs/` directory if extensive content needed
+- **Documentation sections should include:**
+  1. **Project Overview:** Brief description of calculator purpose and capabilities
+  2. **Features:** List of supported operations (arithmetic, scientific, error handling, validation)
+  3. **Interaction Modes:** Explain CLI mode and interactive mode; how to select which mode
+  4. **Normal Mode vs. Scientific Mode:** Clarify scope of operations in each mode
+  5. **Usage Instructions:**
+     - How to run in interactive mode (e.g., `python -m calculator` or similar)
+     - How to run in CLI mode with examples (e.g., `python -m calculator add 5 3`)
+     - How to switch modes in interactive mode
+  6. **Project Structure:** Describe module layout and main components (from Task 11 refactoring)
+  7. **Operation Reference:** List operations with brief descriptions (or link to separate file if long)
+  8. **Error Handling:** Explain error messages and recovery (retry logic from Task 8)
+  9. **Session History & Logging:** Brief note on history/error log files (from Tasks 9-10)
+- **Scope of test updates:**
+  - If application behavior changed (unlikely in pure documentation task), update corresponding tests
+  - If docstrings added to functions, may require doctest verification
+  - Existing test suite should continue to pass without modification
+  - Assume minimal test changes unless application code changed in Task 13
+- **Relationship to Task 6 (PlantUML diagrams):** Documentation should reference or embed diagrams if helpful; diagrams support written documentation
+- **Audience assumption:** Mixed (both end users and developers); write clearly for both
+- **Examples:** Include at least one interactive mode session example and one CLI mode example
+
+**Context from Related Issues:**
+- V3 Task 6 (#386): PlantUML documentation diagrams (Task 13 should reference or build on these)
+- V3 Tasks 1-11 (#372-405): All feature work and refactoring that Task 13 must document
+- V3 Task 12 (#405): Modular refactoring (architecture Task 13 documents)
+- V2 Task 13 (#270): Earlier documentation task (may provide template or context)
+- Issue #249: PlantUML diagrams task (provides visual documentation)
+
+**Patterns:**
+- V3 Task 13 is documentation/user-facing task following Task 12 modular refactoring
+- V3 sequence: core features (1-4) → interactive/CLI (5, 7) → validation (8) → logging (9-10) → refactoring (11-12) → documentation (13)
+- Task 13 is near-final task in V3 cycle; represents capture of all prior work in user-accessible form
+- Minimal specification consistent with V3 series; documentation architect/writer has flexibility in format and organization
+- "ai-implement:structured-team" label consistent; no new features or code, pure documentation/communication
+- Task 13 completion means calculator is documented for users and developers; ready for release or deployment
+- Ambiguities are typical for documentation tasks: audience, level of detail, scope are creative decisions, not technical ambiguities
+- Similar to Task 6 (PlantUML diagrams) but higher-level; diagrams are visual aids, Task 13 is narrative documentation
+

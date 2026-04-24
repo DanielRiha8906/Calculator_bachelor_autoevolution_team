@@ -1,3 +1,16 @@
+## Run: Issue #408 — V3 Task 13 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-408-add-documentation
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `README.md` — added comprehensive calculator documentation section (arithmetic & scientific operations, CLI mode examples, interactive REPL mode, error handling, session history, error logging, project structure)
+  - `tests/test_documentation.py` — 17 new tests verifying README.md existence and required content coverage
+- **Purpose:** Add written documentation for the calculator application so its features, usage, and project structure are easier to understand
+- **Risks:** None — documentation only, no src/ changes
+- **Tests passed:** 263 passed, 3 skipped, 0 failed
+
+Duration: 477.4s | Cost: $1.067547 USD | Turns: 25
+
 ## Run: Fix PR #452 — feat: modular calculator package structure (2026-04-24)
 
 - **Branch:** task/issue-405-modular-refactor
@@ -317,3 +330,14 @@ Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
   - `artifacts/sequence_registry_dispatch.puml` — Registry to Operation dispatch sequence
 
 Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
+
+## Run: update-diagrams — Add documentation diagrams (2026-04-24)
+
+- **Branch:** task/issue-408-add-documentation
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — class/component diagram showing module structure, Operation inheritance hierarchy, and dependencies
+  - `artifacts/activity_cli.puml` — activity diagram for CLI mode execution with fail-fast error handling
+  - `artifacts/activity_interactive.puml` — activity diagram for Interactive REPL mode with 3-strike consecutive-failure logic
+
+Duration: 366.8s | Cost: $0.686150 USD | Turns: 5

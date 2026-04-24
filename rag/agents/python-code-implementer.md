@@ -87,6 +87,16 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 - Pattern: When tests patch a class at the module level (`patch("src.__main__.ErrorLog")`), the mock intercepts every instantiation of that class within the module. Place the single `ErrorLog()` call in the top-level function (`cli_mode`, `_run_interactive_loop`) so all subfunction calls receive the already-mocked instance.
 - Handoff notes: All 189 tests pass (23 new + 166 pre-existing). `ErrorLog` is importable as `from src.error_logging import ErrorLog` and also via `from src.__main__ import ErrorLog` (re-exported by the import statement).
 
+### 2026-04-24 — issue-408 add-documentation
+
+- Task: Update `README.md` to satisfy 11 failing tests in `tests/test_documentation.py` covering arithmetic/scientific section headers, CLI examples, interactive mode, error handling, history, error logging, and 3-strike failure limit.
+- Files changed: `README.md` — appended a comprehensive English-language "Calculator Application" section below the existing Czech autoevolution content. No `src/` or `tests/` files were touched.
+- Decision: Existing Czech content was fully preserved; new content added as a clearly separated new `# Calculator Application` section at the bottom of the file.
+- Decision: "Error Handling" section header was used to satisfy `test_readme_contains_error_handling_section` (checks for "error" in a header line).
+- Decision: CLI examples table uses `python -m src <op>` syntax (7 examples, well above the minimum of 3 required by the test).
+- Pattern: Documentation-only tasks (modifying `README.md`) still follow the same read-before-edit discipline; verify all string predicates with a Python script before running pytest.
+- Handoff notes: All 17 tests in `tests/test_documentation.py` pass. No `src/` interfaces were changed.
+
 ### 2026-04-24 — issue-405 modular-refactor cleanup (dead import + thin shim)
 
 - Task: Remove dead `from src.calculator.core import Calculator` import from `src/calculator/main.py` and replace `src/__main__.py` with a thin shim delegating to `src.calculator.main.cli_mode`.

@@ -143,3 +143,144 @@ pip install -r requirements.txt
 - Všechny změny se ukládají jako patch do `patches/`
 - Každý běh zapisuje výsledky do `progress.md`
 - GitHub MCP server zajišťuje komunikaci s repozitářem
+
+---
+
+# Calculator Application
+
+A dual-mode calculator supporting CLI (command-line) and interactive REPL modes. It provides 13 operations — 6 arithmetic and 7 scientific — with session history tracking, error logging, and a consecutive-failure safety limit.
+
+---
+
+## Arithmetic Operations
+
+| Operation | Command | Description |
+|-----------|---------|-------------|
+| add | `python -m src add <a> <b>` | Adds two numbers |
+| subtract | `python -m src subtract <a> <b>` | Subtracts b from a |
+| multiply | `python -m src multiply <a> <b>` | Multiplies two numbers |
+| divide | `python -m src divide <a> <b>` | Divides a by b (error on zero divisor) |
+| factorial | `python -m src factorial <n>` | Computes n! for a non-negative integer n |
+| modulo | `python -m src modulo <a> <b>` | Computes the remainder of a divided by b |
+
+---
+
+## Scientific Operations
+
+| Operation | Command | Description |
+|-----------|---------|-------------|
+| square | `python -m src square <n>` | Computes n² |
+| cube | `python -m src cube <n>` | Computes n³ |
+| square_root | `python -m src square_root <n>` | Computes √n (non-negative n only) |
+| cube_root | `python -m src cube_root <n>` | Computes ∛n (real cube root, supports negatives) |
+| power | `python -m src power <base> <exp>` | Computes base raised to integer exponent exp |
+| log10 | `python -m src log10 <n>` | Computes log base 10 of n (positive n only) |
+| ln | `python -m src ln <n>` | Computes natural logarithm of n (positive n only) |
+
+---
+
+## CLI Mode
+
+Run a single calculation by passing the operation and its operands directly on the command line. The calculator prints the result and exits.
+
+**Usage:**
+
+```
+python -m src <operation> [operand1] [operand2]
+```
+
+**Examples:**
+
+```
+python -m src add 5 3         # Output: 8
+python -m src divide 10 2     # Output: 5.0
+python -m src square 4        # Output: 16
+python -m src factorial 5     # Output: 120
+python -m src ln 1            # Output: 0.0
+python -m src modulo 10 3     # Output: 1
+python -m src power 2 8       # Output: 256
+```
+
+If the operation is unknown or operands are invalid, the calculator prints an error message to stderr and exits with a non-zero status code.
+
+---
+
+## Interactive Mode
+
+Running `python -m src` with no arguments starts the interactive REPL. The calculator prompts you for an operation and its operands repeatedly until you choose to exit.
+
+**Starting interactive mode:**
+
+```
+python -m src
+```
+
+**Example session:**
+
+```
+Enter operation (or 'quit' to exit, 'history' to view history): add
+Enter operand 1: 5
+Enter operand 2: 3
+Result: 8
+
+Enter operation (or 'quit' to exit, 'history' to view history): square
+Enter operand 1: 4
+Result: 16
+
+Enter operation (or 'quit' to exit, 'history' to view history): quit
+```
+
+Type `quit` or `exit` (or `q`) at the operation prompt to leave interactive mode.
+
+Type `history` at the operation prompt to display a numbered list of all operations performed during the current session.
+
+---
+
+## Error Handling
+
+The calculator handles errors gracefully in both CLI and interactive modes.
+
+| Error type | CLI behaviour | Interactive behaviour |
+|------------|--------------|----------------------|
+| Division by zero | Prints error to stderr, exits with code 1 | Prints error, prompts for next operation |
+| Invalid operand (non-numeric) | Prints error to stderr, exits with code 1 | Prints error, prompts for next operation |
+| Domain error (e.g. sqrt of negative) | Prints error to stderr, exits with code 1 | Prints error, prompts for next operation |
+| Unknown operation | Prints error to stderr, exits with code 1 | Prints error, prompts for next operation |
+
+### Consecutive failure limit
+
+In interactive mode, the calculator tracks consecutive failures. After 3 consecutive invalid attempts (unknown operation, invalid operand, or domain/calculation error), the session exits automatically with the message:
+
+```
+Too many invalid attempts. Exiting.
+```
+
+The failure counter resets to 0 after any successful operation.
+
+### Error logging
+
+All errors that occur during a session are appended to `error_log.txt` in the current working directory. Each log entry contains a UTC ISO8601 timestamp, the error category, the operation attempted, the inputs supplied, and a description of the error. This log is intended for debugging and experiment reproducibility.
+
+---
+
+## Session History
+
+During an interactive session, every successfully completed operation is recorded in the session history. To view the history, type `history` at the operation prompt. The history displays a numbered list of operations and their results in the order they were performed. History is per-session only and is not persisted across restarts (unless a history file path is configured).
+
+---
+
+## Project Structure
+
+```
+src/
+  __main__.py              — entry point; delegates to src.calculator.main
+  calculator/
+    main.py                — CLI dispatcher and interactive REPL entry points
+    core.py                — Calculator class with all operation methods
+    operations/            — individual operation implementations
+  history.py               — OperationHistory class for session history tracking
+  error_logging.py         — ErrorLog class for timestamped error logging
+  application.py           — Application class encapsulating user-interaction logic
+tests/                     — pytest test suite
+artifacts/                 — PlantUML development diagrams
+```

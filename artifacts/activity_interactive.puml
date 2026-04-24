@@ -1,0 +1,97 @@
+@startuml activity_interactive
+
+title Interactive REPL Mode — with 3-Strike Consecutive-Failure Logic
+
+start
+
+:Entry: python -m src (no args);
+note right: cli_mode() detects argc<=1,\ncalls _run_interactive_loop()
+
+:Create OperationHistory instance\n(clears file for session isolation);
+:Create ErrorLog instance;
+:consecutive_failures = 0;
+
+while (REPL loop [while True]) is (continue)
+
+    :Print available operations;
+    :Prompt for operation name;
+    :Read input (lowercase);
+
+    if (input == "quit"/"exit"/"q"?) then (yes)
+        break
+    else (no)
+    endif
+
+    if (input == "history"?) then (yes)
+        :Display operation history;
+        :consecutive_failures = 0;
+        note right: counter resets on\nhistory command
+    else (no)
+        if (operation in registry?) then (no)
+            :log_error("unsupported_operation");
+            :Print error message;
+            :consecutive_failures += 1;
+            if (consecutive_failures >= 3?) then (yes)
+                :Print 3-strike exit message;
+                break
+            else (no)
+            endif
+        else (yes)
+            :Retrieve Operation object;
+
+            fork
+                note: Collect operands per arity
+            fork again
+            end fork
+
+            :operands = [];
+
+            while (for each required operand) is (next operand)
+                :Prompt for operand value;
+                :Read raw input;
+                :InputValidator.parse_number(raw);
+                if (ValueError?) then (yes)
+                    :log_error("invalid_input");
+                    :consecutive_failures += 1;
+                    if (consecutive_failures >= 3?) then (yes)
+                        :Print 3-strike exit message;
+                        break
+                    else (no)
+                        :break operand loop;
+                        note right: skip to next\nREPL iteration
+                    endif
+                else (no)
+                    :Append parsed number to operands;
+                endif
+            endwhile (all collected)
+
+            if (operand parsing failed?) then (yes)
+            else (no)
+                :operation.execute(*operands);
+
+                if (ValueError or ZeroDivisionError?) then (yes)
+                    :log_error("calculation_error");
+                    :Print error message;
+                    :consecutive_failures += 1;
+                    if (consecutive_failures >= 3?) then (yes)
+                        :Print 3-strike exit message;
+                        break
+                    else (no)
+                    endif
+                else (no)
+                    :Print result;
+                    :history.record(operation, operands, result);
+                    :consecutive_failures = 0;
+                    note right: counter resets on\nsuccessful execution
+                endif
+            endif
+        endif
+    endif
+
+endwhile (quit/exit/q or 3-strike limit)
+
+:Return from _run_interactive_loop();
+
+stop
+
+@enduml
