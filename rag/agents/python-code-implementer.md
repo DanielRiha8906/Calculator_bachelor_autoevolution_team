@@ -172,3 +172,22 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - The pure-function modules (`basic_operations`, `advanced_operations`) must mirror the guard logic of the original `Calculator` methods exactly (same `ValueError` messages, same `ZeroDivisionError` behavior) because the Calculator tests call Calculator methods, which now delegate to these functions.
   - No circular import risk: `basic_operations` and `advanced_operations` have no project imports; `calculator_core` imports only those two; `calculator` imports `calculator_core`; `interface` imports `calculator_core` directly; `batch_cli` imports `calculator_core` directly.
 - **Test result:** 324 passed, 1 skipped (pre-existing skip).
+
+### 2026-04-24 — issue-407: add README documentation for calculator application
+
+- **Task:** Append comprehensive English-language documentation sections to `README.md` to satisfy 10 failing tests in `tests/test_documentation.py`. No `.py` files in `src/` were modified.
+- **Files changed:** `README.md` (appended new sections)
+- **Changes made:**
+  - Appended an `## Overview` section describing the calculator application and its two modes.
+  - Appended an `## Installation` / Getting Started section with `.venv` creation and `pip install -r requirements.txt`.
+  - Appended a `## Usage` section covering interactive mode (`python -m src`) and batch/CLI mode with 10 concrete `python -m src <operation> <args>` examples inside a code block.
+  - Appended a `## Supported Operations` section (heading contains "Operations") with a table listing all 12 operations: add, subtract, multiply, divide, square, cube, sqrt, cbrt, factorial, power, log, ln.
+  - Appended an `## Error Handling` section mentioning division by zero, invalid input, and a "Retry Behavior" subsection documenting max 3 attempts / `MaxRetriesExceeded`.
+  - Appended a `## History Feature` section mentioning history persistence and the `python -m src history` command.
+  - Appended an `## Architecture` section with a module responsibilities table mentioning `calculator_core`, `basic_operations`, `advanced_operations`, `interface`, `cli`, `batch_cli`, `calculator`, `error_logger`, and `__main__`, plus a data-flow description.
+- **Patterns found:**
+  - Read the test file carefully and map each regex pattern to the exact text that satisfies it before writing a single line of documentation. The test patterns are the ground truth, not the task description prose.
+  - `test_readme_contains_module_responsibilities` applies a heuristic: for each of 5 module names, it checks both that the name appears in the README AND that a related keyword appears nearby. Satisfying 3 of 5 suffices; documenting all modules in a single table naturally satisfies this without needing to engineer adjacency.
+  - `test_readme_documents_operation_examples` counts how many of `['add', 'subtract', 'multiply', 'divide', 'square', 'sqrt']` appear inside code blocks (not plain text) — placing CLI examples in a fenced code block is essential; inline text would not satisfy this check.
+  - Appending to an existing README avoids overwriting the project's Czech-language thesis documentation, which is load-bearing for the experiment context.
+- **Test result:** 340 passed, 1 skipped (pre-existing skip). All 16 documentation tests pass.

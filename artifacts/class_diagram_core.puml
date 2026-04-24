@@ -8,10 +8,10 @@ class Calculator {
   - _history : list[dict]
   --
   + __init__() : None
-  .. History Mgmt ..
+  .. History ..
   + get_history() : list[dict]
   + clear_history() : None
-  - _record_operation(operation_name, operands, result)
+  - _record_operation(name, operands, result)
   .. Binary Ops ..
   + add(a, b)
   + subtract(a, b)
@@ -19,13 +19,13 @@ class Calculator {
   + divide(a, b)
   + power(base, exp)
   .. Unary Ops ..
-  + square(a)
-  + cube(a)
-  + square_root(a)
-  + cube_root(a)
+  + square(x)
+  + cube(x)
+  + square_root(x)
+  + cube_root(x)
   + factorial(n)
-  + log(a)
-  + ln(a)
+  + log(x)
+  + ln(x)
 }
 
 class "«module»\nbasic_operations" as basic_ops {
@@ -36,22 +36,60 @@ class "«module»\nbasic_operations" as basic_ops {
 }
 
 class "«module»\nadvanced_operations" as advanced_ops {
-  + square(a)
-  + cube(a)
-  + square_root(a)
-  + cube_root(a)
+  + square(x)
+  + cube(x)
+  + square_root(x)
+  + cube_root(x)
   + factorial(n)
   + power(base, exp)
-  + log(a)
-  + ln(a)
+  + log(x)
+  + ln(x)
 }
 
-class "«facade»\ncalculator" as facade {
+class "«module»\ninterface" as interface_mod {
+  + OPERATIONS : dict
+  --
+  + prompt_for_operator() : str
+  + prompt_for_first_number() : float
+  + prompt_for_second_number() : float
+  + display_result(result) : None
+  + display_error(msg) : None
+  + display_history(calc) : None
+  + display_history_notification() : None
+  + run_calculator(calc, max_retries) : str
+  + persist_history_to_file(calc) : None
+}
+
+class "«exception»\nMaxRetriesExceeded" as max_retries_exc {
+}
+
+class "«module»\nbatch_cli" as batch_cli_mod {
+  + _BATCH_OPERATIONS : dict
+  --
+  + parse_batch_args() : namespace
+  + execute_batch(calc, args) : float
+  + batch_main() : None
+  + print_help() : None
+}
+
+class "«facade»\ncalculator" as calc_facade {
   note "re-exports Calculator\nfrom calculator_core"
+}
+
+class "«facade»\ncli" as cli_facade {
+  note "re-exports all\nfrom interface"
 }
 
 Calculator --> basic_ops : delegates arithmetic
 Calculator --> advanced_ops : delegates math
-facade ..> Calculator : re-export
+
+interface_mod --> Calculator : uses
+interface_mod +-- max_retries_exc
+
+batch_cli_mod --> Calculator : uses
+batch_cli_mod --> interface_mod : uses (OPERATIONS,\ndisplay functions)
+
+calc_facade ..> Calculator : re-export
+cli_facade ..> interface_mod : re-export
 
 @enduml

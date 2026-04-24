@@ -1,4 +1,17 @@
 
+## Run: Issue #407 — V3 Task 13 - Naive/team (2026-04-24)
+
+- **Branch:** task/issue-407-add-documentation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `README.md` — added comprehensive calculator documentation (overview, installation, usage, operations reference, error handling, architecture, history, retry info)
+  - `tests/test_documentation.py` — 16 new tests verifying documentation completeness and accuracy
+- **Purpose:** Add user-facing and developer-facing documentation for the calculator application covering all 12 operations, interaction modes, error handling, and module architecture
+- **Risks:** None — documentation-only change; no source code modified
+- **Tests passed:** 340 passed, 1 skipped, 0 failed
+
+Duration: 464.2s | Cost: $1.150619 USD | Turns: 17
+
 ## Run: Issue #404 — V3 Task 12 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-404-refactor-modules
@@ -351,3 +364,14 @@ Duration: 172.3s | Cost: $0.461259 USD | Turns: 4
   - `artifacts/sequence_diagram_operation.puml` — sequence diagram for add(5,3) interaction
 
 Duration: 282.4s | Cost: $0.580798 USD | Turns: 4
+
+## Run: update-diagrams — Add PlantUML diagrams for calculator architecture (2026-04-24)
+
+- **Branch:** task/issue-407-add-documentation
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — Class diagram showing Calculator, operation modules, interface, batch_cli, and facade relationships
+  - `artifacts/activity_diagram_main_flow.puml` — Activity diagram showing entry dispatch and batch/interactive mode flows
+  - `artifacts/sequence_diagram_single_operation.puml` — Sequence diagram for single operation execution (binary happy path + error case)
+
+Duration: 235.0s | Cost: $0.667638 USD | Turns: 5
