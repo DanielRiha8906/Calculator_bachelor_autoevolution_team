@@ -183,13 +183,12 @@ class TestFullWorkflow:
     def test_cli_full_workflow_factorial(self):
         """Test end-to-end workflow for factorial (unary) operation.
 
-        Note: Factorial requires integer input, but CLI prompts convert input to float.
-        This test expects ValueError due to type mismatch (5.0 instead of 5).
-        This is a known limitation of the current CLI design.
+        Factorial now accepts float-like integers (e.g., 5.0 → 120).
+        The implementation correctly converts float to int when appropriate.
         """
         with patch('builtins.input', side_effect=['factorial', '5']):
-            with pytest.raises(ValueError, match="only defined for non-negative integers"):
-                run_calculator()
+            result = run_calculator()
+            assert result == pytest.approx(120.0)
 
     def test_cli_full_workflow_log(self):
         """Test end-to-end workflow for base-10 logarithm (unary) operation."""
