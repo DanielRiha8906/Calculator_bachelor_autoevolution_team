@@ -221,4 +221,4 @@ Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
   - `artifacts/retry_flow_activity.puml` — activity diagram for retry validation flow with session termination paths
   - `artifacts/retry_sequence.puml` — sequence diagram for user session hitting retry limit
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 216.3s | Cost: $0.496068 USD | Turns: 4
