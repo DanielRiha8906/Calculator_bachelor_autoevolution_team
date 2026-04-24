@@ -1,3 +1,19 @@
+## Run: Issue #396 — V3 Task 9 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-396-operation-history
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/history.py` — new OperationHistory class with record(), get_all(), display(), clear(); in-memory list + file persistence; session isolation via constructor clearing the file
+  - `src/__main__.py` — added history import; extended _run_interactive_loop() with history_file_path param; added "history" command handler; record() called after each successful operation
+  - `tests/test_history.py` — 23 new tests covering recording, display, file persistence, session isolation, failure-counter integration, and edge cases
+  - `rag/codebase_map.md` — updated src/__main__.py entry; added src/history.py and tests/test_history.py entries
+  - `rag/evolution_log.md` — appended cycle entry for Issue #396
+- **Purpose:** Add per-session operation history to interactive mode; display on "history" command; no cross-session persistence; file path injectable for test isolation
+- **Risks:** None — OperationHistory is a new isolated class; __main__.py changes are additive; CLI mode untouched; no new dependencies
+- **Tests passed:** 166 passed, 0 failed
+
+Duration: 409.8s | Cost: $1.123842 USD | Turns: 20
+
 ## Run: Issue #393 — V3 Task 8 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-393-input-validation
@@ -172,3 +188,14 @@ Duration: 250.2s | Cost: $0.668063 USD | Turns: 4
   - `artifacts/sequence_interactive_session.puml` — sequence diagram for interactive session iteration
 
 Duration: 272.2s | Cost: $0.589015 USD | Turns: 4
+
+## Run: update-diagrams — Operation History Diagrams (2026-04-24)
+
+- **Branch:** task/issue-396-operation-history
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_history.puml` — class diagram showing Calculator and OperationHistory with Path composition and __main__ dependencies
+  - `artifacts/activity_diagram_interactive_history.puml` — activity diagram for interactive mode with history command and operation recording flow
+  - `artifacts/sequence_diagram_history.puml` — sequence diagrams for history command and successful calculation recording
+
+Duration: 211.4s | Cost: $0.558391 USD | Turns: 4

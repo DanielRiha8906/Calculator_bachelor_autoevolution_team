@@ -10,6 +10,12 @@ Per-cycle entries appended by the orchestrator after each completed run.
 - **Notes:** <anything significant>
 -->
 
+### Cycle: 2026-04-24 — Issue #396: V3 Task 9 - Structured/team (operation history)
+- **Branch:** task/issue-396-operation-history
+- **Files changed:** `src/history.py` (new: OperationHistory class), `src/__main__.py` (added history integration + "history" command), `tests/test_history.py` (23 new tests)
+- **Tests:** 166 passed, 0 failed
+- **Notes:** Added `OperationHistory` class with in-memory tracking + file persistence. Session isolation via file clear on construction. "history" pseudo-command in interactive loop shows current session entries. Failed/invalid operations never recorded. history_file_path injectable for test isolation.
+
 ### Cycle: 2026-04-24 — Issue #393: V3 Task 8 - Structured/team (input validation)
 - **Branch:** task/issue-393-input-validation
 - **Files changed:** `src/__main__.py` (consecutive-failure counter in `_run_interactive_loop`), `tests/test_interactive_validation.py` (14 new tests)

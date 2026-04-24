@@ -1,0 +1,51 @@
+@startuml class_diagram_history
+
+skinparam classAttributeIconSize 0
+
+class Calculator {
+    .. Binary Arithmetic ..
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    .. Unary Algebraic ..
+    + square(x)
+    + cube(x)
+    + square_root(x)
+    + cube_root(x)
+    .. Power & Logarithm ..
+    + power(base, exponent)
+    + log10(x)
+    + ln(x)
+    .. Special ..
+    + factorial(n)
+}
+
+class OperationHistory {
+    - _file_path: Path
+    - _entries: list[str]
+    --
+    + __init__(file_path: str | None)
+    + record(operation, operands, result)
+    + get_all() : list[str]
+    + clear()
+    + display() : str
+    - _format_operation(operation, operands, result) : str
+    - _write_to_file(line: str) : None
+}
+
+class Path <<stdlib>> {
+}
+
+class "__main__" as main <<module>> {
+    + _run_interactive_loop(registry, history_file_path)
+    + main()
+}
+
+OperationHistory *-- Path : _file_path
+OperationHistory o-- "list[str]" : _entries
+
+main --> Calculator : creates instance\nfor registry
+main --> OperationHistory : creates instance\nat loop start
+
+@enduml

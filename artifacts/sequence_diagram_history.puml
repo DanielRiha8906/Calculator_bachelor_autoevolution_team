@@ -1,0 +1,53 @@
+@startuml sequence_diagram_history
+
+participant User as user
+participant "_run_interactive_loop()" as loop
+participant "OperationHistory" as history
+participant "Calculator" as calc
+
+== History Command ==
+
+user ->> loop : input "history"
+activate loop
+
+loop ->> history : get_all()
+activate history
+history --> loop : list[str]
+deactivate history
+
+alt entries exist
+    loop --> user : display numbered entries
+else empty
+    loop --> user : "History: (empty)"
+end
+
+deactivate loop
+
+== Successful Calculation ==
+
+user ->> loop : input operation + operands
+activate loop
+
+loop ->> calc : method(operands)
+activate calc
+calc --> loop : result
+deactivate calc
+
+loop --> user : display result
+
+loop ->> history : record(operation, operands, result)
+activate history
+
+history -> history : _format_operation(operation, operands, result)
+history -> history : _write_to_file(line)
+
+note right of history
+  File I/O errors are logged
+  but never propagate
+end note
+
+deactivate history
+
+deactivate loop
+
+@enduml

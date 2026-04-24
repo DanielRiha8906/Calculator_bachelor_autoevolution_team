@@ -1,0 +1,70 @@
+@startuml activity_diagram_interactive_history
+
+start
+
+:_run_interactive_loop(registry, history_file_path);
+
+:Create OperationHistory(history_file_path)\n(clears backing file for session isolation);
+:consecutive_failures = 0;
+
+repeat
+    :Display menu;
+    :Prompt for operation;
+    :Read input;
+
+    if (input is quit / exit / q?) then (yes)
+        :Exit loop;
+        break
+    endif
+
+    if (input is "history"?) then (yes)
+        :Call history.get_all();
+        if (entries exist?) then (yes)
+            :Display numbered entries;
+        else (no)
+            :Display "History: (empty)";
+        endif
+        :consecutive_failures = 0;
+    else (no)
+        if (operation in registry?) then (no)
+            :Print "Unknown operation" error;
+            :consecutive_failures += 1;
+            if (consecutive_failures >= 3?) then (yes)
+                :Print "Too many invalid attempts. Exiting.";
+                :Exit loop;
+                break
+            endif
+        else (yes)
+            :Collect operands from user;
+            if (parse error?) then (yes)
+                :Print parse error;
+                :consecutive_failures += 1;
+                if (consecutive_failures >= 3?) then (yes)
+                    :Print "Too many invalid attempts. Exiting.";
+                    :Exit loop;
+                    break
+                endif
+            else (no)
+                :Call Calculator method(operands);
+                if (exception raised?) then (yes)
+                    :Print exception message;
+                    :consecutive_failures += 1;
+                    if (consecutive_failures >= 3?) then (yes)
+                        :Print "Too many invalid attempts. Exiting.";
+                        :Exit loop;
+                        break
+                    endif
+                else (no)
+                    :Print result;
+                    :history.record(operation, operands, result);
+                    :consecutive_failures = 0;
+                endif
+            endif
+        endif
+    endif
+
+repeat while (loop continues)
+
+stop
+
+@enduml

@@ -11,6 +11,7 @@ Provides two modes of operation:
 import sys
 
 from .calculator import Calculator
+from .history import OperationHistory
 
 
 # ---------------------------------------------------------------------------
@@ -188,11 +189,17 @@ def cli_mode() -> None:
         sys.exit(1)
 
 
-def _run_interactive_loop(registry: dict[str, tuple]) -> None:
+def _run_interactive_loop(
+    registry: dict[str, tuple],
+    history_file_path: str | None = None,
+) -> None:
     """Run the interactive REPL loop.
 
     Args:
         registry: The operation registry mapping name to (callable, arity).
+        history_file_path: Optional path for the history file.  When None,
+            :class:`~src.history.OperationHistory` defaults to
+            ``"history.txt"`` in the current working directory.
 
     The loop continues until the user types ``quit``, ``exit``, or ``q``,
     or until 3 consecutive failures occur (unknown operation, invalid operand,
@@ -201,15 +208,27 @@ def _run_interactive_loop(registry: dict[str, tuple]) -> None:
     ``EOFError`` is intentionally *not* caught here so that callers can
     decide how to handle a closed stdin.
     """
+    history = OperationHistory(history_file_path)
     consecutive_failures: int = 0
 
     while True:
         print("Enter operation (add, subtract, multiply, divide, factorial, square, cube,")
-        print("square_root, cube_root, power, log10, ln) or 'quit' to exit:")
+        print("square_root, cube_root, power, log10, ln) or 'history' to view history or 'quit' to exit:")
         operation = input("Select operation: ").strip().lower()
 
         if operation in ("quit", "exit", "q"):
             break
+
+        # Handle 'history' special command before registry lookup.
+        if operation == "history":
+            entries = history.get_all()
+            if not entries:
+                print("History: (empty)")
+            else:
+                for i, entry in enumerate(entries, 1):
+                    print(f"{i}. {entry}")
+            consecutive_failures = 0
+            continue
 
         if operation not in registry:
             print(f"Error: Unknown operation '{operation}'. Please try again.")
@@ -249,6 +268,7 @@ def _run_interactive_loop(registry: dict[str, tuple]) -> None:
         try:
             result = method(*operands)
             print(f"Result: {result}")
+            history.record(operation, operands, result)
             consecutive_failures = 0
         except (ValueError, ZeroDivisionError) as exc:
             print(f"Error: {exc}")
