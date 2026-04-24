@@ -2,25 +2,63 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
-  + add(a: numeric, b: numeric): numeric
-  + subtract(a: numeric, b: numeric): numeric
-  + multiply(a: numeric, b: numeric): numeric
-  + divide(a: numeric, b: numeric): numeric
+  .. Basic Arithmetic (no type hints) ..
+  + add(a, b): numeric
+  + subtract(a, b): numeric
+  + multiply(a, b): numeric
+  + divide(a, b): numeric
+
+  .. Power Operations ..
+  + square(x: int|float): int|float
+  + cube(x: int|float): int|float
+  + power(base: int|float, exponent: int|float): int|float
   + factorial(n: int): int
+
+  .. Root Operations ..
+  + sqrt(x: int|float): float
+  + cbrt(x: int|float): float
+
+  .. Logarithmic Operations ..
+  + log10(x: int|float): float
+  + ln(x: int|float): float
 }
 
 note right of Calculator::divide
   Raises ZeroDivisionError when b == 0.
-  Behavior is provided natively by
-  Python's / operator — no explicit
-  guard is required in the implementation.
+  Python's / operator raises natively —
+  no explicit guard in implementation.
 end note
 
 note right of Calculator::factorial
-  Rejects invalid inputs: bool, float, str, None,
-  negative integers. Raises ValueError for all
-  invalid cases. Returns 1 for n=0 or n=1.
+  Strict validation: rejects bool, float,
+  str, None, and negative int.
+  Raises ValueError for all invalid inputs.
   Iterative computation for n >= 2.
 end note
+
+note right of Calculator::sqrt
+  Raises ValueError if x < 0.
+  Delegates to math.sqrt(x).
+end note
+
+note right of Calculator::cbrt
+  Supports negative inputs via sign flip:
+  -((-x)^(1/3)) when x < 0.
+  Delegates to math.pow().
+end note
+
+note right of Calculator::log10
+  Raises ValueError if x <= 0.
+  Delegates to math.log10(x).
+end note
+
+note right of Calculator::ln
+  Raises ValueError if x <= 0.
+  Delegates to math.log(x).
+end note
+
+class "math\n(stdlib)" as math <<module>>
+
+Calculator ..> math : <<use>>\nsqrt, cbrt, log10, ln
 
 @enduml

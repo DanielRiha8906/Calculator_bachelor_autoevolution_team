@@ -272,3 +272,163 @@ def test_factorial_returns_int(calc):
 def test_factorial_matches_math_factorial(calc, n):
     """Test factorial matches math.factorial() for validation."""
     assert calc.factorial(n) == math.factorial(n)
+
+
+# ============================================================================
+# CATEGORY 8: UNARY OPERATIONS - SQUARE
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (0, 0),
+    (5, 25),
+    (-3, 9),
+    (2.5, 6.25),
+    (1000, 1000000),
+])
+def test_square(calc, x, expected):
+    """Test square operation with various valid inputs."""
+    assert calc.square(x) == expected
+
+
+# ============================================================================
+# CATEGORY 9: UNARY OPERATIONS - CUBE
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (0, 0),
+    (3, 27),
+    (-2, -8),
+    (2.0, 8.0),
+    (100, 1000000),
+])
+def test_cube(calc, x, expected):
+    """Test cube operation with various valid inputs."""
+    assert calc.cube(x) == expected
+
+
+# ============================================================================
+# CATEGORY 10: UNARY OPERATIONS - SQUARE ROOT
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (0, 0.0),
+    (9, 3.0),
+    (4.0, 2.0),
+    (1, 1.0),
+])
+def test_sqrt_valid_inputs(calc, x, expected):
+    """Test square root with valid inputs."""
+    assert calc.sqrt(x) == expected
+
+
+def test_sqrt_non_perfect_square(calc):
+    """Test square root of non-perfect square."""
+    assert calc.sqrt(2) == pytest.approx(1.4142135623730951)
+
+
+@pytest.mark.parametrize("x", [-1, -100])
+def test_sqrt_negative_raises_value_error(calc, x):
+    """Test that negative input to sqrt raises ValueError."""
+    with pytest.raises(ValueError):
+        calc.sqrt(x)
+
+
+# ============================================================================
+# CATEGORY 11: UNARY OPERATIONS - CUBE ROOT
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (0, 0.0),
+    (8, 2.0),
+    (-8, -2.0),
+    (1, 1.0),
+    (-1, -1.0),
+    (27.0, 3.0),
+    (-27.0, -3.0),
+])
+def test_cbrt_valid_inputs(calc, x, expected):
+    """Test cube root with valid inputs."""
+    assert calc.cbrt(x) == expected
+
+
+def test_cbrt_non_perfect_cube(calc):
+    """Test cube root of non-perfect cube."""
+    assert calc.cbrt(2) == pytest.approx(1.2599210498948732)
+
+
+# ============================================================================
+# CATEGORY 12: UNARY OPERATIONS - LOG BASE 10
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (1, 0.0),
+    (10, 1.0),
+    (100, 2.0),
+])
+def test_log10_valid_inputs(calc, x, expected):
+    """Test log base 10 with valid inputs."""
+    assert calc.log10(x) == expected
+
+
+def test_log10_float(calc):
+    """Test log base 10 with float input."""
+    assert calc.log10(10.5) == pytest.approx(1.0211892990699383)
+
+
+@pytest.mark.parametrize("x", [0, -5, -100])
+def test_log10_invalid_raises_value_error(calc, x):
+    """Test that zero or negative inputs to log10 raise ValueError."""
+    with pytest.raises(ValueError):
+        calc.log10(x)
+
+
+# ============================================================================
+# CATEGORY 13: UNARY OPERATIONS - NATURAL LOGARITHM (LN)
+# ============================================================================
+
+@pytest.mark.parametrize("x,expected", [
+    (1, 0.0),
+    (math.e, pytest.approx(1.0)),
+])
+def test_ln_valid_inputs(calc, x, expected):
+    """Test natural logarithm with valid inputs."""
+    assert calc.ln(x) == expected
+
+
+def test_ln_float_input(calc):
+    """Test natural logarithm with float input."""
+    assert calc.ln(2.718) == pytest.approx(0.9998962584672666)
+
+
+def test_ln_ten(calc):
+    """Test natural logarithm of 10."""
+    assert calc.ln(10) == pytest.approx(2.302585092994046)
+
+
+@pytest.mark.parametrize("x", [0, -1, -100])
+def test_ln_invalid_raises_value_error(calc, x):
+    """Test that zero or negative inputs to ln raise ValueError."""
+    with pytest.raises(ValueError):
+        calc.ln(x)
+
+
+# ============================================================================
+# CATEGORY 14: BINARY OPERATION - POWER
+# ============================================================================
+
+@pytest.mark.parametrize("base,exp,expected", [
+    (2, 3, 8),
+    (5, 0, 1),
+    (2, -1, 0.5),
+    (-2, 2, 4),
+    (-2, 3, -8),
+    (1, 100, 1),
+    (0, 5, 0),
+    (0, 0, 1),
+    (2.5, 2, 6.25),
+    (4, 0.5, pytest.approx(2.0)),
+    (2, 10, 1024),
+])
+def test_power(calc, base, exp, expected):
+    """Test power operation with various valid inputs."""
+    assert calc.power(base, exp) == expected

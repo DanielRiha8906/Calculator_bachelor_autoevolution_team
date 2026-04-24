@@ -47,6 +47,19 @@ Duration: 360.3s | Cost: $0.703439 USD | Turns: 18
 
 Duration: 316.6s | Cost: $0.627916 USD | Turns: 17
 
+## Run: Issue #382 — V3 Task 4 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-382-advanced-math-ops
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/calculator.py` — added `import math` and 7 new methods: `square`, `cube`, `sqrt`, `cbrt`, `log10`, `ln`, `power` with domain validation for sqrt (rejects negative), log10 and ln (reject non-positive), and cube root supporting negative inputs
+  - `tests/test_calculator.py` — added 50 new tests covering all 7 operations with valid inputs, floating-point edge cases, and domain error handling
+- **Purpose:** Add advanced mathematical operations (square, cube, square root, cube root, power, log₁₀, ln) to the calculator, integrating them consistently with the existing pattern and handling critical domain edge cases.
+- **Risks:** None
+- **Tests passed:** 123 passed, 0 failed
+
+Duration: 381.8s | Cost: $0.789959 USD | Turns: 19
+
 ## Run: update-diagrams — Unit Test Suite PR #376 (2026-04-24)
 
 - **Branch:** task/issue-376-unit-test-suite
@@ -68,3 +81,14 @@ Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
   - `artifacts/sequence_diagram.puml` — added factorial alt block showing error and success paths
 
 Duration: 163.2s | Cost: $0.420227 USD | Turns: 14
+
+## Run: update-diagrams — Advanced Math Operations Diagrams (2026-04-24)
+
+- **Branch:** task/issue-382-advanced-math-ops
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_calculator.puml` — full Calculator class diagram with all 12 methods grouped by category
+  - `artifacts/activity_diagram_calculation_flow.puml` — activity diagram with all 5 calculation/validation execution paths
+  - `artifacts/sequence_diagram_validated_operation.puml` — sequence diagram for log10 happy path and error path
+
+Duration: 243.0s | Cost: $0.521679 USD | Turns: 5
