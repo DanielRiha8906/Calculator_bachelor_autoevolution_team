@@ -1,0 +1,37 @@
+@startuml sequence_diagram_interactive_calculation
+
+participant User
+participant Application
+participant Calculator
+participant OperationHistory
+
+User ->> Application : enter operation name ("add")
+activate Application
+
+Application -> Application : registry lookup ("add") → arity 2
+
+Application ->> User : prompt for operand 1
+User ->> Application : "5"
+Application -> Application : _parse_number("5") → 5
+
+Application ->> User : prompt for operand 2
+User ->> Application : "3"
+Application -> Application : _parse_number("3") → 3
+
+Application ->> Calculator : add(5, 3)
+activate Calculator
+Calculator -->> Application : 8
+deactivate Calculator
+
+Application ->> User : print "Result: 8"
+
+Application ->> OperationHistory : record("add", [5, 3], 8)
+activate OperationHistory
+OperationHistory -->> Application : (recorded)
+deactivate OperationHistory
+
+Application -> Application : consecutive_failures = 0
+
+deactivate Application
+
+@enduml

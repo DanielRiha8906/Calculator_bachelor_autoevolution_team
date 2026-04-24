@@ -1,0 +1,65 @@
+@startuml activity_diagram_interactive_loop
+
+start
+
+:Initialize OperationHistory;
+:Initialize ErrorLog;
+:consecutive_failures = 0;
+
+repeat
+
+    :Prompt for operation name;
+    :Read user input;
+
+    if (input is "quit" / "exit" / "q"?) then (yes)
+        :Print farewell message;
+        stop
+    endif
+
+    if (input is "history"?) then (yes)
+        :OperationHistory.display();
+        :consecutive_failures = 0;
+    else (no)
+        if (operation unknown in registry?) then (yes)
+            :Log error (ErrorLog);
+            :Print unknown operation message;
+            :consecutive_failures += 1;
+            if (consecutive_failures >= 3?) then (yes)
+                :Print "Too many invalid attempts. Exiting.";
+                stop
+            endif
+        else (no)
+            :Look up arity from registry;
+            :Prompt for each operand;
+
+            if (operand parsing fails?) then (yes)
+                :Log error (ErrorLog);
+                :Print invalid input message;
+                :consecutive_failures += 1;
+                if (consecutive_failures >= 3?) then (yes)
+                    :Print "Too many invalid attempts. Exiting.";
+                    stop
+                endif
+            else (no)
+                :Call Calculator method with parsed operands;
+
+                if (Calculator raises ValueError or ZeroDivisionError?) then (yes)
+                    :Log error (ErrorLog);
+                    :Print error message;
+                    :consecutive_failures += 1;
+                    if (consecutive_failures >= 3?) then (yes)
+                        :Print "Too many invalid attempts. Exiting.";
+                        stop
+                    endif
+                else (no)
+                    :Print "Result: <value>";
+                    :OperationHistory.record(operation, operands, result);
+                    :consecutive_failures = 0;
+                endif
+            endif
+        endif
+    endif
+
+repeat while (continue loop)
+
+@enduml

@@ -908,3 +908,129 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - No regressions detected in any existing tests.
 - Error logging integration complete for both interactive and CLI modes.
 - Ready for commit and PR.
+
+### Cycle 19: 2026-04-24 — Issue #402 Application Layer Separation (WRITE phase)
+
+**Task:** Write failing tests for Application layer separation. Test specifications: 19 tests covering Calculator independence, Application layer integration, CLI/interactive modes, registry management, and module independence.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_application.py` with 19 comprehensive tests
+2. Organized into 6 test classes:
+   - `TestCalculatorIndependence`: 5 tests verifying Calculator works without UI dependencies
+   - `TestApplicationLayerIntegration`: 3 tests for Application class integration with Calculator
+   - `TestApplicationRegistryArities`: 1 test for registry operation arity validation
+   - `TestApplicationCLIMode`: 2 tests for CLI mode execution
+   - `TestApplicationInteractiveMode`: 2 tests for interactive loop
+   - `TestOperationHistoryIndependence`: 1 test for history independence
+   - `TestErrorLogIndependence`: 1 test for error log independence
+   - `TestImportsAndModules`: 4 tests for module imports
+3. Tests import Application class from `src.application` (not yet created)
+4. Tests verify Calculator operations work in isolation (no UI dependency)
+5. Tests verify Application accepts Calculator instance and manages registry
+6. Tests verify OperationHistory and ErrorLog work independently
+
+**Patterns Found:**
+- Application class must be created in new `src/application.py` module
+- Class must accept Calculator instance in __init__
+- Class must build registry of 12 operations: add, subtract, multiply, divide, factorial, square, cube, square_root, cube_root, power, log10, ln
+- Registry operations must have correct arity (binary or unary)
+- Application must support execute_cli() and run_interactive() methods
+- Tests show clear separation: Calculator is independent, Application wraps Calculator, History/ErrorLog are independent utilities
+
+**Test Results:**
+- 19 total tests written
+- 9 tests FAILED (as expected — src.application module doesn't exist)
+  - ModuleNotFoundError: No module named 'src.application'
+  - All failures are import-time, not logic errors
+- 10 tests PASSED (existing independent functionality)
+  - 5 Calculator independence tests pass
+  - 1 OperationHistory independence test passes
+  - 1 ErrorLog independence test passes
+  - 3 module import tests pass
+- Total test suite: 208 tests (189 existing + 19 new)
+- Duration: 0.10s (new tests only)
+
+**Status:** READY FOR HANDOFF — 9 tests fail as expected. Application class implementation required.
+
+**Escalations:** None. All failures are due to missing Application class (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Create new file `src/application.py` with Application class
+- Class must implement:
+  - __init__(calculator: Calculator): Accept Calculator instance and store as self.calculator
+  - self.registry: dict[str, callable] mapping operation names to Calculator methods
+  - execute_cli(args: list) method: Execute CLI mode with argument parsing
+  - run_interactive() method: Execute interactive mode with user prompts
+- Registry must contain all 12 operations with correct arity:
+  - Binary (2 args): add, subtract, multiply, divide, power
+  - Unary (1 arg): factorial, square, cube, square_root, cube_root, log10, ln
+- 9 failing tests ready for implementation verification
+- 10 passing tests must remain passing after implementation
+
+### Cycle 20: 2026-04-24 — Issue #402 Application Layer Separation (VERIFY phase)
+
+**Task:** Run full test suite to confirm all tests pass after implementer completion.
+
+**Phase:** VERIFY
+
+**Test Results:**
+- Total tests collected: 208
+- Passed: 208
+- Failed: 0
+- Errors: 0
+- Duration: 0.20s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- 82 baseline tests (calculator operations: addition, subtraction, multiplication, division, factorial, advanced operations, interactive loop, CLI mode)
+- 14 tests for consecutive failure tracking (input validation from Issue #393)
+- 23 tests for operation history (Issue #396)
+- 23 tests for error logging (Issue #399)
+- **19 new tests for Application layer separation** (Issue #402):
+  - 5 tests for Calculator independence (can be instantiated and used without UI dependencies)
+  - 3 tests for Application layer integration (accepts Calculator, builds registry, imports work)
+  - 1 test for registry operation arity validation
+  - 2 tests for CLI mode execution
+  - 2 tests for interactive loop
+  - 1 test for OperationHistory independence
+  - 1 test for ErrorLog independence
+  - 4 tests for module imports (Calculator, Application, History, ErrorLog)
+- **Total: 208 tests, all passing**
+
+**Implementation Verified:**
+- src/application.py created with Application class:
+  - __init__(calculator: Calculator): Accepts Calculator instance; builds registry of 12 operations
+  - registry: dict[str, object] mapping operation names to bound Calculator methods
+  - _build_registry(): Constructs registry from Calculator instance
+  - _parse_number(raw: str): Converts string to int or float
+  - _parse_cli_arguments(): Parses sys.argv for operation and operands
+  - _execute_cli_mode(): Executes CLI operation and prints result
+  - _run_interactive_loop(history_file_path): Interactive REPL with history and error logging
+  - run_cli_mode(): Public entry point for combined CLI/interactive dispatch
+  - run_interactive(): Public entry point for direct interactive REPL
+  - execute_cli(args: list): Programmatic CLI execution without sys.argv manipulation
+- Application layer correctly:
+  - Separates UI concerns from Calculator computation
+  - Integrates OperationHistory and ErrorLog for history/error tracking
+  - Tracks consecutive failures and exits after 3 invalid attempts
+  - Handles binary and unary operations with correct arity
+  - Validates inputs and provides appropriate error messages
+  - Supports "history" special command for operation display
+  - Falls back from CLI to interactive mode when no argv present
+- src/__main__.py NOT modified (as required in implementation plan)
+- All 19 new Application layer tests pass
+- All 189 prior tests remain passing (no regressions)
+
+**Escalations:** None. All tests pass. No bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Cycle complete. Full test suite verified with all 208 tests passing.
+- Implementation successfully satisfies all 19 new test specifications for Application layer separation.
+- Full test suite is stable with 208 passing tests (189 baseline + 19 new Application tests).
+- No regressions detected in any existing tests.
+- Application layer cleanly separates UI logic from Calculator domain layer.
+- src/__main__.py preserved and not modified as specified.
+- Ready for commit and PR.

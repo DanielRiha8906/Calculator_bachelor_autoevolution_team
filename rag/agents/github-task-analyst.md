@@ -424,3 +424,81 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Task 10 must coexist with Task 9's operation history; both mechanisms must be independent and non-interfering
 - Error logging is distinct from operation history: history is session-scoped and contains successful operations; error log is persistent and contains failures
 
+### 2026-04-24 | V3 Task 11 - Structured/team (Issue #402)
+
+**Issue:** Refactor the calculator so calculation logic is separated from user interaction and interface handling. Keep the application object-oriented and preserve the current calculator behavior while making the code easier to maintain and reason about. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Refactor to enforce separation of concerns: isolate calculation logic from UI/interaction
+- Maintain object-oriented design (no procedural flattening)
+- Preserve all existing calculator behavior (operations, error handling, validation, logging)
+- Keep tests passing and consistent with refactored code
+- This is an architectural refactoring task, not a feature addition task
+- Part of final V3 integration sequence (follows Tasks 1-10 feature work)
+
+**Explicit Requirements:**
+- **Functional:** All operations from Tasks 1-4 must work identically
+- **Functional:** Input validation from Task 8 must work identically
+- **Functional:** CLI mode (Task 7) and interactive mode (Task 5) must work identically
+- **Functional:** Operation history (Task 9) and error logging (Task 10) must work identically
+- **Non-Functional:** Code must be easier to maintain and reason about than pre-refactoring
+- **Non-Functional:** Preserve object-oriented structure (classes, inheritance, composition)
+- **Testing:** All existing tests must pass without modification to behavior assertions
+
+**Ambiguities & Gaps:**
+- **Specific architectural pattern:** No specification of which design pattern(s) to use (MVC? Layered architecture? Hexagonal? Strategy pattern?)
+- **Module/class organization:** Task does not specify how to organize code into modules or classes
+- **Refactoring scope:** Unclear whether tests should be restructured or only source code
+- **Success metrics:** "Easier to maintain and reason about" is subjective; no measurable criteria specified
+- **Interface abstraction:** Should input modes (interactive, CLI) be abstracted behind a unified interface?
+- **Backwards compatibility:** All existing tests expect current behavior; task requires preservation
+- **Degree of separation:** How tightly should layers be separated? (dependency injection? direct coupling? facade pattern?)
+- No comments provided; issue body is minimal
+- No design diagrams or architectural sketches provided
+- No examples of "poor maintainability" in current code or "good maintainability" target state
+
+**Assumed Resolution (for Architect):**
+- **Architecture:** Recommend layered or hexagonal architecture with clear separation:
+  1. **Core Logic Layer:** Pure calculation functions, operation registry, error types (no I/O, no UI)
+  2. **Input/Validation Layer:** Input parsing, validation, error recovery (CLI args, interactive prompts)
+  3. **UI Layer:** Interface handling (interactive loop, CLI dispatcher, result formatting)
+  4. **Persistence Layer:** History and error logging (file I/O)
+- **Module Organization:** Recommend file structure like:
+  - `src/calculator/core.py` — calculation logic, operation definitions
+  - `src/calculator/validation.py` — input validation, operand parsing
+  - `src/calculator/input.py` — input modes (interactive, CLI)
+  - `src/calculator/persistence.py` — history and error logging
+  - `src/calculator/main.py` — entry point, mode dispatcher
+- **Object-Oriented Design:** Use classes for:
+  - Operation abstraction (base Operation class with subclasses for each operation)
+  - Calculator engine (Calculator class managing state and operation dispatch)
+  - Input handlers (InteractiveInput, CLIInput classes)
+  - Validators (InputValidator, OperandValidator classes)
+  - Loggers (HistoryLogger, ErrorLogger classes)
+- **Backwards Compatibility:** All behavior must remain identical; test assertions must not change, only test structure may adapt
+- **Success Metrics (suggested):**
+  - Core logic is testable in isolation (no side effects, no I/O)
+  - Each class has single, clear responsibility (SRP)
+  - Input and UI layers can be tested without triggering actual calculations
+  - Adding a new operation requires change in only one place (core logic)
+  - Adding a new input mode requires change in only one place (input layer)
+
+**Context from Related Issues:**
+- V3 Task 1 (#372): Division-by-zero error handling (must preserve)
+- V3 Task 2 (#375): Unit test suite (must pass without behavior changes)
+- V3 Tasks 3-4 (#378, #381): Operations implementations (must work identically)
+- V3 Task 5 (#384): Interactive mode (must work identically)
+- V3 Task 7 (#390): CLI mode (must work identically)
+- V3 Task 8 (#393): Input validation (must work identically)
+- V3 Tasks 9-10 (#396, #399): Logging (must work identically)
+
+**Patterns:**
+- V3 Task 11 is final refactoring/integration task; consolidates all prior feature work into clean architecture
+- V3 sequence: error handling (1) → test suite (2) → operations (3-4) → interactive (5) → CLI (7) → validation (8) → logging (9-10) → refactoring (11)
+- Minimal specification consistent with V3 series; architect must make design decisions about layer separation, module organization
+- "ai-implement:structured-team" label consistent; no new features, pure architectural restructuring
+- Task 11 is likely final V3 task; represents completion of structured/team evolution cycle
+- Key assumption: current codebase has calculation logic mixed with UI/interaction; refactoring will separate these concerns
+- No mention of performance optimization or new dependencies; refactoring is purely structural
+- Task is about code organization and maintainability, not behavior change
+
