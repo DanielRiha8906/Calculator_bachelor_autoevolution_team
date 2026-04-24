@@ -19,7 +19,7 @@
 - **Risks:** Old flat files kept at src/ root to avoid breaking existing tests; future cleanup will require updating existing test imports.
 - **Tests passed:** 334 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 806.7s | Cost: $1.811358 USD | Turns: 22
 
 ## Run: Issue #403 — V3 Task 11 - Expert/team (2026-04-24)
 
