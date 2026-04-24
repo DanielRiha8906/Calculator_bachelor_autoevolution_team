@@ -1,0 +1,38 @@
+@startuml activity_diagram_operation
+
+skinparam activityFontSize 13
+skinparam activityDiamondFontSize 12
+
+start
+
+:User starts interactive mode;
+
+:Prompt for operator key;
+
+:Determine arity (unary vs binary);
+
+:Prompt for first number;
+
+if (arity == 1?) then (yes)
+  note right: skip second operand
+else (no)
+  :Prompt for second number;
+endif
+
+:Call Calculator method (e.g. add);
+
+:Delegate to pure function\n(basic_operations.add);
+
+if (error raised?) then (yes)
+  :display_error to user;
+  note right: operation NOT recorded
+  stop
+else (no)
+  :_record_operation in history;
+  :Display result to user;
+  :Persist history to file;
+endif
+
+stop
+
+@enduml

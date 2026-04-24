@@ -1,0 +1,57 @@
+@startuml class_diagram_core
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam packageFontSize 11
+
+class Calculator {
+  - _history : list[dict]
+  --
+  + __init__() : None
+  .. History Mgmt ..
+  + get_history() : list[dict]
+  + clear_history() : None
+  - _record_operation(operation_name, operands, result)
+  .. Binary Ops ..
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+  + power(base, exp)
+  .. Unary Ops ..
+  + square(a)
+  + cube(a)
+  + square_root(a)
+  + cube_root(a)
+  + factorial(n)
+  + log(a)
+  + ln(a)
+}
+
+class "«module»\nbasic_operations" as basic_ops {
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)
+}
+
+class "«module»\nadvanced_operations" as advanced_ops {
+  + square(a)
+  + cube(a)
+  + square_root(a)
+  + cube_root(a)
+  + factorial(n)
+  + power(base, exp)
+  + log(a)
+  + ln(a)
+}
+
+class "«facade»\ncalculator" as facade {
+  note "re-exports Calculator\nfrom calculator_core"
+}
+
+Calculator --> basic_ops : delegates arithmetic
+Calculator --> advanced_ops : delegates math
+facade ..> Calculator : re-export
+
+@enduml

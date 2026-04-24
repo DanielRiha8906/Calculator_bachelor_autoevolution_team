@@ -340,3 +340,14 @@ Duration: 255.0s | Cost: $0.666930 USD | Turns: 11
   - `artifacts/sequence_error_logging_sequence.puml` — new sequence diagram for a single log_error() call
 
 Duration: 172.3s | Cost: $0.461259 USD | Turns: 4
+
+## Run: update-diagrams — Refactor Modules UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-404-refactor-modules
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — class diagram showing Calculator, basic_operations, advanced_operations modules and facade
+  - `artifacts/activity_diagram_operation.puml` — activity diagram for interactive binary operation flow
+  - `artifacts/sequence_diagram_operation.puml` — sequence diagram for add(5,3) interaction
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
