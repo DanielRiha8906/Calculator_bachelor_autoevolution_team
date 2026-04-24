@@ -404,3 +404,61 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Full test suite is clean with 107 passing tests.
 - No regressions detected in any existing tests.
 - Ready for commit and PR.
+
+### Cycle 11: 2026-04-24 — Issue #390 CLI Mode (WRITE phase)
+
+**Task:** Write failing tests for CLI mode (command-line argument parsing). Test specifications: 22 tests covering argument parsing, execution, float/negative operands, error handling, and interactive mode fallback.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_cli_mode.py` with 22 new tests
+2. Organized into 4 test classes:
+   - `TestCLIBasicOperations`: 9 tests covering add, subtract, multiply, divide, factorial, square, square_root, power, ln
+   - `TestCLIFloatsAndNegatives`: 2 tests for float operands and negative operands
+   - `TestCLIErrorHandling`: 8 tests for error conditions (missing operation, unknown operation, missing operands, invalid operands, division by zero, domain errors)
+   - `TestInteractiveModeBackwardCompatibility`: 3 tests for fallback to interactive mode when no CLI args provided
+3. All tests use `monkeypatch` to override `sys.argv`
+4. All tests use `capsys` fixture to capture stdout/stderr
+5. All error tests use `pytest.raises(SystemExit)` with exit code assertion
+6. Tests expect a new `cli_mode()` function in `src/__main__.py` (not yet implemented)
+
+**Patterns Found:**
+- CLI mode requires a new `cli_mode()` function that does not exist yet
+- Function must parse `sys.argv` to determine operation and operands
+- For operations with CLI args, must execute and output result
+- For operations without CLI args (or with only program name), must fall back to interactive mode
+- All 22 tests fail with ImportError (expected — function does not exist)
+- No regressions on existing 107 tests (interactive mode still works)
+
+**Test Results:**
+- 22 new tests written
+- 22 tests FAILED (as expected — cli_mode() function does not exist)
+- 0 tests PASSED
+- 0 existing tests broken (no regressions)
+- Failure reason: ImportError: cannot import name 'cli_mode' from 'src.__main__'
+- Duration: 0.05s
+
+**Status:** READY FOR HANDOFF — All 22 tests fail as expected. Implementation required.
+
+**Test Breakdown:**
+- Test Group A (CLI Basic Operations): 9 tests for all calculator operations via CLI
+- Test Group B (CLI Floats/Negatives): 2 tests for float and negative numeric operands
+- Test Group C (CLI Error Handling): 8 tests for error cases and validation
+- Test Group D (Backward Compatibility): 3 tests for interactive mode fallback
+
+**Escalations:** None. All failures are due to missing cli_mode() function (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Implement cli_mode() function in src/__main__.py to satisfy all 22 test specifications
+- Function must check sys.argv for operation name and operands
+- If sys.argv has at least 3 elements (program name + operation + at least 1 operand), execute CLI mode:
+  - Parse operation name from argv[1]
+  - Parse operands from argv[2:] as numeric values
+  - Execute corresponding Calculator method
+  - Print result to stdout (format: result should be in output as string)
+  - Exit with code 0 on success, 1 on error
+- If sys.argv has fewer than 3 elements, fall back to existing interactive mode
+- Error cases must exit(1) with appropriate error messages to stderr/stdout
+- Support all 12 operations: add, subtract, multiply, divide, factorial, square, cube, square_root, cube_root, power, log10, ln
+- 22 failing tests ready for implementation verification
