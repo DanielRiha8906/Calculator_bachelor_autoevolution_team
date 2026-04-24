@@ -83,3 +83,27 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - For implementer: one-file change to `src/__main__.py`; imports and calls `run_interactive_session()` from `src.interactive`
   - For tester: verify that `python -m src` (or configured entry point) successfully launches interactive loop; ensure existing tests remain green
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #391: V3 Task 7 - Expert/team
+- **Task Type:** Feature implementation (CLI argument parsing and execution)
+- **Scope:** Add command-line interface to calculator accepting operation and operand arguments
+- **Key Patterns:**
+  - Clear, self-contained feature request with concrete examples
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "keep change scoped to bash-based CLI access"
+  - Follows completion of issues #376, #379, #382, #385 (core operations and interactive mode established)
+  - Requires support for both unary (factorial) and binary (add) operations via CLI
+- **Ambiguities Flagged:**
+  1. Entry point location — issue examples show `python main.py` but codebase likely uses `python -m src`; specification does not clarify
+  2. Error handling behavior — "predictably for incorrect argument usage" is vague; no specification of exit codes, error messages, or exact validation order
+  3. Supported operations list — task says "current operations" but does not enumerate which operations are "current" (must discover from operation registry)
+  4. Operand count validation — no specification of handling mismatched operand counts (e.g., `add 5` or `factorial 5 7`)
+  5. Operand type validation — no specification of behavior for non-numeric arguments (e.g., `add abc 7`)
+  6. Output format — "through standard terminal output" is generic; no spec for float precision, newlines, or error output stream (stdout vs stderr)
+- **Handoff Notes:**
+  - Architect must clarify: (1) exact entry point (main.py vs python -m src), (2) error handling strategy (exit codes, message format), (3) operand validation order, (4) output format for results
+  - Architect should produce test specs covering: valid single/multi-arg operations, missing args, excess args, non-numeric args, edge cases per operation type
+  - Tester will write failing tests for all scenarios above
+  - Implementer will add CLI argument parsing (argparse or manual) and invoke operation registry with parsed operands
+  - Note: Test suite must remain accurate to "current version of application" — implies tests should reflect actual behavior, not aspirational behavior
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)

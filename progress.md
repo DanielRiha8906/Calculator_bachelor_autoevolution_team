@@ -144,3 +144,16 @@ Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
   - `artifacts/session_state_machine.puml` — State machine diagram of interactive session states and transitions
 
 Duration: 318.7s | Cost: $0.692764 USD | Turns: 5
+
+## Run: Issue #391 — V3 Task 7 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-391-cli-interface
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/cli.py` — new CLI module with `parse_cli_operand()` and `run_cli()` functions
+  - `tests/test_cli.py` — 53 test cases covering all CLI behaviors (binary ops, unary ops, errors, validation)
+- **Purpose:** Add bash-based CLI entry point so the calculator can be invoked as `python -m src <operation> <operands>` without changing the interactive mode or core calculator logic.
+- **Risks:** None
+- **Tests passed:** 194 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

@@ -254,3 +254,144 @@ No other source files need modification. `src/interactive.py` and `src/operation
 
 **Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
+---
+
+### 2026-04-24 — Issue #391 — V3 Task 7 - Expert/team — CLI for Bash Invocation
+
+**Task:** Add a command-line interface (CLI) enabling bash-based calculator invocation with operation name and operand arguments, supporting both unary and binary operations.
+
+**Requirements:**
+- Accept operation name as first positional argument
+- Accept operand(s) as subsequent positional arguments
+- Support variable operand counts: unary operations (e.g., factorial) and binary operations (e.g., add)
+- Example invocations: `python -m src add 5 7` (binary), `python -m src factorial 5` (unary)
+- Invoke calculator's operation registry with parsed operands
+- Print operation result to standard output
+- Incorrect argument usage must produce predictable, consistent behavior with non-zero exit code
+
+**Key Decisions:**
+- Create new module `src/cli.py` with CLI argument parser and operation executor
+- Reuse existing `OperationRegistry` for operation discovery and execution (no duplication)
+- Auto-detect CLI vs interactive mode in `__main__.py`: if argv > 1, run CLI; else run interactive
+- Error handling: argument errors and computation errors both exit with code 1
+- Results printed to stdout; errors and usage messages to stderr
+- Operand parsing: supports int and float (decimal point detection); non-numeric input raises ValueError
+- No changes to Calculator, OperationRegistry, or interactive modules; they remain unchanged
+
+**Architecture Observations (from source exploration):**
+- OperationRegistry (`src/operation_registry.py`) already introspects Calculator and discovers 12 operations (5 binary, 7 unary)
+- Interactive mode (`src/interactive.py`) already uses OperationRegistry; mirrors operand parsing pattern
+- Current `__main__.py` only dispatches to interactive; no CLI support exists
+- Calculator has 12 methods with proper type hints and domain validation (e.g., sqrt rejects negatives, factorial rejects non-ints)
+- Test infrastructure uses pytest with fixture pattern; mocking for input/output is standard
+
+**Patterns Observed:**
+- Parse operand pattern: try int first (no decimal point), fall back to float (has decimal point)
+- Error handling pattern: catch specific exceptions (ZeroDivisionError, ValueError), print to stderr, exit with non-zero code
+- Operation execution pattern: OperationRegistry.call(operation_name, *operands) returns result or raises exception
+- Input validation pattern: validate before execution (operand count, operand format, operation existence)
+
+**Test Specifications Provided to pytest-edge-tester (WRITE):**
+25 test scenarios in new `tests/test_cli.py`:
+
+1. **test_cli_binary_add_valid_integers**: argv=['add', '5', '7'] → stdout='12\n', exit=0
+2. **test_cli_binary_subtract_valid_integers**: argv=['subtract', '10', '3'] → stdout='7\n', exit=0
+3. **test_cli_binary_multiply_valid_integers**: argv=['multiply', '4', '5'] → stdout='20\n', exit=0
+4. **test_cli_binary_divide_valid_integers**: argv=['divide', '10', '2'] → stdout='5.0\n', exit=0
+5. **test_cli_binary_power_valid**: argv=['power', '2', '3'] → stdout='8\n', exit=0
+6. **test_cli_unary_factorial_valid**: argv=['factorial', '5'] → stdout='120\n', exit=0
+7. **test_cli_unary_square_valid**: argv=['square', '4'] → stdout='16\n', exit=0
+8. **test_cli_unary_cube_valid**: argv=['cube', '3'] → stdout='27\n', exit=0
+9. **test_cli_unary_sqrt_valid**: argv=['sqrt', '9'] → stdout='3.0\n', exit=0
+10. **test_cli_unary_cbrt_valid**: argv=['cbrt', '8'] → stdout='2.0\n', exit=0
+11. **test_cli_unary_ln_valid**: argv=['ln', '2.718281828'] → stdout≈'1.0\n', exit=0
+12. **test_cli_unary_log10_valid**: argv=['log10', '100'] → stdout='2.0\n', exit=0
+13. **test_cli_float_operands_binary**: argv=['add', '1.5', '2.5'] → stdout='4.0\n', exit=0
+14. **test_cli_negative_operands**: argv=['add', '-5', '-3'] → stdout='-8\n', exit=0
+15. **test_cli_division_by_zero_error**: argv=['divide', '5', '0'] → stderr contains "Division by zero", exit=1
+16. **test_cli_sqrt_negative_error**: argv=['sqrt', '-4'] → stderr contains error, exit=1
+17. **test_cli_factorial_negative_error**: argv=['factorial', '-5'] → stderr contains error, exit=1
+18. **test_cli_missing_operation_argument**: argv=[] → stderr contains usage message, exit=1
+19. **test_cli_missing_operands_unary**: argv=['factorial'] → stderr contains "requires 1 operand", exit=1
+20. **test_cli_missing_operands_binary**: argv=['add', '5'] → stderr contains "requires 2 operands", exit=1
+21. **test_cli_too_many_operands_unary**: argv=['factorial', '5', '6'] → stderr contains error, exit=1
+22. **test_cli_too_many_operands_binary**: argv=['add', '5', '7', '9'] → stderr contains error, exit=1
+23. **test_cli_unknown_operation**: argv=['unknown_op', '5'] → stderr contains "Unknown operation", exit=1
+24. **test_cli_non_numeric_operand**: argv=['add', 'abc', '5'] → stderr contains "Invalid operand", exit=1
+25. **test_cli_large_number_computation**: argv=['multiply', '1000000', '1000000'] → stdout='1000000000000\n', exit=0
+
+All tests capture stdout and stderr; verify exit code via return value or sys.exit() mock.
+
+**Source Changes Plan for python-code-implementer:**
+
+**File 1: Create `src/cli.py`**
+- Action: Create new file
+- Purpose: CLI argument parser and operation executor
+- Key functions:
+  - `parse_cli_operand(operand_str: str) -> Union[int, float]`: parse int or float from string
+  - `run_cli(argv=None) -> int`: main CLI entry point; returns exit code (0 on success, 1 on error)
+- Logic flow:
+  1. Validate argv length (must have operation name)
+  2. Extract operation name and operand arguments
+  3. Create Calculator and OperationRegistry
+  4. Validate operation exists in registry
+  5. Validate operand count matches operation arity
+  6. Parse operands (int/float conversion)
+  7. Execute operation via registry.call()
+  8. Print result to stdout on success
+  9. Print error to stderr and return 1 on any failure
+- Exception handling: ZeroDivisionError, ValueError, and generic Exception
+- All error messages consistent and informative
+
+**File 2: Modify `src/__main__.py`**
+- Action: Modify existing file
+- Changes:
+  1. Add import: `from .cli import run_cli`
+  2. Add `import sys` in the `if __name__ == "__main__":` block
+  3. Replace hardcoded `if __name__ == "__main__": run_interactive_session()` with:
+     ```
+     if __name__ == "__main__":
+         import sys
+         # If arguments provided, run CLI mode; else run interactive mode
+         if len(sys.argv) > 1:
+             exit_code = run_cli()
+             sys.exit(exit_code)
+         else:
+             run_interactive_session()
+     ```
+- Rationale: Auto-detects whether user wants CLI (arguments present) or interactive (no arguments)
+- Backward compatibility: `python -m src` still launches interactive mode
+- New capability: `python -m src add 5 7` launches CLI mode
+
+**No Changes Required:**
+- `src/calculator.py`: remains unchanged (all 12 methods functional as-is)
+- `src/operation_registry.py`: remains unchanged (OperationRegistry fully supports CLI use case)
+- `src/interactive.py`: remains unchanged (interactive mode independent)
+
+**Architecture Impact:**
+- New module `cli.py` follows existing patterns from `interactive.py` (operation discovery, error handling, input parsing)
+- Entry point in `__main__.py` now supports both CLI and interactive modes (mutually exclusive based on argv)
+- CLI mode leverages existing OperationRegistry; no duplication of operation logic
+- Error handling consistent across CLI and interactive modes
+- No changes to core calculator logic; all changes are presentation/input layer
+- Test suite grows by ~25 CLI-specific tests; existing tests unaffected
+- CLI output format: result to stdout (plain), errors to stderr (prefixed with "Error:")
+- Exit codes: 0 on success, 1 on any error (argument validation, domain error, computation error)
+
+**Handoff to pytest-edge-tester (WRITE):**
+Write 25 test scenarios in `tests/test_cli.py`. Each test calls `run_cli(argv=...)` with mocked stdout/stderr (use capsys or StringIO). Scenarios cover:
+- All 5 binary operations with valid inputs
+- All 7 unary operations with valid inputs
+- Float and negative operands
+- Domain errors (sqrt negative, factorial negative, zero division)
+- Argument validation (missing operation, missing operands, too many operands, unknown operation)
+- Operand format validation (non-numeric input)
+- Large number computation
+All tests must FAIL initially (run_cli does not exist).
+
+**Handoff to python-code-implementer (upon tester's WRITE report):**
+Implement new file `src/cli.py` with `run_cli(argv=None) -> int` function and helper `parse_cli_operand(operand_str: str) -> Union[int, float]`. Modify `src/__main__.py` to dispatch based on argv length. Implementation must pass all 25 test scenarios and maintain backward compatibility with existing interactive mode.
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+---
