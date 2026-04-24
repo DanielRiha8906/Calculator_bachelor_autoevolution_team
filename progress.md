@@ -67,4 +67,4 @@ Duration: 194.3s | Cost: $0.436326 USD | Turns: 4
   - `artifacts/activity_diagram.puml` — added factorial fork branch with validation and base-case guards
   - `artifacts/sequence_diagram.puml` — added factorial alt block showing error and success paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 163.2s | Cost: $0.420227 USD | Turns: 14
