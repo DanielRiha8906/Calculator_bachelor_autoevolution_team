@@ -9,7 +9,7 @@
 - **Risks:** None — documentation only, no src/ changes
 - **Tests passed:** 263 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 477.4s | Cost: $1.067547 USD | Turns: 25
 
 ## Run: Fix PR #452 — feat: modular calculator package structure (2026-04-24)
 
