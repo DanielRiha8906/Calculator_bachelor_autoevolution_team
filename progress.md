@@ -7,7 +7,7 @@
   - `artifacts/interactive_session_activity.puml` — activity diagram for interactive session loop with retry logic and exit paths
   - `artifacts/cli_execution_sequence.puml` — sequence diagram for CLI execution flow with error handling branches
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 365.6s | Cost: $0.623501 USD | Turns: 6
 
 ## Run: Issue #409 — V3 Task 13 - Expert/team (2026-04-24)
 
