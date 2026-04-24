@@ -133,4 +133,4 @@ Duration: 416.6s | Cost: $0.814535 USD | Turns: 14
   - `artifacts/sequence_diagram_invalid_input.puml` — Operator validation loop sequence
   - `artifacts/component_diagram_modules.puml` — Module dependency diagram (__main__ → cli → calculator → math)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 289.9s | Cost: $0.657900 USD | Turns: 4
