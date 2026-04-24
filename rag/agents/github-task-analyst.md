@@ -22,3 +22,22 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Tester will write failing tests matching those specs
   - Implementer will add code only if calculator implementation itself needs fixes (unlikely, as task is test-only)
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #379: V3 Task 3 - Expert/team
+- **Task Type:** New feature implementation (Green + Refactor phase of TDD)
+- **Scope:** Add factorial operation to calculator
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit boundary cases (0, 1, negative, non-integers)
+  - No comments or linked issues; requirements fully expressed in issue body
+  - Explicit scope constraint: "avoid unrelated refactoring"
+  - Part of multi-task progression (follows issue #376)
+- **Ambiguities Flagged:**
+  1. Factorial behavior for non-integer inputs (floats) — stated as rejection requirement but no error type specified
+  2. Maximum input value not stated — mathematically unbounded, but Python int can handle it; implementation must decide on reasonable limits
+  3. Return type not specified (int vs float) — presumed int based on factorial mathematical definition
+  4. Integration point not specified (how factorial operation is wired into calculator API)
+- **Handoff Notes:**
+  - Architect must specify where factorial integrates (operation registry, CLI, API function name)
+  - Tester will write failing tests for valid (0, 1, positive integers) and invalid cases (negatives, floats, edge cases)
+  - Implementer receives tester's failing test names and must implement factorial function + integration to make them pass
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
