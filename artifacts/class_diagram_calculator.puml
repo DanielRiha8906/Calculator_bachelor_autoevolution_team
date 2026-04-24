@@ -3,15 +3,57 @@
 skinparam classAttributeIconSize 0
 
 class Calculator {
+    ' Basic Arithmetic
     + add(a, b) : numeric
     + subtract(a, b) : numeric
     + multiply(a, b) : numeric
     + divide(a, b) : float
+
+    ' Power & Root
+    + square(a) : numeric
+    + cube(a) : numeric
+    + square_root(a) : float
+    + cube_root(a) : float
+    + power(base, exp) : numeric
+
+    ' Logarithmic
+    + log(a) : float
+    + ln(a) : float
+
+    ' Combinatorial
+    + factorial(n) : int
 }
 
 note right of Calculator::divide
   Raises ZeroDivisionError
   when b == 0
+end note
+
+note right of Calculator::square_root
+  Raises ValueError
+  when a < 0
+end note
+
+note right of Calculator::cube_root
+  Handles negatives:
+  -(abs(a) ^ (1/3))
+end note
+
+note right of Calculator::factorial
+  Raises ValueError when:
+  - n is a boolean
+  - n is non-integer
+  - n < 0
+end note
+
+note right of Calculator::log
+  Base-10 logarithm
+  Raises ValueError when a <= 0
+end note
+
+note right of Calculator::ln
+  Natural logarithm
+  Raises ValueError when a <= 0
 end note
 
 @enduml
