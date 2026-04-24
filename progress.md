@@ -15,7 +15,7 @@
 - **Risks:** None — domain errors (ValueError, ZeroDivisionError) still propagate without retry; batch mode unchanged
 - **Tests passed:** 185 passed, 0 failed, 1 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 687.9s | Cost: $1.521183 USD | Turns: 18
 
 ## Run: Issue #371 — V3 Task 1 - Naive/team (2026-04-24)
 
