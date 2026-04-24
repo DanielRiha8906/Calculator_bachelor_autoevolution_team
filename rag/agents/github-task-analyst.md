@@ -136,3 +136,62 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Implementer will add validation logic to `src/interactive.py` (operation selection, operand parsing); no changes to `src/cli.py` required
   - Critical: All existing tests must remain passing (no regression)
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — Issue #397: V3 Task 9 - Expert/team
+- **Task Type:** Feature implementation (session history tracking with file I/O)
+- **Scope:** Add operation history to interactive mode; record all operations in function-style format; persist to file on session end; reset on new session start
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit format examples
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "keep the change scoped to local session history"
+  - Follows completion of issues #376–#394 (core operations, interactive/CLI modes, input validation all established)
+  - Scope is limited to interactive mode only; no CLI history tracking required
+- **Key Findings:**
+  1. **History format:** Function-style notation with all types of operations: `add(2, 3) = 5`, `power(2, 3) = 8`, `sqrt(9) = 3`, `factorial(5) = 120`
+  2. **Display mechanism:** Current session history can be shown on request (command/menu option not specified; implementation discretion)
+  3. **Persistence:** History written to `history.txt` when session ends; file is overwritten (not appended) on subsequent sessions
+  4. **Session lifecycle:** Each new session starts with empty history; no data carried over from previous sessions
+  5. **Success condition:** Only successful operations recorded; computation errors and input validation failures not added to history
+- **Ambiguities Flagged:**
+  1. History display command name/integration — issue does not specify how user requests history display (dedicated command, menu option, etc.); assume architect will determine based on existing interactive mode patterns
+  2. File location — task says "such as history.txt" without specifying exact path; assume project root or cwd, no nested directories
+  3. Error handling on file I/O — no spec for behavior if file write fails (permissions, disk full); assume graceful handling (log, inform user, allow session to end)
+  4. Numeric precision in output — no spec for float formatting (repr vs str vs custom); assume Python default repr() or str()
+  5. Whether computation errors are recorded — not explicitly stated; assume only successful results are recorded
+- **Handoff Notes:**
+  - Architect should clarify: (1) history display command integration point, (2) file write error handling strategy, (3) result numeric formatting preference
+  - Architect must produce test specs covering: recording unary/binary operations, history display functionality, file write on session end, empty history on new session start, graceful error handling for file I/O
+  - Tester will write failing tests for all scenarios above; verify both interactive and existing tests remain passing
+  - Implementer will integrate history recording into `src/interactive.py` (post-operation hook), add history display command, implement file write on session exit
+  - Critical: All existing tests must pass; no unrelated refactoring
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-24 — PR #444 Review: Unresolved Feedback on Issue #397 Implementation
+- **Task Type:** PR review feedback analysis (identify unresolved requirements)
+- **Scope:** Extract and structure unresolved owner feedback on PR #444 (session history feature implementation)
+- **Key Finding (BLOCKER):**
+  - **Unresolved Comment by @DanielRiha8906 (Owner):** "Add an option when launching the application to view history of operations via an index."
+  - **Status:** Flagged as "Needs fix"; PR state is OPEN with label `request-changes:expert-team`
+  - **Current Implementation Gap:** PR implements history recording and file persistence, but **does not provide a user-facing mechanism** to view recorded history during/at session launch
+- **Requirement Extracted:**
+  - **FR1 (MUST HAVE):** Add user-facing menu option or command in interactive mode to view operation history indexed by entry number
+  - **Scope:** History viewing must integrate into interactive session launch/menu flow; exact entry point not specified by owner
+  - **Pattern:** Indexed display of operations (e.g., "1. add(2, 3) = 5", "2. sqrt(9) = 3.0", etc.)
+  - **Behavior:** User can select or view history entries; gracefully handle empty history
+- **Critical Ambiguities Requiring Architect Clarification:**
+  1. **Display timing:** At startup (mandatory), on-demand during session, or optional pre-session menu?
+  2. **Navigation/selection:** Is index used for full entry viewing, or just enumerated display?
+  3. **History scope:** Current-session ops only, or include previous session data from `history.txt`?
+  4. **Integration point:** Where in existing interactive menu flow is history option placed?
+  5. **Empty history handling:** Exact user message/behavior when no operations recorded yet?
+- **Handoff Notes:**
+  - Architect MUST clarify the 5 ambiguities above before system design proceeds
+  - Test specs must cover: history display with 1/N operations, indexed selection (if applicable), empty history, no-crash behavior, menu integration
+  - Tester will write failing tests for history viewing feature (new tests beyond the 21 already in test_history.py)
+  - Implementer will modify `src/interactive.py` to add history viewing mechanism; may require minor enhancements to `src/history.py` if display method is insufficient
+  - All 241 existing tests must remain green throughout
+- **Patterns Observed:**
+  - PR comments from owner are concise and actionable but sometimes lack implementation details
+  - "Needs fix" label followed by explicit task statement is the blocking signal for PRs in this pipeline
+  - Each task/PR builds on prior features; interdependencies are tracked in issue progression
+- **Label:** `request-changes:expert-team` (blocking; requires modification before merge)

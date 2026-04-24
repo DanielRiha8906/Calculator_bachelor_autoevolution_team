@@ -44,8 +44,32 @@ package "src.operation_registry" {
     }
 }
 
+package "src.history" {
+    class "«function»\nformat_history_entry" <<function>> {
+        + format_history_entry(operation_name: str,\n  operands: tuple, result: Any) : str
+        .. example output ..
+        "add(2, 3) = 5"
+    }
+
+    class OperationHistory {
+        - _entries : list[str]
+        --
+        + __init__() : None
+        + record(operation_name: str,\n  operands: tuple, result: Any) : None
+        + get_entries() : list[str]
+        + display() : str
+        + write_to_file(filepath: str = "history.txt") : None
+        .. notes ..
+        Only successful operations recorded.
+        File I/O errors logged to stderr.
+    }
+
+    "format_history_entry" ..> OperationHistory : used by record()
+}
+
 "run_interactive_session" ..> Calculator : depends on\n(optional, injected)
 "run_interactive_session" *-- OperationRegistry : creates and uses
+"run_interactive_session" *-- OperationHistory : creates and owns
 "run_interactive_session" ..> "parse_operand" : calls
 "run_interactive_session" ..> "MAX_ATTEMPTS" : references
 

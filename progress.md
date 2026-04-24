@@ -1,3 +1,34 @@
+## Run: Fix PR #444 — feat: add session operation history to interactive mode (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/interactive.py` — added `display_history_indexed()` helper, menu help text "h: View operation history", and command recognition for "h"/"H"/"history" in selection loop
+  - `tests/test_interactive_history_menu.py` — 15 new tests covering history viewing command, indexed display, empty history, case-insensitive matching, session flow, format verification
+  - `rag/agents/github-task-analyst.md` — updated cycle entry
+  - `rag/agents/system-architect.md` — updated cycle entry
+  - `rag/agents/python-code-implementer.md` — updated cycle entry
+- **Purpose:** Address reviewer feedback requesting a user-facing option to view operation history with an index; users now type "h" or "history" during the session to see a numbered list of past operations.
+- **Risks:** None — additive change only; existing behavior unchanged; all 241 prior tests continue to pass.
+- **Tests passed:** 256 passed, 0 failed
+
+Duration: 719.0s | Cost: $1.328373 USD | Turns: 14
+
+## Run: Issue #397 — V3 Task 9 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/history.py` — new module with OperationHistory class; record(), get_entries(), display(), write_to_file() methods; graceful IOError handling
+  - `src/interactive.py` — import OperationHistory, initialize history per session, record successful operations, write history to file at all exit points
+  - `tests/test_history.py` — 21 new tests covering recording, ordering, error cases, display, file persistence, IOError handling, session isolation
+  - `rag/agents/*.md` — updated per-agent RAG files
+- **Purpose:** Add session operation history to interactive mode; entries recorded in function-style format (e.g. add(2, 3) = 5); persisted to history.txt on session exit; fresh history per session.
+- **Risks:** history.txt is a runtime artifact not tracked in .gitignore; file write failures are silently logged to stderr.
+- **Tests passed:** 241 passed, 0 failed
+
+Duration: 624.4s | Cost: $1.142542 USD | Turns: 18
+
 ## Run: Issue #394 — V3 Task 8 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-394-input-validation-retry
@@ -222,3 +253,26 @@ Duration: 236.4s | Cost: $0.590013 USD | Turns: 4
   - `artifacts/retry_sequence.puml` — sequence diagram for user session hitting retry limit
 
 Duration: 216.3s | Cost: $0.496068 USD | Turns: 4
+
+## Run: update-diagrams — Session History Diagrams (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/interactive_class.puml` — added OperationHistory class with attributes and methods, dependency from interactive session
+  - `artifacts/interactive_session_flow.puml` — added history.record() after successful operation and write_to_file() at all 5 exit points
+  - `artifacts/session_state_machine.puml` — updated with RECORDING and PERSISTING states for history lifecycle
+
+Duration: 228.5s | Cost: $0.513488 USD | Turns: 7
+
+## Run: update-diagrams — Session Operation History (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram.puml` — added OperationHistory class and composition/usage relationships
+  - `artifacts/activity_diagram_session.puml` — interactive session flow with history command and all exit paths
+  - `artifacts/sequence_diagram_operation.puml` — happy path operation cycle with history recording
+  - `artifacts/component_diagram.puml` — module boundaries including history.py and history.txt dependency
+
+Duration: 410.4s | Cost: $0.692189 USD | Turns: 4

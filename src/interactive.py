@@ -3,9 +3,30 @@
 from typing import Union
 
 from .calculator import Calculator
+from .history import OperationHistory
 from .operation_registry import OperationRegistry
 
 MAX_ATTEMPTS = 5
+
+_HISTORY_SENTINEL = "__history__"
+
+
+def display_history_indexed(history: "OperationHistory") -> None:
+    """Display the session history with 1-based numbered entries.
+
+    Prints each recorded operation as ``"N. entry"`` where N is the 1-based
+    position.  Prints ``"No operations recorded yet."`` when the history is
+    empty.
+
+    Args:
+        history: The ``OperationHistory`` instance for the current session.
+    """
+    entries = history.get_entries()
+    if not entries:
+        print("No operations recorded yet.")
+        return
+    for idx, entry in enumerate(entries, start=1):
+        print(f"{idx}. {entry}")
 
 
 def parse_operand(user_input: str) -> Union[int, float]:
@@ -45,6 +66,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
         calculator = Calculator()
 
     registry = OperationRegistry(calculator)
+    history = OperationHistory()
     retry_count = 0
 
     while True:
@@ -55,11 +77,16 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             arity = registry.get_arity(name)
             label = "unary" if arity == 1 else "binary"
             print(f"  {idx}: {name} ({label})")
+        print("  h: View operation history")
 
         # --- Select operation ---
         op_name: str | None = None
         while op_name is None:
             raw_index = input("Select an operation (index): ")
+            if raw_index.strip().lower() in ("h", "history"):
+                display_history_indexed(history)
+                op_name = _HISTORY_SENTINEL
+                break
             try:
                 index = int(raw_index)
                 if index < 0 or index >= len(operations):
@@ -76,7 +103,23 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                     print(f"  {idx}: {name} ({label})")
                 if retry_count >= MAX_ATTEMPTS:
                     print("Too many consecutive invalid inputs. Session terminated.")
+                    history.write_to_file()
                     return
+
+        # --- History command: skip computation, go to continue prompt ---
+        if op_name == _HISTORY_SENTINEL:
+            while True:
+                answer = input("Continue? (yes/no): ").strip().lower()
+                if answer in ("yes", "y"):
+                    break
+                if answer in ("no", "n"):
+                    history.write_to_file()
+                    return
+                if answer in ("h", "history"):
+                    display_history_indexed(history)
+                    continue
+                # Unexpected input: re-prompt
+            continue
 
         arity = registry.get_arity(op_name)
 
@@ -93,6 +136,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
+                        history.write_to_file()
                         return
             operands = (operand,)
         else:
@@ -107,6 +151,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
+                        history.write_to_file()
                         return
 
             operand2: Union[int, float] | None = None
@@ -120,6 +165,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
                     print("Invalid input. Please enter a number.")
                     if retry_count >= MAX_ATTEMPTS:
                         print("Too many consecutive invalid inputs. Session terminated.")
+                        history.write_to_file()
                         return
 
             operands = (operand1, operand2)
@@ -128,6 +174,7 @@ def run_interactive_session(calculator: Calculator = None) -> None:
         try:
             result = registry.call(op_name, *operands)
             print(f"Result: {result}")
+            history.record(op_name, operands, result)
         except ZeroDivisionError:
             print("Error: Division by zero")
         except Exception as exc:
@@ -139,5 +186,9 @@ def run_interactive_session(calculator: Calculator = None) -> None:
             if answer in ("yes", "y"):
                 break
             if answer in ("no", "n"):
+                history.write_to_file()
                 return
+            if answer in ("h", "history"):
+                display_history_indexed(history)
+                continue
             # Unexpected input: re-prompt

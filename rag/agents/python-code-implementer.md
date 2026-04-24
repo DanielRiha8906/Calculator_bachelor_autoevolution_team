@@ -152,3 +152,50 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** Not run by this agent (implementer does not run tests).
 
 **Handoff notes for next agent:** No new external dependencies introduced. The continue-prompt loop (`yes/no`) was intentionally left untouched — it does not participate in the retry counter per the architect's spec. If a future task adds retry logic there, new failing tests must be written first.
+
+### 2026-04-24 — Add OperationHistory and wire into interactive session (history feature)
+
+**Task:** Create `src/history.py` with `OperationHistory` class and `format_history_entry` helper; integrate into `src/interactive.py` to make 21 failing tests in `tests/test_history.py` pass.
+
+**Files changed:**
+- `src/history.py` — new file; `format_history_entry()` module-level helper; `OperationHistory` class with `record()`, `get_entries()`, `display()`, `write_to_file()` methods
+- `src/interactive.py` — added `from .history import OperationHistory` import; added `history = OperationHistory()` initialisation in `run_interactive_session`; added `history.record(op_name, operands, result)` after the successful `registry.call`; added `history.write_to_file()` before every `return` in the function (4 exit points: operation-selection timeout, unary operand timeout, operand1 timeout, operand2 timeout, and the `no/n` continue-prompt exit — 5 total `history.write_to_file()` calls)
+
+**Key decisions:**
+- `get_entries()` returns a `list(self._entries)` copy rather than the internal list directly, preventing external mutation of history state.
+- `display()` uses `"\n".join(...)` with no trailing newline, so `output.strip().split('\n')` in tests yields exactly `len(entries)` lines with no empty elements.
+- `write_to_file()` also uses `"\n".join(...)` with no trailing newline; for empty history this writes an empty string (zero bytes), which satisfies `len(content) == 0 or content.strip() == ""`.
+- File writes use `open(filepath, "w")` (overwrite mode, not append), matching the test that asserts second-write content excludes first-write content.
+- `OSError` (covers `PermissionError`, `FileNotFoundError`, etc.) is caught and logged to `stderr`; no re-raise, satisfying the "must not raise" contract.
+- `history.record()` is placed inside the `try` block after `print(f"Result: {result}")` but before the `except` clauses — so it is only reached on success, never on `ZeroDivisionError` or other exceptions.
+
+**Patterns found:**
+- Join entries with `"\n"` (no trailing newline) so `str.split('\n')` gives a clean list with no empty tail element; this makes test assertions on `lines` length exact.
+- Always return a copy from `get_entries()` to prevent callers from mutating internal state.
+- `OSError` is the correct base class to catch for file-system errors (covers `PermissionError`, `FileNotFoundError`, `IsADirectoryError`, etc.); using `IOError` also works in Python 3 (alias of `OSError`), but `OSError` is canonical.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** No new external dependencies introduced (`sys` and `typing.Any` are stdlib). The default `filepath="history.txt"` in `write_to_file()` will write to the CWD when the session exits normally or via timeout. If a future task requires configurable history paths or append-mode (cross-session persistence), new failing tests must be written first.
+
+### 2026-04-24 — Add history-viewing menu command to interactive session (issue-397)
+
+**Task:** Add `display_history_indexed()` helper and `"h"/"H"/"history"` command recognition to `src/interactive.py` to make 15 failing tests in `tests/test_interactive_history_menu.py` pass.
+
+**Files changed:**
+- `src/interactive.py` — added `_HISTORY_SENTINEL = "__history__"` module-level constant; added `display_history_indexed(history)` public function (prints numbered entries or "No operations recorded yet."); added `"  h: View operation history"` line to menu display; added `"h"/"history"` recognition in op-selection inner loop (sets `op_name = _HISTORY_SENTINEL` + `break` rather than `continue`, to route to a continue-prompt); added sentinel guard block that displays history then enters its own continue-prompt loop; added `"h"/"history"` recognition in the regular post-computation continue-prompt loop.
+
+**Key decisions:**
+- The directive specified `continue` in the op-selection loop, but tracing the tests revealed that `"h"` in op selection must flow to the continue prompt (not re-prompt for an operation). Tests like `["h", "n"]` supply only 2 inputs; a `continue` would re-call `input("Select an operation")` consuming `"n"`, which would fail and then exhaust inputs via `StopIteration`. The correct behaviour is: display history → enter continue-prompt → `"n"` exits cleanly.
+- Solution: use `op_name = _HISTORY_SENTINEL` + `break` to exit the inner op-selection loop, then a dedicated `if op_name == _HISTORY_SENTINEL:` block that contains its own continue-prompt loop (with `"h"` support) before `continue`-ing the outer `while True`.
+- The `"h"` command is also recognized in the regular post-computation continue-prompt loop (after a successful operation) to allow mid-session history review.
+- `_HISTORY_SENTINEL` is module-level but prefixed with `_` to mark it as internal. It is not a public interface.
+- The forward reference `"OperationHistory"` in the type hint of `display_history_indexed` is a string annotation because `OperationHistory` is already imported at module level — the string form avoids any potential circular-import confusion but is actually unnecessary here; kept as a string per the directive's sample signature.
+
+**Patterns found:**
+- When a special command in an input loop must route to a DIFFERENT subsequent prompt (not just re-iterate the same loop), use a sentinel value + `break` pattern rather than `continue`. The sentinel is then checked immediately after the loop to dispatch to the correct code path.
+- Always trace test input sequences end-to-end before choosing `continue` vs `break` for special-case handling in input loops — the number of inputs consumed determines whether `continue` or `break` is correct.
+
+**Test result:** 256/256 passed (241 pre-existing + 15 new history-menu tests).
+
+**Handoff notes for next agent:** No new external dependencies introduced. `_HISTORY_SENTINEL` is an internal string constant — it should never appear in history entries (it is only used as a flow-control flag and is never passed to `history.record()`). If a future task adds per-prompt history viewing (e.g., "h" during operand entry), new failing tests must be written first.

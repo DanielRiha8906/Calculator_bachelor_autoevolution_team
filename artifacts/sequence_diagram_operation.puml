@@ -1,0 +1,88 @@
+@startuml
+title Interactive Session — Single Operation Happy Path (with History)
+
+actor User
+participant "InteractiveSession\n(run_interactive_session)" as Session
+participant "OperationRegistry" as Registry
+participant "Calculator" as Calc
+participant "OperationHistory" as History
+
+== Session Startup ==
+
+Session ->> Registry : new OperationRegistry(calculator)
+activate Registry
+Registry ->> Calc : inspect.getmembers() / getfullargspec()
+activate Calc
+Calc -->> Registry : method list and signatures
+deactivate Calc
+deactivate Registry
+
+Session ->> History : new OperationHistory()
+activate History
+History -->> Session : history instance (_entries=[])
+deactivate History
+
+== Menu and Operation Selection ==
+
+Session ->> Registry : get_operations()
+activate Registry
+Registry -->> Session : ["add", "cbrt", "cube", ...]
+deactivate Registry
+
+Session ->> User : display menu\n(0: add [binary], ..., "h: View history")
+User ->> Session : "0"  (selects "add")
+
+Session ->> Registry : get_arity("add")
+activate Registry
+Registry -->> Session : 2
+deactivate Registry
+
+== Operand Input ==
+
+Session ->> User : "Enter operand 1:"
+User ->> Session : "5"
+Session -> Session : parse_operand("5") → 5
+
+Session ->> User : "Enter operand 2:"
+User ->> Session : "3"
+Session -> Session : parse_operand("3") → 3
+
+== Operation Execution ==
+
+Session ->> Registry : call("add", 5, 3)
+activate Registry
+Registry ->> Calc : add(5, 3)
+activate Calc
+Calc -->> Registry : 8
+deactivate Calc
+Registry -->> Session : 8
+deactivate Registry
+
+Session ->> User : "Result: 8"
+
+== History Recording ==
+
+Session ->> History : record("add", (5, 3), 8)
+activate History
+History -> History : format_history_entry("add", (5, 3), 8)\n→ "add(5, 3) = 8"
+History -> History : _entries.append("add(5, 3) = 8")
+History -->> Session : (recorded)
+deactivate History
+
+== Continue Prompt ==
+
+Session ->> User : "Continue? (yes/no):"
+User ->> Session : "no"
+
+== Session Exit ==
+
+Session ->> History : write_to_file("history.txt")
+activate History
+History -> History : open("history.txt", "w")
+History -> History : write all entries
+History -->> Session : (file written)
+deactivate History
+
+Session -> Session : exit loop
+
+@enduml
