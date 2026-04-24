@@ -328,4 +328,4 @@ Duration: 296.6s | Cost: $0.709031 USD | Turns: 4
   - `artifacts/sequence_diagram_cli_flow.puml` — sequence diagram for CLI add operation with error path alt fragment
   - `artifacts/activity_diagram_interactive_session.puml` — activity diagram for interactive session with retry logic and history branch
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 332.4s | Cost: $0.659363 USD | Turns: 6
