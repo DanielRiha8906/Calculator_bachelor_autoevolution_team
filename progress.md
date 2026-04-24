@@ -12,7 +12,7 @@
 - **Risks:** None — OperationHistory is a new isolated class; __main__.py changes are additive; CLI mode untouched; no new dependencies
 - **Tests passed:** 166 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 409.8s | Cost: $1.123842 USD | Turns: 20
 
 ## Run: Issue #393 — V3 Task 8 - Structured/team (2026-04-24)
 
