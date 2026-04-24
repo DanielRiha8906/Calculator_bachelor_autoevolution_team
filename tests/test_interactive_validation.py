@@ -218,22 +218,21 @@ class TestValidationCounter:
     def test_mixed_failures_count_toward_limit(self):
         """Test mixed operation and operand failures count toward 5-input limit.
 
-        Scenario: Mix of invalid operation (1) and invalid operands (4) for total of 5.
-                 Input sequence: invalid_op, valid_op, invalid_operand, invalid_operand,
-                 invalid_operand, invalid_operand
-        Expected: After 5th failure, session terminates with message.
+        Scenario: Mix of invalid operation and invalid operands reaching 5 consecutive failures.
+                 Input sequence: invalid_op, valid_op, then 5 invalid operands
+        Expected: After 5th consecutive invalid operand entry, session terminates with message.
         """
-        with patch('builtins.input', side_effect=["999", "0", "a", "b", "c", "d"]):
+        with patch('builtins.input', side_effect=["999", "0", "a", "b", "c", "d", "e"]):
             with patch('builtins.print') as mock_print:
                 run_interactive_session()
                 output = " ".join(
                     str(call_args[0][0]) for call_args in mock_print.call_args_list
                     if call_args[0]
                 )
-                # After 5th failure (1 operation + 4 operands), session terminates
+                # After 5th consecutive invalid operand, session terminates
                 assert "Too many consecutive invalid inputs" in output or \
                        "Session terminated" in output, \
-                       f"Expected termination after 5 mixed failures, output was: {output}"
+                       f"Expected termination after 5 consecutive invalid operands, output was: {output}"
 
     def test_computation_error_does_not_increment_counter_zero_division(self):
         """Test division by zero error does NOT increment counter.

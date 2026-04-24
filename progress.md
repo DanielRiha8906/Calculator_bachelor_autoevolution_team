@@ -1,3 +1,17 @@
+## Run: Issue #394 — V3 Task 8 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-394-input-validation-retry
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/interactive.py` — add MAX_ATTEMPTS=5 constant, retry_count variable, validation retry loops for operation selection and operand input, session termination after 5 consecutive invalid inputs, available operations display on invalid operation
+  - `tests/test_interactive_validation.py` — 14 new tests covering retry counter, session termination, computation error exclusion, mixed failures, CLI fail-fast preservation
+  - `rag/agents/*.md` — updated per-agent RAG files
+- **Purpose:** Add input validation with retry logic to interactive mode; session terminates gracefully after 5 consecutive invalid inputs; CLI mode remains fail-fast and unaffected.
+- **Risks:** None
+- **Tests passed:** 213 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #436 — Add CLI entry point for bash-based calculator invocation (#391) (2026-04-24)
 
 - **Branch:** task/issue-391-cli-interface

@@ -496,3 +496,118 @@ No other files need modification. `src/cli.py` is already complete and functiona
 **Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
 ---
+
+### 2026-04-24 — Issue #394 — V3 Task 8 - Expert/team — Input Validation with Retry Mechanism
+
+**Task:** Add retry counter mechanism to interactive mode for consecutive invalid inputs (operation selection or operand entry), with automatic session termination after 5 consecutive failures. Computation errors (domain validation, zero division) do NOT count toward the limit. CLI mode remains unchanged (fail-fast behavior).
+
+**Current State (verified via source exploration):**
+- `src/interactive.py`: fully implemented interactive session with operation menu, operand gathering loops, error handling (lines 45-113)
+- `src/operation_registry.py`: complete operation discovery and execution
+- `src/calculator.py`: 12 operations (5 binary, 7 unary) with domain validation on sqrt, ln, log10, factorial
+- `src/cli.py`: complete CLI implementation with fail-fast behavior
+- `src/__main__.py`: correctly dispatches to CLI or interactive based on argv length
+
+**Requirements Analysis:**
+1. Invalid operation index → error + re-prompt, counter increments
+2. Invalid operand (non-numeric) → error + re-prompt, counter increments
+3. Valid input (operation or operand) → counter resets to 0
+4. Computation error (ZeroDivisionError, ValueError from domain check) → error displayed, counter NOT incremented, session continues
+5. After 5 consecutive invalid inputs → session terminates with clear message
+6. Counter shared across operation selection and all operand prompts
+7. CLI mode unaffected (no retry loop, fail-fast exit with code 1)
+8. MAX_ATTEMPTS constant = 5
+
+**Key Decisions:**
+- Add `MAX_ATTEMPTS = 5` constant at module level in `src/interactive.py`
+- Initialize `retry_count = 0` before main session loop
+- Increment counter on ValueError/IndexError during operation selection
+- Increment counter on ValueError during operand parsing (unary and both binary operands)
+- Distinguish between input validation errors (increment counter) and domain computation errors (do NOT increment)
+- Display list of available operations when invalid operation is entered
+- Display termination message "Too many consecutive invalid inputs. Session terminated." when limit exceeded
+- Reset counter to 0 on successful operation selection or operand entry
+- Reset counter to 0 on continuing session after computation error (user says "yes")
+
+**Architecture Observations (from source code review):**
+- Current `run_interactive_session()` has simple re-prompting logic (lines 56-64 for operation, lines 71-94 for operands)
+- Operation selection uses try/except to catch ValueError (invalid int()) and IndexError (out of range)
+- Operand gathering uses try/except to catch ValueError from `parse_operand()`
+- Computation errors caught separately (lines 98-104): ZeroDivisionError, generic Exception
+- No counter tracking exists; logic must be threaded through all validation points
+- Continue/exit prompt (lines 107-112) re-prompts on unexpected input; should reset counter when session continues
+
+**Test Specifications (18 scenarios for pytest-edge-tester):**
+1. Valid operation → counter resets
+2. Invalid operation (shows error + list) → counter increments
+3. Invalid unary operand → counter increments
+4. Invalid binary operand 1 → counter increments
+5. Invalid binary operand 2 → counter increments
+6. Counter resets after prior failures → valid operation succeeds
+7. Session terminates after 5 consecutive invalid operations
+8. Session terminates after 5 consecutive invalid operands
+9. Mixed operation and operand failures count together → terminates at 5th attempt
+10. Zero division error → counter NOT incremented, session continues
+11. Sqrt negative error → counter NOT incremented, session continues
+12. Factorial negative error → counter NOT incremented, session continues
+13. Counter resets after computation error then valid input
+14. Counter persists across multiple operations in session
+15. MAX_ATTEMPTS constant = 5 (constant validation)
+16. CLI mode unaffected (fail-fast with no retry)
+17. Session continues after reset, doesn't exit
+18. Available operations listed on invalid operation entry
+
+**Source Changes Plan for python-code-implementer:**
+
+**File: `src/interactive.py`**
+- Action: MODIFY existing file
+- Changes required:
+  1. Add `MAX_ATTEMPTS = 5` constant after imports
+  2. In `run_interactive_session()`, initialize `retry_count = 0` before the main `while True:` loop
+  3. Modify operation selection loop (lines 55-64):
+     - Wrap in try/except for ValueError and IndexError
+     - On error: increment `retry_count`, print error, print available operations list, check if `retry_count >= MAX_ATTEMPTS`, if yes print termination message and `return`, else continue re-prompting
+     - On success: set `op_name = operations[index]`, reset `retry_count = 0`, break loop
+  4. Modify unary operand gathering loop (lines 69-77):
+     - On ValueError: increment `retry_count`, print error, check limit, if exceeded print termination message and `return`, else continue re-prompting
+     - On success: set `operand = parse_operand(raw)`, reset `retry_count = 0`, break loop
+  5. Modify binary operand gathering loops (lines 78-95):
+     - Same logic for both `operand1` and `operand2` gathering
+     - Both share same `retry_count` variable (not reset between operand1 and operand2)
+  6. Computation error handling (lines 98-104):
+     - KEEP AS-IS: do NOT modify counter when ZeroDivisionError or domain ValueError occurs
+     - Just display error and continue to continue/exit prompt
+  7. Continue/exit prompt (lines 107-112):
+     - On user says "yes": reset `retry_count = 0` before breaking to loop again
+     - Simplest: no change needed (counter will be reset at start of next operation selection)
+     - Alternative: explicitly reset to 0 before break for clarity
+
+**No Changes to Other Files:**
+- `src/calculator.py`: unchanged (all operations with domain validation as-is)
+- `src/cli.py`: unchanged (fail-fast behavior preserved)
+- `src/operation_registry.py`: unchanged (operation discovery unaffected)
+- `src/__main__.py`: unchanged (entry point routing unaffected)
+
+**Architectural Impact:**
+- Interactive mode behavior changes: now includes retry limit and counter tracking
+- Session UX improved: clear error messages and operation list on invalid operation
+- Session safety: automatic termination after repeated input failures prevents infinite loops
+- API unchanged: `run_interactive_session()` still takes optional calculator argument
+- Backward compatibility: existing tests may need review for new counter behavior
+- CLI mode unaffected: all changes scoped to interactive.py only
+- Error distinction preserved: input validation errors ≠ computation domain errors
+
+**Implementation Order:**
+1. Add MAX_ATTEMPTS constant
+2. Initialize retry_count in main session loop
+3. Implement operation selection retry logic with counter and limit check
+4. Implement unary operand retry logic with counter and limit check
+5. Implement binary operand retry logic (both operands) with shared counter
+6. Ensure computation errors do NOT increment counter
+7. Ensure counter resets on valid input
+8. Ensure session can continue after reset (or terminates when limit exceeded)
+9. Test all 18 scenarios
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+---
