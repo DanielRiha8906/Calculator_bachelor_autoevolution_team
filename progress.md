@@ -1,3 +1,14 @@
+## Run: update-diagrams — Error Logging UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-399-error-logging
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_error_logging.puml` — class diagram showing ErrorLog, Calculator, OperationHistory integration
+  - `artifacts/activity_diagram_interactive_mode.puml` — activity diagram for interactive mode error logging flow
+  - `artifacts/sequence_diagram_error_logging.puml` — sequence diagram for invalid input error logging scenario
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #399 — V3 Task 10 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-399-error-logging
