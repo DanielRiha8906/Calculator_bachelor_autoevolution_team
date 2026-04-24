@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       branch:
-        description: 'Experiment branch to check out and target (e.g. exp2/naive-generic)'
+        description: 'Experiment branch to check out and target (e.g. exp3/naive-generic)'
         type: string
         required: true
       experiment_name:

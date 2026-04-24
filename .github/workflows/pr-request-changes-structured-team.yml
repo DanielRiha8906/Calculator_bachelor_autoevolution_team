@@ -10,7 +10,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'request-changes:structured-team' &&
-       github.event.pull_request.base.ref == 'exp2/structured-team')
+       github.event.pull_request.base.ref == 'exp3/structured-team')
     permissions:                                                                                                                                                                          
         contents: write                                                                                                                                                                                            
         issues: write                                                                                                                                                                                              
@@ -19,7 +19,7 @@ jobs:
         actions: read   
     uses: ./.github/workflows/pr-request-changes-shared.yml
     with:
-      branch: exp2/structured-team
+      branch: exp3/structured-team
       experiment_name: structured-team
       pr_number: ${{ github.event.pull_request.number }}
       pr_title: ${{ github.event.pull_request.title }}
