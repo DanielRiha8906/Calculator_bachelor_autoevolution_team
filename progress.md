@@ -1,3 +1,18 @@
+## Run: Issue #397 — V3 Task 9 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-397-session-history
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/history.py` — new module with OperationHistory class; record(), get_entries(), display(), write_to_file() methods; graceful IOError handling
+  - `src/interactive.py` — import OperationHistory, initialize history per session, record successful operations, write history to file at all exit points
+  - `tests/test_history.py` — 21 new tests covering recording, ordering, error cases, display, file persistence, IOError handling, session isolation
+  - `rag/agents/*.md` — updated per-agent RAG files
+- **Purpose:** Add session operation history to interactive mode; entries recorded in function-style format (e.g. add(2, 3) = 5); persisted to history.txt on session exit; fresh history per session.
+- **Risks:** history.txt is a runtime artifact not tracked in .gitignore; file write failures are silently logged to stderr.
+- **Tests passed:** 241 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #394 — V3 Task 8 - Expert/team (2026-04-24)
 
 - **Branch:** task/issue-394-input-validation-retry
