@@ -1,0 +1,51 @@
+@startuml activity_interactive_flow
+
+start
+
+:Create Calculator instance;
+
+repeat
+  :run_calculator(calc, max_retries);
+
+  :prompt_for_operator();
+  note right: Retries up to max_retries\non invalid input
+
+  if (MaxRetriesExceeded?) then (yes)
+    :display_error("Max retries exceeded");
+    stop
+  endif
+
+  if (operator == "QUIT"?) then (yes)
+    break
+  endif
+
+  :Look up OPERATIONS[op].arity;
+
+  if (arity == 1?) then (yes)
+    :prompt_for_first_number();
+    note right: Retries up to max_retries\non non-numeric input
+    :calc.{method}(operand);
+    :display_result_unary(op, operand, result);
+  else (no)
+    :prompt_for_first_number();
+    :prompt_for_second_number();
+    :calc.{method}(a, b);
+    :display_result_binary(op, a, b, result);
+  endif
+
+  if (Domain error? (ValueError / ZeroDivisionError)) then (yes)
+    :display_error(error message);
+    note right: Continue loop —\nno exit on domain error
+  else (no)
+    :display_history_notification();
+    :return numeric result to Main;
+  endif
+
+repeat while (more operations?) is (yes)
+->no (QUIT);
+
+:persist_history_to_file(calc, "history.txt");
+
+stop
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml sequence_calculation_request
+
+participant User
+participant "Main\n(__main__)" as Main
+participant "run_calculator\n(interface.py)" as RunCalc
+participant "Prompts\n(interface.py)" as Prompts
+participant "Calculator\n(calculator.py)" as Calc
+participant "Display\n(interface.py)" as Display
+participant "File\n(history.txt)" as File
+
+User -> Main : python -m calculator\n(interactive mode)
+activate Main
+
+Main -> Calc : Calculator()
+activate Calc
+
+Main -> RunCalc : run_calculator(calc, max_retries)
+activate RunCalc
+
+RunCalc -> Prompts : prompt_for_operator()
+activate Prompts
+Prompts -> User : "Enter operator:"
+User --> Prompts : "sqrt"
+Prompts --> RunCalc : "sqrt"
+deactivate Prompts
+
+RunCalc -> RunCalc : OPERATIONS["sqrt"].arity == 1
+
+RunCalc -> Prompts : prompt_for_first_number()
+activate Prompts
+Prompts -> User : "Enter number:"
+User --> Prompts : "9"
+Prompts --> RunCalc : 9.0
+deactivate Prompts
+
+RunCalc -> Calc : square_root(9.0)
+Calc -> Calc : _record_operation("square_root", [9.0], 3.0)
+Calc --> RunCalc : 3.0
+
+RunCalc -> Display : display_result_unary("sqrt", 9.0, 3.0)
+activate Display
+Display -> User : "sqrt(9.0) = 3.0"
+deactivate Display
+
+RunCalc -> Display : display_history_notification()
+activate Display
+Display -> User : "History updated."
+deactivate Display
+
+RunCalc --> Main : 3.0
+deactivate RunCalc
+
+note over Main : loop continues for next operation\n...
+
+Main -> File : persist_history_to_file(calc, "history.txt")
+activate File
+File --> Main : history written
+deactivate File
+
+deactivate Calc
+deactivate Main
+
+@enduml

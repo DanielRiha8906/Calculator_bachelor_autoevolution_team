@@ -1,0 +1,102 @@
+@startuml class_diagram_separation
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+together {
+  package "Pure Logic" #E8F5E9 {
+    class Calculator {
+      - _history : list[dict]
+      --
+      + __init__()
+      + add(a, b) : float
+      + subtract(a, b) : float
+      + multiply(a, b) : float
+      + divide(a, b) : float
+      + power(base, exp) : float
+      + square(a) : float
+      + cube(a) : float
+      + square_root(a) : float
+      + cube_root(a) : float
+      + factorial(n) : int
+      + log(a) : float
+      + ln(a) : float
+      + get_history() : list[dict]
+      + clear_history()
+      - _record_operation(operation_name, operands, result)
+    }
+
+    note right of Calculator
+      Imports: math (stdlib only)
+      No I/O, no prompts, no persistence
+    end note
+  }
+}
+
+together {
+  package "UI Layer" #E3F2FD {
+    class "interface.py" as Interface <<module>> {
+      + OPERATIONS : dict[str, tuple]
+      --
+      + prompt_for_operator() : str
+      + prompt_for_first_number() : float
+      + prompt_for_second_number() : float
+      + display_result(op, operands, result)
+      + display_result_unary(op, operand, result)
+      + display_result_binary(op, a, b, result)
+      + display_error(message)
+      + display_history(calc)
+      + display_history_notification()
+      + persist_history_to_file(calc, filepath)
+      + run_calculator(calc, max_retries) : float | str
+      - _get_operation_arity(op) : int
+      - _get_calculator_method(op) : str
+      - _get_display_symbol(op) : str
+      - _format_history_entry(entry) : str
+    }
+
+    class MaxRetriesExceeded {
+    }
+
+    class "cli.py" as CLI <<facade>> {
+      ' re-exports all symbols from interface.py
+    }
+
+    note bottom of CLI
+      Backward-compatibility facade.
+      No logic — only re-exports from interface.py.
+    end note
+  }
+}
+
+package "Entry Points" #FFF8E1 {
+  class "batch_cli.py" as BatchCLI <<module>> {
+    - _BATCH_OPERATIONS : dict
+    --
+    + parse_batch_args() : dict
+    + print_help()
+    + execute_batch(args) : float
+    + batch_main()
+  }
+
+  class "__main__.py" as Main <<module>> {
+    + main()
+  }
+}
+
+' Inheritance
+MaxRetriesExceeded --|> Exception
+
+' Dependencies — UI Layer
+Interface --> Calculator : uses
+CLI --> Interface : re-exports
+
+' Dependencies — Entry Points
+Main --> CLI : imports via facade
+Main --> Calculator : creates instance
+Main --> BatchCLI : lazy import
+
+BatchCLI --> Calculator : uses
+BatchCLI --> Interface : imports OPERATIONS,\ndisplay_result_unary,\ndisplay_result_binary
+
+@enduml

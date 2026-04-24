@@ -1,4 +1,15 @@
 
+## Run: update-diagrams — Separate calculator logic from interface (#401) (2026-04-24)
+
+- **Branch:** task/issue-401-separate-calculator-logic
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_diagram_separation.puml` — class diagram showing Calculator vs interface separation with facade pattern
+  - `artifacts/activity_interactive_flow.puml` — activity diagram for interactive calculator session flow
+  - `artifacts/sequence_calculation_request.puml` — sequence diagram for a single unary calculation request
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #401 — V3 Task 11 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-401-separate-calculator-logic
