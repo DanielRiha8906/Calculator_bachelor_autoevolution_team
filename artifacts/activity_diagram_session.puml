@@ -1,107 +1,127 @@
 @startuml
-title run_interactive_session() — Interactive Session Flow with History
+title Session Execution Flows — Interactive and CLI (Issue #406)
 
-|User|
 |Interactive Session|
-|History|
+|CLI Session|
 
 start
 
-|Interactive Session|
-:Create Calculator();
-:Create OperationRegistry(calculator);
-:Create OperationHistory();
-:retry_count = 0;
-
-repeat
-
-  :Get operations list from registry;
-  :Display numbered menu\n+ "h: View operation history";
+fork
+  |Interactive Session|
+  :Initialize Calculator,\nOperationRegistry,\nOperationHistory, ErrorLogger;
+  :retry_count = 0;
 
   repeat
-    |User|
-    :Enter selection;
-    |Interactive Session|
-    if (input == "h" or "history"?) then (yes)
-      |History|
-      :history.get_entries();
-      :display_history_indexed(history);
-      |Interactive Session|
-    else (no)
-      if (input is valid integer in range?) then (yes)
-        :Reset retry_count = 0;
-        :Resolve operation name from index;
-      else (no — invalid index)
-        :Increment retry_count;
+
+    :Display numbered operation menu\n+ "h: View operation history";
+
+    repeat
+      :User enters selection;
+      if (input == "h" or "history"?) then (yes)
+        :display_history_indexed(history);
+      else (no)
+        if (input is valid index?) then (yes)
+          :Resolve op_name from index;
+          :Reset retry_count = 0;
+        else (no — invalid)
+          :log_invalid_operation();
+          :retry_count++;
+          if (retry_count >= MAX_ATTEMPTS (5)?) then (yes)
+            :history.write_to_file();
+            stop
+          endif
+        endif
+      endif
+    repeat while (valid operation selected?) is (no)
+    -> yes;
+
+    :get_arity(op_name);
+
+    repeat
+      :User enters operand;
+      if (parse_operand() succeeds?) then (yes)
+      else (no — ValueError)
+        :log_invalid_operand();
+        :retry_count++;
         if (retry_count >= MAX_ATTEMPTS (5)?) then (yes)
-          |History|
-          :history.write_to_file("history.txt");
-          |Interactive Session|
+          :history.write_to_file();
           stop
         endif
       endif
-    endif
-  repeat while (valid operation selected?) is (no — loop back to menu)
-  -> yes — valid index;
+    repeat while (all operands collected?) is (no)
+    -> yes;
 
-  :get_arity(op_name) → arity;
+    :registry.call(op_name, *operands);
 
-  repeat
-    |User|
-    :Enter operand (prompt repeats for arity=2);
-    |Interactive Session|
-    if (parse_operand() succeeds?) then (yes)
-    else (no — ValueError)
-      :Increment retry_count;
-      if (retry_count >= MAX_ATTEMPTS (5)?) then (yes)
-        |History|
-        :history.write_to_file("history.txt");
-        |Interactive Session|
-        stop
-      endif
+    if (call succeeds?) then (yes)
+      :history.record(op_name, operands, result);
+      :retry_count = 0;
+      :Print result;
+    elseif (ZeroDivisionError?) then (yes)
+      :log_runtime_calculation_error();
+      :Print "Error: Division by zero";
+    else (other error)
+      :log_runtime_calculation_error();
+      :Print "Error: {exc}";
     endif
-  repeat while (all operands parsed?) is (no)
-  -> yes — operands ready;
+
+    :User enters "Continue? (yes/no)";
+
+  repeat while (user chose yes?) is (yes)
+  -> no;
+
+  :history.write_to_file("history.txt");
+
+fork again
+
+  |CLI Session|
+  :Parse argv (op_name, operand strings);
+  :Initialize Calculator,\nOperationRegistry,\nErrorLogger, OperationHistory;
+
+  if (op_name valid in registry?) then (yes)
+  else (no)
+    :log_invalid_operation();
+    :Print error to stderr;
+    :return 1;
+    stop
+  endif
+
+  :get_arity(op_name) → required_count;
+
+  if (operand count == required_count?) then (yes)
+  else (no)
+    :log_incorrect_argument_count();
+    :Print error to stderr;
+    :return 1;
+    stop
+  endif
+
+  :parse_cli_operand() for each operand string;
+
+  if (all parse_cli_operand() succeed?) then (yes)
+  else (no — ValueError)
+    :log_invalid_operand();
+    :Print error to stderr;
+    :return 1;
+    stop
+  endif
 
   :registry.call(op_name, *operands);
 
   if (call succeeds?) then (yes)
-    :Print "Result: {result}";
-    |History|
     :history.record(op_name, operands, result);
-    |Interactive Session|
-    :retry_count = 0;
-  elseif (ZeroDivisionError?) then (yes)
-    :Print "Error: Division by zero";
-    note right: retry_count NOT incremented\nfor computation errors
-  else (other exception)
-    :Print "Error: {exc}";
-    note right: retry_count NOT incremented\nfor computation errors
+    :history.write_to_file();
+    :Print result to stdout;
+    :return 0;
+  else (exception)
+    :log_runtime_calculation_error();
+    :Print error to stderr;
+    :return 1;
+    stop
   endif
 
-  repeat
-    |User|
-    :Enter "Continue? (yes/no):";
-    |Interactive Session|
-    if (input == "h" or "history"?) then (yes)
-      |History|
-      :history.get_entries();
-      :display_history_indexed(history);
-      |Interactive Session|
-    elseif (input == "yes" or "y"?) then (yes)
-    elseif (input == "no" or "n"?) then (yes)
-    else (unrecognised)
-    endif
-  repeat while (yes or no recognised?) is (no — re-prompt)
-  -> recognised;
+end fork
 
-repeat while (user chose "yes" or "y"?) is (yes — continue)
--> no/n — exit;
-
-|History|
-:history.write_to_file("history.txt");
-
-|Interactive Session|
 stop
 
 @enduml

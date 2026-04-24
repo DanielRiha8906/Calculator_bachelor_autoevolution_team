@@ -352,3 +352,14 @@ Duration: 296.6s | Cost: $0.709031 USD | Turns: 4
   - `artifacts/activity_diagram_interactive_session.puml` — activity diagram for interactive session with retry logic and history branch
 
 Duration: 332.4s | Cost: $0.659363 USD | Turns: 6
+
+## Run: update-diagrams — Modular Refactor UML Diagrams (2026-04-24)
+
+- **Branch:** task/issue-406-modular-refactor
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_modular.puml` — class diagram of modular architecture (Calculator, OperationRegistry, OperationHistory, ErrorLogger, SessionManager, OperationType, OperationMetadata)
+  - `artifacts/activity_diagram_session.puml` — activity diagram for interactive and CLI session flows
+  - `artifacts/component_diagram_layers.puml` — component diagram showing Core, Discovery, UI, Infrastructure, and Session layers
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

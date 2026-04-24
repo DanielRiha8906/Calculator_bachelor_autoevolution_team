@@ -1,0 +1,64 @@
+@startuml
+title Modular Calculator — Component Layer Architecture (Issue #406)
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+
+package "Entry Point" {
+  component [__main__.py] as Main
+}
+
+package "UI Layer" {
+  component [interactive.py\nrun_interactive_session()\nparse_operand()\ndisplay_history_indexed()] as Interactive
+  component [cli.py\nrun_cli()\nparse_cli_operand()] as CLI
+}
+
+package "Discovery Layer" {
+  component [operation_registry.py\nOperationRegistry] as Registry
+}
+
+package "Core Layer" {
+  component [calculator.py\nCalculator] as Calc
+}
+
+package "Infrastructure Layer" {
+  component [history.py\nOperationHistory\nformat_history_entry()] as History
+  component [error_logger.py\nErrorLogger] as Logger
+}
+
+package "Session Layer" {
+  component [session/manager.py\nSessionManager] as Session
+  note right of Session
+    Prepared for future integration.
+    Currently isolated — not
+    imported by UI layer.
+  end note
+}
+
+package "Core Abstractions" {
+  component [core/operations.py\nOperationType\nOperationMetadata] as CoreAbstractions
+  note right of CoreAbstractions
+    Future extension point.
+    Currently standalone —
+    no consumers yet.
+  end note
+}
+
+Main --> Interactive : routes to (no CLI args)
+Main --> CLI : routes to (CLI args present)
+
+Interactive --> Registry : uses
+Interactive --> History : uses
+Interactive --> Logger : uses
+
+CLI --> Registry : uses
+CLI --> History : uses
+CLI --> Logger : uses
+
+Registry --> Calc : introspects
+
+Session ..> Calc : references (constructor)
+Session ..> Logger : references (constructor)
+Session ..> History : references (constructor)
+
+@enduml
