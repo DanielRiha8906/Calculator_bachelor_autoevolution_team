@@ -177,3 +177,25 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
 **Test result:** Not run by this agent (implementer does not run tests).
 
 **Handoff notes for next agent:** No new external dependencies introduced (`sys` and `typing.Any` are stdlib). The default `filepath="history.txt"` in `write_to_file()` will write to the CWD when the session exits normally or via timeout. If a future task requires configurable history paths or append-mode (cross-session persistence), new failing tests must be written first.
+
+### 2026-04-24 — Add history-viewing menu command to interactive session (issue-397)
+
+**Task:** Add `display_history_indexed()` helper and `"h"/"H"/"history"` command recognition to `src/interactive.py` to make 15 failing tests in `tests/test_interactive_history_menu.py` pass.
+
+**Files changed:**
+- `src/interactive.py` — added `_HISTORY_SENTINEL = "__history__"` module-level constant; added `display_history_indexed(history)` public function (prints numbered entries or "No operations recorded yet."); added `"  h: View operation history"` line to menu display; added `"h"/"history"` recognition in op-selection inner loop (sets `op_name = _HISTORY_SENTINEL` + `break` rather than `continue`, to route to a continue-prompt); added sentinel guard block that displays history then enters its own continue-prompt loop; added `"h"/"history"` recognition in the regular post-computation continue-prompt loop.
+
+**Key decisions:**
+- The directive specified `continue` in the op-selection loop, but tracing the tests revealed that `"h"` in op selection must flow to the continue prompt (not re-prompt for an operation). Tests like `["h", "n"]` supply only 2 inputs; a `continue` would re-call `input("Select an operation")` consuming `"n"`, which would fail and then exhaust inputs via `StopIteration`. The correct behaviour is: display history → enter continue-prompt → `"n"` exits cleanly.
+- Solution: use `op_name = _HISTORY_SENTINEL` + `break` to exit the inner op-selection loop, then a dedicated `if op_name == _HISTORY_SENTINEL:` block that contains its own continue-prompt loop (with `"h"` support) before `continue`-ing the outer `while True`.
+- The `"h"` command is also recognized in the regular post-computation continue-prompt loop (after a successful operation) to allow mid-session history review.
+- `_HISTORY_SENTINEL` is module-level but prefixed with `_` to mark it as internal. It is not a public interface.
+- The forward reference `"OperationHistory"` in the type hint of `display_history_indexed` is a string annotation because `OperationHistory` is already imported at module level — the string form avoids any potential circular-import confusion but is actually unnecessary here; kept as a string per the directive's sample signature.
+
+**Patterns found:**
+- When a special command in an input loop must route to a DIFFERENT subsequent prompt (not just re-iterate the same loop), use a sentinel value + `break` pattern rather than `continue`. The sentinel is then checked immediately after the loop to dispatch to the correct code path.
+- Always trace test input sequences end-to-end before choosing `continue` vs `break` for special-case handling in input loops — the number of inputs consumed determines whether `continue` or `break` is correct.
+
+**Test result:** 256/256 passed (241 pre-existing + 15 new history-menu tests).
+
+**Handoff notes for next agent:** No new external dependencies introduced. `_HISTORY_SENTINEL` is an internal string constant — it should never appear in history entries (it is only used as a flow-control flag and is never passed to `history.record()`). If a future task adds per-prompt history viewing (e.g., "h" during operand entry), new failing tests must be written first.

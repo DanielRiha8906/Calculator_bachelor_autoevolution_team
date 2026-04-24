@@ -716,3 +716,193 @@ No other files need modification. `src/cli.py` is already complete and functiona
 - Risk: IOError during file write breaks session: Mitigation: Wrap in try/except; log to stderr; allow session to exit cleanly
 - Risk: History instance persists across multiple `run_interactive_session()` calls: Mitigation: Create new instance per session (line in function start, not module global)
 
+---
+
+### 2026-04-24 — PR #444 — User-Facing History Viewing Mechanism
+
+**Task:** Add user-facing history viewing capability to interactive mode allowing users to view recorded operation history during the session via a menu command.
+
+**Requirements:**
+- Interactive mode must include a menu option or command that allows users to view recorded operation history
+- History entries must be displayed with an index (numbered list: 1, 2, 3, etc.)
+- Entry format matches existing implementation: `add(2, 3) = 5`, `sqrt(9) = 3.0`, `factorial(5) = 120`
+- Option must be accessible when launching or during the interactive session
+- System must handle empty history gracefully without crashing
+- User can invoke history viewing via "h" or "history" command (case-insensitive)
+- After viewing history, session returns to operation menu (non-blocking)
+
+**Current State (verified via source inspection):**
+- `src/history.py`: COMPLETE with `OperationHistory` class containing:
+  - `display()` returning formatted multi-line string
+  - `get_entries()` returning list of entries
+  - Both methods support indexed display requirement
+- `src/interactive.py`: FULLY IMPLEMENTED with history tracking and persistence
+  - Initializes `OperationHistory()` at session start
+  - Records successful operations via `history.record()`
+  - Writes to file on session exit via `history.write_to_file()`
+  - NO history viewing command exists in UI
+
+**Root Cause / Gap:**
+- History tracking infrastructure is complete; only the user-facing menu command is missing
+- Current operation menu (lines 54-59) displays only operations, not history viewing option
+- Operation selection loop (lines 63-82) accepts numeric indices but not "h"/"history" command
+
+**Required Changes:**
+1. Add `display_history_indexed()` helper function to format history with 1-based numbering
+2. Check for "h"/"history" command in operation selection input (case-insensitive)
+3. Add optional help text to operation menu showing available commands
+
+**Key Decisions:**
+- History viewing is accessible via "h" or "history" command typed at "Select an operation (index):" prompt
+- Command is case-insensitive ("h", "H", "history", "HISTORY" all work)
+- After displaying history, menu is shown again (non-blocking, session continues)
+- Empty history displays user-friendly message "No operations recorded yet."
+- Numbered indexing: 1-based (user sees `1. operation`, `2. operation`, etc.)
+- Format leverages existing `OperationHistory.get_entries()` (no enhancement to history.py needed)
+
+**Architecture Impact:**
+- MINIMAL: ~15 lines added/modified to `src/interactive.py` only
+- No changes to Calculator, OperationRegistry, cli, history modules
+- Interactive mode behavior extended; no impact on CLI mode
+- Session flow unchanged (non-blocking history view)
+- Backward compatible: all existing tests continue to pass
+
+**Test Specifications (15 scenarios for pytest-edge-tester):**
+
+1. **test_history_view_command_after_one_operation**: User performs one operation (add), then selects history view
+   - Input: "0", "5", "3", "h"
+   - Expected: Displays `1. add(5, 3) = 8`
+
+2. **test_history_view_command_after_multiple_operations**: User performs three operations, then views history
+   - Input: Sequence performs `add(2, 3)`, `square(4)`, `factorial(3)`, then selects history
+   - Expected: Numbered list with all three operations
+
+3. **test_history_view_empty_history**: User selects view history at session start (no operations yet)
+   - Input: "h" immediately
+   - Expected: Displays `No operations recorded yet.`
+
+4. **test_history_view_handles_float_operands**: Operations with float operands (divide, sqrt, ln)
+   - Input: Performs `divide(5, 2)`, views history
+   - Expected: `1. divide(5, 2) = 2.5`
+
+5. **test_history_view_handles_negative_operands**: Operations with negative operands
+   - Input: Performs `add(-5, 3)`, views history
+   - Expected: `1. add(-5, 3) = -2`
+
+6. **test_history_view_after_error**: User attempts invalid operation, then views history (should be empty)
+   - Input: Selects sqrt(-4) [error], views history
+   - Expected: `No operations recorded yet.`
+
+7. **test_history_view_continues_session**: User views history, then continues to perform another operation
+   - Input: Perform op → view history → continue → perform new op → view history again
+   - Expected: First history shows 1 op, second history shows 2 ops; session does not exit
+
+8. **test_history_view_command_case_insensitive**: User types history command in various cases
+   - Input: "H" or "HISTORY" or "h"
+   - Expected: All variants recognized and display history
+
+9. **test_history_view_returns_to_menu**: View history, then session displays operation menu again
+   - Input: Perform op → view history → check output for menu redisplay
+   - Expected: After history display, menu is shown again
+
+10. **test_history_display_formatting_numbered_list**: Verify exact formatting with index numbers (1, 2, 3...)
+    - Input: Three operations, view history
+    - Expected: Each entry formatted as `<number>. <operation(args) = result>`
+
+11. **test_history_view_from_continue_prompt**: After successful operation, user views history instead of answering continue prompt
+    - Input: Perform op → when asked "Continue?" user enters "h" for history
+    - Expected: History displayed, then "Continue?" prompt is repeated (or session continues)
+
+12. **test_history_view_unary_operations**: History displays unary operations correctly
+    - Input: Perform `factorial(5)`, `square(3)`, view history
+    - Expected: Entries show single operand: `1. factorial(5) = 120`, `2. square(3) = 9`
+
+13. **test_history_view_binary_operations**: History displays binary operations correctly
+    - Input: Perform `add(2, 3)`, `divide(10, 4)`, view history
+    - Expected: Entries show both operands
+
+14. **test_history_menu_invalid_command_does_not_crash**: User enters invalid command
+    - Input: "xyz" (invalid)
+    - Expected: Error message, no crash, menu re-displayed
+
+15. **test_history_view_exact_output_format**: Verify exact output format
+    - Input: `add(1, 2)`, then view history
+    - Expected: Output contains exactly `1. add(1, 2) = 3`
+
+**Source Changes Plan for python-code-implementer:**
+
+**File 1: Modify `src/interactive.py`**
+- Path: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/interactive.py`
+- Action: MODIFY existing file
+- Changes:
+  1. Add new helper function `display_history_indexed(history: OperationHistory) -> None` (8-10 lines):
+     ```python
+     def display_history_indexed(history: OperationHistory) -> None:
+         """Display the operation history with numbered indexing (1-based).
+         
+         Args:
+             history: The OperationHistory instance to display.
+         """
+         entries = history.get_entries()
+         if not entries:
+             print("No operations recorded yet.")
+             return
+         for idx, entry in enumerate(entries, start=1):
+             print(f"{idx}. {entry}")
+     ```
+  
+  2. Modify operation menu display (after line 54, add one line):
+     ```python
+     operations = registry.get_operations()
+     print("Available operations:")
+     for idx, name in enumerate(operations):
+         arity = registry.get_arity(name)
+         label = "unary" if arity == 1 else "binary"
+         print(f"  {idx}: {name} ({label})")
+     print("  h: View operation history")  # NEW LINE
+     ```
+  
+  3. Modify operation selection loop (lines 63-82):
+     - After prompting for input, before try/except block, add check:
+     ```python
+     raw_index = input("Select an operation (index): ")
+     
+     # Check for special commands (history view)
+     if raw_index.lower() in ("h", "history"):
+         display_history_indexed(history)
+         continue  # Re-display menu and re-prompt
+     
+     try:
+         index = int(raw_index)
+         ...
+     ```
+
+**No Changes to Other Files:**
+- `src/history.py`: Already complete; no enhancements needed
+- `src/calculator.py`: Unchanged
+- `src/operation_registry.py`: Unchanged
+- `src/cli.py`: Unchanged
+- `src/__main__.py`: Unchanged
+
+**Architectural Impact:**
+- Minimal: ~15 lines of code additions/modifications to one file
+- No impact on core functionality or other modules
+- History viewing is non-blocking (user returns to menu)
+- Case-insensitive command for UX clarity
+- Graceful handling of empty history
+- Backward compatible with all existing tests
+
+**Integration:**
+- Works seamlessly with existing history tracking (already implemented in #397)
+- Numbered indexing requirement met via `enumerate(..., start=1)`
+- Format consistency: uses `OperationHistory.get_entries()` (no duplication)
+
+**Risks & Mitigations:**
+- Risk: User confused by "h" command: Mitigation: Documented in menu with "h: View operation history"
+- Risk: History display interrupts session flow: Mitigation: Non-blocking; returns to menu immediately
+- Risk: Empty history shows error: Mitigation: Friendly message "No operations recorded yet."
+- Risk: Case sensitivity issues: Mitigation: Use `raw_index.lower()` for case-insensitive matching
+
+**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
+
+---
