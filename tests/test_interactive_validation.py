@@ -8,7 +8,7 @@ compatibility with the existing interactive behavior.
 import sys
 import pytest
 from unittest.mock import patch
-from src.__main__ import _run_interactive_loop, cli_mode, _build_registry
+from src.calculator.main import _run_interactive_loop, cli_mode, _build_registry
 from src.calculator import Calculator
 
 
@@ -29,8 +29,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['invalid_op', 'invalid_op', 'invalid_op'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -50,8 +49,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['add', 'abc', 'invalid_op', 'invalid_op', 'invalid_op'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -72,8 +70,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['square_root', '-1', 'square_root', '-1', 'square_root', '-1'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -93,8 +90,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['invalid_op', 'add', '5', '3', 'invalid_op', 'invalid_op', 'invalid_op'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -117,8 +113,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['invalid_op', 'invalid_op', 'square', '4', 'invalid_op', 'invalid_op', 'invalid_op'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -140,8 +135,7 @@ class TestConsecutiveFailureTracking:
         inputs = iter(['bad', 'bad', 'bad'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -169,8 +163,7 @@ class TestBackwardCompatibility:
         inputs = iter(['invalid_op', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -190,8 +183,7 @@ class TestBackwardCompatibility:
         inputs = iter(['add', 'not_a_number', 'add', '5', '3', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -212,8 +204,7 @@ class TestBackwardCompatibility:
         inputs = iter(['multiply', '6', '7', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -230,8 +221,7 @@ class TestBackwardCompatibility:
         inputs = iter(['ln', '0', 'add', '2', '3', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -250,8 +240,7 @@ class TestBackwardCompatibility:
         inputs = iter(['invalid', 'invalid', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 
@@ -319,8 +308,7 @@ class TestEdgeCases:
         inputs = iter(['invalid_op', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
-        calculator = Calculator()
-        registry = _build_registry(calculator)
+        registry = _build_registry()
 
         _run_interactive_loop(registry)
 

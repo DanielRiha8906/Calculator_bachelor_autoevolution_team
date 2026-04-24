@@ -1,7 +1,16 @@
+"""Core Calculator class with all mathematical operations.
+
+This module contains the Calculator class with all arithmetic and scientific
+operations, moved from the top-level src/calculator.py as part of the
+modular refactor (Issue #405).
+"""
+
 import math
 
 
 class Calculator:
+    """Provides arithmetic and scientific calculator operations."""
+
     def add(self, a, b):
         return a + b
 
@@ -135,4 +144,3 @@ class Calculator:
         if x <= 0:
             raise ValueError("ln() is not defined for non-positive numbers")
         return math.log(x)
-

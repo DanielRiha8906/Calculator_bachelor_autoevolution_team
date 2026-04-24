@@ -1,0 +1,75 @@
+@startuml class_calculator_package
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Calculator Package — Utility Classes and Entry Point
+
+package "src/calculator" {
+
+    class Calculator {
+        add(a, b) : float
+        subtract(a, b) : float
+        multiply(a, b) : float
+        divide(a, b) : float
+        factorial(n) : int
+        square(x) : float
+        cube(x) : float
+        square_root(x) : float
+        cube_root(x) : float
+        power(base, exp) : float
+        log10(x) : float
+        ln(x) : float
+    }
+
+    class InputValidator {
+        {static} parse_number(raw: str) : int | float
+    }
+
+    class CLIInput {
+        _argv : list[str]
+        has_operation_args() : bool
+        get_operation_and_operands() : tuple[str, list[str]]
+    }
+
+    class InteractiveInput {
+        read_operation() : str
+        read_operand(label: str) : str
+        show_message(msg: str) : None
+    }
+
+    class OperationRegistry <<reference>> {
+        get(name: str) : Operation
+        register(op: Operation, name: str = None) : None
+    }
+
+    class main <<module>> {
+        _build_registry() : OperationRegistry
+        cli_mode() : None
+        _run_interactive_loop(registry, history_file_path) : None
+        main() : None
+    }
+
+}
+
+package "src (external)" {
+    class OperationHistory {
+        record(operation, operands, result) : None
+        get_all() : list[str]
+    }
+    class ErrorLog {
+        log_error(category, operation, inputs, description) : None
+    }
+}
+
+main ..> OperationRegistry : builds
+main ..> CLIInput : uses
+main ..> InteractiveInput : uses
+main ..> InputValidator : uses
+main ..> OperationHistory : uses
+main ..> ErrorLog : uses
+
+CLIInput ..> InputValidator : delegates parsing
+InteractiveInput ..> InputValidator : delegates parsing
+
+@enduml

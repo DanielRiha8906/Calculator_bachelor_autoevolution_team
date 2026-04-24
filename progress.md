@@ -1,3 +1,55 @@
+## Run: Fix PR #452 — feat: modular calculator package structure (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/main.py` — removed dead import `from src.calculator.core import Calculator`
+  - `src/__main__.py` — replaced 321-line legacy implementation with 9-line thin shim delegating to `src.calculator.main.cli_mode`
+  - `tests/test_interactive_validation.py` — updated imports from `src.__main__` to `src.calculator.main`; removed `Calculator()` instantiations; updated `_build_registry()` calls
+  - `tests/test_calculator.py` — updated `main` import from `src.__main__` to `src.calculator.main`
+  - `tests/test_error_logging.py` — updated 6 imports and 3 patch targets from `src.__main__` to `src.calculator.main`; updated `_build_registry()` calls
+  - `tests/test_history.py` — updated 3 imports and 3 patch targets from `src.__main__` to `src.calculator.main`; updated `_build_registry()` calls
+  - `tests/test_modularization.py` — updated `main` import from `src.__main__` to `src.calculator.main`
+- **Purpose:** Address PR review feedback: remove dual entry point, eliminate dead import, establish single authoritative entry point at src.calculator.main
+- **Risks:** None — all 246 tests pass, 3 skipped as expected; backward compatibility of `python -m src` preserved via shim
+- **Tests passed:** 246 passed, 3 skipped, 0 failed
+
+Duration: 246.2s | Cost: $0.822289 USD | Turns: 12
+
+## Run: update-diagrams — Issue #405 Modular Refactor (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_calculator_package.puml` — class diagram for refactored calculator package with Operation hierarchy and OperationRegistry
+  - `artifacts/activity_diagram_calculation_flow.puml` — activity diagram for CLI and interactive calculation flow
+  - `artifacts/component_diagram_calculator_modules.puml` — component/package dependency diagram for src/calculator/ modules
+
+Duration: 221.0s | Cost: $0.586572 USD | Turns: 5
+
+## Run: Issue #405 — V3 Task 12 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/__init__.py` — new package init; re-exports Calculator for backward compatibility
+  - `src/calculator/core.py` — Calculator class moved here; all 12 methods preserved verbatim
+  - `src/calculator/operations/__init__.py` — Operation ABC and OperationRegistry with register/get/list_all/has
+  - `src/calculator/operations/arithmetic.py` — 6 arithmetic operation classes (Add, Subtract, Multiply, Divide, Factorial, Modulo)
+  - `src/calculator/operations/scientific.py` — 7 scientific operation classes (Square, Cube, SquareRoot, CubeRoot, Power, Log10, Ln)
+  - `src/calculator/validation.py` — InputValidator with static parse_number()
+  - `src/calculator/input_handler.py` — CLIInput and InteractiveInput handler classes
+  - `src/calculator/persistence.py` — thin facade re-exporting OperationHistory and ErrorLog
+  - `src/calculator/main.py` — _build_registry(), cli_mode(), main(), _run_interactive_loop()
+  - `src/calculator.py` — deleted (replaced by src/calculator/ package directory)
+  - `tests/test_modularization.py` — 41 new tests covering module imports, registry, operation hierarchy, validation, input handlers, persistence, core calculator, end-to-end, backward compatibility
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+- **Purpose:** Refactor calculator into modular package with clear separation of core logic, operation registry, validation, input handling, and persistence; extensible for future scientific functionality
+- **Risks:** src/calculator.py deleted and replaced by src/calculator/ package; backward compatibility maintained via __init__.py re-exports
+- **Tests passed:** 246 passed, 3 skipped, 0 failed
+
+Duration: 768.3s | Cost: $1.722454 USD | Turns: 15
+
 ## Run: Issue #402 — V3 Task 11 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-402-separate-calc-logic
@@ -253,3 +305,15 @@ Duration: 211.4s | Cost: $0.558391 USD | Turns: 4
   - `artifacts/sequence_diagram_interactive_calculation.puml` — new sequence diagram for one successful interactive calculation with history recording
 
 Duration: 203.6s | Cost: $0.612880 USD | Turns: 7
+
+## Run: update-diagrams — Modular Calculator Package UML (2026-04-24)
+
+- **Branch:** task/issue-405-modular-refactor
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_operations.puml` — Operation ABC hierarchy and OperationRegistry composition
+  - `artifacts/class_calculator_package.puml` — Calculator package structure with utility classes
+  - `artifacts/activity_calculation_flow.puml` — CLI calculation activity flow
+  - `artifacts/sequence_registry_dispatch.puml` — Registry to Operation dispatch sequence
+
+Duration: 202.9s | Cost: $0.495948 USD | Turns: 4

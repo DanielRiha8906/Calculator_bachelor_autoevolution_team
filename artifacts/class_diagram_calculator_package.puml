@@ -1,0 +1,158 @@
+@startuml class_diagram_calculator_package
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Calculator Package — Class Hierarchy and Relationships
+
+package "src/calculator" {
+
+    abstract class Operation {
+        {abstract} name : str
+        {abstract} arity : int
+        {abstract} execute(*args: float) : float
+    }
+
+    class OperationRegistry {
+        _ops : dict[str, Operation]
+        register(operation: Operation, name: str = None) : None
+        get(name: str) : Operation
+        list_all() : list[str]
+        has(name: str) : bool
+    }
+
+    package "operations/arithmetic" {
+        class ArithmeticAdd {
+            name = "add"
+            arity = 2
+            execute(a, b) : float
+        }
+        class ArithmeticSubtract {
+            name = "subtract"
+            arity = 2
+            execute(a, b) : float
+        }
+        class ArithmeticMultiply {
+            name = "multiply"
+            arity = 2
+            execute(a, b) : float
+        }
+        class ArithmeticDivide {
+            name = "divide"
+            arity = 2
+            execute(a, b) : float
+        }
+        class ArithmeticFactorial {
+            name = "factorial"
+            arity = 1
+            execute(n) : float
+        }
+        class ArithmeticModulo {
+            name = "modulo"
+            arity = 2
+            execute(a, b) : float
+        }
+    }
+
+    package "operations/scientific" {
+        class ScientificSquare {
+            name = "square"
+            arity = 1
+            execute(x) : float
+        }
+        class ScientificCube {
+            name = "cube"
+            arity = 1
+            execute(x) : float
+        }
+        class ScientificSquareRoot {
+            name = "square_root"
+            arity = 1
+            execute(x) : float
+        }
+        class ScientificCubeRoot {
+            name = "cube_root"
+            arity = 1
+            execute(x) : float
+        }
+        class ScientificPower {
+            name = "power"
+            arity = 2
+            execute(base, exp) : float
+        }
+        class ScientificLog10 {
+            name = "log10"
+            arity = 1
+            execute(x) : float
+        }
+        class ScientificLn {
+            name = "ln"
+            arity = 1
+            execute(x) : float
+        }
+    }
+
+    class Calculator {
+        add(a, b) : float
+        subtract(a, b) : float
+        multiply(a, b) : float
+        divide(a, b) : float
+        factorial(n) : int
+        square(x) : float
+        cube(x) : float
+        square_root(x) : float
+        cube_root(x) : float
+        power(base, exp) : float
+        log10(x) : float
+        ln(x) : float
+    }
+
+    class InputValidator {
+        {static} parse_number(raw: str) : float
+    }
+
+    class CLIInput {
+        _argv : list[str]
+        has_operation_args() : bool
+        get_operation_and_operands() : tuple[str, list[str]]
+    }
+
+    class InteractiveInput {
+        read_operation() : str
+        read_operand(label: str) : str
+        show_message(message: str) : None
+    }
+
+}
+
+package "src (external)" {
+    class OperationHistory {
+        record(operation: str, operands: list, result: float) : None
+        get_all() : list[str]
+    }
+    class ErrorLog {
+        log_error(category: str, operation: str, inputs: list, description: str) : None
+    }
+}
+
+' Inheritance: arithmetic
+Operation <|-- ArithmeticAdd
+Operation <|-- ArithmeticSubtract
+Operation <|-- ArithmeticMultiply
+Operation <|-- ArithmeticDivide
+Operation <|-- ArithmeticFactorial
+Operation <|-- ArithmeticModulo
+
+' Inheritance: scientific
+Operation <|-- ScientificSquare
+Operation <|-- ScientificCube
+Operation <|-- ScientificSquareRoot
+Operation <|-- ScientificCubeRoot
+Operation <|-- ScientificPower
+Operation <|-- ScientificLog10
+Operation <|-- ScientificLn
+
+' Registry aggregates operations
+OperationRegistry "1" o-- "0..*" Operation
+
+@enduml
