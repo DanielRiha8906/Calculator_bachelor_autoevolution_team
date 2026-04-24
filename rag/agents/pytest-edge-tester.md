@@ -301,3 +301,106 @@ Accumulated testing context for this experiment branch. Each cycle entry records
 - Full test suite is clean with 82 passing tests.
 - No regressions detected.
 - Ready for commit and PR.
+
+### Cycle 9: 2026-04-24 — Issue #384 Interactive Input Loop (WRITE phase)
+
+**Task:** Write failing tests for interactive calculator loop. 20 tests covering operation input, prompts, error handling, sequences, and direct Calculator method compatibility.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created 2 new test classes: `TestInteractiveLoop` (20 tests) and `TestCalculatorDirectCompatibility` (5 tests)
+2. 25 new tests total:
+   - 20 interactive loop tests: quit, single operations (add, subtract, multiply, divide), unary operations (factorial, square, square_root, power, cube_root, log10, ln), error scenarios (division by zero, invalid operation, non-numeric operands, negative factorial), multiple operations sequence, prompts verification
+   - 5 direct compatibility tests: verify Calculator methods still exist and work directly after changes
+3. Interactive tests use monkeypatch to mock builtins.input() and capsys to capture stdout
+4. Import main() from src.__main__ module
+5. Tests call main() function with mocked input streams
+6. Existing 82 tests remain in place for regression detection
+
+**Patterns Found:**
+- Current main() function does not implement interactive loop; it just prints hardcoded calculator results
+- All 18 interactive tests expecting specific output or prompts fail (as expected for WRITE phase)
+- 2 interactive tests pass (basic quit and division-by-zero tests that just check program runs)
+- All 5 direct compatibility tests pass (Calculator methods work correctly)
+- All 82 existing calculator tests pass (no regressions)
+
+**Test Results:**
+- 25 new tests written (20 interactive + 5 compatibility)
+- 18 tests FAILED (missing interactive loop implementation)
+- 7 tests PASSED (2 interactive + 5 compatibility)
+- 82 existing tests PASSED (no regressions)
+- Total tests in suite: 107 (25 new + 82 existing)
+- Duration: 0.25s
+
+**Status:** READY FOR HANDOFF — 18 tests fail as expected. Interactive loop implementation required.
+
+**Escalations:** None. All failures are due to missing interactive main() implementation (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Implement interactive loop in src/__main__.py main() function to satisfy all 20 interactive test specifications
+- Function must accept operation name from user input (as operation selection)
+- Function must accept operand(s) from user input based on operation type (binary or unary)
+- Function must print "Result: <value>" format for successful operations
+- Function must print "Error" message for error conditions (division by zero, invalid operation, non-numeric input, negative factorial, etc.)
+- Function must loop continuously until user types "quit"
+- Function must display prompts for:
+  - Operation selection (e.g., "Select operation:" or similar with "operation" or "select" in text)
+  - For binary operations: two operand prompts (with "first", "operand", or "enter" in text)
+  - For unary operations: one operand prompt (with "enter" or "operand" in text)
+- Supported operations: add, subtract, multiply, divide, factorial, square, cube, square_root, cube_root, power, log10, ln
+- 18 failing tests ready for implementation verification
+- 7 tests already pass and must continue passing after implementation
+
+### Cycle 10: 2026-04-24 — Issue #384 Interactive Input Loop (VERIFY phase)
+
+**Task:** Run full test suite to confirm all tests pass after implementer completion.
+
+**Phase:** VERIFY
+
+**Test Results:**
+- Total tests collected: 107
+- Passed: 107
+- Failed: 0
+- Errors: 0
+- Duration: 0.07s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Verified:**
+- 6 tests for addition
+- 6 tests for subtraction
+- 6 tests for multiplication
+- 5 tests for division
+- 10 tests for factorial
+- 5 tests for square
+- 5 tests for cube
+- 6 tests for square root
+- 6 tests for cube root
+- 11 tests for power
+- 8 tests for log10
+- 8 tests for ln
+- 20 tests for interactive loop (quit, single operations, unary operations, error handling, prompts, sequences)
+- 5 tests for direct calculator compatibility
+- **Total: 107 tests, all passing**
+
+**Implementation Verified:**
+- Interactive loop implemented in src/__main__.py main() function
+- Accepts operation names from user input
+- Handles both binary operations (add, subtract, multiply, divide, power) and unary operations (factorial, square, cube, square_root, cube_root, log10, ln)
+- Prints "Result: <value>" format for successful operations
+- Prints "Error" message for error conditions
+- Loops continuously until user types "quit"
+- Displays appropriate prompts for operation selection and operands
+- All 20 new interactive loop tests pass
+- All 25 new tests from WRITE phase pass (18 that were failing + 7 that already passed)
+- All 82 prior calculator tests remain passing (no regressions)
+
+**Escalations:** None. All tests pass. No bugs found.
+
+**Handoff Notes for Orchestrator:**
+- Cycle complete. Full test suite verified and all tests passing.
+- Implementation successfully satisfies all 20 new interactive loop test specifications.
+- Full test suite is clean with 107 passing tests.
+- No regressions detected in any existing tests.
+- Ready for commit and PR.

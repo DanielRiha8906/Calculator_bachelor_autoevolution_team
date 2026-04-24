@@ -139,3 +139,58 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Minimal spec + reliance on prior context consistent with Task 2 and Task 3
 - No mention of operation aliases or alternate names (e.g., sqrt vs. √, log vs. log10)
 - Assumed all operations use standard mathematical definitions
+
+### 2026-04-24 | V3 Task 5 - Structured/team (Issue #384)
+
+**Issue:** Add interactive user input so the calculator can read the selected operation and required values at runtime. Make sure the entered values are used to perform calculations correctly and allow the user to continue using the calculator after a result is shown. Update relevant tests as needed so they remain consistent with the current version of the application.
+
+**Key Requirements Identified:**
+- Add interactive/runtime user input capability to calculator
+- Calculator must read operation selection from user input at runtime
+- Calculator must read required values (operands) from user input at runtime
+- Entered values must be used correctly to perform calculations
+- Calculator must remain operational after displaying a result (loop/continue)
+- Update tests to reflect changes to calculator input model
+
+**Explicit Requirements:**
+- **Functional:** Interactive user input loop for operation and operands
+- **Functional:** Values entered must be correctly used in calculations
+- **Functional:** Calculator must not exit after returning a result; must allow continuation of use
+- **Testing:** Update existing tests to remain consistent with new input model
+
+**Ambiguities & Gaps:**
+- No comments provided; issue body is minimal
+- No specification of input interface (CLI prompts? Menu system? Syntax expected?)
+- No clarification of "selected operation" — how user selects (typing "add"? "+" symbol? menu number?)
+- No specification of "required values" — how many operands? Format? Validation?
+- No detail on how loop termination works (Ctrl+C? quit command? specific keyword?)
+- No specification of what "enter values correctly" means (which existing operation set? all of them?)
+- No mention of error handling during input (invalid operation, non-numeric input, etc.)
+- No specification of output format for results (precision, rounding, etc.)
+- No mention of whether calculator continues with fresh state or reuses previous result
+- Minimal acceptance criteria; no test examples provided
+
+**Assumed Resolution (for Architect):**
+- **Input model:** Interactive loop at program entry; prompt user for:
+  1. Operation to perform (e.g., "Enter operation: ", expects string like "add", "+", or numeric menu code)
+  2. Operand(s) required by that operation (e.g., "Enter first value: ", "Enter second value: ")
+- **Execution:** Read inputs → validate → perform operation using accumulated implementation from Tasks 1-4 → display result
+- **Loop behavior:** After result display, prompt user again for next operation (do not exit program)
+- **Termination:** User-initiated (e.g., "quit", "exit", "q", or Ctrl+C)
+- **Error handling:** Handle invalid operations, non-numeric input, and operation-specific errors (e.g., division by zero) consistently with prior tasks
+- **Test updates:** Tests will need to adapt from non-interactive/batch input model to interactive loop (may require mocking stdin or changing test structure)
+
+**Context from Related Issues:**
+- V3 Task 4 (#381): Seven mathematical operations (square, cube, sqrt, cbrt, power, log, ln)
+- V3 Task 3 (#378): Factorial operation
+- V3 Task 1 (#372): Division-by-zero error handling pattern
+- V3 Task 2 (#375): Test suite and operations scope (arithmetic + scientific)
+- Issue #273: Scientific mode (architecture reference for operation organization)
+
+**Patterns:**
+- V3 Task 5 is a UI/UX layer task, differs from previous feature-addition tasks (1-4)
+- Task 5 consolidates all prior operations into an interactive workflow
+- V3 sequence so far: error handling (1) → test suite (2) → factorial (3) → advanced math (4) → interactive UI (5)
+- Likely end-of-V3 task; integration and usability focus
+- "ai-implement:structured-team" label consistent; no new operations, UX/workflow addition
+- No comments suggest this is straightforward specification; ambiguities are structural (input format, loop behavior)

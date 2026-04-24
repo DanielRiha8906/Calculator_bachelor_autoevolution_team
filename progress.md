@@ -98,3 +98,16 @@ Duration: 395.6s | Cost: $0.776898 USD | Turns: 18
   - `artifacts/component_calculator.puml` — updated operations list to all 11 operations and math dependency note
 
 Duration: 255.8s | Cost: $0.582970 USD | Turns: 6
+
+## Run: Issue #384 — V3 Task 5 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-384-interactive-input
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/__main__.py` — replaced batch-mode stub with interactive REPL loop: operation registry, operand prompts, result display, error handling, quit mechanism
+  - `tests/test_calculator.py` — added 25 new tests: 20 TestInteractiveLoop integration tests + 5 TestCalculatorDirectCompatibility unit tests
+- **Purpose:** Transform calculator from batch-mode to interactive runtime application; user can select operations and enter operands at runtime and continue after each result
+- **Risks:** None — Calculator class unchanged; only entry point modified
+- **Tests passed:** 107 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
