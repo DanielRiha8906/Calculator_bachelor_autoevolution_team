@@ -290,3 +290,58 @@ test_cli_full_workflow_factorial now expects ValueError because factorial() requ
 - All tests verified passing
 
 **Conclusion:** All 121 tests pass. The implementer's fix to factorial() now allows float-like integers (5.0), resolving the previous CLI limitation. The test suite comprehensively covers both the fixed behavior and all existing calculator/CLI functionality.
+
+### 2026-04-24 | task/issue-389-add-cli-mode | WRITE | 32 failing tests written
+
+**Task:** Write comprehensive failing tests for batch CLI batch_main() function covering 7 test categories: help flags, binary operations, unary operations, error handling, argument validation, invalid operations, and backward compatibility.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented:**
+- TestBatchCLIHelp (2 tests): --help and -h flags display help and exit code 0
+- TestBatchCLIBinaryOps (5 tests): add, subtract, multiply, divide, power with correct results
+- TestBatchCLIUnaryOps (7 tests): square, cube, sqrt, cbrt, factorial, log, ln with correct results
+- TestBatchCLIErrors (8 tests): division by zero, negative sqrt/log/ln, factorial negative
+- TestBatchCLIArgValidation (7 tests): missing operands, too many args, invalid numeric inputs
+- TestBatchCLIInvalidOps (2 tests): unknown operation, no operation provided
+- TestBackwardCompat (1 test): skipped placeholder for existing test_cli.py verification
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_batch_cli.py`
+
+**Test Results:**
+- Total test functions: 32
+- Collection error: ModuleNotFoundError (src.batch_cli does not exist) - EXPECTED behavior for WRITE phase
+- Status: All tests fail as expected during import
+
+**Test Structure:**
+- All tests use capsys fixture to capture stdout/stderr
+- All tests use pytest.raises(SystemExit) to verify exit codes
+- Tests assert:
+  - exit code == 0 for successful operations (stdout contains result)
+  - exit code == 1 for errors (stderr contains error message)
+  - Help flags exit with code 0 (stdout contains help or usage)
+- Unary operations: operation name + 1 operand
+- Binary operations: operation name + 2 operands
+- Error messages must contain specific keywords (case-insensitive): "zero", "negative", "positive"
+- Argument validation errors produce non-empty stderr with exit code 1
+
+**Test Coverage Matrix:**
+| Category | Tests | Status |
+|----------|-------|--------|
+| Help | 2 | ✓ fail on import |
+| Binary ops | 5 | ✓ fail on import |
+| Unary ops | 7 | ✓ fail on import |
+| Error handling | 8 | ✓ fail on import |
+| Arg validation | 7 | ✓ fail on import |
+| Invalid ops | 2 | ✓ fail on import |
+| Backward compat | 1 | ✓ skipped |
+
+**Handoff Note:** 32 failing tests committed. Ready for python-code-implementer to create src/batch_cli.py with batch_main() function. The function must:
+1. Accept argv list (typically sys.argv[1:])
+2. Support --help and -h flags (exit code 0)
+3. Parse operation name as first argument
+4. Parse operands based on operation arity
+5. Return exit code 0 on success (print result to stdout)
+6. Return exit code 1 on error (print error message to stderr)
+7. Support 12 operations: add, subtract, multiply, divide, power (binary) + square, cube, sqrt, cbrt, factorial, log, ln (unary)
+8. Delegate calculations to existing Calculator class methods
