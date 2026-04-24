@@ -68,4 +68,4 @@ Duration: 276.8s | Cost: $0.627102 USD | Turns: 21
   - `artifacts/activity_factorial.puml` — new activity diagram for `factorial()` validation and computation flow
   - `artifacts/component_calculator.puml` — component diagram showing Calculator and math stdlib relationship
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 157.2s | Cost: $0.412103 USD | Turns: 7
