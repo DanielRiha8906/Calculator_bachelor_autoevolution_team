@@ -1,0 +1,76 @@
+@startuml
+title Interactive Session — Main Loop (run_interactive_session)
+
+start
+
+if (calculator is None?) then (yes)
+  :Create Calculator();
+else (no)
+  :Use provided Calculator;
+endif
+
+:Create OperationRegistry(calculator);
+
+repeat
+
+  :Get operations list from registry;
+  :Display numbered menu\n(index | name | unary/binary label);
+
+  repeat
+    :Prompt: "Select operation by number:";
+    :Read user input;
+  repeat while (valid integer in range?) is (no — invalid)
+  -> yes — valid index;
+
+  :Resolve operation name from index;
+  :arity = registry.get_arity(op_name);
+
+  if (arity == 1?) then (yes)
+
+    repeat
+      :Prompt: "Enter operand:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :operands = [parsed_value];
+
+  else (no — arity == 2)
+
+    repeat
+      :Prompt: "Enter operand 1:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :store operand1;
+
+    repeat
+      :Prompt: "Enter operand 2:";
+      :Read user input;
+    repeat while (parse_operand() succeeds?) is (no — ValueError)
+    -> yes — parsed;
+    :operands = [operand1, parsed_value];
+
+  endif
+
+  :registry.call(op_name, *operands);
+
+  if (call succeeds?) then (yes)
+    :Print "Result: {result}";
+  elseif (ZeroDivisionError?) then (yes)
+    :Print "Error: Division by zero";
+  else (other exception)
+    :Print "Error: {exc}";
+  endif
+
+  repeat
+    :Prompt: "Continue? (yes/no):";
+    :Read user input (lowercase);
+  repeat while (input is yes/y or no/n?) is (no — unrecognised)
+  -> yes — recognised;
+
+repeat while (user chose yes or y?) is (yes — continue)
+-> no/n — exit;
+
+stop
+
+@enduml

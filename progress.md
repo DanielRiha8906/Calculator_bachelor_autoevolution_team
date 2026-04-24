@@ -130,3 +130,17 @@ Duration: 263.4s | Cost: $0.560446 USD | Turns: 5
 - **Tests passed:** 141 passed, 0 failed
 
 Duration: 311.3s | Cost: $0.571036 USD | Turns: 13
+
+## Run: update-diagrams — Interactive Calculator Session UML (2026-04-24)
+
+- **Branch:** task/issue-385-interactive-input
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/calculator_class_diagram.puml` — Class diagram showing Calculator, OperationRegistry and their composition relationship
+  - `artifacts/interactive_session_flow.puml` — Activity diagram of the interactive session main loop with error recovery
+  - `artifacts/operation_discovery_flow.puml` — Activity diagram of OperationRegistry introspection and method filtering
+  - `artifacts/binary_operation_sequence.puml` — Sequence diagram of a binary operation execution through the full call stack
+  - `artifacts/module_components.puml` — Component diagram showing module dependencies
+  - `artifacts/session_state_machine.puml` — State machine diagram of interactive session states and transitions
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

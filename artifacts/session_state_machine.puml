@@ -1,0 +1,26 @@
+@startuml
+title Interactive Session — State Machine
+
+[*] --> MenuDisplay : session starts
+
+MenuDisplay --> OperationSelection : show numbered menu
+
+OperationSelection --> OperationSelection : invalid index\n(re-prompt)
+OperationSelection --> OperandInput : valid index selected
+
+OperandInput --> OperandInput : invalid operand\n(ValueError — re-prompt)
+OperandInput --> Execution : valid operand(s) provided
+
+Execution --> ResultDisplay : success
+Execution --> ResultDisplay : ZeroDivisionError\n("Error: Division by zero")
+Execution --> ResultDisplay : other exception\n("Error: {exc}")
+
+ResultDisplay --> ContinuePrompt : result printed
+
+ContinuePrompt --> ContinuePrompt : unrecognised input\n(re-prompt)
+ContinuePrompt --> MenuDisplay : yes / y
+ContinuePrompt --> Exit : no / n
+
+Exit --> [*]
+
+@enduml
