@@ -362,4 +362,4 @@ Duration: 332.4s | Cost: $0.659363 USD | Turns: 6
   - `artifacts/activity_diagram_session.puml` — activity diagram for interactive and CLI session flows
   - `artifacts/component_diagram_layers.puml` — component diagram showing Core, Discovery, UI, Infrastructure, and Session layers
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 509.7s | Cost: $0.996440 USD | Turns: 7
