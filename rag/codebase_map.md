@@ -9,9 +9,22 @@ Per-file summaries of `src/`. Update after any cycle that modifies a listed file
 - **Known constraints:** —
 
 ## src/__main__.py
-- **Last updated:** — (not yet populated)
-- **Purpose:** —
-- **Notes:** —
+- **Last updated:** 2026-04-25 (Issue #415)
+- **Purpose:** Entry point dispatcher — routes to GUI, CLI, or interactive mode
+- **Public interface:** Routes `--gui` flag to CalculatorApp, argv>1 to run_cli(), no-args to run_interactive_session()
+- **Notes:** --gui flag added in Issue #415; previous dispatch logic preserved unchanged
+
+## src/ui/modes.py
+- **Last updated:** 2026-04-25 (Issue #415)
+- **Purpose:** OO mode abstraction for calculator UI modes
+- **Public interface:** CalculatorMode (ABC), SimpleMode (6 ops: add, subtract, multiply, divide, square, sqrt), ScientificMode (12 ops: all legacy ops)
+- **Known constraints:** ScientificMode uses registry.get_operations() (legacy 12), not get_operations_by_mode(SCIENTIFIC) which returns 18 including trig
+
+## src/ui/gui.py
+- **Last updated:** 2026-04-25 (Issue #415)
+- **Purpose:** Tkinter-based GUI for calculator; reuses Calculator, OperationRegistry, OperationHistory
+- **Public interface:** CalculatorApp(root=None, calculator=None, registry=None); methods: calculate(), switch_mode(), get_current_mode_operations(), get_history(), is_unary_operation(), run()
+- **Known constraints:** tkinter unavailable in CI; uses try/except ImportError stub assigned to `tk` so tests can patch `src.ui.gui.tk.Tk` in headless environments; _parse_operand returns int for whole numbers (required for factorial)
 
 ## src/__init__.py
 - **Last updated:** 2026-04-24 (Issue #406)

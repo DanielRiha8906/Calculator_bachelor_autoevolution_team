@@ -10,6 +10,17 @@ Per-cycle entries appended by the orchestrator after each completed run.
 - **Notes:** <anything significant>
 -->
 
+### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team
+- **Branch:** task/issue-415-tkinter-gui
+- **Files changed:**
+  - src/ui/modes.py (new: CalculatorMode ABC + SimpleMode + ScientificMode)
+  - src/ui/gui.py (new: CalculatorApp tkinter GUI)
+  - src/__main__.py (modified: --gui flag routing)
+  - tests/test_gui.py (new: 30 GUI tests)
+  - tests/test_core_separation.py (fixed: test_circular_imports sys.modules isolation bug)
+- **Tests:** 445 passed, 0 failed
+- **Notes:** tkinter unavailable in CI; gui.py uses ImportError stub so @patch('src.ui.gui.tk.Tk') resolves in headless env. ScientificMode returns 12-op legacy set (not 18 with trig) to match test assertion. _parse_operand returns int for whole numbers to avoid factorial(float) rejection.
+
 ### Cycle: 2026-04-24 — Issue #406: V3 Task 12 - Expert/team
 - **Branch:** task/issue-406-modular-refactor
 - **Files changed:**
