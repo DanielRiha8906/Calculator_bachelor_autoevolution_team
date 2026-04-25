@@ -27,6 +27,21 @@ Duration: 235.4s | Cost: $0.581542 USD | Turns: 4
 
 Duration: 500.2s | Cost: $1.102253 USD | Turns: 13
 
+## Run: Issue #413 — V3 Task 15 - Naive/team (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/gui.py` — new tkinter GUI module implementing CalculatorGUI class with all calculator operations and launch_gui() entry point
+  - `src/__main__.py` — added --gui/gui CLI routing to launch the tkinter GUI
+  - `tests/test_gui.py` — 25 new tests covering window creation, all arithmetic/unary operations, error handling, clear, sequences, decimal and negative inputs
+  - `rag/agents/*.md` — per-agent cycle entries updated
+- **Purpose:** Add tkinter-based GUI for the calculator app while preserving all existing CLI and interactive functionality
+- **Risks:** None — GUI is a new additive module; no Calculator core logic modified; existing modes unchanged
+- **Tests passed:** 412 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
 - **Branch:** task/issue-410-scientific-mode

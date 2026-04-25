@@ -474,3 +474,85 @@ Enhance the interface layer to proactively inform users about mode toggling and 
 - **pytest-edge-tester (WRITE phase):** Write 15 failing test cases (see Test Specifications in architect output) covering: (1) Welcome message with mode toggle hint, (2) Prompt mode-aware operation lists, (3) Mode change feedback with operation list, (4) End-to-end user flow, (5) Mode state synchronization verification, (6) Backward compatibility. Expected: all 15 new tests fail initially; all 35+ existing tests continue to pass.
 - **python-code-implementer:** After tests are written and fail, implement per plan: (1) Add display_welcome() function to interface.py, (2) Modify display_mode_change() to accept and display available operations list, (3) Enhance prompt_for_operator() help text to mention mode toggle and reflect current mode in operation list, (4) Modify __main__.py to call display_welcome() at session start and pass available_ops to display_mode_change(), (5) Update cli.py facade re-exports if needed. Target: all 15 new tests passing + all 35+ existing tests passing (zero regressions).
 
+### Cycle 10: 2026-04-25 — Issue #413 V3 Task 15 (GUI Implementation with tkinter)
+**Task:** Add a graphical user interface (GUI) to the calculator application using tkinter, while preserving all existing calculator functionality accessible through non-GUI modes (CLI and interactive).
+
+**Analysis of Current State:**
+- `src/calculator_core.py`: Fully implemented with 12 basic operations + 12 scientific operations; mode switching complete
+- `src/interface.py`: All interactive UI logic complete (prompts, displays, operations dicts, orchestration)
+- `src/cli.py`: Facade for backward compatibility
+- `src/__main__.py`: Interactive loop with mode switching, batch mode detection, history persistence
+- `src/batch_cli.py`: Batch mode handler with all operations supported
+- Current capabilities: CLI (interactive and batch), scientific mode, history persistence, error handling
+- Missing: tkinter GUI layer to expose all operations graphically
+
+**Requirements Analysis:**
+- Must: GUI with all 24 operations (12 basic + 12 scientific), error display, mode toggle
+- Must: Keep CLI/interactive/batch unchanged (no regressions)
+- Must: Loosely coupled (separate module, independent Calculator instance)
+- Nice: Handle errors gracefully (popup/inline display)
+- Non-Functional: tkinter only (stdlib), no new dependencies
+
+**Key Architectural Decisions:**
+1. **Create new `src/gui.py`** — tkinter-based GUI module
+   - Implements CalculatorGUI class managing UI state and Calculator interaction
+   - Separate Calculator instance (independent history from CLI)
+   - Three operation panels: basic (always), advanced (always), scientific (toggled)
+   - Display area showing current input/result
+   - Clear button, Mode toggle button, error display via messagebox or label
+   - All operations called via getattr() on Calculator methods
+   - No imports of interface.py functions (self-contained)
+   
+2. **Modify `src/__main__.py`** — Add GUI launch routing
+   - If sys.argv[1:] == ["--gui"] or ["gui"]: import gui.launch_gui() and run it
+   - Otherwise: existing interactive/batch/history routing unchanged
+   - Pure additive change; no disruption to existing modes
+   
+3. **No changes to Calculator or interface**
+   - Calculator already has all operations
+   - Interface already has all operation metadata
+   - GUI operates independently, calls Calculator methods directly
+   
+4. **Test strategy:**
+   - Create `tests/test_gui.py` with 35 test scenarios
+   - Cover: window creation, all 24 operations, error cases, mode toggle, decimal/negative inputs
+   - Use unittest.mock to mock tkinter interactions (Button clicks, Entry input, Label display)
+   - Verify Calculator integration via getattr() calls
+   - All tests must initially fail (gui.py doesn't exist yet)
+
+**Module Organization Post-Implementation:**
+```
+src/
+├── calculator.py              [UNCHANGED] Facade for calculator_core
+├── calculator_core.py         [UNCHANGED] Calculator + history recording
+├── basic_operations.py        [UNCHANGED] Pure arithmetic
+├── advanced_operations.py     [UNCHANGED] Pure advanced math
+├── scientific_operations.py   [UNCHANGED] Pure scientific math
+├── interface.py               [UNCHANGED] Interactive CLI interface
+├── cli.py                     [UNCHANGED] Facade for interface
+├── batch_cli.py               [UNCHANGED] Batch mode handler
+├── gui.py                     [NEW] tkinter-based GUI
+└── __main__.py                [MODIFIED] Add --gui routing
+```
+
+**Separation of Concerns:**
+- **calculator_core.py + operations modules:** Pure math, zero UI
+- **interface.py + cli.py + batch_cli.py:** Text-based UI (interactive/batch)
+- **gui.py:** Graphical UI (new, independent)
+- **__main__.py:** Router to select UI mode (text-interactive, text-batch, text-history, or GUI)
+
+**Extensibility Pattern:**
+- Each UI mode (interactive, batch, GUI) maintains its own Calculator instance
+- UI modes never share state; each is independent
+- Future UI modes (web, REST API, TUI) can follow identical pattern
+
+**Risks & Mitigations:**
+- Risk: GUI doesn't support mode toggling correctly. Mitigation: test 21-30 verify scientific mode UI behavior.
+- Risk: GUI crashes on error. Mitigation: test 17-19 and 32 verify error handling via messagebox.
+- Risk: GUI Calculator history interferes with CLI. Mitigation: GUI instance is separate; test 31 verifies independence.
+- Risk: Import errors if tkinter unavailable. Mitigation: import only if --gui flag used; CLI users unaffected.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write 35 failing test cases in `tests/test_gui.py` covering: (1) GUI initialization (tests 1-4), (2) All 12 basic operations (tests 5-16), (3) All 12 scientific operations + mode toggle (tests 21-30), (4) Error handling (tests 17-19, 32), (5) Input handling (tests 33-35), (6) Mode independence from CLI (test 31). All tests must initially fail.
+- **python-code-implementer:** Implement `src/gui.py` and modify `src/__main__.py` per plan. Target: all 35 GUI tests passing + all 100+ existing tests passing (zero regressions).
+
