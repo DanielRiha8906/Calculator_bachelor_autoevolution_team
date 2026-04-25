@@ -8,7 +8,7 @@
 - **Risks:** None — change isolated to GUI layer; all colors from _THEME; headless test safety preserved via _TkStub
 - **Tests passed:** 504 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1068.0s | Cost: $2.115572 USD | Turns: 14
 
 ## Run: Issue #415 — V3 Task 15 - Expert/team (2026-04-25)
 
