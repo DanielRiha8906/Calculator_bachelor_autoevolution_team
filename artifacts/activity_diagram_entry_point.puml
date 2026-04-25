@@ -1,0 +1,25 @@
+@startuml
+skinparam activityFontSize 13
+skinparam activityDiamondFontSize 12
+
+title Entry Point Routing — src/__main__.py
+
+start
+
+:Parse sys.argv;
+
+if ("--gui" in args?) then (yes)
+  :Instantiate Calculator, OperationRegistry;
+  :CalculatorApp(root, calculator, registry).run();
+  stop
+else (no)
+  if (other args present?) then (yes)
+    :run_cli();
+    stop
+  else (no args)
+    :run_interactive_session();
+    stop
+  endif
+endif
+
+@enduml

@@ -1209,3 +1209,324 @@ The python-code-implementer successfully implemented the calculator modes featur
 
 **Handoff Notes:** Test suite verification complete. All 415 tests passing (100%). Calculator modes feature fully implemented with proper separation of NORMAL (6 basic ops) and SCIENTIFIC (18 ops including trig) modes. Interactive mode selection with persistent mode across operations confirmed working. Ready for orchestrator to finalize commit and PR.
 
+### Cycle 28 (2026-04-25)
+**Task:** GUI Feature (tkinter) — Write Failing Tests
+**Phase:** WRITE
+**Test Cases Added:** 30 new tests across 7 test classes
+
+Test organization by functional area:
+- **TestCalculatorModeAbstract (1 test):** CalculatorMode cannot be instantiated directly (raises TypeError)
+- **TestSimpleMode (3 tests):** SimpleMode returns exactly 6 operations {add, subtract, multiply, divide, square, sqrt}, is subset of scientific
+- **TestScientificMode (2 tests):** ScientificMode returns 12 operations, includes advanced ops {power, factorial, cube, cbrt, ln, log10}
+- **TestCalculatorAppInstantiation (4 tests):** CalculatorApp instantiation with dependency injection (root, calculator, registry parameters)
+- **TestCalculatorAppModeManagement (4 tests):** Mode switching, operation filtering, mode persistence (starts NORMAL, switches to SCIENTIFIC and back)
+- **TestCalculatorAppCalculations (8 tests):** Calculation interface (binary add, unary square, error handling for divide-by-zero/sqrt-negative, float operands, factorial/power in scientific mode)
+- **TestCalculatorAppHistory (5 tests):** History tracking (empty on start, records ops, multiple ops, persists across mode switches, entry format verification)
+- **TestCalculatorAppOperationClassification (2 tests):** Unary vs binary classification (square/sqrt/factorial/ln/log10/cube/cbrt are unary; add/subtract/multiply/divide/power are binary)
+- **TestCalculatorAppRunMethod (1 test):** CalculatorApp has run() method
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui.py`
+
+**Test Status:** ALL 30 NEW TESTS FAIL as expected (100% failure rate for WRITE phase)
+
+Failure patterns:
+- 6 tests fail with ModuleNotFoundError: No module named 'src.ui.modes' (CalculatorMode, SimpleMode, ScientificMode)
+- 24 tests fail with AttributeError: module 'src.ui' has no attribute 'gui' (CalculatorApp tests, tkinter gui module missing)
+
+Both failures are expected — the modules src/ui/modes.py and src/ui/gui.py do not exist yet.
+
+**Test File Structure:**
+- Location: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui.py`
+- 30 test functions organized into 7 test classes
+- Uses `@patch('src.ui.gui.tk.Tk')` to mock tkinter.Tk for headless testing (prevents window creation in CI)
+- Tests inject Mock objects as root parameter for CalculatorApp
+- Uses standard pytest assertions and Mock call verification
+- All imports are delayed (within test functions) to allow graceful handling of missing modules
+
+**Patterns Applied:**
+- CalculatorMode tests verify abstract base class pattern (TypeError on direct instantiation)
+- Mode tests verify operation count and set membership
+- CalculatorApp dependency injection pattern (optional calculator, registry, root parameters)
+- Mode management tests validate state transitions (NORMAL ↔ SCIENTIFIC)
+- Calculation tests verify error handling (returns error string, not exception) and numeric results
+- History tests verify in-memory tracking and persistence across mode switches
+- Operation classification tests use metadata to determine arity (OperationRegistry.get_arity)
+
+**Pre-existing Test Suite Status:**
+- All 415 pre-existing tests continue to pass (no regressions)
+- New test file is syntactically valid (30 tests collected, no parse errors)
+
+**Handoff Notes:** 
+30 new tkinter GUI tests written and confirmed failing (30/30 failures as expected). All failures are due to missing module implementations, not test bugs. Test file is syntactically valid and properly structured for mocking tkinter. Ready for python-code-implementer to implement:
+
+1. **src/ui/modes.py:**
+   - CalculatorMode abstract base class with abstract method get_operations(registry)
+   - SimpleMode(CalculatorMode) subclass returning 6 operations: add, subtract, multiply, divide, square, sqrt
+   - ScientificMode(CalculatorMode) subclass returning 12 operations (legacy ops + power, factorial, cube, cbrt, ln, log10)
+
+2. **src/ui/gui.py:**
+   - CalculatorApp class with dependency injection: __init__(root=None, calculator=None, registry=None)
+   - Properties/methods: _calculator, _registry, _current_mode (starts NORMAL), _history
+   - Public methods:
+     - calculate(operation_name, *operands) → str (error message or result)
+     - get_current_mode_operations() → list[str]
+     - switch_mode(mode: OperationMode) → None
+     - get_history() → list[str]
+     - is_unary_operation(op_name) → bool
+     - run() → None (GUI main loop, can be empty for testing)
+   - Error handling: ZeroDivisionError, ValueError for domain errors → error string (no exception propagation)
+   - History tracking: records successful operations, persists across mode switches
+
+3. Optional: Modify src/__main__.py to add --gui flag support if required
+
+### Cycle 29 (2026-04-25)
+**Task:** GUI Feature (tkinter) — Verify Implementation
+**Phase:** VERIFY
+**Test Execution:** Full test suite run via `python -m pytest tests/ --tb=short -q`
+
+**Results (Initial):**
+- Total tests run: 445
+- Tests passing: 440 (98.9%)
+- Tests failing: 5
+- Suite status: **5 TESTS FAILING** (unexpected)
+
+**Failing Tests Identified:**
+1. `tests/test_gui.py::TestSimpleMode::test_simple_mode_returns_six_operations` — expects 6 ops, gets 0
+2. `tests/test_gui.py::TestSimpleMode::test_simple_mode_operations_exact_set` — expects {add, subtract, ...}, gets {}
+3. `tests/test_gui.py::TestCalculatorAppModeManagement::test_app_starts_in_simple_mode` — mode assertion failing
+4. `tests/test_gui.py::TestCalculatorAppModeManagement::test_app_switch_to_scientific_mode` — mode switch failing
+5. `tests/test_gui.py::TestCalculatorAppModeManagement::test_app_switch_back_to_simple_mode` — mode reset failing
+
+**Root Cause Identified: Test Isolation Pollution**
+
+After investigation:
+- `pytest tests/test_gui.py -v` alone: ALL 30 PASS ✓
+- `pytest tests/test_error_logging.py tests/test_gui.py -v`: ALL PASS ✓
+- `pytest tests/test_core_separation.py tests/test_gui.py -v`: 5 FAIL ✗
+- `pytest tests/ -v`: 5 FAIL ✗ (full suite)
+
+**Source of Pollution: test_core_separation.py**
+
+File: `tests/test_core_separation.py`, method `TestModuleBoundaryValidation.test_circular_imports()` (lines 149-151):
+
+```python
+def test_circular_imports(self):
+    """Verify no circular imports when importing core modules."""
+    # Clear any previously imported modules
+    modules_to_clear = [m for m in sys.modules.keys() if m.startswith('src.')]
+    for m in modules_to_clear:
+        del sys.modules[m]  # <-- Clears ALL src.* modules without restoring
+    
+    # Now import in order
+    try:
+        from src.calculator import Calculator
+        from src.operation_registry import OperationRegistry
+        ...
+```
+
+This code clears all `src.*` modules from sys.modules during VERIFY cycle execution. When test_gui.py later imports modules, they get fresh imports but the OperationRegistry state is broken, causing SimpleMode.get_operations() to return empty list and CalculatorApp._current_mode updates to fail.
+
+**Assessment:** Implementation in src/ui/modes.py and src/ui/gui.py is CORRECT. The test failures are caused by a test isolation bug in test_core_separation.py, NOT by the production code.
+
+**Escalation to PROGRAMMER:**
+The failing tests are a consequence of test pollution from test_core_separation.py::test_circular_imports() which clears and does not restore sys.modules. This needs to be fixed in the test infrastructure, not in production code. The 30 GUI tests are production-correct.
+
+**Handoff Notes:** Implementation verification blocked by test isolation issue. Ready to proceed after test_core_separation.py is fixed to properly restore sys.modules state.
+
+### Cycle 30 (2026-04-25)
+**Task:** Fix Test Isolation Bug in test_core_separation.py::test_circular_imports()
+**Phase:** FIX + VERIFY
+**Change Applied:** Added save/restore pattern to `test_circular_imports()` method
+
+**Fix Details:**
+Modified `tests/test_core_separation.py` lines 146-162 to wrap the sys.modules mutation in try/finally block:
+
+```python
+def test_circular_imports(self):
+    """Verify no circular imports when importing core modules."""
+    # Save original state before mutation
+    original_modules = {k: v for k, v in sys.modules.items() if k.startswith('src.')}
+    
+    try:
+        # Clear any previously imported modules
+        modules_to_clear = [m for m in sys.modules.keys() if m.startswith('src.')]
+        for m in modules_to_clear:
+            del sys.modules[m]
+        
+        # Now import in order
+        try:
+            from src.calculator import Calculator
+            from src.operation_registry import OperationRegistry
+            from src.ui.interactive import run_interactive_session
+            from src.ui.cli import run_cli
+            # If we get here, no circular imports occurred
+            assert True
+        except ImportError as e:
+            pytest.fail(f"Circular import detected: {e}")
+    finally:
+        # Restore original sys.modules state
+        # First remove any newly added src.* modules
+        for m in [k for k in sys.modules.keys() if k.startswith('src.')]:
+            del sys.modules[m]
+        # Then restore the originals
+        sys.modules.update(original_modules)
+```
+
+**Test Execution Results:**
+- Full suite: `python -m pytest tests/ --tb=short -q` → **445 passed in 0.65s** ✓
+
+**Specific Tests Now Passing (Previously Failing):**
+1. `test_circular_imports` — Now properly restores sys.modules after mutation
+2. `test_simple_mode_returns_six_operations` — Now gets 6 ops (was 0)
+3. `test_simple_mode_operations_exact_set` — Now returns correct set (was empty)
+4. `test_app_starts_in_simple_mode` — Mode correctly initialized
+5. `test_app_switch_to_scientific_mode` — Mode switching works
+6. `test_app_switch_back_to_simple_mode` — Mode reset works
+
+**Assessment:** 
+- Test infrastructure bug is completely fixed
+- All 445 tests pass with 0 failures (100% success rate)
+- No production code changes required — the issue was purely in the test
+- The fix uses the save/restore pattern: store original modules before mutation, restore them in finally block
+- Ensures test isolation is maintained: subsequent tests are not affected by sys.modules clearing
+- The circular import check still works correctly (imports are re-executed during test, then fully restored)
+
+**Handoff Notes:** Test isolation bug fixed. Full test suite verification complete. All 445 tests passing. Ready for commit.
+
+### Cycle 31 (2026-04-25)
+**Task:** GUI Feature (tkinter) — Mode Switching Behavior Tests (VERIFY Phase)
+**Phase:** VERIFY
+**Test Cases Added:** 12 new tests in TestModeSwitchingBehavior class
+
+Test organization:
+- **test_switch_scientific_returns_12_operations** — After switch_mode(SCIENTIFIC), get_current_mode_operations() returns 12
+- **test_switch_back_to_normal_returns_6_operations** — After SCIENTIFIC→NORMAL, get_current_mode_operations() returns 6
+- **test_op_var_reset_to_first_scientific_operation** — After SCIENTIFIC switch, _op_var.get() equals first scientific operation
+- **test_op_var_valid_normal_operation_after_switch** — After NORMAL switch, _op_var.get() is valid normal-mode operation
+- **test_multiple_mode_switches_stable** — NORMAL→SCIENTIFIC→NORMAL→SCIENTIFIC: operation counts correct at each step
+- **test_invalid_mode_is_noop** — Switching to invalid mode does not change _current_mode
+- **test_rebuild_operation_menu_no_exception** — _rebuild_operation_menu() called directly raises no exception
+- **test_mode_switch_persistence** — Subsequent get_current_mode_operations() calls return identical sets
+- **test_switch_mode_preserves_calculator_instance** — id(app._calculator) and id(app._registry) unchanged after switch
+- **test_scientific_mode_has_scientific_only_operations** — Scientific mode includes power, factorial, cube, cbrt, ln, log10
+- **test_normal_mode_exact_operations** — Normal mode is exactly {add, subtract, multiply, divide, square, sqrt}
+- **test_op_menu_not_duplicated_on_multiple_switches** — After two switches, _op_menu is singular (not accumulated)
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui.py`
+
+**Test Status:** ALL 12 NEW TESTS PASS immediately (100% pass rate)
+
+This is expected for VERIFY phase after implementer has completed the mode-switching feature. All tests validate the three changes made to src/ui/gui.py:
+1. Line 275: `self._op_frame = op_frame` — stores operation menu's parent frame for accessibility
+2. Lines 126-144: New `_rebuild_operation_menu()` method — destroys old OptionMenu and creates new one with current mode's operations
+3. Lines 122-124: `switch_mode()` now calls `self._rebuild_operation_menu()` after setting mode
+
+**Test Execution Results:**
+- test_gui.py: 42 tests (30 existing + 12 new), all PASS
+- Full test suite: 457 tests, all PASS (445 pre-existing + 12 new)
+
+**All Tests Breakdown:**
+- test_calculator.py: 123 tests, all pass (no regressions)
+- test_cli.py: 53 tests, all pass (no regressions)
+- test_core_separation.py: 21 tests, all pass (no regressions)
+- test_documentation.py: 1 test, all pass (no regressions)
+- test_error_logging.py: 32 tests, all pass (no regressions)
+- test_gui.py: 42 tests, all pass (30 existing + 12 new mode-switching tests)
+- test_history.py: 28 tests, all pass (no regressions)
+- test_interactive.py: 15 tests, all pass (no regressions)
+- test_interactive_history_menu.py: 15 tests, all pass (no regressions)
+- test_interactive_validation.py: 14 tests, all pass (no regressions)
+- test_main_entrypoint.py: 8 tests, all pass (no regressions)
+- test_modular_structure.py: 25 tests, all pass (no regressions)
+
+**Implementation Verified:**
+The python-code-implementer's changes to src/ui/gui.py are correct and complete:
+- _setup_gui() properly stores _op_frame (line 275)
+- _rebuild_operation_menu() correctly destroys old menu before creating new one (line 137)
+- _rebuild_operation_menu() resets _op_var to first operation in new mode (line 142)
+- _rebuild_operation_menu() handles exceptions gracefully for headless environments (try/except at lines 134-144)
+- switch_mode() guards against invalid modes via if check (line 122)
+- switch_mode() calls _rebuild_operation_menu() to apply mode change (line 124)
+
+**Assessment:** 
+The full test suite is GREEN. All 457 tests pass without failure. The mode-switching behavior is correctly implemented and fully tested. All 12 new tests confirm the fix works as intended. No regressions in any of the 445 pre-existing tests. No escalations needed.
+
+**Handoff Notes:** All 12 new mode-switching tests written and verified passing. Full test suite (457 tests) passing with 100% success rate. GUI mode-switching feature complete and verified. Ready for orchestrator to commit and finalize PR.
+
+**Patterns Found:**
+- Tests for GUI widget behavior use @patch to mock tkinter.Tk to prevent window creation in headless CI
+- Tests verify both _current_mode state and get_current_mode_operations() results
+- Tests consolidate related mode-switching scenarios into single comprehensive test class
+- Tests validate exception safety (_rebuild_operation_menu wrapped in try/except for mocked environments)
+- Tests confirm internal consistency: mode persists, calculator/registry unchanged, operation lists accurate
+
+### Cycle 12 (2026-04-25)
+**Task:** Issue #415 — Trigonometric Functions in ScientificMode  
+**Phase:** WRITE  
+**Test Cases Added:** 13 new tests  
+- **Updated Existing Tests:** 5 tests modified to expect 18 operations instead of 12
+  - `test_scientific_mode_returns_eighteen_operations` (renamed, assertion updated)
+  - `test_scientific_mode_includes_advanced_ops` (assertion updated to include trig functions)
+  - `test_app_switch_to_scientific_mode` (assertion updated to 18 ops)
+  - `test_switch_scientific_returns_18_operations` (renamed, assertion updated)
+  - `test_mode_switch_persistence` (assertion updated to 18 ops)
+  - `test_multiple_mode_switches_stable` (assertion updated from 12→18 ops)
+  
+- **New Test Classes Added:**
+  - `TestScientificModeTrigonometry` (1 test)
+    - `test_scientific_mode_includes_all_trig_functions` — verifies sin, cos, tan, cot, asin, acos in ScientificMode
+  
+  - `TestTrigonometryCalculations` (4 tests)
+    - `test_app_calculate_sin` — calculate('sin', '0') returns ~0.0
+    - `test_app_calculate_cos` — calculate('cos', '0') returns ~1.0
+    - `test_app_calculate_asin` — calculate('asin', '0.5') returns ~0.5236
+    - `test_app_calculate_acos` — calculate('acos', '0.5') returns ~1.047
+  
+  - `TestTrigonometryUnaryClassification` (6 tests)
+    - `test_app_is_unary_sin` — sin is unary operation
+    - `test_app_is_unary_cos` — cos is unary operation
+    - `test_app_is_unary_tan` — tan is unary operation
+    - `test_app_is_unary_cot` — cot is unary operation
+    - `test_app_is_unary_asin` — asin is unary operation
+    - `test_app_is_unary_acos` — acos is unary operation
+  
+  - `TestCalculatorAppModeManagement` additions (2 tests)
+    - `test_app_scientific_mode_contains_trig_operations` — trig ops available in scientific mode
+    - `test_app_switch_back_to_simple_hides_trig` — trig ops not available in simple mode
+
+**Test Status:** ALL 13 NEW TESTS PASS. This is expected behavior after the implementer's change to `ScientificMode.get_operations()`:
+- Changed from `return registry.get_operations()` to `return registry.get_operations_by_mode(OperationMode.SCIENTIFIC)`
+- This change enables the registry to filter operations by mode, exposing all 18 operations (6 normal + 12 scientific)
+- Trigonometric functions (sin, cos, tan, cot, asin, acos) are now properly returned by get_operations_by_mode(SCIENTIFIC)
+- All calculation and unary classification tests pass, confirming trig operations work end-to-end
+
+**Test File Structure:**
+- Tests follow existing patterns: @patch decorator for mocking tk.Tk, Mock root object for dependency injection
+- Tests use `pytest.approx()` for floating-point comparisons (critical for sin/cos/asin/acos results)
+- Tests verify mode-specific operation exposure via set operations (issubset, isdisjoint)
+- Trigonometry calculations tested with known values (sin(0)=0, cos(0)=1, asin(0.5)≈0.5236, acos(0.5)≈1.047)
+
+**Full Test Suite Results:**
+- Total tests: 55 in test_gui.py (up from 42)
+- All test_gui.py tests: PASS (55/55)
+- Full pytest suite (all files): 470 tests PASS
+- Suite status: **GREEN** ✓
+
+**Assessment:** 
+The full test suite is GREEN. All 470 tests pass without failure. The trigonometric function integration into ScientificMode is correctly implemented and fully tested. All 13 new/updated tests confirm the feature works end-to-end:
+- Mode filtering correctly exposes 18 operations in scientific mode vs 6 in normal mode
+- Trigonometric functions are accessible and calculate correctly
+- Trigonometric functions are properly classified as unary operations
+- Mode switching preserves/removes trig operations as expected
+- No regressions in any pre-existing tests
+
+**Handoff Notes:** 
+WRITE phase complete. All new tests written and passing. Implementation already complete (change made to src/ui/modes.py by implementer). Full test suite confirms feature is working correctly. Ready to proceed to VERIFY phase to confirm all tests remain green.
+
+**Patterns Found:**
+- GUI tests consolidate multiple modes into single test classes with appropriate fixtures
+- Floating-point math functions require `pytest.approx()` for safe assertions
+- Mode-based filtering uses set operations (issubset/isdisjoint) for clean readability
+- Calculation tests use string conversion and float parsing to handle GUI result formatting
+- Unary operation classification tests use simple boolean assertions for clear intent
+

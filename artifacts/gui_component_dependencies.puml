@@ -1,0 +1,23 @@
+@startuml
+skinparam componentStyle rectangle
+
+title GUI Module Dependencies and Integration Points
+
+component "__main__\n(entry point)" as main
+component "src.ui.gui\n(CalculatorApp)" as gui
+component "src.ui.modes\n(CalculatorMode, SimpleMode,\nScientificMode)" as modes
+component "src.calculator\n(Calculator)" as calculator
+component "src.operation_registry\n(OperationRegistry)" as registry
+component "src.infrastructure.history\n(OperationHistory)" as history
+component "src.core.operations\n(OperationMode enum)" as core_ops
+
+main --> gui : conditional (--gui flag)
+gui --> calculator : uses
+gui --> registry : uses
+gui --> history : uses
+gui --> modes : uses
+modes --> registry : queries operations
+modes --> core_ops : uses OperationMode enum
+registry --> calculator : introspects at init
+
+@enduml

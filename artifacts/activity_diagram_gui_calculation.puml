@@ -1,0 +1,92 @@
+@startuml
+skinparam activityFontSize 13
+skinparam activityDiamondFontSize 12
+
+title GUI Calculation Flow (tkinter CalculatorApp)
+
+start
+
+:python -m calculator --gui;
+
+:__main__.py detects --gui flag;
+
+:Create Calculator, OperationRegistry;
+:Create CalculatorApp(root, calculator, registry);
+
+note right
+  __init__ also creates
+  OperationHistory, sets
+  _current_mode = NORMAL,
+  builds SimpleMode + ScientificMode,
+  calls _setup_gui()
+end note
+
+:_setup_gui(): build widgets
+(mode selector, op dropdown,
+ operand fields, button, result label,
+ history listbox);
+
+:Display GUI window (root.mainloop());
+
+repeat
+
+  if (User selects mode?) then (yes)
+    :switch_mode(selected OperationMode);
+    :get_current_mode_operations();
+
+    if (mode == NORMAL?) then (yes)
+      :SimpleMode.get_operations(registry)
+       → 6 NORMAL ops;
+    else (SCIENTIFIC)
+      :ScientificMode.get_operations(registry)
+       → 12 ops;
+    endif
+
+    :Repopulate operation dropdown;
+  endif
+
+  :User selects operation from dropdown;
+  :User enters operand(s) in fields;
+  :User clicks Calculate button;
+
+  :_on_calculate() triggered;
+  :Read op_name from dropdown;
+  :Read operand1 (and operand2) from fields;
+
+  if (is_unary_operation(op_name)?) then (yes)
+    :Use operand1 only;
+  else (binary)
+    :Use operand1 and operand2;
+  endif
+
+  :calculate(op_name, *operands);
+
+  fork
+    :_parse_operand(operand1);
+  fork again
+    if (binary?) then (yes)
+      :_parse_operand(operand2);
+    endif
+  end fork
+
+  if (parse error?) then (yes)
+    :Display error in result label;
+  else (parsed ok)
+    :registry.call(op_name, *parsed_args);
+
+    if (ZeroDivisionError / ValueError / Exception?) then (yes)
+      :calculate() returns error string;
+      :Display error in result label;
+    else (success)
+      :history.record(op_name, operands, result);
+      :calculate() returns result string;
+      :Update result label with result;
+      :Append entry to history listbox;
+    endif
+  endif
+
+repeat while (window open)
+
+stop
+
+@enduml

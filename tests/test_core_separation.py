@@ -145,21 +145,32 @@ class TestModuleBoundaryValidation:
 
     def test_circular_imports(self):
         """Verify no circular imports when importing core modules."""
-        # Clear any previously imported modules
-        modules_to_clear = [m for m in sys.modules.keys() if m.startswith('src.')]
-        for m in modules_to_clear:
-            del sys.modules[m]
+        # Save original state before mutation
+        original_modules = {k: v for k, v in sys.modules.items() if k.startswith('src.')}
 
-        # Now import in order
         try:
-            from src.calculator import Calculator
-            from src.operation_registry import OperationRegistry
-            from src.ui.interactive import run_interactive_session
-            from src.ui.cli import run_cli
-            # If we get here, no circular imports occurred
-            assert True
-        except ImportError as e:
-            pytest.fail(f"Circular import detected: {e}")
+            # Clear any previously imported modules
+            modules_to_clear = [m for m in sys.modules.keys() if m.startswith('src.')]
+            for m in modules_to_clear:
+                del sys.modules[m]
+
+            # Now import in order
+            try:
+                from src.calculator import Calculator
+                from src.operation_registry import OperationRegistry
+                from src.ui.interactive import run_interactive_session
+                from src.ui.cli import run_cli
+                # If we get here, no circular imports occurred
+                assert True
+            except ImportError as e:
+                pytest.fail(f"Circular import detected: {e}")
+        finally:
+            # Restore original sys.modules state
+            # First remove any newly added src.* modules
+            for m in [k for k in sys.modules.keys() if k.startswith('src.')]:
+                del sys.modules[m]
+            # Then restore the originals
+            sys.modules.update(original_modules)
 
     def test_main_dispatch_logic(self):
         """Test dispatch logic: len(sys.argv) > 1 means CLI, otherwise interactive."""

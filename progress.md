@@ -1,3 +1,51 @@
+## Run: Issue #415 — V3 Task 15 - Expert/team (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/modes.py` — new CalculatorMode abstract base class with SimpleMode (6 ops) and ScientificMode (12 ops) subclasses
+  - `src/ui/gui.py` — new CalculatorApp tkinter GUI class with dependency injection, mode switching, calculate(), get_history(), is_unary_operation(), run()
+  - `src/__main__.py` — added --gui flag routing to launch CalculatorApp
+  - `tests/test_gui.py` — 30 new tests covering modes, calculations, error handling, history, operation classification
+  - `tests/test_core_separation.py` — fixed test isolation bug in test_circular_imports (save/restore sys.modules)
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+- **Purpose:** Add tkinter-based GUI allowing users to perform calculations, switch between simple and scientific mode, view session history, and use the calculator without terminal prompts. GUI reuses existing Calculator, OperationRegistry, and OperationHistory without modification.
+- **Risks:** tkinter is unavailable in CI headless environment; gui.py uses a try/except ImportError stub for tk so tests can patch it without a real display. Production use requires a display server.
+- **Tests passed:** 445 passed, 0 failed
+
+Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
+
+## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction — trig ops (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/modes.py` — ScientificMode.get_operations() changed from registry.get_operations() to registry.get_operations_by_mode(OperationMode.SCIENTIFIC); now returns all 18 ops including trig
+  - `tests/test_gui.py` — updated 5 existing tests to expect 18 ops; added TestScientificModeTrigonometry, TestTrigonometryCalculations, TestTrigonometryUnaryClassification, and 2 new mode-switching trig tests
+- **Purpose:** Fix second owner review blocker: ScientificMode was returning only 12 legacy operations instead of all 18 (missing 6 trig functions: sin, cos, tan, cot, asin, acos). One-line fix in modes.py; GUI mode switching was already correct.
+- **Risks:** None — change is isolated to modes.py; GUI and registry already handled 18 ops correctly
+- **Tests passed:** 470 passed, 0 failed
+
+Duration: 533.2s | Cost: $1.078242 USD | Turns: 13
+
+## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added `_rebuild_operation_menu()` method and `_op_frame` reference; `switch_mode()` now calls `_rebuild_operation_menu()` to update the OptionMenu widget on mode change
+  - `tests/test_gui.py` — 12 new tests in `TestModeSwitchingBehavior` class covering mode switch operation counts, _op_var reset, persistence, stability, scientific-only ops, and no-exception guarantees
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Fix PR #462 review blocker: mode switching in the GUI was non-functional because the OptionMenu widget was built once in _setup_gui() and never rebuilt when the mode changed. The fix adds a _rebuild_operation_menu() helper that destroys and recreates the widget with the correct operation list for the new mode.
+- **Risks:** None — change is isolated to GUI layer; no core logic touched; headless test safety preserved via try/except wrapper
+- **Tests passed:** 457 passed, 0 failed
+
+Duration: 786.0s | Cost: $1.383743 USD | Turns: 15
+
 ## Run: update-diagrams — Calculator Modes (2026-04-24)
 
 - **Branch:** task/issue-412-calculator-modes
@@ -457,3 +505,38 @@ Duration: 509.7s | Cost: $0.996440 USD | Turns: 7
   - `artifacts/import_graph.puml` — new component diagram showing module import dependencies
 
 Duration: 217.7s | Cost: $0.525866 USD | Turns: 5
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI + mode + core components
+  - `artifacts/activity_diagram_gui_calculation.puml` — activity diagram for GUI calculation flow
+  - `artifacts/sequence_diagram_calculate.puml` — sequence diagram for calculate() interaction
+
+Duration: 407.8s | Cost: $0.703099 USD | Turns: 4
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** task/issue-415-tkinter-gui
+- **Files changed:**
+  - `artifacts/gui_class_structure.puml` — class hierarchy for CalculatorMode, SimpleMode, ScientificMode, CalculatorApp
+  - `artifacts/gui_component_dependencies.puml` — module dependency map for GUI layer integration
+  - `artifacts/gui_calculate_sequence.puml` — sequence diagram for user calculate operation flow
+  - `artifacts/gui_mode_switch_activity.puml` — activity diagram for mode switching and operation menu rebuild
+
+Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI mode abstraction and CalculatorApp relationships
+  - `artifacts/activity_diagram_calculate.puml` — activity diagram for user calculation flow
+  - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram for mode switching mechanism
+  - `artifacts/activity_diagram_entry_point.puml` — activity diagram for entry point routing
+
+Duration: 431.7s | Cost: $0.715237 USD | Turns: 5

@@ -479,3 +479,201 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - `src/ui/interactive.py` — to add mode selection menu and filter operation display
   - `src/core/operations.py` — possibly to add mode metadata or new operation category enum
   - `tests/` — new tests for mode selection and operation filtering
+
+### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team (CURRENT)
+- **Task Type:** Feature implementation (GUI layer using tkinter)
+- **Scope:** Add graphical user interface for calculator using tkinter; preserve existing calculator behavior and application logic; reuse existing operations without duplication
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit functional requirements
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "scope to adding tkinter-based GUI rather than replacing existing interactive or bash-based CLI modes"
+  - Follows completion of all prior tasks (#376–#414); builds on fully modularized codebase and comprehensive documentation
+  - Task is feature addition (new GUI) not refactoring; focuses on new UI layer
+  - Explicitly emphasizes reuse of existing application logic to avoid duplication
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Add **graphical user interface for calculator using tkinter**
+  2. **FR2 (MUST HAVE):** **Preserve current calculator behavior** — no changes to existing interactive/CLI modes
+  3. **FR3 (MUST HAVE):** **Reuse existing application logic** rather than duplicating in GUI layer
+  4. **FR4 (MUST HAVE):** GUI allows user access to **all currently available calculator functionality**
+  5. **FR5 (MUST HAVE):** GUI supports **operation selection** (all supported operations)
+  6. **FR6 (MUST HAVE):** GUI supports **operand entry** (unary and binary functions)
+  7. **FR7 (MUST HAVE):** GUI displays **calculation results**
+  8. **FR8 (MUST HAVE):** GUI supports **switching between simple and scientific mode**
+  9. **FR9 (MUST HAVE):** GUI allows viewing **session history**
+  10. **FR10 (MUST HAVE):** Use **object-oriented mode design** with **shared base abstraction for calculator modes**
+  11. **FR11 (MUST HAVE):** **Common structure** handles simple/scientific behavior while keeping operation sets **separate**
+  12. **NFR1:** User can **open calculator window** without terminal prompts
+  13. **NFR2:** User can **choose between simple and scientific mode** through interface
+  14. **NFR3:** User can **perform supported calculations** through interface
+  15. **NFR4:** User can **inspect current session history**
+  16. **NFR5:** Application is **usable without relying on terminal prompts**
+  17. **SC1:** Do NOT modify/replace existing interactive CLI mode
+  18. **SC2:** Do NOT modify/replace existing bash-based CLI mode
+  19. **SC3:** Keep change scoped to adding GUI; maintain relevant tests (tests must reflect current version)
+- **Current State (Discovered from RAG + Prior Task Context):**
+  - **Architecture established:** Modular structure (src/core/, src/ui/, src/infrastructure/, src/session/)
+  - **Existing UI modes:** Interactive (terminal-based), CLI (bash-based argument parsing)
+  - **Operations available (12 total):** add, subtract, multiply, divide, power, factorial, square, cube, sqrt, cbrt, ln, log10
+  - **Missing trig operations:** sin, cos, tan, cot, asin, acos (listed in issue #412 but not yet implemented; architect must clarify if available for GUI)
+  - **Mode support:** Issue #412 (interactive mode switching) may or may not be completed before this task; architect must check current state
+  - **History tracking:** history.py module already implements persistence; GUI can reuse
+  - **Error logging:** error_logger.py already implements error tracking; GUI can reuse
+  - **Session management:** SessionManager in src/session/manager.py (may or may not be fully utilized by GUI)
+- **Ambiguities Flagged:**
+  1. **Trigonometric operations availability:** Issue #415 expects "all currently available" operations in GUI. If trig ops from #412 not implemented, should GUI implementation wait or include stub/placeholder? (CLARIFICATION NEEDED: architect must determine which operations are actually available)
+  2. **Mode switching implementation:** Issue #412 adds interactive-mode switching; does GUI also need to support mode switching, or is it orthogonal to GUI implementation? (ASSUMPTION: GUI supports mode switching in same way interactive mode does, if mode switching is implemented by then)
+  3. **GUI entry point:** How is GUI launched? (a) New entry point in __main__.py with CLI arg flag, (b) separate script/command, (c) choice menu in existing __main__.py, (d) standalone launcher script? (DEFERRED to architect; no specification provided)
+  4. **History display format:** Should GUI history display match function-style format from history.txt (e.g., "add(2, 3) = 5"), or can it use tabular/graphical format? (ASSUMPTION: reuse existing history module format; flexible display allowed)
+  5. **Session persistence in GUI:** Does GUI session start fresh (like interactive mode), or can user load previous session history via GUI menu? (ASSUMPTION: fresh session per GUI invocation; history viewing shows previous sessions if desired)
+  6. **Error handling in GUI:** How are calculator errors (domain errors, invalid operations) displayed? (ASSUMPTION: GUI shows error messages in dedicated error label/dialog instead of stderr)
+  7. **Mode persistence in GUI:** When user closes and reopens GUI, does selected mode persist? (ASSUMPTION: mode resets to default (simple) on each new GUI session)
+  8. **Unary vs binary operation handling:** How does GUI distinguish unary vs binary ops in input flow? (e.g., prompt for single operand for sqrt, two operands for add) (DEFERRED to architect; UI design pattern not specified)
+  9. **OOP mode design specifics:** "Object-oriented mode design with shared base abstraction" — does this mean: (a) base class for Mode with subclasses SimpleMode/ScientificMode, (b) mode metadata in operation registry, (c) factory pattern for mode instantiation, or (d) something else? (DEFERRED to architect; no implementation pattern specified)
+  10. **Reuse of existing logic:** Which modules/functions should GUI call directly? (ASSUMPTION: GUI delegates to Calculator class and OperationRegistry; avoids reimplementing operation logic)
+  11. **Test strategy for GUI:** Should GUI be tested via unit tests (mocking tkinter), integration tests (launching GUI window), or both? (DEFERRED; test phase will determine approach)
+- **Constraints:**
+  - Must not modify existing interactive or CLI modes
+  - Must reuse existing application logic (Calculator, operations, history, error logging)
+  - Must preserve all existing test pass rate (no regression)
+  - GUI is NEW UI layer alongside existing UI modes; does not replace them
+  - Mode abstraction must support future extension (simple/scientific separation pattern from #412)
+  - No changes to CLAUDE.md, .gitignore, or workflow files
+- **Acceptance Criteria (inferred):**
+  - AC1: GUI launches successfully from configured entry point without terminal prompts
+  - AC2: GUI displays all currently available operations in mode-appropriate list
+  - AC3: User can select operation and enter operands (single for unary, two for binary) via GUI
+  - AC4: User can click "Calculate" button and see result displayed in GUI
+  - AC5: GUI displays errors gracefully (e.g., domain errors, invalid operands)
+  - AC6: User can switch between simple and scientific modes using GUI controls
+  - AC7: Simple mode displays only basic operations; scientific mode displays all operations
+  - AC8: User can access session history from GUI (view operations performed, formatted consistently with history.txt)
+  - AC9: User can close GUI window and exit application cleanly (no hanging threads, proper cleanup)
+  - AC10: All existing tests pass; no regression from adding GUI module
+  - AC11: GUI code is organized in modular fashion (e.g., src/ui/gui.py or src/ui/tkinter_app.py) following existing structure
+  - AC12: Object-oriented mode abstraction is evident; base class or interface supports both simple/scientific behaviors
+  - AC13: Existing application logic (operations, history, logging) is reused, not duplicated in GUI
+- **Handoff Notes for Architect:**
+  1. **CRITICAL AMBIGUITY 1:** Confirm which operations are "currently available" (12 known + 6 trig from #412?). If trig not yet implemented, clarify scope for GUI task.
+  2. **CRITICAL AMBIGUITY 2:** Clarify mode switching design: does GUI leverage interactive mode switching from #412, or implement independently?
+  3. **CRITICAL AMBIGUITY 3:** Design object-oriented mode abstraction: propose base class structure (e.g., `class Mode(ABC)` with `get_operations()` method, or operation registry filtering approach).
+  4. **CRITICAL AMBIGUITY 4:** Specify GUI entry point mechanism: CLI arg, separate script, menu choice, or standalone launcher.
+  5. Architect should produce test specs covering: GUI window launch, operation selection, operand entry (unary/binary), result display, error display, mode switching, history viewing, window close/cleanup, mode persistence behavior, code organization.
+  6. Architect should produce UI/UX design sketch or pseudocode showing tkinter widget layout (e.g., operation buttons, operand entry fields, result label, mode selector, history viewer).
+  7. Architect should clarify reuse strategy: which existing classes/functions should GUI import and delegate to (Calculator, OperationRegistry, OperationHistory, ErrorLogger, SessionManager).
+  8. Architect should specify file organization: where GUI code lives (src/ui/gui.py vs src/ui/tkinter_app.py vs src/ui/gui_app.py), and whether mode abstraction lives in src/core/ or src/ui/.
+- **Patterns Observed:**
+  - Task builds on fully completed prior work (#376–#414); inherits modular structure and comprehensive documentation
+  - Task involves new UI layer (GUI) alongside existing UI modes (interactive, CLI); architectural pattern is additive, not replacements
+  - Mode switching design (from #412) is prerequisite or parallel concern; GUI must align with mode abstraction strategy
+  - Strong emphasis on reuse over duplication suggests architect should design clear API boundaries between GUI and core logic
+- **Files Likely to Be Modified/Created:**
+  - **Create:** `src/ui/gui.py` or `src/ui/tkinter_app.py` (main GUI implementation)
+  - **Create or modify:** Mode abstraction (possibly `src/core/mode_base.py` or enhancements to `src/core/operations.py`)
+  - **Modify:** `src/__main__.py` (to add GUI entry point or launcher choice)
+  - **Possibly modify:** `src/ui/interactive.py` (if mode abstraction is shared with interactive mode)
+  - **Tests:** `tests/test_gui.py` or similar (new GUI test module)
+  - **May reference (no modification):** `src/calculator.py`, `src/operation_registry.py`, `src/infrastructure/history.py`, `src/infrastructure/error_logger.py`
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-25 — PR #462 Review: Unresolved Feedback on Issue #415 Implementation — CURRENT ANALYSIS
+- **Task Type:** PR review feedback analysis (identify and structure unresolved owner feedback requiring fixes)
+- **Scope:** Extract and structure unresolved owner feedback on PR #462 (Issue #415 tkinter GUI implementation)
+- **PR Status:** OPEN with blocking owner feedback (2 unresolved comment threads)
+- **PR Implementation Summary (from PR body):**
+  - **`src/ui/modes.py`** — New `CalculatorMode` abstract base class with `SimpleMode` (6 ops: add, subtract, multiply, divide, square, sqrt) and `ScientificMode` (all 12 legacy ops) subclasses; clean OO mode abstraction
+  - **`src/ui/gui.py`** — New `CalculatorApp` tkinter GUI reusing `Calculator`, `OperationRegistry`, `OperationHistory`; supports mode switching, dynamic operand fields, error display, scrollable history; fully injectable for testability
+  - **`src/__main__.py`** — Added `--gui` flag: `python -m src --gui` launches GUI; CLI and interactive paths unchanged
+  - **`tests/test_gui.py`** — 30 new tests covering modes, calculations, error handling, history, operation classification (headless via mocked tkinter)
+  - **`tests/test_core_separation.py`** — Fixed `sys.modules` isolation bug in `test_circular_imports`
+- **TEST RESULT:** PR summary claims "445 passed in 0.38s" (all tests passing)
+- **UNRESOLVED BLOCKERS (Critical - 2 comment threads):**
+  
+  **COMMENT 1 (2026-04-25 15:42:36Z) — Owner Task List (First Report):**
+  - "**Done?**" [implicit: owner tested manually and found issues]
+  - Task 1: "When changing modes from Normal to Scientific, nothing changes."
+  - Task 2: "When Selecting the Scientific modes, the operations are not updated."
+  - Task 3: "Add the Scientific operations when scientific mode is selected, add the functionality to them."
+  - Task 4: "Every functionality from CLI should be incorporated into the GUI"
+  - **Status:** Explicitly flagged as needing fixes; owner functional test reveals mode switching is broken
+  
+  **COMMENT 2 (2026-04-25 16:07:31Z) — Owner Escalation (Follow-up):**
+  - "**Fix needed**" [explicit blocker signal]
+  - Task 1: "GUI still does not show all of the 18 operations implemented, only 12. It's missing the trigonometry functions."
+  - Task 2: "Add those operations to the scientific mode."
+  - **Status:** Follow-up comment indicates initial fixes did not address root cause; new issue identified: GUI is missing 18 operations (not just 12), specifically trig functions
+  - **CRITICAL FINDING:** Owner statement "18 operations implemented" contradicts PR claim of 12 ops; either (a) 6 trig ops were recently added, or (b) owner expects GUI to support a broader operation set than currently documented
+  
+- **Requirements Extracted from Unresolved Feedback:**
+  1. **FR1 (MUST HAVE):** **Fix mode switching functionality**
+     - Symptom: User selects scientific mode → GUI operation list does not update
+     - Current state: `CalculatorMode` class exists with `SimpleMode`/`ScientificMode` subclasses, but GUI controls not re-rendering on mode change
+     - Fix: Implement dynamic operation filtering when mode selection changes; operation buttons/dropdown must update immediately upon mode switch
+     
+  2. **FR2 (MUST HAVE):** **Ensure operation set in GUI matches available operations**
+     - Symptom: GUI displays 12 operations; owner reports 18 operations "implemented"
+     - Current state: PR implements `SimpleMode` (6 ops) + `ScientificMode` (12 ops); missing 6 trigonometry functions
+     - Fix: Identify which 6 trig operations should be available (sin, cos, tan, cot, asin, acos); verify they are implemented in core/registry; add them to `ScientificMode` operation list in GUI
+     
+  3. **FR3 (MUST HAVE):** **Verify operation functionality parity between GUI and CLI**
+     - Symptom: Owner states "Every functionality from CLI should be incorporated into the GUI"
+     - Current state: CLI supports 12 ops; GUI scientific mode should support same 12 + any trig ops available in CLI
+     - Fix: Enumerate all operations available in CLI via `OperationRegistry.get_operations()` or CLI entry point; ensure GUI scientific mode includes all of them
+     
+  4. **FR4 (MUST HAVE):** **Dynamic operand field adaptation on mode switch**
+     - Symptom: Related to FR1; when mode changes, operand entry fields may not adapt correctly for unary vs binary ops
+     - Current state: PR mentions "dynamic unary/binary operand fields" but unclear if they update on mode change
+     - Fix: Ensure operand fields (labels, input widgets) adjust based on selected operation's arity when mode switches
+     
+  5. **NFR1:** Mode switching must be **immediate and responsive** — no lag, no need to restart GUI
+     
+  6. **NFR2:** All **445 tests must remain passing** after fixes (no regressions); any new operations added must be fully tested
+     
+  7. **NFR3:** Error messages must guide user if they attempt unavailable operation in current mode (e.g., trig in simple mode)
+
+- **Critical Ambiguities / Root Cause Analysis:**
+  1. **Missing trigonometry functions:** Owner explicitly mentions "18 operations implemented" and refers to "trigonometry functions" missing from GUI. CLARIFICATION NEEDED: Are these 6 trig ops (sin, cos, tan, cot, asin, acos) already implemented in core modules, or must they be added as part of this PR fix? (If already implemented in issue #412 or elsewhere, GUI just needs to reference them; if not, core implementation is blocked prerequisite)
+  
+  2. **Mode persistence mechanism:** Current `CalculatorMode` implementation likely has mode object but GUI controls (buttons/dropdown/tabs) not observing mode changes. LIKELY ROOT CAUSE: Mode object state changes internally but no callback/event mechanism triggers UI re-render. FIX: Add mode change listener or observer pattern so GUI re-renders operation list on mode switch.
+  
+  3. **Operation list filtering:** PR implements `SimpleMode` (6 ops) and `ScientificMode` (12 ops) but GUI may not be calling mode object's operation getter method, or operation getter may not be correctly filtering. LIKELY ROOT CAUSE: Mode switching button/control triggers internal mode change but operation display widget (buttons/dropdown) still references old mode or static operation list. FIX: Bind operation display widget to mode object's `get_operations()` method; re-populate widget on every mode change.
+  
+  4. **Test coverage gap:** PR passes 445 tests but manual functional test fails. LIKELY ROOT CAUSE: Automated tests may mock GUI controls or use headless rendering, so mode switching UI behavior not tested. (Tests verify mode object switches internally but don't verify UI updates) FIX: Add tests that verify operation widget is re-populated when mode changes; test end-to-end mode switching flow.
+  
+  5. **Trig operations implementation status:** Owner feedback mentions "18 operations" but PR only documents 12. CLARIFICATION NEEDED: Where are these 6 additional trig operations? Are they in `OperationRegistry` already, or is this PR expected to add them? If already in registry but GUI doesn't show them, GUI simple oversight. If not in registry, this is a blocker requiring core implementation first.
+
+- **Owner Expectations Inferred:**
+  - Mode switching MUST work visually in GUI; owner tested manually and found it broken
+  - All 18 operations (or at least all operations in CLI) must be accessible in scientific mode
+  - Owner expects feature parity: if operation is in CLI registry, it must be available in GUI scientific mode
+  - Four-point initial task list + follow-up suggest multiple interconnected issues, not a single root cause
+  - Follow-up comment (mentioning 18 vs 12 ops) indicates first fix attempt did not resolve issue; suggests implementer may have only partially addressed mode switching
+
+- **Handoff Notes for Architect:**
+  - **CRITICAL DECISION 1:** Are the 6 trigonometry functions (sin, cos, tan, cot, asin, acos) currently implemented in the codebase? If not, are they in scope for this PR fix?
+  - **CRITICAL DECISION 2:** What is the intended operation count? PR documents 12; owner mentions 18. Clarify scope: simple mode = 6 ops, scientific = 12 ops (current PR assumption), or is the expectation different?
+  - Clarify mode switching architecture: should mode object notify GUI of changes (observer pattern), or should GUI poll mode object on every user interaction?
+  - Clarify which GUI elements trigger mode switches (radio buttons, dropdown, menu) and which display operation list (buttons, dropdown, tabs); ensure they're properly linked
+  - Design test spec that specifically validates mode switching UI behavior (not just internal state)
+
+- **Handoff Notes for Implementer:**
+  - Root cause likely: mode object changes but GUI operation display not re-rendered. DEBUG STEPS:
+    1. Add logging/breakpoints to mode selection event handler; verify it fires when user switches mode
+    2. Verify mode switch triggers operation list refresh (widget repopulation)
+    3. Verify operation getter returns correct operation set for current mode
+    4. Manually test: switch mode in GUI and observe operation buttons/dropdown — they should update immediately
+  - If trig operations missing from operation list: verify they exist in `OperationRegistry`; if not, implement them or clarify scope
+  - Add end-to-end test: select mode, verify operations change, select operation from new mode, calculate, verify result
+
+- **Handoff Notes for Tester:**
+  - Write new tests covering: (1) mode switch updates operation display, (2) scientific mode operations accessible after switch, (3) simple mode operations unavailable in simple mode, (4) trig operations (if applicable) available in scientific, (5) mode switch mid-session (switch mode, calculate, switch back, verify)
+  - Verify all 445+ tests pass after fixes (no regression)
+  - Manual functional test: launch GUI, switch modes, select operations from each mode, verify calculations work
+
+- **Label:** `request-changes:expert-team` (blocking feedback; functional regression in core GUI feature)
+
+- **Patterns Observed:**
+  - PR automated test suite passes (445 tests) but owner's manual functional test fails — classic case of test coverage gap (tests don't validate UI behavior)
+  - Owner comment evolves from "here are the problems" (first comment) to "you didn't fix it correctly" (second comment) — suggests implementer may have attempted partial fix without addressing root cause
+  - Owner mention of "18 operations" introduces new ambiguity about operation scope; may indicate missing trig ops or misalignment on expected feature set
+  - Mode switching is core to issue #415 requirement; its failure is blocking PR merge
+

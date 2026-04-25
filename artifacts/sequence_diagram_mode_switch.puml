@@ -1,0 +1,47 @@
+@startuml
+skinparam participantFontSize 13
+skinparam sequenceArrowFontSize 12
+
+title Mode Switching — CalculatorApp + OperationRegistry
+
+actor User
+participant "CalculatorApp" as App
+participant "CalculatorMode\n(SimpleMode / ScientificMode)" as Mode
+participant "OperationRegistry" as Registry
+participant "OptionMenu\n(tk widget)" as Menu
+
+User -> App : clicks radiobutton\n(Normal / Scientific)
+activate App
+
+App -> App : switch_mode(OperationMode.X)
+App -> App : _current_mode = OperationMode.X
+
+App -> App : _rebuild_operation_menu()
+activate App
+
+App -> App : get_current_mode_operations()
+App -> Mode : get_operations(registry)
+activate Mode
+
+Mode -> Registry : get_operations_by_mode(OperationMode.X)
+activate Registry
+Registry --> Mode : List[str] — operation names
+deactivate Registry
+
+Mode --> App : List[str]
+deactivate Mode
+
+App -> Menu : Destroy existing OptionMenu
+destroy Menu
+
+App -> Menu : Create new OptionMenu\nwith updated operations list
+activate Menu
+Menu --> App : widget ready
+
+App -> App : _op_var.set(operations[0])
+deactivate App
+
+App --> User : UI updated with new operations
+deactivate App
+
+@enduml

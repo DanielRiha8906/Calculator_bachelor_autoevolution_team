@@ -1,0 +1,39 @@
+@startuml
+title User Calculate Operation Flow
+
+actor User
+participant "CalculatorApp" as App
+participant "OperationRegistry" as Registry
+participant "Calculator" as Calc
+participant "OperationHistory" as History
+participant "GUI (tk widgets)" as GUI
+
+User -> App : clicks Calculate button
+activate App
+
+App -> App : _on_calculate()
+App -> App : extract op_name from _op_var
+App -> App : is_unary_operation(op_name)
+App -> App : _parse_operand(value) [per operand]
+App -> App : calculate(op_name, *operands)
+
+App -> Registry : call(op_name, *numeric_operands)
+activate Registry
+Registry -> Calc : op_method(*args)
+activate Calc
+Calc --> Registry : result
+deactivate Calc
+Registry --> App : result
+deactivate Registry
+
+alt success
+    App -> History : record(op_name, operands, result)
+    App -> GUI : set _result_var = result string
+    App -> GUI : append to _history_text widget
+else error (ValueError, ZeroDivisionError)
+    App -> GUI : _show_error(error_msg)
+end
+
+deactivate App
+
+@enduml

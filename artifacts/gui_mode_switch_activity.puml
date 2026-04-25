@@ -1,0 +1,36 @@
+@startuml
+title Calculator Mode Transition and Operation Menu Rebuild
+
+start
+
+:User clicks radiobutton (Normal or Scientific);
+
+:Call switch_mode(OperationMode.NORMAL or SCIENTIFIC);
+
+if (mode exists in _modes dict?) then (yes)
+    :Update _current_mode;
+else (no)
+    :Log / ignore;
+    stop
+endif
+
+:Call _rebuild_operation_menu();
+
+:Call get_current_mode_operations();
+:Get CalculatorMode instance from _modes[_current_mode];
+
+if (SimpleMode?) then (yes)
+    :registry.get_operations_by_mode(NORMAL)
+     → 6 operations;
+else (ScientificMode)
+    :registry.get_operations()
+     → 12 operations;
+endif
+
+:Destroy existing _op_menu widget;
+:Create new OptionMenu with new operations list;
+:Set selected = first operation in list;
+
+stop
+
+@enduml
