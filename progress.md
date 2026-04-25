@@ -503,3 +503,15 @@ Duration: 217.7s | Cost: $0.525866 USD | Turns: 5
   - `artifacts/sequence_diagram_calculate.puml` — sequence diagram for calculate() interaction
 
 Duration: 407.8s | Cost: $0.703099 USD | Turns: 4
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** task/issue-415-tkinter-gui
+- **Files changed:**
+  - `artifacts/gui_class_structure.puml` — class hierarchy for CalculatorMode, SimpleMode, ScientificMode, CalculatorApp
+  - `artifacts/gui_component_dependencies.puml` — module dependency map for GUI layer integration
+  - `artifacts/gui_calculate_sequence.puml` — sequence diagram for user calculate operation flow
+  - `artifacts/gui_mode_switch_activity.puml` — activity diagram for mode switching and operation menu rebuild
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

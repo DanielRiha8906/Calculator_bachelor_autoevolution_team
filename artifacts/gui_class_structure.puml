@@ -1,0 +1,73 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title UI Mode Abstraction and Calculator App Class Hierarchy
+
+package "src/ui" {
+    abstract class CalculatorMode {
+        {abstract} + get_operations(registry) : List[str]
+        {abstract} + get_mode_name() : str
+    }
+
+    class SimpleMode {
+        + get_operations(registry) : List[str]
+    }
+
+    note right of SimpleMode
+        Queries registry.get_operations_by_mode(NORMAL)
+        Returns 6 NORMAL-mode operations
+    end note
+
+    class ScientificMode {
+        + get_operations(registry) : List[str]
+    }
+
+    note right of ScientificMode
+        Queries registry.get_operations()
+        Returns all 12 operations
+    end note
+
+    class CalculatorApp {
+        - _calculator : Calculator
+        - _registry : OperationRegistry
+        - _history : OperationHistory
+        - _root : tk.Tk
+        - _current_mode : OperationMode
+        - _modes : dict
+        - _unary_ops : frozenset
+        --
+        + __init__(root, calculator, registry)
+        + get_current_mode_operations() : List[str]
+        + switch_mode(mode) : None
+        + calculate(op_name, *operands) : str
+        + get_history() : List[str]
+        + is_unary_operation(op_name) : bool
+        + run() : None
+        - _setup_gui() : None
+        - _rebuild_operation_menu() : None
+        - _parse_operand(value) : object
+        - _on_calculate() : None
+    }
+}
+
+package "src" {
+    class Calculator
+    class OperationRegistry
+}
+
+package "src/infrastructure" {
+    class OperationHistory
+}
+
+' Inheritance
+CalculatorMode <|-- SimpleMode
+CalculatorMode <|-- ScientificMode
+
+' Composition
+CalculatorApp *-- Calculator
+CalculatorApp *-- OperationRegistry
+CalculatorApp *-- OperationHistory
+CalculatorApp *-- CalculatorMode : via _modes dict
+CalculatorApp *-- "tk.Tk" as TkRoot
+
+@enduml
