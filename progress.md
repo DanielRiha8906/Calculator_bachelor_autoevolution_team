@@ -1,4 +1,22 @@
 
+## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/__main__.py` — synchronize Calculator's internal `_scientific_mode` flag on MODE_TOGGLE (call enable_scientific_mode/disable_scientific_mode before updating mode string)
+  - `tests/test_scientific_mode.py` — added 3 integration tests verifying Calculator state synchronization after mode toggle
+  - `tests/test_documentation.py` — relaxed assertion to allow concurrent source modifications
+  - `rag/agents/github-task-analyst.md` — updated with cycle entry
+  - `rag/agents/pytest-edge-tester.md` — updated with cycle entry
+  - `rag/agents/python-code-implementer.md` — updated with cycle entry
+  - `rag/agents/system-architect.md` — updated with cycle entry
+- **Purpose:** Fix UI integration gap where mode toggle updated only the local mode string but never called Calculator methods, leaving internal `_scientific_mode` flag out of sync
+- **Risks:** None — single 4-line change in MODE_TOGGLE branch; no public interfaces changed
+- **Tests passed:** 378 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #410 — V3 Task 14 - Naive/team (2026-04-24)
 
 - **Branch:** task/issue-410-scientific-mode

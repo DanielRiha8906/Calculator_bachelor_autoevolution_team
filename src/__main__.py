@@ -42,6 +42,10 @@ def main() -> None:
                     if result == "QUIT":
                         break
                     if result == "MODE_TOGGLE":
+                        if mode == "normal":
+                            calc.enable_scientific_mode()
+                        else:
+                            calc.disable_scientific_mode()
                         mode = "scientific" if mode == "normal" else "normal"
                         display_mode_change(mode)
                         continue

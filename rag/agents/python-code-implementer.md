@@ -173,6 +173,18 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - No circular import risk: `basic_operations` and `advanced_operations` have no project imports; `calculator_core` imports only those two; `calculator` imports `calculator_core`; `interface` imports `calculator_core` directly; `batch_cli` imports `calculator_core` directly.
 - **Test result:** 324 passed, 1 skipped (pre-existing skip).
 
+### 2026-04-25 — issue-410: scientific mode — sync Calculator internal flag on MODE_TOGGLE
+
+- **Task:** Fix bug in `src/__main__.py` where the MODE_TOGGLE branch updated the local `mode` string but never called the Calculator's mode-management methods, leaving `calc._scientific_mode` always `False`.
+- **Files changed:** `src/__main__.py`
+- **Changes made:**
+  - In the `if result == "MODE_TOGGLE":` branch, added a conditional before the mode string flip: `calc.enable_scientific_mode()` when `mode == "normal"`, `calc.disable_scientific_mode()` otherwise.
+  - The `mode` string update and `display_mode_change(mode)` call order are unchanged.
+- **Patterns found:**
+  - The local `mode` string and `calc._scientific_mode` were out of sync because the toggle logic only updated the string. Always check whether a UI state variable needs to be mirrored into the domain object.
+  - The fix must call the Calculator method BEFORE flipping the string, otherwise the condition `mode == "normal"` would read the already-toggled value and call the wrong method.
+- **Test result:** pending VERIFY phase.
+
 ### 2026-04-24 — issue-407: add README documentation for calculator application
 
 - **Task:** Append comprehensive English-language documentation sections to `README.md` to satisfy 10 failing tests in `tests/test_documentation.py`. No `.py` files in `src/` were modified.

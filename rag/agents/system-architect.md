@@ -425,3 +425,44 @@ __main__.py                [UNCHANGED] Entry point (imports via cli)
 - **pytest-edge-tester (WRITE phase):** Write 30 test cases covering: (1) Module imports (tests 1-4: basic_ops, advanced_ops, calculator_core, operations registry can be imported), (2) Backward compatibility (tests 5-9: Calculator still importable from src.calculator, same public API, history works), (3) Operation functions (tests 6-24: basic_ops functions work, advanced_ops functions work, error handling preserved), (4) Extensibility (tests 25-28: operations registry complete, module structure clear, new modules can follow same pattern), (5) No regressions (tests 29-30: all 100+ existing tests still pass, batch_cli works unchanged). All new tests must initially fail or verify pre-conditions.
 - **python-code-implementer:** Implement per plan: (1) Create basic_operations.py with 4 functions, (2) Create advanced_operations.py with 8 functions + math imports, (3) Create calculator_core.py with Calculator class delegating to both modules, (4) Replace calculator.py with facade, (5) Update imports in interface.py and batch_cli.py. Zero behavior changes; all 100+ existing tests pass; architecture clear and extensible.
 
+### Cycle 9: 2026-04-25 — PR #457 Unresolved Feedback (Scientific Mode UI Integration Issue)
+**Task:** Fix the integration gap between scientific mode state management in Calculator and interactive UI display of scientific operations. PR #457 implements scientific operations and mode management but does not properly expose them through the interactive UI.
+
+**Current Problem Analysis:**
+- Calculator class (`calculator_core.py`) has complete scientific operation methods (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, get_pi, get_e) ✓
+- Mode state management in Calculator works correctly (enable_scientific_mode, disable_scientific_mode, toggle_scientific_mode, is_scientific_mode) ✓
+- SCIENTIFIC_OPERATIONS dict exists in `interface.py` with proper metadata ✓
+- prompt_for_operator() accepts mode parameter and correctly shows/hides scientific ops based on mode ✓
+- scientific_operations.py module exists with all 12 pure functions ✓
+- **BUT:** __main__.py tracks mode as a local string variable and toggles it, but never synchronizes Calculator._scientific_mode with the UI mode state
+- **Result:** prompt_for_operator receives correct mode string, displays correct operations, user can select them, but Calculator instance's internal scientific_mode flag is never updated
+
+**Integration Gap Root Cause:**
+- Line 45 in `__main__.py`: `mode = "scientific" if mode == "normal" else "normal"` toggles the local string
+- This local string is passed to `run_calculator(calc=calc, max_retries=3, mode=mode)` 
+- `run_calculator` passes mode to `prompt_for_operator(max_retries=max_retries, mode=mode)`
+- prompt_for_operator uses mode string to determine which operations dict to use (OPERATIONS or OPERATIONS+SCIENTIFIC_OPERATIONS)
+- BUT `calc.enable_scientific_mode()` and `calc.disable_scientific_mode()` are never called
+- The Calculator's internal _scientific_mode flag remains False throughout, even though UI shows scientific ops
+
+**Key Architectural Decision:**
+Synchronize the Calculator's internal mode state with the UI mode string by calling Calculator mode methods when mode changes.
+
+**Where to Make the Change:**
+- In `__main__.py`, when MODE_TOGGLE is detected, also call the appropriate Calculator method:
+  - If mode is currently "normal", call `calc.enable_scientific_mode()` before updating mode string
+  - If mode is currently "scientific", call `calc.disable_scientific_mode()` before updating mode string
+- This ensures Calculator's _scientific_mode flag stays in sync with the UI's mode string
+
+**Pattern Observed:**
+- Mode state is now managed in TWO places: Calculator instance and __main__ loop variable
+- Both must be kept synchronized for end-to-end functionality
+
+**Risks & Mitigations:**
+- Risk: Forgetting to call Calculator methods leaves internal state inconsistent. Mitigation: centralize mode toggle in one place (either Calculator or __main__) with clear responsibility.
+- Risk: Tests don't verify integration (only unit tests of isolated components). Mitigation: write integration tests simulating full user flow: mode toggle → operation selection → execution.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write failing integration tests (see Test Specifications below) that simulate end-to-end user flow in scientific mode. Tests must verify that after mode toggle, user can select and execute scientific operations, and Calculator internal state reflects the mode change.
+- **python-code-implementer:** Modify `__main__.py` to synchronize Calculator mode state with UI mode string. When MODE_TOGGLE is returned from run_calculator, call the appropriate Calculator method (enable/disable) before updating the mode string variable. Verify all integration tests pass.
+
