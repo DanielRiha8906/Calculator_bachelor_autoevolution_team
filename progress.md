@@ -1,3 +1,17 @@
+## Run: Issue #464 — V3 Task 16 - Redesign - Structured/team (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/window.py` — complete rewrite to iOS-inspired dark grid calculator (4×5 button grid, color constants, _ButtonConfig helper, scientific panel)
+  - `tests/test_gui_window_redesign.py` — new test suite (46 tests) covering colors, layout, symbols, and button structure
+  - `tests/test_main_entry_gui.py` — updated stale test that expected GUI to not exist
+- **Purpose:** Redesign calculator GUI to modern iOS-inspired dark interface with black background, orange operators, flat buttons, and Unicode symbols
+- **Risks:** None — no logic changes, all calculation delegates to GUIController unchanged
+- **Tests passed:** 462 passed, 0 failed, 3 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #414 — V3 Task 15 - Structured/team (2026-04-25)
 
 - **Branch:** task/issue-414-tkinter-gui
@@ -427,3 +441,4 @@ Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
   - `artifacts/gui_operation_sequence.puml` — new sequence diagram for GUI operation execution showing interactions between User, GUIWindow, GUIController, OperationRegistry, and Operation
 
 Duration: 343.9s | Cost: $0.663255 USD | Turns: 4
+
