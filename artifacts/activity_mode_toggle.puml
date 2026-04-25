@@ -6,7 +6,7 @@ title Mode Toggle — NORMAL ↔ SCIENTIFIC Panel Rebuild
 
 start
 
-:User clicks mode toggle button;
+:User presses mode toggle button;
 
 :_on_mode_toggle();
 
@@ -16,37 +16,31 @@ else (no)
     :_current_mode = NORMAL;
 endif
 
-:_update_mode_toggle_text();
-
-note right
-  Button label switches between
-  "Scientific" and "Normal"
-end note
+:Update _mode_toggle_btn text\n("Scientific" ↔ "Normal");
 
 :_rebuild_bottom_panel();
 
-:Destroy existing _bottom_frame and its child buttons;
+:Destroy existing _bottom_frame\nand all child operation buttons;
 
 :Create new _bottom_frame widget;
 
 if (_current_mode == NORMAL?) then (yes)
-    :Op set: sqrt, square, factorial, ln, log10\n(5 ops in 4-column grid);
+    :Op set: _NORMAL_OPS\n(sqrt, square, factorial, ln, log10)\n5 ops in 4-column grid;
 else (no)
-    :Op set: NORMAL ops + cube, cbrt, power,\nsin, cos, tan, cot, asin, acos\n(14 ops in 4-column grid);
+    :Op set: _NORMAL_OPS + _SCIENTIFIC_OPS\n(+ cube, cbrt, power, sin, cos,\n  tan, cot, asin, acos)\n14 ops in 4-column grid;
 endif
 
-:_build_bottom_panel(new _bottom_frame);
-
 fork
-    :For each op: _op_button_colours(op_name) → (bg, fg, active_bg);
+    :For each op_name:;
+    :_op_button_colours(op_name)\n→ (bg, fg, active_bg);
+    :_make_button(parent, symbol,\n  bg, fg, active_bg, command);
+    :grid-place button in 4-column layout;
 fork again
-    :_make_button(parent, symbol, bg, fg, active_bg, command);
+    :bind <Enter> → _on_button_enter;
+    :bind <Leave> → _on_button_leave;
 end fork
 
-:grid-place each button in 4-column layout;
-
-:bind <Enter> → _on_button_enter;
-:bind <Leave> → _on_button_leave;
+:Store button refs in _operation_buttons;
 
 :Bottom panel updated — new op set visible;
 

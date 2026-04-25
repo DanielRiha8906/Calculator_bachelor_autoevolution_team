@@ -1,0 +1,25 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam activityFontSize 12
+title Digit Input — Operand Accumulation Flow
+
+start
+
+:User presses digit button (0–9);
+
+:Lambda fires: _on_digit_press(digit);
+
+:_current_operand += str(digit);
+
+:_result_label.config(text=_current_operand);
+
+note right
+  Display updates immediately.
+  No separate refresh step needed.
+  Digits accumulate until the user
+  selects an operation or clears.
+end note
+
+stop
+@enduml

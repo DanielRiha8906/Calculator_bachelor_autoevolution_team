@@ -632,3 +632,16 @@ Duration: 248.3s | Cost: $0.569492 USD | Turns: 5
   - `artifacts/component_gui_layout.puml` — iOS three-panel widget hierarchy component diagram
 
 Duration: 357.3s | Cost: $0.797121 USD | Turns: 4
+
+## Run: update-diagrams — iOS-Style GuiCalculator Redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — updated class diagram adding _TkStub, CalculatorApp, and _is_real_tk_widget; full attribute/method inventory for all three classes with composition and stub-fallback associations
+  - `artifacts/class_module_constants.puml` — new focused diagram for all module-level constants (_THEME, _OPERATION_SYMBOLS, _UNARY_OPS, _NORMAL_OPS, _SCIENTIFIC_OPS, _ARITHMETIC_OPS, _ARITHMETIC_RIGHT_PANEL_ORDER, _TK_AVAILABLE) and their relationship to GuiCalculator
+  - `artifacts/activity_digit_input.puml` — new activity diagram for digit input flow (button press → accumulate _current_operand → update _result_label)
+  - `artifacts/activity_mode_toggle.puml` — updated activity diagram for mode toggle flow (toggle → switch _current_mode → _rebuild_bottom_panel with correct op sets)
+  - `artifacts/sequence_widget_creation.puml` — new sequence diagram for conditional widget creation (_make_button: _is_real_tk_widget check → real tk.Button or _TkStub, with hover binding in both paths)
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

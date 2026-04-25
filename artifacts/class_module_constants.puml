@@ -1,0 +1,72 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classFontSize 12
+skinparam noteBackgroundColor #FFFFEE
+title Module-Level Constants — src/ui/gui.py
+
+note as THEME
+  **_THEME** : dict  (16 keys)
+  ──────────────────────────────
+  WINDOW_BG        = "#000000"
+  RESULT_BG        = "#1C1C1E"
+  RESULT_FG        = "#FFFFFF"
+  RESULT_FONT      = ("Courier", 32, "bold")
+  BUTTON_NORMAL_BG = "#2C2C2E"
+  BUTTON_NORMAL_FG = "#FFFFFF"
+  BUTTON_OPERATOR_BG  = "#FF9500"
+  BUTTON_OPERATOR_FG  = "#FFFFFF"
+  BUTTON_SCIENTIFIC_BG= "#333333"
+  BUTTON_SCIENTIFIC_FG= "#FFFFFF"
+  BUTTON_MODE_TOGGLE_BG = "#4D4D4D"
+  BUTTON_MODE_TOGGLE_FG = "#FFFFFF"
+  ACTIVE_NORMAL    = lighter variant
+  ACTIVE_OPERATOR  = "#FFB143"
+  ACTIVE_SCIENTIFIC= lighter variant
+  ACTIVE_MODE_TOGGLE= lighter variant
+end note
+
+note as OP_SYMBOLS
+  **_OPERATION_SYMBOLS** : dict  (19 entries)
+  ────────────────────────────────────────────
+  add       → "+"    subtract  → "−"
+  multiply  → "×"    divide    → "÷"
+  sqrt      → "√"    square    → "x²"
+  cube      → "x³"   cbrt      → "³√"
+  power     → "xʸ"   factorial → "n!"
+  ln        → "ln"   log10     → "log"
+  sin       → "sin"  cos       → "cos"
+  tan       → "tan"  cot       → "cot"
+  asin      → "sin⁻¹" acos    → "cos⁻¹"
+  pi        → "π"
+end note
+
+note as OP_SETS
+  **_UNARY_OPS** : frozenset  (13 names)
+  sqrt, square, cube, cbrt, factorial,
+  ln, log10, sin, cos, tan, cot, asin, acos
+
+  **_NORMAL_OPS** : tuple  (5 names)
+  (sqrt, square, factorial, ln, log10)
+
+  **_SCIENTIFIC_OPS** : tuple  (9 names)
+  (cube, cbrt, power, sin, cos, tan, cot, asin, acos)
+
+  **_ARITHMETIC_OPS** : frozenset  (4 names)
+  add, subtract, multiply, divide
+
+  **_ARITHMETIC_RIGHT_PANEL_ORDER** : tuple  (4 names)
+  vertical display order of arithmetic buttons
+
+  **_TK_AVAILABLE** : bool
+  True when "import tkinter" succeeds
+end note
+
+class GuiCalculator <<uses>> {
+}
+
+THEME       .. GuiCalculator : button / window colors
+OP_SYMBOLS  .. GuiCalculator : display symbols
+OP_SETS     .. GuiCalculator : mode-dependent op sets
+
+@enduml
