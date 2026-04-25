@@ -51,20 +51,26 @@ class SimpleMode(CalculatorMode):
 
 
 class ScientificMode(CalculatorMode):
-    """Scientific mode — exposes the 12 core (legacy) operations.
+    """Scientific mode — exposes all 18 operations including trigonometry.
 
-    Returns the same 12 operations as ``registry.get_operations()``:
-    add, subtract, multiply, divide, square, sqrt, power, factorial,
-    cube, cbrt, ln, log10.
+    Returns all operations available via ``registry.get_operations_by_mode(OperationMode.SCIENTIFIC)``:
+    the 6 normal operations (add, subtract, multiply, divide, square, sqrt)
+    plus the 12 scientific operations (power, factorial, cube, cbrt, ln, log10,
+    sin, cos, tan, cot, asin, acos).
     """
 
     def get_operations(self, registry) -> List[str]:
-        """Return the 12 legacy operation names from the registry.
+        """Return all 18 operation names from the registry for scientific mode.
+
+        Calls ``registry.get_operations_by_mode(OperationMode.SCIENTIFIC)``
+        which returns all 18 operations: the 6 normal-mode operations plus
+        the 12 scientific operations including trigonometric functions
+        (sin, cos, tan, cot, asin, acos).
 
         Args:
             registry: An ``OperationRegistry`` instance.
 
         Returns:
-            A sorted list of 12 operation name strings.
+            A sorted list of 18 operation name strings.
         """
-        return registry.get_operations()
+        return registry.get_operations_by_mode(OperationMode.SCIENTIFIC)

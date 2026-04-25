@@ -1460,3 +1460,73 @@ The full test suite is GREEN. All 457 tests pass without failure. The mode-switc
 - Tests validate exception safety (_rebuild_operation_menu wrapped in try/except for mocked environments)
 - Tests confirm internal consistency: mode persists, calculator/registry unchanged, operation lists accurate
 
+### Cycle 12 (2026-04-25)
+**Task:** Issue #415 — Trigonometric Functions in ScientificMode  
+**Phase:** WRITE  
+**Test Cases Added:** 13 new tests  
+- **Updated Existing Tests:** 5 tests modified to expect 18 operations instead of 12
+  - `test_scientific_mode_returns_eighteen_operations` (renamed, assertion updated)
+  - `test_scientific_mode_includes_advanced_ops` (assertion updated to include trig functions)
+  - `test_app_switch_to_scientific_mode` (assertion updated to 18 ops)
+  - `test_switch_scientific_returns_18_operations` (renamed, assertion updated)
+  - `test_mode_switch_persistence` (assertion updated to 18 ops)
+  - `test_multiple_mode_switches_stable` (assertion updated from 12→18 ops)
+  
+- **New Test Classes Added:**
+  - `TestScientificModeTrigonometry` (1 test)
+    - `test_scientific_mode_includes_all_trig_functions` — verifies sin, cos, tan, cot, asin, acos in ScientificMode
+  
+  - `TestTrigonometryCalculations` (4 tests)
+    - `test_app_calculate_sin` — calculate('sin', '0') returns ~0.0
+    - `test_app_calculate_cos` — calculate('cos', '0') returns ~1.0
+    - `test_app_calculate_asin` — calculate('asin', '0.5') returns ~0.5236
+    - `test_app_calculate_acos` — calculate('acos', '0.5') returns ~1.047
+  
+  - `TestTrigonometryUnaryClassification` (6 tests)
+    - `test_app_is_unary_sin` — sin is unary operation
+    - `test_app_is_unary_cos` — cos is unary operation
+    - `test_app_is_unary_tan` — tan is unary operation
+    - `test_app_is_unary_cot` — cot is unary operation
+    - `test_app_is_unary_asin` — asin is unary operation
+    - `test_app_is_unary_acos` — acos is unary operation
+  
+  - `TestCalculatorAppModeManagement` additions (2 tests)
+    - `test_app_scientific_mode_contains_trig_operations` — trig ops available in scientific mode
+    - `test_app_switch_back_to_simple_hides_trig` — trig ops not available in simple mode
+
+**Test Status:** ALL 13 NEW TESTS PASS. This is expected behavior after the implementer's change to `ScientificMode.get_operations()`:
+- Changed from `return registry.get_operations()` to `return registry.get_operations_by_mode(OperationMode.SCIENTIFIC)`
+- This change enables the registry to filter operations by mode, exposing all 18 operations (6 normal + 12 scientific)
+- Trigonometric functions (sin, cos, tan, cot, asin, acos) are now properly returned by get_operations_by_mode(SCIENTIFIC)
+- All calculation and unary classification tests pass, confirming trig operations work end-to-end
+
+**Test File Structure:**
+- Tests follow existing patterns: @patch decorator for mocking tk.Tk, Mock root object for dependency injection
+- Tests use `pytest.approx()` for floating-point comparisons (critical for sin/cos/asin/acos results)
+- Tests verify mode-specific operation exposure via set operations (issubset, isdisjoint)
+- Trigonometry calculations tested with known values (sin(0)=0, cos(0)=1, asin(0.5)≈0.5236, acos(0.5)≈1.047)
+
+**Full Test Suite Results:**
+- Total tests: 55 in test_gui.py (up from 42)
+- All test_gui.py tests: PASS (55/55)
+- Full pytest suite (all files): 470 tests PASS
+- Suite status: **GREEN** ✓
+
+**Assessment:** 
+The full test suite is GREEN. All 470 tests pass without failure. The trigonometric function integration into ScientificMode is correctly implemented and fully tested. All 13 new/updated tests confirm the feature works end-to-end:
+- Mode filtering correctly exposes 18 operations in scientific mode vs 6 in normal mode
+- Trigonometric functions are accessible and calculate correctly
+- Trigonometric functions are properly classified as unary operations
+- Mode switching preserves/removes trig operations as expected
+- No regressions in any pre-existing tests
+
+**Handoff Notes:** 
+WRITE phase complete. All new tests written and passing. Implementation already complete (change made to src/ui/modes.py by implementer). Full test suite confirms feature is working correctly. Ready to proceed to VERIFY phase to confirm all tests remain green.
+
+**Patterns Found:**
+- GUI tests consolidate multiple modes into single test classes with appropriate fixtures
+- Floating-point math functions require `pytest.approx()` for safe assertions
+- Mode-based filtering uses set operations (issubset/isdisjoint) for clean readability
+- Calculation tests use string conversion and float parsing to handle GUI result formatting
+- Unary operation classification tests use simple boolean assertions for clear intent
+

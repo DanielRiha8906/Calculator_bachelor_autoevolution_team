@@ -16,6 +16,19 @@
 
 Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 
+## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction — trig ops (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/modes.py` — ScientificMode.get_operations() changed from registry.get_operations() to registry.get_operations_by_mode(OperationMode.SCIENTIFIC); now returns all 18 ops including trig
+  - `tests/test_gui.py` — updated 5 existing tests to expect 18 ops; added TestScientificModeTrigonometry, TestTrigonometryCalculations, TestTrigonometryUnaryClassification, and 2 new mode-switching trig tests
+- **Purpose:** Fix second owner review blocker: ScientificMode was returning only 12 legacy operations instead of all 18 (missing 6 trig functions: sin, cos, tan, cot, asin, acos). One-line fix in modes.py; GUI mode switching was already correct.
+- **Risks:** None — change is isolated to modes.py; GUI and registry already handled 18 ops correctly
+- **Tests passed:** 470 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction (2026-04-25)
 
 - **Branch:** task/issue-415-tkinter-gui

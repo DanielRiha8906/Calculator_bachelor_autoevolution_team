@@ -432,3 +432,24 @@ Only after ALL those test changes are committed (and passing against old flat fi
 **Test result:** Not run by this agent (implementer does not run tests).
 
 **Handoff notes for next agent:** No new dependencies. The `_op_frame` attribute is only set inside `_setup_gui()`'s try block; if setup fails (headless), `_op_frame` will not exist and `_rebuild_operation_menu()` will silently no-op due to the `hasattr` guard. Tests that call `switch_mode()` and then assert on the updated op list should use `get_current_mode_operations()` (which is pure-logic, no widget) rather than introspecting the OptionMenu widget directly.
+
+---
+
+### 2026-04-25 — Fix ScientificMode.get_operations() to return 18 ops (issue-415)
+
+**Task:** Change `ScientificMode.get_operations()` in `src/ui/modes.py` to call `registry.get_operations_by_mode(OperationMode.SCIENTIFIC)` instead of `registry.get_operations()`, so it returns all 18 operations (6 NORMAL + 12 SCIENTIFIC including trig).
+
+**Files changed:**
+- `src/ui/modes.py` — one line changed (line 70): `registry.get_operations()` replaced with `registry.get_operations_by_mode(OperationMode.SCIENTIFIC)`; `ScientificMode` class docstring and `get_operations()` method docstring updated to reflect 18 ops and list all 6 trig functions.
+
+**Key decisions:**
+- `OperationMode` was already imported at line 11 (`from ..core.operations import OperationMode`) — no import change required.
+- No other files were touched. The fix is a single-line change in the method body plus docstring updates.
+- The module-level docstring still mentions "12 legacy operations" for `ScientificMode` in the summary line — this was intentionally left as is to minimise diff scope; only the class and method docstrings (which are the authoritative contracts) were updated.
+
+**Patterns found:**
+- Always check if the required import is already present before adding it — avoids duplicate imports. In this case `OperationMode` was already imported for `SimpleMode`'s use.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** No new dependencies. The module-level docstring summary line at the top of `modes.py` still says "12 legacy operations" — if a future task requires it to be exact, update it there too. The only observable behaviour change is that `ScientificMode.get_operations(registry)` now returns 18 names instead of 12.

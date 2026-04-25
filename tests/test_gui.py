@@ -72,8 +72,8 @@ class TestSimpleMode:
 class TestScientificMode:
     """Test ScientificMode concrete implementation."""
 
-    def test_scientific_mode_returns_twelve_operations(self):
-        """ScientificMode.get_operations(registry) returns 12 operations."""
+    def test_scientific_mode_returns_eighteen_operations(self):
+        """ScientificMode.get_operations(registry) returns 18 operations including trigonometric functions."""
         from src.ui.modes import ScientificMode
 
         calc = Calculator()
@@ -81,10 +81,10 @@ class TestScientificMode:
         mode = ScientificMode()
 
         ops = mode.get_operations(registry)
-        assert len(ops) == 12
+        assert len(ops) == 18
 
     def test_scientific_mode_includes_advanced_ops(self):
-        """ScientificMode includes power, factorial, cube, cbrt, ln, log10."""
+        """ScientificMode includes power, factorial, cube, cbrt, ln, log10, sin, cos, tan, cot, asin, acos."""
         from src.ui.modes import ScientificMode
 
         calc = Calculator()
@@ -92,8 +92,24 @@ class TestScientificMode:
         mode = ScientificMode()
 
         ops = set(mode.get_operations(registry))
-        required = {"power", "factorial", "cube", "cbrt", "ln", "log10"}
+        required = {"power", "factorial", "cube", "cbrt", "ln", "log10", "sin", "cos", "tan", "cot", "asin", "acos"}
         assert required.issubset(ops)
+
+
+class TestScientificModeTrigonometry:
+    """Test that ScientificMode exposes all 6 trigonometric functions."""
+
+    def test_scientific_mode_includes_all_trig_functions(self):
+        """ScientificMode.get_operations() includes sin, cos, tan, cot, asin, acos."""
+        from src.ui.modes import ScientificMode
+
+        calc = Calculator()
+        registry = OperationRegistry(calc)
+        mode = ScientificMode()
+
+        ops = set(mode.get_operations(registry))
+        trig = {"sin", "cos", "tan", "cot", "asin", "acos"}
+        assert trig.issubset(ops)
 
 
 class TestCalculatorAppInstantiation:
@@ -163,7 +179,7 @@ class TestCalculatorAppModeManagement:
 
     @patch('src.ui.gui.tk.Tk')
     def test_app_switch_to_scientific_mode(self, mock_tk_class):
-        """Mode switch updates to 12 ops."""
+        """Mode switch updates to 18 ops including trigonometric functions."""
         from src.ui.gui import CalculatorApp
 
         mock_root = Mock()
@@ -172,7 +188,7 @@ class TestCalculatorAppModeManagement:
 
         assert app._current_mode == OperationMode.SCIENTIFIC
         ops = app.get_current_mode_operations()
-        assert len(ops) == 12
+        assert len(ops) == 18
 
     @patch('src.ui.gui.tk.Tk')
     def test_app_switch_back_to_simple_mode(self, mock_tk_class):
@@ -187,6 +203,31 @@ class TestCalculatorAppModeManagement:
         assert app._current_mode == OperationMode.NORMAL
         ops = app.get_current_mode_operations()
         assert len(ops) == 6
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_scientific_mode_contains_trig_operations(self, mock_tk_class):
+        """After switching to scientific mode, trig ops are available."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        ops = set(app.get_current_mode_operations())
+        trig = {"sin", "cos", "tan", "cot", "asin", "acos"}
+        assert trig.issubset(ops)
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_switch_back_to_simple_hides_trig(self, mock_tk_class):
+        """After switching back to simple mode, trig ops are gone."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        app.switch_mode(OperationMode.NORMAL)
+        ops = set(app.get_current_mode_operations())
+        trig = {"sin", "cos", "tan", "cot"}
+        assert trig.isdisjoint(ops)
 
 
 class TestCalculatorAppCalculations:
@@ -285,6 +326,50 @@ class TestCalculatorAppCalculations:
         app = CalculatorApp(root=mock_root)
         result = app.calculate("add", 1.5, 2.5)
         assert result == "4.0" or "4.0" in str(result)
+
+
+class TestTrigonometryCalculations:
+    """Test trigonometric function calculations in the GUI."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_calculate_sin(self, mock_tk_class):
+        """calculate('sin', '0') returns ~0.0."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        result = app.calculate('sin', '0')
+        assert float(result) == pytest.approx(0.0, abs=1e-9)
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_calculate_cos(self, mock_tk_class):
+        """calculate('cos', '0') returns ~1.0."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        result = app.calculate('cos', '0')
+        assert float(result) == pytest.approx(1.0, abs=1e-9)
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_calculate_asin(self, mock_tk_class):
+        """calculate('asin', '0.5') returns ~0.5236."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        result = app.calculate('asin', '0.5')
+        assert float(result) == pytest.approx(0.5236, abs=0.001)
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_calculate_acos(self, mock_tk_class):
+        """calculate('acos', '0.5') returns ~1.047."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        result = app.calculate('acos', '0.5')
+        assert float(result) == pytest.approx(1.047, abs=0.001)
 
 
 class TestCalculatorAppHistory:
@@ -389,6 +474,58 @@ class TestCalculatorAppOperationClassification:
             assert is_binary, f"{op} should be binary"
 
 
+class TestTrigonometryUnaryClassification:
+    """Test that trig functions are classified as unary operations."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_sin(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('sin') is True
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_cos(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('cos') is True
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_tan(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('tan') is True
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_cot(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('cot') is True
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_asin(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('asin') is True
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_app_is_unary_acos(self, mock_tk_class):
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        assert app.is_unary_operation('acos') is True
+
+
 class TestCalculatorAppRunMethod:
     """Test CalculatorApp run method."""
 
@@ -407,15 +544,15 @@ class TestModeSwitchingBehavior:
     """Test mode-switching behavior after fix to _rebuild_operation_menu."""
 
     @patch('src.ui.gui.tk.Tk')
-    def test_switch_scientific_returns_12_operations(self, mock_tk_class):
-        """After switch_mode(OperationMode.SCIENTIFIC), get_current_mode_operations() returns 12 operations."""
+    def test_switch_scientific_returns_18_operations(self, mock_tk_class):
+        """After switch_mode(OperationMode.SCIENTIFIC), get_current_mode_operations() returns 18 operations."""
         from src.ui.gui import CalculatorApp
 
         mock_root = Mock()
         app = CalculatorApp(root=mock_root)
         app.switch_mode(OperationMode.SCIENTIFIC)
         ops = app.get_current_mode_operations()
-        assert len(ops) == 12
+        assert len(ops) == 18
 
     @patch('src.ui.gui.tk.Tk')
     def test_switch_back_to_normal_returns_6_operations(self, mock_tk_class):
@@ -471,13 +608,13 @@ class TestModeSwitchingBehavior:
         mock_root = Mock()
         app = CalculatorApp(root=mock_root)
 
-        # Switch: NORMAL (6) → SCIENTIFIC (12) → NORMAL (6) → SCIENTIFIC (12)
+        # Switch: NORMAL (6) → SCIENTIFIC (18) → NORMAL (6) → SCIENTIFIC (18)
         ops = app.get_current_mode_operations()
         assert len(ops) == 6
 
         app.switch_mode(OperationMode.SCIENTIFIC)
         ops = app.get_current_mode_operations()
-        assert len(ops) == 12
+        assert len(ops) == 18
 
         app.switch_mode(OperationMode.NORMAL)
         ops = app.get_current_mode_operations()
@@ -485,7 +622,7 @@ class TestModeSwitchingBehavior:
 
         app.switch_mode(OperationMode.SCIENTIFIC)
         ops = app.get_current_mode_operations()
-        assert len(ops) == 12
+        assert len(ops) == 18
 
     @patch('src.ui.gui.tk.Tk')
     def test_invalid_mode_is_noop(self, mock_tk_class):
@@ -532,7 +669,7 @@ class TestModeSwitchingBehavior:
 
         # Both calls should return identical operation lists
         assert ops1 == ops2
-        assert len(ops1) == 12
+        assert len(ops1) == 18
 
     @patch('src.ui.gui.tk.Tk')
     def test_switch_mode_preserves_calculator_instance(self, mock_tk_class):
