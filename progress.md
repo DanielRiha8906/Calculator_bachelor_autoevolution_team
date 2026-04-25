@@ -501,4 +501,4 @@ Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
 - **Risks:** None; GUI is additive, CLI change only affects error path, test path fix is portable
 - **Tests passed:** 441 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20
