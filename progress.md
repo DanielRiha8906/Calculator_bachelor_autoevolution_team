@@ -539,4 +539,4 @@ Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
   - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram for mode switching mechanism
   - `artifacts/activity_diagram_entry_point.puml` — activity diagram for entry point routing
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 431.7s | Cost: $0.715237 USD | Turns: 5
