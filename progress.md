@@ -449,3 +449,15 @@ Duration: 235.0s | Cost: $0.667638 USD | Turns: 5
   - `artifacts/sequence_scientific_calculation.puml` — sequence diagram tracing sin(x) from user input through interface, Calculator, scientific_operations, and history recording
 
 Duration: 211.6s | Cost: $0.600988 USD | Turns: 5
+
+## Run: update-diagrams — Scientific Mode PlantUML Diagrams (2026-04-25)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_calculator_core.puml` — new class diagram: Calculator, its three operation modules, and their delegation relationships
+  - `artifacts/class_module_structure.puml` — new component diagram: module boundaries and import graph
+  - `artifacts/activity_mode_toggle.puml` — new activity diagram: mode-toggle sentinel protocol between main() and run_calculator()
+  - `artifacts/activity_scientific_dispatch.puml` — new activity diagram: arity-based dispatch and domain-validation for scientific operations
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

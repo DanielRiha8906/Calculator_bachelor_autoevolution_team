@@ -1,0 +1,74 @@
+@startuml class_calculator_core
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle Bold
+
+class Calculator {
+  - _history : list[dict]
+  - _scientific_mode : bool
+
+  .. Arithmetic (binary) ..
+  + add(a, b)
+  + subtract(a, b)
+  + multiply(a, b)
+  + divide(a, b)  [raises ZeroDivisionError]
+  + power(base, exp)
+
+  .. Arithmetic (unary) ..
+  + square(a)
+  + cube(a)
+  + square_root(a)  [raises ValueError if negative]
+  + cube_root(a)
+  + factorial(n)
+  + log(a)
+  + ln(a)
+
+  .. Scientific — Trigonometric ..
+  + sin(x)
+  + cos(x)
+  + tan(x)
+  + asin(x)  [raises ValueError outside [-1,1]]
+  + acos(x)  [raises ValueError outside [-1,1]]
+  + atan(x)
+
+  .. Scientific — Hyperbolic ..
+  + sinh(x)
+  + cosh(x)
+  + tanh(x)
+
+  .. Scientific — Exponential & Constants ..
+  + exp(x)
+  + get_pi()
+  + get_e()
+
+  .. Mode Management ..
+  + enable_scientific_mode()
+  + disable_scientific_mode()
+  + toggle_scientific_mode()
+  + is_scientific_mode() : bool
+}
+
+package basic_operations <<Module>> {
+  note "add, subtract\nmultiply, divide" as N_basic
+}
+
+package advanced_operations <<Module>> {
+  note "square, cube, square_root\ncube_root, factorial\npower, log, ln" as N_adv
+}
+
+package scientific_operations <<Module>> {
+  note as N_sci
+    Trigonometric: sin, cos, tan,
+      asin ([-1,1]), acos ([-1,1]), atan
+    Hyperbolic: sinh, cosh, tanh
+    Exponential: exp
+    Constants: pi(), e()
+    (all delegate to math module)
+  end note
+}
+
+Calculator --> basic_operations      : delegates arithmetic
+Calculator --> advanced_operations   : delegates advanced math
+Calculator --> scientific_operations : delegates scientific ops
+
+@enduml
