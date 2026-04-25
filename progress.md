@@ -27,7 +27,7 @@ Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 - **Risks:** None — change is isolated to modes.py; GUI and registry already handled 18 ops correctly
 - **Tests passed:** 470 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 533.2s | Cost: $1.078242 USD | Turns: 13
 
 ## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction (2026-04-25)
 
