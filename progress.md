@@ -1,3 +1,21 @@
+## Run: Issue #415 — V3 Task 15 - Expert/team (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/modes.py` — new CalculatorMode abstract base class with SimpleMode (6 ops) and ScientificMode (12 ops) subclasses
+  - `src/ui/gui.py` — new CalculatorApp tkinter GUI class with dependency injection, mode switching, calculate(), get_history(), is_unary_operation(), run()
+  - `src/__main__.py` — added --gui flag routing to launch CalculatorApp
+  - `tests/test_gui.py` — 30 new tests covering modes, calculations, error handling, history, operation classification
+  - `tests/test_core_separation.py` — fixed test isolation bug in test_circular_imports (save/restore sys.modules)
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+- **Purpose:** Add tkinter-based GUI allowing users to perform calculations, switch between simple and scientific mode, view session history, and use the calculator without terminal prompts. GUI reuses existing Calculator, OperationRegistry, and OperationHistory without modification.
+- **Risks:** tkinter is unavailable in CI headless environment; gui.py uses a try/except ImportError stub for tk so tests can patch it without a real display. Production use requires a display server.
+- **Tests passed:** 445 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Calculator Modes (2026-04-24)
 
 - **Branch:** task/issue-412-calculator-modes

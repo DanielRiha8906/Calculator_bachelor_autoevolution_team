@@ -479,3 +479,98 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - `src/ui/interactive.py` — to add mode selection menu and filter operation display
   - `src/core/operations.py` — possibly to add mode metadata or new operation category enum
   - `tests/` — new tests for mode selection and operation filtering
+
+### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team
+- **Task Type:** Feature implementation (GUI layer using tkinter)
+- **Scope:** Add graphical user interface for calculator using tkinter; preserve existing calculator behavior and application logic; reuse existing operations without duplication
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit functional requirements
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "scope to adding tkinter-based GUI rather than replacing existing interactive or bash-based CLI modes"
+  - Follows completion of all prior tasks (#376–#414); builds on fully modularized codebase and comprehensive documentation
+  - Task is feature addition (new GUI) not refactoring; focuses on new UI layer
+  - Explicitly emphasizes reuse of existing application logic to avoid duplication
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Add **graphical user interface for calculator using tkinter**
+  2. **FR2 (MUST HAVE):** **Preserve current calculator behavior** — no changes to existing interactive/CLI modes
+  3. **FR3 (MUST HAVE):** **Reuse existing application logic** rather than duplicating in GUI layer
+  4. **FR4 (MUST HAVE):** GUI allows user access to **all currently available calculator functionality**
+  5. **FR5 (MUST HAVE):** GUI supports **operation selection** (all supported operations)
+  6. **FR6 (MUST HAVE):** GUI supports **operand entry** (unary and binary functions)
+  7. **FR7 (MUST HAVE):** GUI displays **calculation results**
+  8. **FR8 (MUST HAVE):** GUI supports **switching between simple and scientific mode**
+  9. **FR9 (MUST HAVE):** GUI allows viewing **session history**
+  10. **FR10 (MUST HAVE):** Use **object-oriented mode design** with **shared base abstraction for calculator modes**
+  11. **FR11 (MUST HAVE):** **Common structure** handles simple/scientific behavior while keeping operation sets **separate**
+  12. **NFR1:** User can **open calculator window** without terminal prompts
+  13. **NFR2:** User can **choose between simple and scientific mode** through interface
+  14. **NFR3:** User can **perform supported calculations** through interface
+  15. **NFR4:** User can **inspect current session history**
+  16. **NFR5:** Application is **usable without relying on terminal prompts**
+  17. **SC1:** Do NOT modify/replace existing interactive CLI mode
+  18. **SC2:** Do NOT modify/replace existing bash-based CLI mode
+  19. **SC3:** Keep change scoped to adding GUI; maintain relevant tests (tests must reflect current version)
+- **Current State (Discovered from RAG + Prior Task Context):**
+  - **Architecture established:** Modular structure (src/core/, src/ui/, src/infrastructure/, src/session/)
+  - **Existing UI modes:** Interactive (terminal-based), CLI (bash-based argument parsing)
+  - **Operations available (12 total):** add, subtract, multiply, divide, power, factorial, square, cube, sqrt, cbrt, ln, log10
+  - **Missing trig operations:** sin, cos, tan, cot, asin, acos (listed in issue #412 but not yet implemented; architect must clarify if available for GUI)
+  - **Mode support:** Issue #412 (interactive mode switching) may or may not be completed before this task; architect must check current state
+  - **History tracking:** history.py module already implements persistence; GUI can reuse
+  - **Error logging:** error_logger.py already implements error tracking; GUI can reuse
+  - **Session management:** SessionManager in src/session/manager.py (may or may not be fully utilized by GUI)
+- **Ambiguities Flagged:**
+  1. **Trigonometric operations availability:** Issue #415 expects "all currently available" operations in GUI. If trig ops from #412 not implemented, should GUI implementation wait or include stub/placeholder? (CLARIFICATION NEEDED: architect must determine which operations are actually available)
+  2. **Mode switching implementation:** Issue #412 adds interactive-mode switching; does GUI also need to support mode switching, or is it orthogonal to GUI implementation? (ASSUMPTION: GUI supports mode switching in same way interactive mode does, if mode switching is implemented by then)
+  3. **GUI entry point:** How is GUI launched? (a) New entry point in __main__.py with CLI arg flag, (b) separate script/command, (c) choice menu in existing __main__.py, (d) standalone launcher script? (DEFERRED to architect; no specification provided)
+  4. **History display format:** Should GUI history display match function-style format from history.txt (e.g., "add(2, 3) = 5"), or can it use tabular/graphical format? (ASSUMPTION: reuse existing history module format; flexible display allowed)
+  5. **Session persistence in GUI:** Does GUI session start fresh (like interactive mode), or can user load previous session history via GUI menu? (ASSUMPTION: fresh session per GUI invocation; history viewing shows previous sessions if desired)
+  6. **Error handling in GUI:** How are calculator errors (domain errors, invalid operations) displayed? (ASSUMPTION: GUI shows error messages in dedicated error label/dialog instead of stderr)
+  7. **Mode persistence in GUI:** When user closes and reopens GUI, does selected mode persist? (ASSUMPTION: mode resets to default (simple) on each new GUI session)
+  8. **Unary vs binary operation handling:** How does GUI distinguish unary vs binary ops in input flow? (e.g., prompt for single operand for sqrt, two operands for add) (DEFERRED to architect; UI design pattern not specified)
+  9. **OOP mode design specifics:** "Object-oriented mode design with shared base abstraction" — does this mean: (a) base class for Mode with subclasses SimpleMode/ScientificMode, (b) mode metadata in operation registry, (c) factory pattern for mode instantiation, or (d) something else? (DEFERRED to architect; no implementation pattern specified)
+  10. **Reuse of existing logic:** Which modules/functions should GUI call directly? (ASSUMPTION: GUI delegates to Calculator class and OperationRegistry; avoids reimplementing operation logic)
+  11. **Test strategy for GUI:** Should GUI be tested via unit tests (mocking tkinter), integration tests (launching GUI window), or both? (DEFERRED; test phase will determine approach)
+- **Constraints:**
+  - Must not modify existing interactive or CLI modes
+  - Must reuse existing application logic (Calculator, operations, history, error logging)
+  - Must preserve all existing test pass rate (no regression)
+  - GUI is NEW UI layer alongside existing UI modes; does not replace them
+  - Mode abstraction must support future extension (simple/scientific separation pattern from #412)
+  - No changes to CLAUDE.md, .gitignore, or workflow files
+- **Acceptance Criteria (inferred):**
+  - AC1: GUI launches successfully from configured entry point without terminal prompts
+  - AC2: GUI displays all currently available operations in mode-appropriate list
+  - AC3: User can select operation and enter operands (single for unary, two for binary) via GUI
+  - AC4: User can click "Calculate" button and see result displayed in GUI
+  - AC5: GUI displays errors gracefully (e.g., domain errors, invalid operands)
+  - AC6: User can switch between simple and scientific modes using GUI controls
+  - AC7: Simple mode displays only basic operations; scientific mode displays all operations
+  - AC8: User can access session history from GUI (view operations performed, formatted consistently with history.txt)
+  - AC9: User can close GUI window and exit application cleanly (no hanging threads, proper cleanup)
+  - AC10: All existing tests pass; no regression from adding GUI module
+  - AC11: GUI code is organized in modular fashion (e.g., src/ui/gui.py or src/ui/tkinter_app.py) following existing structure
+  - AC12: Object-oriented mode abstraction is evident; base class or interface supports both simple/scientific behaviors
+  - AC13: Existing application logic (operations, history, logging) is reused, not duplicated in GUI
+- **Handoff Notes for Architect:**
+  1. **CRITICAL AMBIGUITY 1:** Confirm which operations are "currently available" (12 known + 6 trig from #412?). If trig not yet implemented, clarify scope for GUI task.
+  2. **CRITICAL AMBIGUITY 2:** Clarify mode switching design: does GUI leverage interactive mode switching from #412, or implement independently?
+  3. **CRITICAL AMBIGUITY 3:** Design object-oriented mode abstraction: propose base class structure (e.g., `class Mode(ABC)` with `get_operations()` method, or operation registry filtering approach).
+  4. **CRITICAL AMBIGUITY 4:** Specify GUI entry point mechanism: CLI arg, separate script, menu choice, or standalone launcher.
+  5. Architect should produce test specs covering: GUI window launch, operation selection, operand entry (unary/binary), result display, error display, mode switching, history viewing, window close/cleanup, mode persistence behavior, code organization.
+  6. Architect should produce UI/UX design sketch or pseudocode showing tkinter widget layout (e.g., operation buttons, operand entry fields, result label, mode selector, history viewer).
+  7. Architect should clarify reuse strategy: which existing classes/functions should GUI import and delegate to (Calculator, OperationRegistry, OperationHistory, ErrorLogger, SessionManager).
+  8. Architect should specify file organization: where GUI code lives (src/ui/gui.py vs src/ui/tkinter_app.py vs src/ui/gui_app.py), and whether mode abstraction lives in src/core/ or src/ui/.
+- **Patterns Observed:**
+  - Task builds on fully completed prior work (#376–#414); inherits modular structure and comprehensive documentation
+  - Task involves new UI layer (GUI) alongside existing UI modes (interactive, CLI); architectural pattern is additive, not replacements
+  - Mode switching design (from #412) is prerequisite or parallel concern; GUI must align with mode abstraction strategy
+  - Strong emphasis on reuse over duplication suggests architect should design clear API boundaries between GUI and core logic
+- **Files Likely to Be Modified/Created:**
+  - **Create:** `src/ui/gui.py` or `src/ui/tkinter_app.py` (main GUI implementation)
+  - **Create or modify:** Mode abstraction (possibly `src/core/mode_base.py` or enhancements to `src/core/operations.py`)
+  - **Modify:** `src/__main__.py` (to add GUI entry point or launcher choice)
+  - **Possibly modify:** `src/ui/interactive.py` (if mode abstraction is shared with interactive mode)
+  - **Tests:** `tests/test_gui.py` or similar (new GUI test module)
+  - **May reference (no modification):** `src/calculator.py`, `src/operation_registry.py`, `src/infrastructure/history.py`, `src/infrastructure/error_logger.py`
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
