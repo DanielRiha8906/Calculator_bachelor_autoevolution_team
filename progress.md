@@ -25,7 +25,7 @@ Duration: 235.4s | Cost: $0.581542 USD | Turns: 4
 - **Risks:** None — purely additive UI changes; no Calculator logic or existing tests changed
 - **Tests passed:** 387 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 500.2s | Cost: $1.102253 USD | Turns: 13
 
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
