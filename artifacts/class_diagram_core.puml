@@ -6,6 +6,7 @@ skinparam packageFontSize 11
 
 class Calculator {
   - _history : list[dict]
+  - _scientific_mode : bool
   --
   + __init__() : None
   .. History ..
@@ -26,6 +27,16 @@ class Calculator {
   + factorial(n)
   + log(x)
   + ln(x)
+  .. Scientific Ops ..
+  + sin(x) / cos(x) / tan(x)
+  + asin(x) / acos(x) / atan(x)
+  + sinh(x) / cosh(x) / tanh(x)
+  + exp(x) / get_pi() / get_e()
+  .. Mode Management ..
+  + enable_scientific_mode()
+  + disable_scientific_mode()
+  + toggle_scientific_mode()
+  + is_scientific_mode() : bool
 }
 
 class "«module»\nbasic_operations" as basic_ops {
@@ -46,34 +57,35 @@ class "«module»\nadvanced_operations" as advanced_ops {
   + ln(x)
 }
 
+class "«module»\nscientific_operations" as sci_ops {
+  .. Trigonometric ..
+  + sin(x) / cos(x) / tan(x)
+  + asin(x) / acos(x) / atan(x)
+  .. Hyperbolic ..
+  + sinh(x) / cosh(x) / tanh(x)
+  .. Other ..
+  + exp(x)
+  + pi() : float
+  + e() : float
+  note "asin/acos raise ValueError\nif x not in [-1, 1]"
+}
+
 class "«module»\ninterface" as interface_mod {
   + OPERATIONS : dict
+  + SCIENTIFIC_OPERATIONS : dict
   --
-  + prompt_for_operator() : str
+  + prompt_for_operator(mode: str) : str
   + prompt_for_first_number() : float
   + prompt_for_second_number() : float
   + display_result(result) : None
   + display_error(msg) : None
   + display_history(calc) : None
-  + display_history_notification() : None
-  + run_calculator(calc, max_retries) : str
+  + display_mode_change(new_mode: str) : None
+  + run_calculator(calc, mode: str) : str
   + persist_history_to_file(calc) : None
 }
 
 class "«exception»\nMaxRetriesExceeded" as max_retries_exc {
-}
-
-class "«module»\nbatch_cli" as batch_cli_mod {
-  + _BATCH_OPERATIONS : dict
-  --
-  + parse_batch_args() : namespace
-  + execute_batch(calc, args) : float
-  + batch_main() : None
-  + print_help() : None
-}
-
-class "«facade»\ncalculator" as calc_facade {
-  note "re-exports Calculator\nfrom calculator_core"
 }
 
 class "«facade»\ncli" as cli_facade {
@@ -82,14 +94,11 @@ class "«facade»\ncli" as cli_facade {
 
 Calculator --> basic_ops : delegates arithmetic
 Calculator --> advanced_ops : delegates math
+Calculator --> sci_ops : delegates scientific
 
 interface_mod --> Calculator : uses
 interface_mod +-- max_retries_exc
 
-batch_cli_mod --> Calculator : uses
-batch_cli_mod --> interface_mod : uses (OPERATIONS,\ndisplay functions)
-
-calc_facade ..> Calculator : re-export
 cli_facade ..> interface_mod : re-export
 
 @enduml

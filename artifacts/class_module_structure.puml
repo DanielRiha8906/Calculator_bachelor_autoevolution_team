@@ -1,0 +1,28 @@
+@startuml class_module_structure
+
+skinparam componentStyle rectangle
+skinparam ArrowColor #444444
+
+component "__main__" as main
+
+component "cli\n<<facade>>" as cli
+
+component "interface" as interface
+
+component "calculator_core" as core
+
+component "scientific_operations" as sci
+
+component "basic_operations\n<<pre-existing>>" as basic
+
+component "advanced_operations\n<<pre-existing>>" as adv
+
+main --> cli       : imports (facade)
+main --> interface : imports directly
+cli  --> interface : re-exports
+interface --> core : calls Calculator
+core --> sci       : delegates scientific
+core --> basic     : delegates arithmetic
+core --> adv       : delegates advanced math
+
+@enduml

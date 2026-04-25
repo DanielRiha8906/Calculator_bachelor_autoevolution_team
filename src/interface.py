@@ -29,6 +29,21 @@ OPERATIONS = {
     "ln": (1, "ln", "ln", "Natural logarithm"),
 }
 
+SCIENTIFIC_OPERATIONS = {
+    "sin": (1, "sin", "sin", "Sine (radians)"),
+    "cos": (1, "cos", "cos", "Cosine (radians)"),
+    "tan": (1, "tan", "tan", "Tangent (radians)"),
+    "asin": (1, "asin", "asin", "Arc sine"),
+    "acos": (1, "acos", "acos", "Arc cosine"),
+    "atan": (1, "atan", "atan", "Arc tangent"),
+    "sinh": (1, "sinh", "sinh", "Hyperbolic sine"),
+    "cosh": (1, "cosh", "cosh", "Hyperbolic cosine"),
+    "tanh": (1, "tanh", "tanh", "Hyperbolic tangent"),
+    "exp": (1, "exp", "exp", "Exponential (e^x)"),
+    "pi": (0, "get_pi", "pi", "Pi constant"),
+    "e": (0, "get_e", "e", "Euler's number"),
+}
+
 
 def _get_operation_arity(operation_key: str) -> int:
     """Return the arity (1 or 2) for the given operation key.
@@ -58,12 +73,14 @@ def _get_display_symbol(operation_key: str) -> str:
     """Return the display symbol for the given operation key.
 
     Args:
-        operation_key: A key from the OPERATIONS dict.
+        operation_key: A key from the OPERATIONS or SCIENTIFIC_OPERATIONS dict.
 
     Returns:
         The symbol string used when displaying results.
     """
-    return OPERATIONS[operation_key][2]
+    if operation_key in OPERATIONS:
+        return OPERATIONS[operation_key][2]
+    return SCIENTIFIC_OPERATIONS[operation_key][2]
 
 
 def prompt_for_first_number(max_retries: int = 3) -> float:
@@ -96,35 +113,48 @@ def prompt_for_first_number(max_retries: int = 3) -> float:
                 )
 
 
-def prompt_for_operator(max_retries: int = 3) -> str:
+def prompt_for_operator(max_retries: int = 3, mode: str = "normal") -> str:
     """Prompt the user for an operation, re-prompting on invalid input.
 
     Valid operations include: +, -, *, /, square, cube, sqrt, cbrt,
-    factorial, power, log, ln
+    factorial, power, log, ln.  When mode is 'scientific', additional
+    scientific operations (sin, cos, tan, etc.) are also accepted.
 
     The user may also enter 'quit' or 'exit' (case-insensitive) to signal
     they want to stop; in that case the sentinel string "QUIT" is returned.
+    The user may enter 'mode' or 'sci' (case-insensitive) to request a mode
+    toggle; in that case the sentinel string "MODE_TOGGLE" is returned.
 
     Args:
         max_retries: Maximum number of invalid attempts before raising
             MaxRetriesExceeded. Defaults to 3.
+        mode: Current calculator mode, either "normal" or "scientific".
+            Defaults to "normal".
 
     Returns:
-        The operation key as a string, or "QUIT" if the user requested exit.
+        The operation key as a string, "QUIT" if the user requested exit,
+        or "MODE_TOGGLE" if the user requested a mode change.
 
     Raises:
         MaxRetriesExceeded: If the user exhausts all retry attempts.
     """
-    valid_ops = list(OPERATIONS.keys())
+    if mode == "scientific":
+        valid_ops_dict = {**OPERATIONS, **SCIENTIFIC_OPERATIONS}
+    else:
+        valid_ops_dict = OPERATIONS
+
+    valid_ops = list(valid_ops_dict.keys())
     attempts = 0
     while True:
         raw = input(
             "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, "
-            "factorial, power, log, ln): "
+            "factorial, power, log, ln) [type 'mode' to switch modes]: "
         )
         if raw.lower() in ("quit", "exit"):
             return "QUIT"
-        if raw in OPERATIONS:
+        if raw.lower() in ("mode", "sci"):
+            return "MODE_TOGGLE"
+        if raw in valid_ops_dict:
             return raw
         attempts += 1
         print(
@@ -241,6 +271,16 @@ def display_history(calc: "Calculator") -> None:
         print(formatted)
 
 
+def display_welcome() -> None:
+    """Print a welcome banner and usage tip at the start of a session.
+
+    Informs the user about mode toggling capability.
+    Prints to stdout only; has no side effects on any state.
+    """
+    print("Welcome to the Calculator!")
+    print("Tip: Type 'mode' or 'sci' at the operator prompt to switch between modes.")
+
+
 def display_error(error_message: str) -> None:
     """Print an error message in a user-friendly format.
 
@@ -248,6 +288,29 @@ def display_error(error_message: str) -> None:
         error_message: The error description to display.
     """
     print(f"Error: {error_message}")
+
+
+def display_mode_change(new_mode: str, available_ops: list[str] | None = None) -> None:
+    """Print a user-friendly message indicating a mode change.
+
+    If ``available_ops`` is not provided, the list is derived automatically
+    from the OPERATIONS or SCIENTIFIC_OPERATIONS registry based on ``new_mode``.
+
+    Args:
+        new_mode: The name of the new mode (e.g. "scientific" or "normal").
+        available_ops: Optional explicit list of operation keys to display.
+            When None, computed automatically from ``new_mode``.
+    """
+    if available_ops is None:
+        if new_mode == "scientific":
+            available_ops = list(SCIENTIFIC_OPERATIONS.keys())
+        else:
+            available_ops = list(OPERATIONS.keys())
+    ops_str = ", ".join(available_ops)
+    if new_mode == "scientific":
+        print(f"Switched to scientific mode. New operations: {ops_str}")
+    else:
+        print(f"Switched to normal mode. Available operations: {ops_str}")
 
 
 def persist_history_to_file(calc: Calculator, filepath: str = "history.txt") -> None:
@@ -282,17 +345,24 @@ def display_history_notification(filepath: str = "history.txt") -> None:
     )
 
 
-def run_calculator(calc: "Calculator | None" = None, max_retries: int = 3) -> "float | str":
+def run_calculator(
+    calc: "Calculator | None" = None,
+    max_retries: int = 3,
+    mode: str = "normal",
+) -> "float | str":
     """Run a single interactive calculation and return the result.
 
     Prompts the user for an operation and required operand(s), performs the
     calculation using Calculator, displays the result, and returns it.
 
-    Supports both unary operations (e.g., square, sqrt) and binary operations
-    (e.g., +, power).
+    Supports arity-0 (constants: pi, e), arity-1 (unary: square, sqrt, sin,
+    etc.), and arity-2 (binary: +, power, etc.) operations.
 
     If the user enters 'quit' or 'exit' at the operator prompt, returns the
     sentinel string "QUIT" so the caller can break an interactive loop.
+
+    If the user enters 'mode' or 'sci' at the operator prompt, returns the
+    sentinel string "MODE_TOGGLE" so the caller can switch modes.
 
     Args:
         calc: An optional Calculator instance to reuse. If None, a new instance
@@ -300,10 +370,13 @@ def run_calculator(calc: "Calculator | None" = None, max_retries: int = 3) -> "f
             across multiple calls. Defaults to None.
         max_retries: Maximum number of invalid attempts for each prompt before
             raising MaxRetriesExceeded. Defaults to 3.
+        mode: Current calculator mode, either "normal" or "scientific".
+            Controls which operations are offered to the user. Defaults to "normal".
 
     Returns:
-        The numeric result of the calculation as a float, or the string "QUIT"
-        if the user requested to exit.
+        The numeric result of the calculation as a float, the string "QUIT"
+        if the user requested to exit, or the string "MODE_TOGGLE" if the user
+        requested a mode change.
 
     Raises:
         MaxRetriesExceeded: If the user exhausts retry attempts on any prompt.
@@ -313,16 +386,27 @@ def run_calculator(calc: "Calculator | None" = None, max_retries: int = 3) -> "f
     if calc is None:
         calc = Calculator()
 
-    operation_key = prompt_for_operator(max_retries=max_retries)
+    operation_key = prompt_for_operator(max_retries=max_retries, mode=mode)
     if operation_key == "QUIT":
         return "QUIT"
+    if operation_key == "MODE_TOGGLE":
+        return "MODE_TOGGLE"
 
-    arity = _get_operation_arity(operation_key)
-    method_name = _get_calculator_method(operation_key)
+    # Determine arity and method from whichever registry the key belongs to.
+    if mode == "scientific" and operation_key in SCIENTIFIC_OPERATIONS:
+        op_tuple = SCIENTIFIC_OPERATIONS[operation_key]
+    else:
+        op_tuple = OPERATIONS[operation_key]
+
+    arity = op_tuple[0]
+    method_name = op_tuple[1]
     method = getattr(calc, method_name)
 
     try:
-        if arity == 1:
+        if arity == 0:
+            result = method()
+            print(f"{operation_key} = {result}")
+        elif arity == 1:
             operand = prompt_for_first_number(max_retries=max_retries)
             result = method(operand)
             display_result_unary(operation_key, operand, result)

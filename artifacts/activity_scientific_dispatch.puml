@@ -1,0 +1,48 @@
+@startuml activity_scientific_dispatch
+
+start
+:User enters scientific op key
+(e.g. "sin", "pi", "exp");
+
+:Look up op in SCIENTIFIC_OPERATIONS registry
+→ retrieve arity;
+
+if (arity == 0?) then (yes)
+  note right: constants: pi, e
+  :No number prompts;
+  :call calc.get_pi() or calc.get_e();
+
+else if (arity == 1?) then (yes)
+  :prompt_for_first_number();
+
+  :call calc.trig / hyperbolic / exp method(x);
+
+  if (domain error?\ne.g. asin/acos outside [-1,1]\nor sqrt of negative) then (yes)
+    :display_error(ValueError message);
+    :re-raise ValueError;
+    stop
+  else (no)
+    note right: success path
+  endif
+
+else (arity == 2)
+  :prompt_for_first_number();
+  :prompt_for_second_number();
+  :call calc.method(a, b);
+
+  if (ZeroDivisionError?) then (yes)
+    :display_error(message);
+    :re-raise ZeroDivisionError;
+    stop
+  else (no)
+    note right: success path
+  endif
+endif
+
+:_record_operation(name, operands, result);
+:display_result;
+:return result to run_calculator();
+
+stop
+
+@enduml

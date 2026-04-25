@@ -173,6 +173,18 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - No circular import risk: `basic_operations` and `advanced_operations` have no project imports; `calculator_core` imports only those two; `calculator` imports `calculator_core`; `interface` imports `calculator_core` directly; `batch_cli` imports `calculator_core` directly.
 - **Test result:** 324 passed, 1 skipped (pre-existing skip).
 
+### 2026-04-25 — issue-410: scientific mode — sync Calculator internal flag on MODE_TOGGLE
+
+- **Task:** Fix bug in `src/__main__.py` where the MODE_TOGGLE branch updated the local `mode` string but never called the Calculator's mode-management methods, leaving `calc._scientific_mode` always `False`.
+- **Files changed:** `src/__main__.py`
+- **Changes made:**
+  - In the `if result == "MODE_TOGGLE":` branch, added a conditional before the mode string flip: `calc.enable_scientific_mode()` when `mode == "normal"`, `calc.disable_scientific_mode()` otherwise.
+  - The `mode` string update and `display_mode_change(mode)` call order are unchanged.
+- **Patterns found:**
+  - The local `mode` string and `calc._scientific_mode` were out of sync because the toggle logic only updated the string. Always check whether a UI state variable needs to be mirrored into the domain object.
+  - The fix must call the Calculator method BEFORE flipping the string, otherwise the condition `mode == "normal"` would read the already-toggled value and call the wrong method.
+- **Test result:** pending VERIFY phase.
+
 ### 2026-04-24 — issue-407: add README documentation for calculator application
 
 - **Task:** Append comprehensive English-language documentation sections to `README.md` to satisfy 10 failing tests in `tests/test_documentation.py`. No `.py` files in `src/` were modified.
@@ -191,3 +203,24 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - `test_readme_documents_operation_examples` counts how many of `['add', 'subtract', 'multiply', 'divide', 'square', 'sqrt']` appear inside code blocks (not plain text) — placing CLI examples in a fenced code block is essential; inline text would not satisfy this check.
   - Appending to an existing README avoids overwriting the project's Czech-language thesis documentation, which is load-bearing for the experiment context.
 - **Test result:** 340 passed, 1 skipped (pre-existing skip). All 16 documentation tests pass.
+
+### 2026-04-25 — issue-410: scientific mode — welcome banner, enhanced mode-change feedback, prompt hint
+
+- **Task:** Add `display_welcome()` to `src/interface.py`; enhance `display_mode_change()` with `available_ops` parameter and mode-specific messages; add mode hint to `prompt_for_operator()` prompt text; update `src/__main__.py` to call `display_welcome()` and pass `available_ops` to `display_mode_change()`; add `display_welcome` to `src/cli.py` facade.
+- **Files changed:** `src/interface.py`, `src/__main__.py`, `src/cli.py`
+- **Changes made:**
+  - `src/interface.py`:
+    - Added `display_welcome()`: prints `"Welcome to the Calculator!"` and a tip about 'mode'/'sci' toggle. Pure stdout; no state side effects.
+    - Changed `display_mode_change(new_mode: str)` to `display_mode_change(new_mode: str, available_ops: list[str] | None = None)`. When `available_ops` is None, auto-derives it from `SCIENTIFIC_OPERATIONS` (if `new_mode == "scientific"`) or `OPERATIONS`. Prints `"Switched to scientific mode. New operations: ..."` or `"Switched to normal mode. Available operations: ..."`.
+    - Updated `prompt_for_operator()` prompt string: appended `[type 'mode' to switch modes]` to the input prompt text. Error message is unchanged — already dynamically builds valid_ops from whichever dict is active for the current mode.
+  - `src/__main__.py`:
+    - Added `display_welcome`, `OPERATIONS`, `SCIENTIFIC_OPERATIONS` to the import from `.interface`.
+    - Added `display_welcome()` call immediately before the `while True:` loop (after `calc = Calculator()` and `mode = "normal"`).
+    - Refactored the `MODE_TOGGLE` branch: now assigns `mode` and `available_ops` inside each arm of the if/else before calling `display_mode_change(mode, available_ops)`. Eliminates the ternary `mode = "scientific" if mode == "normal" else "normal"` which was error-prone to read.
+  - `src/cli.py`:
+    - Added `display_welcome` to the `from .interface import (...)` block and to `__all__`.
+- **Patterns found:**
+  - Placing `display_welcome()` after `calc = Calculator()` but before `while True:` ensures it fires exactly once per interactive session and not on batch or history subcommands — the `else:` branch guards that.
+  - Splitting the ternary `mode = "scientific" if mode == "normal" else "normal"` into a proper if/else makes it safe to assign both `mode` and `available_ops` atomically in the same branch; the old ternary form would require re-reading the already-flipped `mode` to decide which op list to use.
+  - `display_mode_change` must remain backward-compatible (single-arg callers still work) — using `None` as the default for `available_ops` achieves this cleanly.
+- **Test result:** pending VERIFY phase.

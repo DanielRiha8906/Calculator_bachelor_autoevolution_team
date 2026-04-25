@@ -330,3 +330,27 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - V3 Task 12 (#404) modularization must complete before Task 13 documentation, as documentation needs to reflect current module structure
   - Both V2 and V3 Task 6 (#248 V2, likely #406 V3) created PlantUML diagrams that should be incorporated into documentation
 - **Recurring Pattern Insight:** V3 cycle concludes with documentation task, mirroring V2. Documentation as the final task suggests: (1) all features complete, (2) all code changes finalized, (3) now document the complete system. This is a natural conclusion to a feature development cycle.
+
+### Cycle: 2026-04-25 — PR #457: feat: add scientific mode to calculator (issue #410)
+- **PR Title:** feat: add scientific mode to calculator (issue #410)
+- **PR Number:** 457
+- **Created:** 2026-04-25T14:16:34Z
+- **Status:** OPEN with unresolved feedback
+- **PR Summary:** Adds scientific operations (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) via new `src/scientific_operations.py` module. Extends Calculator with 12 methods + mode management. Interactive mode supports `mode` or `sci` command to toggle scientific mode. 35 new tests, all passing, zero regressions.
+- **Unresolved Feedback from PR Author (DanielRiha8906):**
+  - **Comment ID:** 4319804517
+  - **Created:** 2026-04-25T14:16:34Z
+  - **Status:** **FLAGGED AS FIX NEEDED**
+  - **Exact Text:** "Fix needed\nTASK:\n- Connect the new Mode switching and scientific operations to the UI.\n- Calculator starts in normal mode, and when someone writes mode it will add the new operations to the list of available operations."
+- **Analysis of Unresolved Requirements:**
+  1. **UI Integration Missing** — The PR implements mode switching and scientific operations logic but does NOT properly expose them to users via the UI (interactive/CLI).
+  2. **Operation Availability in UI** — When calculator is in scientific mode, the new operations (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) must appear in the available operations list/menu presented to the user.
+  3. **Mode Toggle Interaction** — Typing `mode` or `sci` at the prompt should work (PR claims to support this), but the feedback suggests the actual UI integration is incomplete or broken.
+  4. **Default State** — "Calculator starts in normal mode" (already implemented per PR description), but the toggle and subsequent display of scientific operations in the UI is not working.
+- **Critical Finding:** This is similar to the pattern seen in PR #432 (user input PR) where partial functionality was incomplete. The PR author is explicitly flagging this as blocking acceptance.
+- **Scope of Required Fix:**
+  - Ensure interactive mode's operator/operation prompt correctly displays scientific operations when in scientific mode
+  - Ensure the mode toggle (`mode` / `sci` command) correctly updates the available operations shown to the user
+  - Verify that users can actually call scientific operations from the interactive interface after toggling mode
+  - This is NOT a logic issue (mode management and operation functions exist); it is a UI/interface integration issue
+- **Test Coverage:** Current 35 tests may pass in isolation but do not verify end-to-end UI integration of mode toggling and operation availability. New tests may be needed for this integration point.

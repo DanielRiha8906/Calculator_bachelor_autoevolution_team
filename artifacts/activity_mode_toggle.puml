@@ -1,0 +1,51 @@
+@startuml activity_mode_toggle
+
+|main()|
+start
+:Initialize Calculator;
+:mode = "normal";
+
+repeat
+  :call run_calculator(calc, mode=mode);
+
+  |run_calculator()|
+  if (mode == "scientific"?) then (yes)
+    :show 24 ops\n(normal + scientific);
+  else (no)
+    :show 12 ops\n(normal only);
+  endif
+
+  :prompt_for_operator();
+
+  if (user types "mode" / "sci"?) then (yes)
+    :return "MODE_TOGGLE";
+
+    |main()|
+    if (mode == "normal"?) then (yes)
+      :calc.enable_scientific_mode();
+      :mode = "scientific";
+    else (no)
+      :calc.disable_scientific_mode();
+      :mode = "normal";
+    endif
+    :display_mode_change(mode, available_ops);
+
+  else if (user types "quit" / "exit"?) then (yes)
+    :return "QUIT";
+
+    |main()|
+    stop
+
+  else (operator selected)
+    :get operands;
+    :call calc.method();
+    :display_result;
+    :return result;
+
+    |main()|
+    note right: result is a number;\ncontinue loop
+  endif
+
+repeat while (session active)
+
+@enduml

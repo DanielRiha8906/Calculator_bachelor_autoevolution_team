@@ -2,20 +2,23 @@
 
 This module contains the canonical Calculator implementation.  All arithmetic
 and mathematical logic is delegated to the pure-function modules
-:mod:`~src.basic_operations` and :mod:`~src.advanced_operations`; this class
-is responsible only for dispatch and history recording.
+:mod:`~src.basic_operations`, :mod:`~src.advanced_operations`, and
+:mod:`~src.scientific_operations`; this class is responsible only for dispatch
+and history recording.
 """
 
 from . import basic_operations
 from . import advanced_operations
+from . import scientific_operations
 
 
 class Calculator:
     """A calculator that supports basic and advanced operations with history tracking."""
 
     def __init__(self) -> None:
-        """Initialize the calculator with an empty operation history."""
+        """Initialize the calculator with an empty operation history and normal mode."""
         self._history: list[dict] = []
+        self._scientific_mode: bool = False
 
     def _record_operation(self, operation_name: str, operands, result) -> None:
         """Record a successfully completed operation to history.
@@ -220,3 +223,191 @@ class Calculator:
         result = advanced_operations.ln(a)
         self._record_operation("ln", [a], result)
         return result
+
+    # ------------------------------------------------------------------
+    # Scientific operations
+    # ------------------------------------------------------------------
+
+    def sin(self, x: float) -> float:
+        """Return the sine of x (in radians) and record the operation.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The sine of x.
+        """
+        result = scientific_operations.sin(x)
+        self._record_operation("sin", [x], result)
+        return result
+
+    def cos(self, x: float) -> float:
+        """Return the cosine of x (in radians) and record the operation.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The cosine of x.
+        """
+        result = scientific_operations.cos(x)
+        self._record_operation("cos", [x], result)
+        return result
+
+    def tan(self, x: float) -> float:
+        """Return the tangent of x (in radians) and record the operation.
+
+        Args:
+            x: The angle in radians.
+
+        Returns:
+            The tangent of x.
+        """
+        result = scientific_operations.tan(x)
+        self._record_operation("tan", [x], result)
+        return result
+
+    def asin(self, x: float) -> float:
+        """Return the arc sine of x (in radians) and record the operation.
+
+        Args:
+            x: A value in the domain [-1, 1].
+
+        Returns:
+            The arc sine of x, in radians.
+
+        Raises:
+            ValueError: If x is outside the domain [-1, 1].
+        """
+        result = scientific_operations.asin(x)
+        self._record_operation("asin", [x], result)
+        return result
+
+    def acos(self, x: float) -> float:
+        """Return the arc cosine of x (in radians) and record the operation.
+
+        Args:
+            x: A value in the domain [-1, 1].
+
+        Returns:
+            The arc cosine of x, in radians.
+
+        Raises:
+            ValueError: If x is outside the domain [-1, 1].
+        """
+        result = scientific_operations.acos(x)
+        self._record_operation("acos", [x], result)
+        return result
+
+    def atan(self, x: float) -> float:
+        """Return the arc tangent of x (in radians) and record the operation.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The arc tangent of x, in radians.
+        """
+        result = scientific_operations.atan(x)
+        self._record_operation("atan", [x], result)
+        return result
+
+    def sinh(self, x: float) -> float:
+        """Return the hyperbolic sine of x and record the operation.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic sine of x.
+        """
+        result = scientific_operations.sinh(x)
+        self._record_operation("sinh", [x], result)
+        return result
+
+    def cosh(self, x: float) -> float:
+        """Return the hyperbolic cosine of x and record the operation.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic cosine of x.
+        """
+        result = scientific_operations.cosh(x)
+        self._record_operation("cosh", [x], result)
+        return result
+
+    def tanh(self, x: float) -> float:
+        """Return the hyperbolic tangent of x and record the operation.
+
+        Args:
+            x: Any real number.
+
+        Returns:
+            The hyperbolic tangent of x.
+        """
+        result = scientific_operations.tanh(x)
+        self._record_operation("tanh", [x], result)
+        return result
+
+    def exp(self, x: float) -> float:
+        """Return e raised to the power of x and record the operation.
+
+        Args:
+            x: The exponent.
+
+        Returns:
+            e ** x.
+        """
+        result = scientific_operations.exp(x)
+        self._record_operation("exp", [x], result)
+        return result
+
+    def get_pi(self) -> float:
+        """Return the mathematical constant π and record the operation.
+
+        Returns:
+            The value of π (approximately 3.14159265358979).
+        """
+        result = scientific_operations.pi()
+        self._record_operation("get_pi", [], result)
+        return result
+
+    def get_e(self) -> float:
+        """Return the mathematical constant e and record the operation.
+
+        Returns:
+            The value of e (approximately 2.71828182845904).
+        """
+        result = scientific_operations.e()
+        self._record_operation("get_e", [], result)
+        return result
+
+    # ------------------------------------------------------------------
+    # Mode management
+    # ------------------------------------------------------------------
+
+    def enable_scientific_mode(self) -> None:
+        """Enable scientific mode.
+
+        When scientific mode is enabled, the UI may expose scientific operations
+        such as trigonometric and hyperbolic functions.
+        """
+        self._scientific_mode = True
+
+    def disable_scientific_mode(self) -> None:
+        """Disable scientific mode, returning to normal mode."""
+        self._scientific_mode = False
+
+    def toggle_scientific_mode(self) -> None:
+        """Toggle scientific mode on or off."""
+        self._scientific_mode = not self._scientific_mode
+
+    def is_scientific_mode(self) -> bool:
+        """Return True if scientific mode is currently enabled, False otherwise.
+
+        Returns:
+            The current scientific mode state.
+        """
+        return self._scientific_mode
