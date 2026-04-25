@@ -10,7 +10,7 @@
 - **Risks:** None — no logic changes, all calculation delegates to GUIController unchanged
 - **Tests passed:** 462 passed, 0 failed, 3 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1229.4s | Cost: $2.266919 USD | Turns: 33
 
 ## Run: Issue #414 — V3 Task 15 - Structured/team (2026-04-25)
 
