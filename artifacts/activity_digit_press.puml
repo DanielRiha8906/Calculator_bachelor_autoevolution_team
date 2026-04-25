@@ -1,0 +1,22 @@
+@startuml
+skinparam activityFontSize 12
+title Digit Button Press Flow
+
+start
+
+:User clicks a digit button (0–9);
+
+:Lambda fires: _on_digit_press(digit);
+
+:_current_operand += str(digit);
+
+:_result_label.config(text=_current_operand);
+
+note right
+  Result label updates
+  immediately — no
+  separate refresh step.
+end note
+
+stop
+@enduml

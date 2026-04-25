@@ -1,0 +1,83 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title GuiCalculator — Class Structure and Composition
+
+class GuiCalculator {
+    ' State
+    - _current_mode : OperationMode
+    - _current_operand : str
+    - _selected_operation : str
+    - _digit_buttons : list
+    - _arithmetic_buttons : list
+    - _operation_buttons : list
+    ' Widget references
+    - _root
+    - _top_frame
+    - _content_frame
+    - _left_panel
+    - _right_panel
+    - _bottom_frame
+    - _result_label
+    - _mode_toggle_btn
+    ' Public API
+    + get_current_mode_operations() : list
+    + calculate(op_name, *operands) : str
+    + get_history() : list
+    + is_unary_operation(op_name) : bool
+    + run() : None
+    ' GUI setup
+    - _setup_ios_gui() : None
+    - _build_left_panel(parent) : None
+    - _build_right_panel(parent) : None
+    - _build_bottom_panel(parent) : None
+    - _rebuild_bottom_panel() : None
+    ' Widget factories
+    - _make_button(...) : _TkStub
+    - _make_label(...) : _TkStub
+    - _make_frame(...) : _TkStub
+    ' Interaction handlers
+    - _on_digit_press(digit: int) : None
+    - _on_mode_toggle() : None
+    - _update_mode_toggle_text() : None
+    - _on_op_press(op_name: str) : None
+    - _on_button_enter(btn) : None
+    - _on_button_leave(btn) : None
+    ' Helpers
+    - _op_button_colours(op_name: str) : tuple
+}
+
+class Calculator {
+    + add(a, b) : float
+    + subtract(a, b) : float
+    + multiply(a, b) : float
+    + divide(a, b) : float
+    + sqrt(x) : float
+    + square(x) : float
+    + factorial(n) : float
+    + sin(x) / cos(x) / tan(x) : float
+    + ... (14 ops total)
+}
+
+class OperationRegistry {
+    + call(op_name, *args) : Any
+    + get_operations_by_mode(mode) : list
+}
+
+class OperationHistory {
+    + record(op_name, operands, result) : None
+    + get_entries() : list
+}
+
+enum OperationMode {
+    NORMAL
+    SCIENTIFIC
+}
+
+GuiCalculator *-- Calculator       : _calculator
+GuiCalculator *-- OperationRegistry : _registry
+GuiCalculator *-- OperationHistory  : _history
+GuiCalculator ..> OperationMode     : _current_mode
+OperationRegistry --> Calculator    : delegates to
+
+@enduml

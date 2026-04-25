@@ -1,0 +1,66 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title Legacy GUI Classes — CalculatorApp and _TkStub
+
+class _TkStub {
+    ' Captures widget constructor args for test assertions
+    - _value : str
+    - _kwargs : dict
+    - _grid_info : dict
+    + __call__(*args, **kwargs) : _TkStub
+    + config(**kwargs) : None
+    + configure(**kwargs) : None
+    + cget(key) : Any
+    + grid(**kwargs) : None
+    + grid_info() : dict
+    + set(value) : None
+    + get() : str
+    + bind(event, handler) : None
+}
+
+note right of _TkStub
+  Module-level mock.
+  Replaces real Tk widgets
+  in headless test mode.
+end note
+
+class CalculatorApp {
+    ' Preserved for backward compatibility
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
+    - _root
+    - _current_mode : OperationMode
+    ' UI variable references
+    - _modes : dict
+    - _var (StringVar stubs)
+    - _frame references
+    ' Public API
+    + get_current_mode_operations() : list
+    + calculate(op_name, *operands) : str
+    + get_history() : list
+    + is_unary_operation(op_name) : bool
+    + run() : None
+    ' Internal
+    - _setup_gui() : None
+    - _on_calculate() : None
+    - _rebuild_operation_menu() : None
+    - _parse_operand(text) : float   {static}
+    + switch_mode(mode) : None
+}
+
+class Calculator
+class OperationRegistry
+class OperationHistory
+enum OperationMode {
+    NORMAL
+    SCIENTIFIC
+}
+
+CalculatorApp *-- Calculator
+CalculatorApp *-- OperationRegistry
+CalculatorApp *-- OperationHistory
+CalculatorApp ..> OperationMode
+
+@enduml

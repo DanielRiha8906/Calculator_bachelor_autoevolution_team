@@ -1,3 +1,17 @@
+## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — GuiCalculator class diagram with composition relationships
+  - `artifacts/class_gui_legacy.puml` — CalculatorApp and _TkStub class diagrams
+  - `artifacts/activity_digit_press.puml` — Digit button press activity flow
+  - `artifacts/activity_mode_toggle.puml` — Mode toggle activity flow with panel rebuild
+  - `artifacts/sequence_gui_init.puml` — GuiCalculator initialization sequence
+  - `artifacts/component_gui_layout.puml` — Widget hierarchy component diagram
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #466 — feat: iOS-style GuiCalculator redesign (2026-04-25)
 
 - **Branch:** task/issue-465-ios-calculator-redesign
