@@ -1,3 +1,20 @@
+## Run: Fix PR #459 — feat: add scientific mode with interactive mode switching (2026-04-25)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/operations/scientific.py` — added 12 new Operation subclasses: ScientificSin, ScientificCos, ScientificTan, ScientificAsin, ScientificAcos, ScientificAtan, ScientificSinh, ScientificCosh, ScientificTanh, ScientificExp, ScientificPi, ScientificE
+  - `src/calculator/main.py` — corrected mode split: normal mode now has 13 ops, scientific mode has 25; updated _SCIENTIFIC_OPS_BLOCKED to only block 12 new scientific ops; updated imports; added dynamic prompt
+  - `tests/test_scientific_operations.py` — 75 new tests for all 12 new scientific operation classes
+  - `tests/test_mode_registry.py` — 16 new tests for mode registry size and operation availability
+  - `tests/test_mode_switching.py` — updated tests to reflect correct normal mode (13 ops); square and other advanced ops now expected to succeed in normal mode
+  - `tests/test_mode_operations.py` — updated tests to reflect correct mode split
+- **Purpose:** Address reviewer feedback on PR #459 — fix architectural mismatch where normal mode was incorrectly limited to 5 operations; implement 12 missing scientific functions; correct mode split so scientific is a proper superset of normal
+- **Risks:** None — all existing tests updated to match corrected behavior; no new dependencies
+- **Tests passed:** 382 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Scientific Mode (2026-04-24)
 
 - **Branch:** task/issue-411-scientific-mode

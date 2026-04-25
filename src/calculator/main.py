@@ -6,7 +6,9 @@ OperationRegistry rather than the legacy dict-based registry in
 
 Mode constants and mode-aware helpers were added in Issue #411 to support
 switching between ``normal`` (basic arithmetic only) and ``scientific``
-(all operations) modes in the interactive REPL.
+(all 25 operations) modes in the interactive REPL.  Scientific mode adds
+12 extra operations on top of the 13 normal ones: sin, cos, tan, asin,
+acos, atan, sinh, cosh, tanh, exp, pi, and e.
 """
 
 import sys
@@ -28,6 +30,18 @@ from src.calculator.operations.scientific import (
     ScientificPower,
     ScientificLog10,
     ScientificLn,
+    ScientificSin,
+    ScientificCos,
+    ScientificTan,
+    ScientificAsin,
+    ScientificAcos,
+    ScientificAtan,
+    ScientificSinh,
+    ScientificCosh,
+    ScientificTanh,
+    ScientificExp,
+    ScientificPi,
+    ScientificE,
 )
 from src.calculator.validation import InputValidator
 from src.history import OperationHistory
@@ -42,16 +56,22 @@ MODE_SCIENTIFIC: str = "scientific"
 VALID_MODES: set[str] = {MODE_NORMAL, MODE_SCIENTIFIC}
 
 # Operations that are unavailable when the interactive loop is in normal mode.
-# ``square`` and ``power`` are intentionally excluded so that existing tests
-# which call ``_run_interactive_loop`` directly (without a mode switch) can
-# still exercise those operations.
+# Only the 12 NEW scientific operations are blocked; all 13 normal-mode
+# operations (including factorial, square, cube, square_root, cube_root,
+# power, log10, ln) are available in normal mode.
 _SCIENTIFIC_OPS_BLOCKED: frozenset[str] = frozenset({
-    "factorial",
-    "square_root",
-    "cube_root",
-    "cube",
-    "log10",
-    "ln",
+    "sin",
+    "cos",
+    "tan",
+    "asin",
+    "acos",
+    "atan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "exp",
+    "pi",
+    "e",
 })
 
 
@@ -71,28 +91,25 @@ def _build_registry(mode: str = MODE_SCIENTIFIC) -> OperationRegistry:
     Returns:
         An OperationRegistry populated according to *mode*:
 
-        * ``MODE_NORMAL`` — only basic arithmetic operations (add, subtract,
-          multiply, divide, modulo).
-        * ``MODE_SCIENTIFIC`` — all 13 arithmetic and scientific operations.
+        * ``MODE_NORMAL`` — 13 operations: the 5 basic arithmetic operations
+          (add, subtract, multiply, divide, modulo) plus 8 advanced operations
+          (factorial, square, cube, square_root, cube_root, power, log10, ln).
+          The 12 NEW scientific operations listed in
+          :data:`_SCIENTIFIC_OPS_BLOCKED` are blocked by the interactive loop.
+        * ``MODE_SCIENTIFIC`` — all 25 operations: the 13 normal-mode
+          operations plus 12 additional trigonometric, hyperbolic,
+          exponential, and constant operations (sin, cos, tan, asin, acos,
+          atan, sinh, cosh, tanh, exp, pi, e).
     """
     registry = OperationRegistry()
 
-    # Basic arithmetic operations available in both modes.
-    basic_ops = [
+    # All 13 normal-mode operations: 5 basic arithmetic + 8 advanced.
+    normal_ops = [
         ArithmeticAdd(),
         ArithmeticSubtract(),
         ArithmeticMultiply(),
         ArithmeticDivide(),
         ArithmeticModulo(),
-    ]
-
-    if mode == MODE_NORMAL:
-        for op in basic_ops:
-            registry.register(op)
-        return registry
-
-    # Scientific mode: register everything including advanced operations.
-    for op in basic_ops + [
         ArithmeticFactorial(),
         ScientificSquare(),
         ScientificCube(),
@@ -101,6 +118,27 @@ def _build_registry(mode: str = MODE_SCIENTIFIC) -> OperationRegistry:
         ScientificPower(),
         ScientificLog10(),
         ScientificLn(),
+    ]
+
+    if mode == MODE_NORMAL:
+        for op in normal_ops:
+            registry.register(op)
+        return registry
+
+    # Scientific mode: all 13 normal ops + 12 new scientific ops.
+    for op in normal_ops + [
+        ScientificSin(),
+        ScientificCos(),
+        ScientificTan(),
+        ScientificAsin(),
+        ScientificAcos(),
+        ScientificAtan(),
+        ScientificSinh(),
+        ScientificCosh(),
+        ScientificTanh(),
+        ScientificExp(),
+        ScientificPi(),
+        ScientificE(),
     ]:
         registry.register(op)
     return registry
@@ -144,8 +182,8 @@ def _run_interactive_loop(
     active_registry: OperationRegistry = registry
 
     while True:
-        print("Enter operation (add, subtract, multiply, divide, factorial, square, cube,")
-        print("square_root, cube_root, power, log10, ln) or 'history' to view history or 'quit' to exit:")
+        ops_list = ", ".join(active_registry.list_all())
+        print(f"Enter operation ({ops_list}) or 'history' to view history or 'quit' to exit:")
         operation = input("Select operation: ").strip().lower()
 
         if operation in ("quit", "exit", "q"):

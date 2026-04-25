@@ -659,3 +659,67 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 - Task 14 likely final V3 task; represents completion of calculator feature work and mode organization
 - Ambiguities are straightforward engineering decisions (command syntax, registry design); no domain confusion
 - Task builds on all prior work; must integrate with existing error handling, validation, history, logging, and refactored architecture
+
+### 2026-04-25 | PR #459 Review Feedback Analysis (Issue #411 implementation)
+
+**Context:** PR #459 implements Issue #411 (scientific mode with mode switching) but received blocking feedback from the repository owner.
+
+**Unresolved Reviewer Feedback (BLOCKING):**
+The single PR comment from DanielRiha8906 (owner) marks **"Fix needed"** and specifies five categories of required work:
+
+1. **Missing Scientific Functions (12 operations required)**
+   - Trigonometric: sin, cos, tan
+   - Inverse trigonometric: asin, acos, atan (with domain constraints: [-1, 1])
+   - Hyperbolic: sinh, cosh, tanh
+   - Exponential: exp
+   - Mathematical constants: pi, e
+   - All must be implemented as Operation subclasses in `src/calculator/operations/scientific.py`
+   - All must be registered in `_build_registry()` under MODE_SCIENTIFIC only
+
+2. **Corrected Normal/Scientific Mode Split (CRITICAL ARCHITECTURAL FIX)**
+   - Current PR implementation: normal mode has ONLY 5 operations (add, subtract, multiply, divide, modulo) — too restrictive
+   - Pre-task (before mode split): calculator supported 10+ operations including square, sqrt, power, log, ln, factorial
+   - **Required correction:** Normal mode must include ALL pre-split operations (10+ operations)
+   - **Superset relationship:** Scientific mode must be a SUPERSET containing all normal mode operations PLUS 12 new scientific functions
+   - **Current error:** The PR's mode split is backward-incompatible; it removes previously supported functions from normal mode
+   - Update `_SCIENTIFIC_OPS_BLOCKED` or equivalent data structure to reflect correct split
+
+3. **Preserve and Verify Interactive Mode Switching**
+   - Mode-switch commands (e.g., `mode normal`, `mode scientific`) must parse case-insensitively
+   - Support aliases: `normal | norm | scientific | sci`
+   - Registry must be immediately rebuilt on mode switch (so operations become accessible/blocked instantly)
+   - Failure counting must still apply to mode-rejection errors
+   - Mode switching must work correctly with ALL newly added scientific functions
+
+4. **Comprehensive Test Coverage for Scientific Functions**
+   - Each new function: test correct output, domain error handling, mode availability, mode absence
+   - Mode switching with scientific functions: verify correct exposure/hiding with interactive commands
+   - Consecutive-failure counting must include mode-rejection errors
+   - Validate case-insensitive command parsing and alias handling
+   - All pre-existing tests must remain green (zero regressions)
+
+5. **Update Interactive Prompts**
+   - Prompt string in `_run_interactive_loop()` must dynamically list available operations per current mode
+   - Include all newly added scientific functions in the list when in scientific mode
+   - Update list to reflect corrected normal mode operation set
+   - Provide clear indication of which mode is active (e.g., mode prefix or feedback message)
+
+**Acceptance Criteria (Blocking PR Merge):**
+- [ ] All 12 new scientific functions implemented and registered
+- [ ] Normal mode includes full pre-split operation set (not just 5 operations)
+- [ ] Scientific mode is true superset (all normal + all scientific)
+- [ ] Interactive mode-switch command parsing works correctly
+- [ ] Registry rebuild happens immediately on mode switch
+- [ ] All new functions have comprehensive tests (correctness, domain errors, mode availability)
+- [ ] Pre-existing tests remain green (no regressions)
+- [ ] Interactive prompts dynamically reflect available operations
+- [ ] PR mergeability changes from "unstable" to "clean"
+
+**Priority:** MUST HAVE — all items block PR merge
+
+**Patterns Identified:**
+- Architectural mismatch: mode split design diverges from intent (too restrictive in normal mode)
+- Missing feature gap: 12 scientific functions not implemented despite being explicitly required in reviewer feedback
+- Backward compatibility violation: normal mode less capable than pre-split calculator
+- Test coverage incomplete: no tests for new scientific functions or correct mode split behavior
+

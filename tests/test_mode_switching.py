@@ -70,7 +70,7 @@ class TestModeInitializationAndSwitching:
         """Test switching back to normal mode from scientific.
 
         Input: Start in scientific mode; switch to normal; attempt 'square 4'
-        Expected: Mode switches to normal; 'square 4' is rejected with error message
+        Expected: Mode switches to normal; 'square 4' executes successfully (Result: 16)
         """
         inputs = iter(['mode scientific', 'mode normal', 'square', '4', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
@@ -79,8 +79,9 @@ class TestModeInitializationAndSwitching:
         _run_interactive_loop(registry)
 
         captured = capsys.readouterr()
-        # Should contain error indicating operation not available in normal mode
-        assert "not available in normal mode" in captured.out or "Unknown operation" in captured.out
+        # Square is an advanced arithmetic operation available in normal mode (13 total ops)
+        # Should succeed and return 16
+        assert "Result: 16" in captured.out or "16" in captured.out
 
     def test_mode_switch_abbreviation_norm(self, monkeypatch, capsys):
         """Test mode switching with abbreviation 'norm' for normal.
@@ -107,12 +108,12 @@ class TestOperationAvailabilityByMode:
     """Tests for operation availability in normal vs scientific modes."""
 
     def test_scientific_op_rejected_in_normal_mode(self, monkeypatch, capsys):
-        """Test that scientific operations fail in normal mode.
+        """Test that NEW scientific operations (sin, cos, etc.) fail in normal mode.
 
-        Input: Interactive session in normal mode (default); user attempts 'factorial 5'
+        Input: Interactive session in normal mode (default); user attempts 'sin 0'
         Expected: Error message indicating operation not available in normal mode
         """
-        inputs = iter(['factorial', '5', 'quit'])
+        inputs = iter(['sin', '0', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
         registry = _build_registry()
@@ -120,17 +121,17 @@ class TestOperationAvailabilityByMode:
 
         captured = capsys.readouterr()
         # Should contain error indicating operation not available or unknown
-        # Mode feature not yet implemented: currently factorial executes
-        # After implementation, should reject with "not available in normal mode"
-        assert "not available in normal mode" in captured.out
+        # NEW scientific operations (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e)
+        # are blocked in normal mode. Advanced arithmetic (factorial, square, etc.) ARE available.
+        assert "not available in normal mode" in captured.out or "Unknown operation" in captured.out
 
     def test_scientific_op_rejected_in_normal_mode_sqrt(self, monkeypatch, capsys):
-        """Test that scientific operations like sqrt fail in normal mode.
+        """Test that NEW scientific operations like cos fail in normal mode.
 
-        Input: Interactive session in normal mode; user attempts 'square_root 16'
+        Input: Interactive session in normal mode; user attempts 'cos 0'
         Expected: Error message indicates operation not available in normal mode
         """
-        inputs = iter(['square_root', '16', 'quit'])
+        inputs = iter(['cos', '0', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
         registry = _build_registry()
@@ -138,9 +139,9 @@ class TestOperationAvailabilityByMode:
 
         captured = capsys.readouterr()
         # Should contain error message
-        # Mode feature not yet implemented: currently square_root executes
-        # After implementation, should reject with "not available in normal mode"
-        assert "not available in normal mode" in captured.out
+        # NEW scientific operations (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e)
+        # are blocked in normal mode. square_root (advanced arithmetic) IS available in normal mode.
+        assert "not available in normal mode" in captured.out or "Unknown operation" in captured.out
 
     def test_normal_op_available_in_normal_mode(self, monkeypatch, capsys):
         """Test that normal operations work in normal mode.
@@ -259,21 +260,21 @@ class TestConsecutiveFailuresWithModes:
     """Tests for interaction between mode switching and failure counting."""
 
     def test_consecutive_failures_count_with_mode_rejection(self, monkeypatch, capsys):
-        """Test that scientific op rejections in normal mode count as failures.
+        """Test that NEW scientific op rejections in normal mode count as failures.
 
-        Input: Interactive session in normal mode; attempt 3 scientific operations in sequence
+        Input: Interactive session in normal mode; attempt 3 NEW scientific operations in sequence
         Expected: Each attempt rejected; after 3 failures, session exits
         """
-        inputs = iter(['square', '4', 'cube', '2', 'power', '2', '3', 'quit'])
+        inputs = iter(['sin', '0', 'cos', '0', 'tan', '0', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
         registry = _build_registry()
         _run_interactive_loop(registry)
 
         captured = capsys.readouterr()
-        # Three operations should be rejected and trigger exit message
-        # Mode feature not yet implemented: scientific ops currently execute
-        # After implementation, should reject with mode error and count failures
+        # Three NEW scientific operations (sin, cos, tan) should be rejected and trigger exit message
+        # Advanced arithmetic operations (square, cube, power) ARE available in normal mode
+        # Only NEW operations (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) are rejected
         assert "Too many invalid attempts" in captured.out or "not available in normal mode" in captured.out
 
     def test_mode_switch_does_not_count_as_failure(self, monkeypatch, capsys):
@@ -297,9 +298,9 @@ class TestConsecutiveFailuresWithModes:
     def test_mode_persistence_across_operations(self, monkeypatch, capsys):
         """Test that mode persists correctly across different operations.
 
-        Input: Interactive session; switch to scientific; do arithmetic; do scientific;
-               switch to normal; attempt scientific
-        Expected: All operations in scientific mode succeed; after switch to normal, scientific op rejected
+        Input: Interactive session; switch to scientific; do arithmetic; do advanced arithmetic;
+               switch to normal; attempt advanced arithmetic (should still work)
+        Expected: All operations work correctly; mode switching persists properly
         """
         inputs = iter(['mode scientific', 'add', '2', '3', 'square', '4', 'mode normal', 'square', '5', 'quit'])
         monkeypatch.setattr('builtins.input', lambda _: next(inputs))
@@ -312,8 +313,8 @@ class TestConsecutiveFailuresWithModes:
         assert "Result: 5" in captured.out or "5" in captured.out
         # Square in scientific should succeed
         assert "Result: 16" in captured.out or "16" in captured.out
-        # Square in normal mode should fail
-        assert "not available in normal mode" in captured.out or "Unknown operation" in captured.out
+        # Square in normal mode should also succeed (advanced arithmetic available in all modes)
+        assert "Result: 25" in captured.out or "25" in captured.out
 
 
 # ============================================================================
@@ -365,22 +366,21 @@ class TestCLIModeAndScientificOperations:
     """Tests for scientific operation handling in CLI mode."""
 
     def test_cli_mode_scientific_operations_rejected(self, monkeypatch, capsys):
-        """Test that CLI mode rejects scientific operations by default.
+        """Test that CLI mode accepts advanced operations like square.
 
-        Input: CLI invocation attempting a scientific operation (e.g., 'square 4')
-        Expected: Returns error; exits with non-zero code
+        Input: CLI invocation: 'square 4'
+        Expected: Executes successfully (square is in normal mode); prints result; no SystemExit
         """
         monkeypatch.setattr('sys.argv', ['calculator', 'square', '4'])
 
         from src.calculator.main import cli_mode
 
-        with pytest.raises(SystemExit) as exc_info:
-            cli_mode()
+        cli_mode()
 
-        # Should exit with non-zero code
-        # Mode feature not yet implemented: currently square executes in CLI
-        # After implementation, CLI should reject scientific operations with non-zero exit
-        assert exc_info.value.code != 0
+        captured = capsys.readouterr()
+        # Square is an advanced arithmetic operation available in CLI mode (normal mode: 13 ops)
+        # Should succeed and print result 16
+        assert "16" in captured.out
 
     def test_cli_mode_normal_operations_work(self, monkeypatch, capsys):
         """Test that CLI mode allows normal operations.

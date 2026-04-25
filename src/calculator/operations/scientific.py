@@ -1,7 +1,8 @@
 """Scientific operation implementations for the modular calculator.
 
-Provides seven concrete Operation subclasses for scientific calculations:
-square, cube, square_root, cube_root, power, log10, and ln.
+Provides nineteen concrete Operation subclasses for scientific calculations:
+square, cube, square_root, cube_root, power, log10, ln, sin, cos, tan,
+asin, acos, atan, sinh, cosh, tanh, exp, pi (constant), and e (constant).
 """
 
 import math
@@ -184,3 +185,287 @@ class ScientificLn(Operation):
         if a <= 0:
             raise ValueError("ln() is not defined for non-positive numbers")
         return math.log(a)
+
+
+class ScientificSin(Operation):
+    """Sine of an angle given in radians."""
+
+    @property
+    def name(self) -> str:
+        return "sin"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the sine of a (in radians).
+
+        Args:
+            a: Angle in radians.
+
+        Returns:
+            The sine of a.
+        """
+        return math.sin(a)
+
+
+class ScientificCos(Operation):
+    """Cosine of an angle given in radians."""
+
+    @property
+    def name(self) -> str:
+        return "cos"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the cosine of a (in radians).
+
+        Args:
+            a: Angle in radians.
+
+        Returns:
+            The cosine of a.
+        """
+        return math.cos(a)
+
+
+class ScientificTan(Operation):
+    """Tangent of an angle given in radians."""
+
+    @property
+    def name(self) -> str:
+        return "tan"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the tangent of a (in radians).
+
+        Args:
+            a: Angle in radians.
+
+        Returns:
+            The tangent of a.
+        """
+        return math.tan(a)
+
+
+class ScientificAsin(Operation):
+    """Arcsine (inverse sine) of a value in the domain [-1, 1]."""
+
+    @property
+    def name(self) -> str:
+        return "asin"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the arcsine of a in radians.
+
+        Args:
+            a: A value in the domain [-1, 1].
+
+        Returns:
+            The arcsine of a in radians, in the range [-pi/2, pi/2].
+
+        Raises:
+            ValueError: If a is outside the domain [-1, 1].
+        """
+        if a < -1 or a > 1:
+            raise ValueError(
+                f"asin() domain error: argument {a} is outside [-1, 1]"
+            )
+        return math.asin(a)
+
+
+class ScientificAcos(Operation):
+    """Arccosine (inverse cosine) of a value in the domain [-1, 1]."""
+
+    @property
+    def name(self) -> str:
+        return "acos"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the arccosine of a in radians.
+
+        Args:
+            a: A value in the domain [-1, 1].
+
+        Returns:
+            The arccosine of a in radians, in the range [0, pi].
+
+        Raises:
+            ValueError: If a is outside the domain [-1, 1].
+        """
+        if a < -1 or a > 1:
+            raise ValueError(
+                f"acos() domain error: argument {a} is outside [-1, 1]"
+            )
+        return math.acos(a)
+
+
+class ScientificAtan(Operation):
+    """Arctangent (inverse tangent) of a value."""
+
+    @property
+    def name(self) -> str:
+        return "atan"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the arctangent of a in radians.
+
+        Args:
+            a: A real number (no domain restriction).
+
+        Returns:
+            The arctangent of a in radians, in the range (-pi/2, pi/2).
+        """
+        return math.atan(a)
+
+
+class ScientificSinh(Operation):
+    """Hyperbolic sine of a value."""
+
+    @property
+    def name(self) -> str:
+        return "sinh"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the hyperbolic sine of a.
+
+        Args:
+            a: A real number.
+
+        Returns:
+            The hyperbolic sine of a.
+        """
+        return math.sinh(a)
+
+
+class ScientificCosh(Operation):
+    """Hyperbolic cosine of a value."""
+
+    @property
+    def name(self) -> str:
+        return "cosh"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the hyperbolic cosine of a.
+
+        Args:
+            a: A real number.
+
+        Returns:
+            The hyperbolic cosine of a.
+        """
+        return math.cosh(a)
+
+
+class ScientificTanh(Operation):
+    """Hyperbolic tangent of a value."""
+
+    @property
+    def name(self) -> str:
+        return "tanh"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return the hyperbolic tangent of a.
+
+        Args:
+            a: A real number.
+
+        Returns:
+            The hyperbolic tangent of a, in the range (-1, 1).
+        """
+        return math.tanh(a)
+
+
+class ScientificExp(Operation):
+    """Exponential function: e raised to the power of a."""
+
+    @property
+    def name(self) -> str:
+        return "exp"
+
+    @property
+    def arity(self) -> int:
+        return 1
+
+    def execute(self, a: float) -> float:
+        """Return e raised to the power of a.
+
+        Args:
+            a: The exponent.
+
+        Returns:
+            e ** a.
+        """
+        return math.exp(a)
+
+
+class ScientificPi(Operation):
+    """Mathematical constant pi (zero-operand constant operation)."""
+
+    @property
+    def name(self) -> str:
+        return "pi"
+
+    @property
+    def arity(self) -> int:
+        return 0
+
+    def execute(self) -> float:
+        """Return the mathematical constant pi.
+
+        Returns:
+            math.pi (~3.141592653589793).
+        """
+        return math.pi
+
+
+class ScientificE(Operation):
+    """Mathematical constant e (zero-operand constant operation)."""
+
+    @property
+    def name(self) -> str:
+        return "e"
+
+    @property
+    def arity(self) -> int:
+        return 0
+
+    def execute(self) -> float:
+        """Return the mathematical constant e.
+
+        Returns:
+            math.e (~2.718281828459045).
+        """
+        return math.e

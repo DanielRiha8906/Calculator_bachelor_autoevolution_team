@@ -15,7 +15,11 @@ from src.calculator.main import _run_interactive_loop, _build_registry
 # ============================================================================
 
 class TestScientificOperationsAvailability:
-    """Tests for scientific operation availability in scientific mode."""
+    """Tests for advanced operation availability in scientific mode.
+
+    Advanced operations (square, cube, power, ln) are available in both normal and scientific modes.
+    This test explicitly verifies they work in scientific mode as well.
+    """
 
     @pytest.mark.parametrize("operation,operand,expected_result", [
         ("square", "4", "16"),
@@ -23,14 +27,15 @@ class TestScientificOperationsAvailability:
         ("power", "2\n3", "8"),  # Two operands
         ("ln", "1", "0"),
     ])
-    def test_scientific_operations_in_scientific_mode_succeed(
+    def test_advanced_operations_in_scientific_mode_succeed(
         self, operation, operand, expected_result, monkeypatch, capsys
     ):
-        """Test that scientific operations execute without mode rejection.
+        """Test that advanced operations execute without mode rejection in scientific mode.
 
-        Input: Interactive session in scientific mode; execute scientific operations
-        Expected: All operations execute without mode rejection; produce correct results
-        Note: Domain errors (e.g., sqrt(-1)) still raise ValueError; mode doesn't bypass validation
+        Input: Interactive session in scientific mode; execute advanced operations
+        Expected: All operations execute without rejection; produce correct results
+        Note: These advanced operations (square, cube, power, ln) are also available in normal mode.
+        Domain errors (e.g., ln(-1)) still raise ValueError; mode doesn't bypass validation
         """
         # Build input sequence with mode switch, then operation and operand(s)
         if operation == "power":
