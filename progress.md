@@ -9,7 +9,7 @@
 - **Risks:** None — entry point change is a 2-line rename; all 516 tests pass with no regressions
 - **Tests passed:** 516 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 700.6s | Cost: $1.274149 USD | Turns: 13
 
 ## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
 
