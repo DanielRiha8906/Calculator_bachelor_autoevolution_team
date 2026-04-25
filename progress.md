@@ -9,7 +9,7 @@
 - **Risks:** None — headless detection uses isinstance check on Tcl/Tk interpreter object; existing test suite unaffected
 - **Tests passed:** 526 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 879.7s | Cost: $2.005213 USD | Turns: 14
 
 ## Run: Fix PR #466 (review feedback) — feat: iOS-style GuiCalculator redesign (2026-04-25)
 
