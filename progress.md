@@ -426,4 +426,4 @@ Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
   - `artifacts/gui_calculate_flow.puml` — new activity diagram showing the full GUI calculate flow from launch through mode selection, operation execution, and history update
   - `artifacts/gui_operation_sequence.puml` — new sequence diagram for GUI operation execution showing interactions between User, GUIWindow, GUIController, OperationRegistry, and Operation
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 343.9s | Cost: $0.663255 USD | Turns: 4
