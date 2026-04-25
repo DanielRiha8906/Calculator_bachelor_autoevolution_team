@@ -333,3 +333,115 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
   - Mode split validated: normal=13, scientific=25
   - No changes to CLI behavior (backward compatible via MODE_SCIENTIFIC in shim)
 
+### Cycle 5: 2026-04-25 — Issue #414 V3 Task 15 — Graphical User Interface
+
+**Task:** Implement a graphical user interface (GUI) using tkinter for the calculator, allowing users to interact with all supported operations through a visual window instead of CLI or interactive REPL. GUI must coexist with existing CLI and interactive modes, selectable via --gui flag at startup.
+
+**Key Decisions:**
+
+1. **Architectural separation (CRITICAL):**
+   - **GUIController:** Pure Python business logic layer with zero tkinter dependency; testable in isolation
+   - **GUIWindow:** tkinter widget layer; depends on GUIController; testable via mocking
+   - **Entry point:** Modified `src/__main__.py` to support `--gui` flag; CLI and interactive modes unchanged
+   - **Rationale:** tkinter code is difficult to unit test automatically; separating logic from widgets enables full test coverage
+
+2. **GUIController class structure:**
+   - Initializes with registry for a given mode (normal or scientific)
+   - Exposes public methods: `get_available_operations()`, `get_current_mode()`, `switch_mode()`, `execute_operation()`, `get_operation_arity()`, `get_session_history()`, `clear_session_history()`
+   - Maintains in-memory session history (distinct from OperationHistory file)
+   - Catches all exceptions (ValueError, ZeroDivisionError, KeyError) and returns error dicts; never raises exceptions to caller
+   - Imports `_build_registry`, `MODE_NORMAL`, `MODE_SCIENTIFIC` from `src.calculator.main`
+
+3. **GUIWindow class structure:**
+   - Single tkinter Tk window with logical sections:
+     - **Mode selector:** two radio buttons (Normal / Scientific) with callback to rebuild operations
+     - **Operation selector:** dropdown/combobox auto-populated from controller's operation list, updates on mode switch
+     - **Operand input fields:** dynamically created/destroyed based on selected operation's arity (0-2 fields)
+     - **Calculate button:** triggers operation execution and updates result display
+     - **Result display:** label showing operation context (name, operands, result) or error message
+     - **History panel:** scrollable listbox showing current session history (not persisted to disk)
+   - Callbacks: `_on_mode_changed()`, `_on_operation_selected()`, `_on_calculate_clicked()`
+   - Helper methods: `_update_operation_dropdown()`, `_update_operand_fields()`, `_update_history_display()`, `_format_result_display()`
+
+4. **Session history design:**
+   - In-memory only, cleared when mode switches or window closes
+   - Different from OperationHistory (which persists to history.txt for CLI/interactive modes)
+   - Simplifies GUI UX: no file dependencies, no session pollution
+
+5. **Mode support in GUI:**
+   - GUI starts in MODE_SCIENTIFIC (all 25 operations available)
+   - User can switch to MODE_NORMAL (13 operations) via radio button
+   - On mode switch: registry rebuilt, operation dropdown refreshed, operand fields cleared, history cleared
+
+6. **Error handling & validation:**
+   - Invalid numeric input (e.g., "abc" for operand) caught by `InputValidator.parse_number()` via GUIController
+   - Domain errors (sqrt(-1), log(0)) caught and displayed as error strings
+   - Unknown operations and wrong arity also return error dicts (never raise exceptions)
+   - Result display formats errors and successes clearly for user
+
+7. **Entry point modification:**
+   - `src/__main__.py` checks for `--gui` flag before delegating
+   - If `--gui` present: remove flag from sys.argv, import GUIController and GUIWindow, create window and run mainloop
+   - If no `--gui`: call `cli_mode()` as before (backward compatible)
+   - No changes to `cli_mode()` or interactive REPL behavior
+
+8. **No changes to:**
+   - `src/calculator/main.py` — all functions remain as-is; only imports for GUIController
+   - `src/calculator/operations/*` — all operation classes unchanged
+   - `OperationHistory`, `ErrorLog`, `InputValidator` — unchanged
+   - Existing test suites — all tests remain passing
+
+9. **New module structure:**
+   - `src/calculator/gui/__init__.py` — package init (exports GUIController, GUIWindow)
+   - `src/calculator/gui/controller.py` — GUIController class
+   - `src/calculator/gui/window.py` — GUIWindow class
+
+**Patterns Observed:**
+- Calculator operations follow consistent ABC pattern (name, arity, execute)
+- Mode-based registry building (already present in `_build_registry`) enables GUI mode switching
+- Session history tracking parallels OperationHistory but without file I/O
+- Exception handling pattern (catch-and-return-dict) suitable for GUI context
+
+**Architectural Impact:**
+- **GUI is additive:** does not modify or replace CLI/interactive modes
+- **CLI/interactive remain default:** --gui flag required to activate GUI mode
+- **No new dependencies:** uses tkinter (standard library only)
+- **Backward compatibility:** all existing tests, CLI syntax, interactive behavior unchanged
+- **Code isolation:** GUI code in separate module (src/calculator/gui/); core logic untouched
+
+**Test Coverage Plan (44 test cases total):**
+- **GUIController tests (25 tests):** initialization, mode switching, operation execution, error handling, session history
+- **GUIWindow integration tests (15 tests):** widget initialization, mode/operation selection, operand field updates, result display, history tracking
+- **Entry point tests (4 tests):** --gui flag handling, backward compatibility with CLI/interactive
+
+**Risks & Mitigations:**
+1. tkinter import failures in headless CI → mock tkinter via pytest monkeypatch
+2. GUI freezing on operations → not a risk; all calculator operations are O(1)-O(log n)
+3. Session history cleared on mode switch → design choice; can be made persistent in future task
+4. Operand validation errors → caught by GUIController, displayed as error messages
+
+**Handoff Notes for pytest-edge-tester (WRITE phase):**
+- Create 3 new test files:
+  - `tests/test_gui_controller.py` (25 tests): GUIController logic without tkinter
+  - `tests/test_gui_integration.py` (15 tests): GUIWindow with tkinter (use monkeypatch/mock)
+  - `tests/test_main_entry_gui.py` (4 tests): --gui flag in entry point
+- All 44 tests must FAIL before implementation
+- Use pytest fixtures for GUIController instantiation
+- Use unittest.mock.patch to mock tkinter.Tk in integration tests
+- Avoid actual window display in CI (headless environment)
+
+**Handoff Notes for python-code-implementer:**
+- **File 1:** Create `src/calculator/gui/__init__.py` — package init with module docstring
+- **File 2:** Create `src/calculator/gui/controller.py` — GUIController class (see File 2 spec above)
+- **File 3:** Create `src/calculator/gui/window.py` — GUIWindow class (see File 3 spec above)
+- **File 4:** Modify `src/calculator/main.py` — ensure exports at module level (no code changes, just verification)
+- **File 5:** Modify `src/__main__.py` — add --gui flag handling and import statements
+- All changes are additive; no existing code modified except entry point
+- All 25 GUIController tests must pass; all 15 GUIWindow integration tests must pass; all 4 entry point tests must pass
+- All existing tests (test_calculator.py, test_cli_mode.py, test_interactive_validation.py, test_history.py, test_error_logging.py, test_scientific_functions.py) must remain passing
+
+**Handoff Notes for pytest-edge-tester (VERIFY phase):**
+- Run full test suite: `pytest tests/` (all tests)
+- Confirm no regressions: all existing tests still pass
+- Confirm new tests pass: 44 GUI tests pass
+- Total expected: 100+ tests, 100% pass rate

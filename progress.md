@@ -1,3 +1,20 @@
+## Run: Issue #414 — V3 Task 15 - Structured/team (2026-04-25)
+
+- **Branch:** task/issue-414-tkinter-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/__init__.py` — new GUI package init, exports GUIController and GUIWindow
+  - `src/calculator/gui/controller.py` — new GUIController class: pure Python business logic (no tkinter), mode management, operation execution with error dicts, session history
+  - `src/calculator/gui/window.py` — new GUIWindow class: tkinter GUI with mode radio buttons, operation dropdown, dynamic operand fields, result label, scrollable history listbox
+  - `src/__main__.py` — added --gui flag support to launch tkinter GUI instead of CLI/interactive mode
+  - `tests/test_gui_controller.py` — 30 new tests for GUIController logic (modes, execution, history, arity)
+  - `tests/test_main_entry_gui.py` — 4 new tests for --gui flag entry point integration
+- **Purpose:** Add tkinter GUI extending the calculator application (Issue #414); GUI is additive, CLI and interactive modes unchanged
+- **Risks:** tkinter unavailable in headless CI — mitigated by lazy import in __init__.py; GUIWindow tests mock tkinter
+- **Tests passed:** 416 passed, 0 failed, 3 skipped
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #459 — feat: add scientific mode with interactive mode switching (2026-04-25)
 
 - **Branch:** task/issue-411-scientific-mode
