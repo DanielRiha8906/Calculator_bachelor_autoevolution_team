@@ -1,0 +1,74 @@
+@startuml gui_button_layout
+title GUI Button Layout — Standard 4x5 Grid and Scientific 2x3 Sidebar
+
+skinparam class {
+  BackgroundColor White
+  BorderColor Black
+}
+
+package "Standard Grid (4 columns x 5 rows)" {
+
+  class "Row 0" as R0 {
+    col 0: C          [UTIL  #A5A5A5]
+    col 1: Del        [UTIL  #A5A5A5]
+    col 2: Mode       [UTIL  #A5A5A5]
+    col 3: ÷ (divide) [OP    #FF9500]
+  }
+
+  class "Row 1" as R1 {
+    col 0: 7          [DIGIT #333333]
+    col 1: 8          [DIGIT #333333]
+    col 2: 9          [DIGIT #333333]
+    col 3: × (multiply) [OP  #FF9500]
+  }
+
+  class "Row 2" as R2 {
+    col 0: 4          [DIGIT #333333]
+    col 1: 5          [DIGIT #333333]
+    col 2: 6          [DIGIT #333333]
+    col 3: + (add)    [OP    #FF9500]
+  }
+
+  class "Row 3" as R3 {
+    col 0: 1          [DIGIT #333333]
+    col 1: 2          [DIGIT #333333]
+    col 2: 3          [DIGIT #333333]
+    col 3: − (subtract) [OP  #FF9500]
+  }
+
+  class "Row 4" as R4 {
+    col 0-1: 0 (colspan=2) [DIGIT #333333]
+    col 2: .           [DIGIT #333333]
+    col 3: = (equals)  [OP    #FF9500]
+  }
+}
+
+package "Scientific Sidebar (2 rows x 3 columns)" {
+
+  class "Sci Row 0" as S0 {
+    col 0: √  → square_root [OP #FF9500]
+    col 1: x² → square      [OP #FF9500]
+    col 2: xʸ → power       [OP #FF9500]
+  }
+
+  class "Sci Row 1" as S1 {
+    col 0: n! → factorial    [OP #FF9500]
+    col 1: ln → ln           [OP #FF9500]
+    col 2: log → log10       [OP #FF9500]
+  }
+}
+
+note bottom of R4
+  0 button spans columns 0-1 (colspan=2).
+  Scientific sidebar shown only when
+  _scientific_panel_visible == True.
+end note
+
+note right of S0
+  Unary ops (arity=1): √, x², n!, ln, log
+  Binary op (arity=2): xʸ (power)
+  Power stores operand1 + pending_op,
+  awaits second operand before executing.
+end note
+
+@enduml

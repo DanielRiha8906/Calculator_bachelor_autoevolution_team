@@ -466,3 +466,16 @@ Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
 
 Duration: 343.9s | Cost: $0.663255 USD | Turns: 4
 
+## Run: update-diagrams — Redesign GUI (task/issue-464-redesign-gui) (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** task/issue-464-redesign-gui
+- **Files changed:**
+  - `artifacts/gui_classes.puml` — class diagram for GUIWindow, _ButtonConfig, GUIController with iOS redesign attributes
+  - `artifacts/gui_button_layout.puml` — new: 4x5 standard grid and 2x3 scientific sidebar button layout
+  - `artifacts/gui_button_press_flow.puml` — activity diagram for all button press workflows
+  - `artifacts/gui_mode_toggle_flow.puml` — new: activity diagram for scientific panel toggle
+  - `artifacts/gui_execute_binary_op_sequence.puml` — sequence diagram for binary operation execution
+  - `artifacts/gui_execute_unary_op_sequence.puml` — new: sequence diagram for unary scientific operation execution
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
