@@ -618,4 +618,4 @@ Duration: 248.3s | Cost: $0.569492 USD | Turns: 5
   - `artifacts/sequence_gui_init.puml` — Initialization sequence from __main__ through GuiCalculator setup to mainloop
   - `artifacts/component_gui_layout.puml` — iOS three-panel widget hierarchy component diagram
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 357.3s | Cost: $0.797121 USD | Turns: 4
