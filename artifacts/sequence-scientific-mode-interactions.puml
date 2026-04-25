@@ -1,0 +1,100 @@
+@startuml sequence-scientific-mode-interactions
+!theme plain
+
+actor User
+participant "_run_interactive_loop()" as Loop
+participant "_build_registry()" as Builder
+participant "OperationRegistry" as Registry
+participant "OperationHistory" as History
+participant "ErrorLog" as ELog
+
+== Scenario A: Mode Switch to Scientific ==
+
+User ->> Loop : "mode scientific"
+activate Loop
+Loop -> Loop : parse mode_arg = "scientific"
+note right of Loop : alias "sci" also accepted
+Loop -> Builder : _build_registry(MODE_SCIENTIFIC)
+activate Builder
+Builder -> Registry : OperationRegistry()
+activate Registry
+Builder -> Registry : register(25 operations)
+Registry --> Builder : registry (25 ops)
+deactivate Registry
+Builder --> Loop : active_registry
+deactivate Builder
+Loop -> Loop : current_mode = MODE_SCIENTIFIC
+Loop -> Loop : consecutive_failures = 0
+Loop ->> User : "Mode switched to scientific."
+deactivate Loop
+
+== Scenario B: Normal Operation Execution (MODE_NORMAL) ==
+
+User ->> Loop : "add"
+activate Loop
+Loop -> Registry : has("add")
+Registry --> Loop : True
+Loop -> Registry : get("add")
+Registry --> Loop : op_obj (ArithmeticAdd, arity=2)
+deactivate Loop
+
+Loop ->> User : "Enter operand 1:"
+activate Loop
+User ->> Loop : "5"
+Loop ->> User : "Enter operand 2:"
+User ->> Loop : "3"
+Loop -> Loop : InputValidator.parse_number("5") = 5.0
+Loop -> Loop : InputValidator.parse_number("3") = 3.0
+Loop -> Loop : result = op_obj.execute(5.0, 3.0) = 8.0
+Loop ->> User : "Result: 8.0"
+Loop -> History : record("add", [5.0, 3.0], 8.0)
+Loop -> Loop : consecutive_failures = 0
+deactivate Loop
+
+== Scenario C: Three Failures Leading to Exit ==
+
+User ->> Loop : "badop"
+activate Loop
+Loop -> Registry : has("badop")
+Registry --> Loop : False
+Loop -> ELog : log_error("unsupported_operation", "badop", [], ...)
+Loop -> Loop : consecutive_failures = 1
+Loop ->> User : "Error: Unknown operation"
+deactivate Loop
+
+User ->> Loop : "divide"
+activate Loop
+Loop -> Registry : has("divide")
+Registry --> Loop : True
+Loop -> Registry : get("divide")
+Registry --> Loop : op_obj (ArithmeticDivide, arity=2)
+deactivate Loop
+Loop ->> User : "Enter operand 1:"
+activate Loop
+User ->> Loop : "abc"
+Loop -> Loop : InputValidator.parse_number("abc") raises ValueError
+Loop -> ELog : log_error("invalid_input", "divide", ["abc"], ...)
+Loop -> Loop : consecutive_failures = 2
+Loop ->> User : "Invalid number: abc"
+deactivate Loop
+
+User ->> Loop : "divide"
+activate Loop
+Loop -> Registry : has("divide")
+Registry --> Loop : True
+Loop -> Registry : get("divide")
+Registry --> Loop : op_obj (ArithmeticDivide, arity=2)
+deactivate Loop
+Loop ->> User : "Enter operand 1:"
+activate Loop
+User ->> Loop : "5"
+Loop ->> User : "Enter operand 2:"
+User ->> Loop : "0"
+Loop -> Loop : op_obj.execute(5.0, 0.0) raises ZeroDivisionError
+Loop -> ELog : log_error("calculation_error", "divide", [5.0, 0.0], ...)
+Loop -> Loop : consecutive_failures = 3
+note right of Loop : consecutive_failures >= 3 → exit
+Loop ->> User : "Too many invalid attempts. Exiting."
+deactivate Loop
+
+@enduml

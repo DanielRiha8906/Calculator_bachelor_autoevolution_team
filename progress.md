@@ -386,3 +386,16 @@ Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
   - `artifacts/activity_interactive.puml` — activity diagram for Interactive REPL mode with 3-strike consecutive-failure logic
 
 Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
+
+## Run: update-diagrams — Scientific Mode UML (2026-04-25)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class-operations-hierarchy.puml` — class diagram for Operation hierarchy and OperationRegistry with 25 subclasses
+  - `artifacts/activity-interactive-loop.puml` — activity diagram for interactive REPL with mode switching and failure tracking
+  - `artifacts/sequence-scientific-mode-interactions.puml` — sequence diagram for mode switch, operation execution, and three-failure exit scenarios
+  - `artifacts/registry-mode-split.puml` — component diagram showing MODE_NORMAL (13 ops) vs MODE_SCIENTIFIC (25 ops) registries
+  - `artifacts/mode-switching-state-machine.puml` — state machine for MODE_NORMAL ↔ MODE_SCIENTIFIC transitions
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
