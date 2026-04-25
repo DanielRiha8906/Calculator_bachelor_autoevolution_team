@@ -24,6 +24,176 @@ except ImportError:
     gui_module = None
 
 
+class TestWidgetFactoryRealStubBehavior:
+    """Test _is_real_tk_widget() and widget factory methods branching logic."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_is_real_tk_widget_returns_false_for_mock(self, mock_tk_class):
+        """_is_real_tk_widget(MagicMock()) returns False."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        result = app._is_real_tk_widget(MagicMock())
+        assert result is False, \
+            "_is_real_tk_widget should return False for MagicMock"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_is_real_tk_widget_returns_false_for_stub(self, mock_tk_class):
+        """_is_real_tk_widget(_TkStub()) returns False."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        stub = gui_module._TkStub()
+        result = app._is_real_tk_widget(stub)
+        assert result is False, \
+            "_is_real_tk_widget should return False for _TkStub"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_is_real_tk_widget_returns_false_for_none(self, mock_tk_class):
+        """_is_real_tk_widget(None) returns False."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        result = app._is_real_tk_widget(None)
+        assert result is False, \
+            "_is_real_tk_widget should return False for None"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_make_button_returns_stub_with_mock_parent(self, mock_tk_class):
+        """With MagicMock() as parent, _make_button returns _TkStub."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        result = app._make_button(
+            parent=mock_parent,
+            text="Test",
+            bg="#FF9500",
+            fg="#FFFFFF",
+            active_bg="#FFB143"
+        )
+        assert isinstance(result, gui_module._TkStub), \
+            f"_make_button should return _TkStub with mock parent, got {type(result)}"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_make_label_returns_stub_with_mock_parent(self, mock_tk_class):
+        """With MagicMock() as parent, _make_label returns _TkStub."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        result = app._make_label(
+            parent=mock_parent,
+            text="Test",
+            bg="#000000",
+            fg="#FFFFFF"
+        )
+        assert isinstance(result, gui_module._TkStub), \
+            f"_make_label should return _TkStub with mock parent, got {type(result)}"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_make_frame_returns_stub_with_mock_parent(self, mock_tk_class):
+        """With MagicMock() as parent, _make_frame returns _TkStub."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        result = app._make_frame(
+            parent=mock_parent,
+            bg="#000000"
+        )
+        assert isinstance(result, gui_module._TkStub), \
+            f"_make_frame should return _TkStub with mock parent, got {type(result)}"
+
+
+class TestButtonStylingWithTkStub:
+    """Test button styling attributes (_orig_bg, _active_bg) stored on widgets."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_button_orig_bg_stored(self, mock_tk_class):
+        """After _make_button with bg="#FF9500", btn._orig_bg == "#FF9500"."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        btn = app._make_button(
+            parent=mock_parent,
+            text="Test",
+            bg="#FF9500",
+            fg="#FFFFFF",
+            active_bg="#FFB143"
+        )
+        assert hasattr(btn, '_orig_bg'), "Button missing _orig_bg attribute"
+        assert btn._orig_bg == "#FF9500", \
+            f"Button._orig_bg is {btn._orig_bg}, expected #FF9500"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_button_active_bg_stored(self, mock_tk_class):
+        """After _make_button with active_bg="#FFB143", btn._active_bg == "#FFB143"."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        btn = app._make_button(
+            parent=mock_parent,
+            text="Test",
+            bg="#FF9500",
+            fg="#FFFFFF",
+            active_bg="#FFB143"
+        )
+        assert hasattr(btn, '_active_bg'), "Button missing _active_bg attribute"
+        assert btn._active_bg == "#FFB143", \
+            f"Button._active_bg is {btn._active_bg}, expected #FFB143"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_button_bg_configured(self, mock_tk_class):
+        """btn.cget('bg') == "#FF9500" after _make_button with bg="#FF9500"."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        btn = app._make_button(
+            parent=mock_parent,
+            text="Test",
+            bg="#FF9500",
+            fg="#FFFFFF",
+            active_bg="#FFB143"
+        )
+        assert hasattr(btn, 'cget'), "Button missing cget() method"
+        bg = btn.cget('bg')
+        assert bg == "#FF9500", \
+            f"Button bg is {bg}, expected #FF9500"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_button_fg_configured(self, mock_tk_class):
+        """btn.cget('fg') == "#FFFFFF" after _make_button with fg="#FFFFFF"."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        mock_parent = MagicMock()
+        btn = app._make_button(
+            parent=mock_parent,
+            text="Test",
+            bg="#FF9500",
+            fg="#FFFFFF",
+            active_bg="#FFB143"
+        )
+        assert hasattr(btn, 'cget'), "Button missing cget() method"
+        fg = btn.cget('fg')
+        assert fg == "#FFFFFF", \
+            f"Button fg is {fg}, expected #FFFFFF"
+
+
 class TestThemeDictionary:
     """Test _THEME dictionary existence and structure."""
 

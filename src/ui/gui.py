@@ -673,6 +673,30 @@ class GuiCalculator:
     # Private: widget factories
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _is_real_tk_widget(parent: object) -> bool:
+        """Return ``True`` when *parent* is backed by a real Tcl/Tk interpreter.
+
+        Real tkinter widgets have a ``.tk`` attribute that is an instance of
+        ``_tkinter.TkappType``.  Mock objects (``unittest.mock.MagicMock``) and
+        :class:`_TkStub` instances do not satisfy this check, so this method
+        reliably distinguishes headless/test parents from live-display parents.
+
+        Args:
+            parent: The candidate parent widget to inspect.
+
+        Returns:
+            ``True`` if *parent* has a real Tcl interpreter backing it,
+            ``False`` otherwise (including when ``_TK_AVAILABLE`` is ``False``).
+        """
+        if not _TK_AVAILABLE:
+            return False
+        try:
+            import _tkinter  # stdlib C extension, always present when tkinter is
+            return isinstance(getattr(parent, "tk", None), _tkinter.TkappType)
+        except Exception:  # noqa: BLE001
+            return False
+
     def _make_button(
         self,
         parent: object,
@@ -681,14 +705,18 @@ class GuiCalculator:
         fg: str,
         active_bg: str,
         command: object = None,
-    ) -> "_TkStub":
+    ) -> object:
         """Create a flat, themed button with hover bindings.
 
-        Always returns a :class:`_TkStub` so that headless CI tests can
-        call ``cget()`` / ``grid_info()`` on the result.  When a real Tk
-        display is available, widget rendering happens through the stub's
-        stored kwargs (the real display integration would be a future
-        enhancement).
+        When *parent* is backed by a real Tcl/Tk interpreter (i.e. a live
+        display is available), a real ``tk.Button`` is created so the widget
+        is rendered on screen.  Otherwise a :class:`_TkStub` is returned so
+        that headless CI tests can call ``cget()`` / ``grid_info()`` on the
+        result with predictable values.
+
+        In both cases the hover attributes ``_orig_bg`` and ``_active_bg`` are
+        stored directly on the button object, and ``<Enter>`` / ``<Leave>``
+        bindings are attached.
 
         Args:
             parent: Parent widget.
@@ -699,24 +727,37 @@ class GuiCalculator:
             command: Callback when button is pressed.
 
         Returns:
-            A :class:`_TkStub` configured with the given options.
+            A ``tk.Button`` when a real display is available, otherwise a
+            :class:`_TkStub` configured with the given options.
         """
         try:
-            btn = _TkStub(
-                text=text,
-                bg=bg,
-                fg=fg,
-                activebackground=active_bg,
-                relief=tk.FLAT,
-                borderwidth=0,
-            )
+            if self._is_real_tk_widget(parent):
+                btn = tk.Button(
+                    parent,
+                    text=text,
+                    bg=bg,
+                    fg=fg,
+                    activebackground=active_bg,
+                    relief=tk.FLAT,
+                    borderwidth=0,
+                    command=command,
+                )
+            else:
+                btn = _TkStub(
+                    text=text,
+                    bg=bg,
+                    fg=fg,
+                    activebackground=active_bg,
+                    relief=tk.FLAT,
+                    borderwidth=0,
+                )
+                if command is not None:
+                    btn._kwargs["command"] = command
             # Store theme colours as instance attributes on the widget so that
             # hover callbacks can retrieve them even when cget() is unavailable.
             btn._orig_bg = bg  # type: ignore[attr-defined]
             btn._active_bg = active_bg  # type: ignore[attr-defined]
-            if command is not None:
-                btn._kwargs["command"] = command
-            # Bind hover effects (no-op on _TkStub; real bindings in live env)
+            # Bind hover effects
             btn.bind("<Enter>", lambda e, b=btn: self._on_button_enter(b))
             btn.bind("<Leave>", lambda e, b=btn: self._on_button_leave(b))
             return btn
@@ -731,11 +772,15 @@ class GuiCalculator:
         fg: str = "",
         font: object = None,
         anchor: str = "",
-    ) -> "_TkStub":
-        """Create a themed label and return a :class:`_TkStub` tracking its config.
+    ) -> object:
+        """Create a themed label.
+
+        When *parent* is backed by a real Tcl/Tk interpreter a real
+        ``tk.Label`` is created.  Otherwise a :class:`_TkStub` is returned so
+        that headless CI tests can inspect the configured values via ``cget()``.
 
         Args:
-            parent: Parent widget (unused in stub mode).
+            parent: Parent widget.
             text: Label text.
             bg: Background colour.
             fg: Foreground colour.
@@ -743,7 +788,8 @@ class GuiCalculator:
             anchor: Anchor direction (e.g. ``'e'`` for right-align).
 
         Returns:
-            A :class:`_TkStub` configured with the given options.
+            A ``tk.Label`` when a real display is available, otherwise a
+            :class:`_TkStub` configured with the given options.
         """
         try:
             kwargs: dict = {"text": text}
@@ -755,24 +801,32 @@ class GuiCalculator:
                 kwargs["font"] = font
             if anchor:
                 kwargs["anchor"] = anchor
+            if self._is_real_tk_widget(parent):
+                return tk.Label(parent, **kwargs)
             return _TkStub(**kwargs)
         except Exception:  # noqa: BLE001
             return _TkStub()
 
-    def _make_frame(self, parent: object, bg: str = "") -> "_TkStub":
-        """Create a themed frame and return a :class:`_TkStub` tracking its config.
+    def _make_frame(self, parent: object, bg: str = "") -> object:
+        """Create a themed frame.
+
+        When *parent* is backed by a real Tcl/Tk interpreter a real
+        ``tk.Frame`` is created.  Otherwise a :class:`_TkStub` is returned.
 
         Args:
-            parent: Parent widget (unused in stub mode).
+            parent: Parent widget.
             bg: Background colour.
 
         Returns:
-            A :class:`_TkStub` configured with the given options.
+            A ``tk.Frame`` when a real display is available, otherwise a
+            :class:`_TkStub` configured with the given options.
         """
         try:
             kwargs: dict = {}
             if bg:
                 kwargs["bg"] = bg
+            if self._is_real_tk_widget(parent):
+                return tk.Frame(parent, **kwargs)
             return _TkStub(**kwargs)
         except Exception:  # noqa: BLE001
             return _TkStub()

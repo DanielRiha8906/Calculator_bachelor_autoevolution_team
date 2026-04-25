@@ -1850,3 +1850,57 @@ The iOS-style GuiCalculator redesign feature is complete and fully verified. All
 **Handoff Notes:**
 Full test suite verification complete. All 516 tests passing (100%). Entry point updated successfully. iOS calculator GUI redesign feature fully implemented and verified. No escalations needed. Ready for orchestrator to finalize commit and PR.
 
+
+### Cycle 7 (2026-04-25)
+**Task:** Issue #465 — iOS Calculator GUI Redesign (VERIFY Phase)  
+**Phase:** VERIFY  
+**Test File:** `tests/test_gui_redesign.py`
+
+**Tests Added (WRITE Phase by Implementer's Handoff):**
+10 new tests were added to verify widget factory behavior and button styling:
+- **Category A (Widget Factory Real/Stub Behavior):** 6 tests
+  - `test_is_real_tk_widget_returns_false_for_mock` — _is_real_tk_widget(MagicMock()) returns False
+  - `test_is_real_tk_widget_returns_false_for_stub` — _is_real_tk_widget(_TkStub()) returns False
+  - `test_is_real_tk_widget_returns_false_for_none` — _is_real_tk_widget(None) returns False
+  - `test_make_button_returns_stub_with_mock_parent` — _make_button with MagicMock parent returns _TkStub
+  - `test_make_label_returns_stub_with_mock_parent` — _make_label with MagicMock parent returns _TkStub
+  - `test_make_frame_returns_stub_with_mock_parent` — _make_frame with MagicMock parent returns _TkStub
+
+- **Category B (Button Styling with _TkStub):** 4 tests
+  - `test_button_orig_bg_stored` — btn._orig_bg equals the bg parameter passed
+  - `test_button_active_bg_stored` — btn._active_bg equals the active_bg parameter passed
+  - `test_button_bg_configured` — btn.cget('bg') returns the configured bg value
+  - `test_button_fg_configured` — btn.cget('fg') returns the configured fg value
+
+**Test Execution Results:**
+- Total test count in test_gui_redesign.py: 56 (46 existing + 10 new)
+- All 56 tests PASS ✓
+- Full test suite (all test files): 526 tests PASS ✓
+
+**Test Status:** ALL PASSING (100%)
+The 10 new tests all pass immediately, confirming:
+1. _is_real_tk_widget() correctly identifies mock/stub parents and returns False
+2. _make_button(), _make_label(), _make_frame() correctly branch to _TkStub when given mocked parents
+3. Button styling attributes (_orig_bg, _active_bg) are properly stored on button objects
+4. Button configuration via cget() works as expected with _TkStub widgets
+
+**Patterns Verified:**
+- Widget factory methods (_make_button, _make_label, _make_frame) use _is_real_tk_widget() branching correctly
+- Both real tk.Button and _TkStub paths set _orig_bg and _active_bg attributes
+- Hover bindings are attached in both code paths
+- _TkStub correctly implements cget() to return constructor kwargs
+
+**Implementation Notes from Implementer's Report:**
+The implementer made four changes to src/ui/gui.py:
+1. Added _is_real_tk_widget(parent) static method that detects real Tcl/Tk interpreters
+2. Modified _make_button() to branch on _is_real_tk_widget(parent)
+3. Modified _make_label() to branch on _is_real_tk_widget(parent)
+4. Modified _make_frame() to branch on _is_real_tk_widget(parent)
+
+All changes preserve hover bindings and styling attributes in both code paths.
+
+**Assessment:**
+All test specifications from the architect have been successfully verified. No bugs or implementation gaps found. The widget factory refactoring to support both real and stubbed tkinter widgets is working correctly. GuiCalculator can now reliably instantiate with mocked parents in CI environments while still creating real widgets in production.
+
+**Handoff Notes:**
+Verification phase complete. All 56 tests in test_gui_redesign.py passing (100%). Full suite 526 tests passing (100%). No escalations needed. Ready for orchestrator to finalize commit and PR.

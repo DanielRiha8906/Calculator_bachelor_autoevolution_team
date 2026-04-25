@@ -226,158 +226,6 @@ Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest
 
 ---
 
-### 2026-04-24 — Issue #465 — V3 Task 16 - GUI Redesign (iOS-Style Calculator)
-
-**Task:** Fully redesign the existing tkinter GUI calculator to adopt a modern iOS-style layout and visual design. This is a **visual-only redesign** that preserves all underlying calculation logic, operation functionality, and mode switching. Redesign will establish:
-- Grid-based layout with three main sections (result display, number grid, operation grid)
-- Thematic color grouping by operation category (arithmetic, scientific, standard)
-- Symbol-based button labels (Unicode mappings: add→"+", multiply→"×", sqrt→"√", etc.)
-- Hover effects on all buttons
-- Centralized theme dictionary for all colors, fonts, and visual constants
-
-**Scope:** ONLY `src/ui/gui.py` modified; no changes to Calculator, modes.py, operation_registry.py, or any other file.
-
-**Key Decisions:**
-- Rename CalculatorApp to GuiCalculator (maintains backward compatibility for tests)
-- Create centralized `_THEME` dictionary at module top with all color, font, and styling constants
-- Implement complete UI redesign in `_setup_gui()`:
-  - Result display: full-width label, right-aligned, monospace font (32pt bold), black bg / white fg
-  - Mode toggle button: single button (text changes to "Scientific"/"Normal" based on mode)
-  - Number grid: 3×4 grid with buttons 1-9 in rows 1-3, button 0 spanning all 3 columns in row 4
-  - Operation grid: 4 columns with auto-sizing rows, all buttons square geometry
-- Color scheme:
-  - Arithmetic operators (add, subtract, multiply, divide): orange (#FF9500)
-  - Scientific operations: dark gray (#1C1C1E)
-  - Standard buttons: medium gray (#333333)
-  - Window bg: black (#000000)
-  - Mode toggle: dark gray (#2C2C2E)
-- Symbol mapping: operation_name → Unicode symbol (add→"+", multiply→"×", divide→"÷", sqrt→"√", square→"x²", cube→"x³", power→"xʸ", factorial→"n!", ln→"ln", log→"log", sin→"sin", cos→"cos", tan→"tan", cot→"cot", asin→"asin", acos→"acos", cbrt→"∛", log10→"log₁₀")
-- Hover effects: all buttons bind <Enter>/<Leave> events; background changes to activebackground on hover, reverts on leave
-- Button properties: relief=FLAT, borderwidth=0, equal col/row weights for square geometry
-
-**Architecture Observations (from source exploration):**
-- CalculatorApp class currently uses form-based layout: mode radiobuttons, operation dropdown, operand text entry fields, calculate button, history display
-- Public API methods (calculate, switch_mode, get_current_mode_operations, get_history, is_unary_operation, run) are all tested and must be preserved
-- Internal state (_calculator, _registry, _history, _current_mode, _modes) is used by tests via mocks
-- _parse_operand() static method used by calculate(); must be preserved
-- All existing tests use mocked tk.Tk; will continue to work with renamed class and new widget layout
-- Modes.py provides SimpleMode (6 ops) and ScientificMode (18 ops); operation discovery via registry.get_operations_by_mode()
-
-**Patterns Found:**
-- Mock-safe widget construction: all tk calls wrapped in try/except for headless test environments
-- Dependency injection: root, calculator, registry all injectable for testing
-- Grid layout will require tkinter Grid geometry manager (instead of current Pack)
-- Hover effects require binding callbacks to Button widgets (tk.Button.bind() method)
-
-**Test Specifications (31 scenarios):**
-1. test_theme_dict_exists — _THEME dict exists at module level
-2. test_theme_dict_keys — _THEME contains all required keys
-3. test_theme_colors_format — All color values are valid hex strings
-4. test_gui_calculator_instantiates — GuiCalculator(root=mock) creates without error
-5. test_result_display_bg_color — Result display bg=#000000
-6. test_result_display_fg_color — Result display fg=#FFFFFF
-7. test_result_display_font — Result display uses monospace font
-8. test_result_display_anchor — Result display is right-aligned
-9. test_mode_toggle_button_exists — Mode toggle button exists
-10. test_mode_toggle_text_normal_mode — In NORMAL mode, text="Scientific"
-11. test_mode_toggle_text_scientific_mode — In SCIENTIFIC mode, text="Normal"
-12. test_mode_toggle_switches_mode — Clicking mode toggle switches mode
-13. test_number_grid_3x4_structure — Number grid has 3 columns, 4 rows
-14. test_number_buttons_1_to_9 — Buttons for digits 1-9 exist
-15. test_zero_button_spans_columns — Button 0 spans all 3 columns in row 4
-16. test_operation_grid_4_columns — Operation grid has 4 columns
-17. test_operation_grid_rows_normal — Normal mode: correct row count (6 ops)
-18. test_operation_grid_rows_scientific — Scientific mode: correct row count (18 ops)
-19. test_button_symbol_mapping_add — add operation shows "+" symbol
-20. test_button_symbol_mapping_multiply — multiply operation shows "×" symbol
-21. test_button_symbol_mapping_sqrt — sqrt operation shows "√" symbol
-22. test_arithmetic_operator_colors — add/subtract/multiply/divide have bg=#FF9500
-23. test_scientific_button_colors — Scientific ops have bg=#1C1C1E
-24. test_button_relief_flat — All operation buttons have relief=FLAT
-25. test_button_borderwidth_zero — All operation buttons have borderwidth=0
-26. test_button_square_geometry — Operation grid buttons have equal width/height
-27. test_hover_effect_binding — Buttons bind <Enter>/<Leave> events
-28. test_hover_effect_on_enter — On <Enter>, bg changes to activebackground
-29. test_hover_effect_on_leave — On <Leave>, bg reverts to default
-30. test_window_bg_from_theme — Root window bg set from _THEME
-31. test_frames_bg_from_theme — All frame widgets have bg from _THEME
-
-**Source Changes Plan for python-code-implementer:**
-
-**File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/ui/gui.py`
-
-**Changes:**
-1. Add _THEME dictionary at module top (before CalculatorApp class):
-   - Keys: WINDOW_BG, RESULT_BG, RESULT_FG, RESULT_FONT, BUTTON_NORMAL_BG, BUTTON_NORMAL_FG, BUTTON_NORMAL_ACTIVE_BG, BUTTON_OPERATOR_BG, BUTTON_OPERATOR_FG, BUTTON_OPERATOR_ACTIVE_BG, BUTTON_SCIENTIFIC_BG, BUTTON_SCIENTIFIC_FG, BUTTON_SCIENTIFIC_ACTIVE_BG, MODE_TOGGLE_BG, MODE_TOGGLE_FG, MODE_TOGGLE_ACTIVE_BG
-   - Colors: all hex strings (#RRGGBB format)
-   - Font: ("Courier", 32, "bold")
-
-2. Add symbol mapping dictionary:
-   - Entries: add→"+", subtract→"−", multiply→"×", divide→"÷", sqrt→"√", square→"x²", cube→"x³", power→"xʸ", factorial→"n!", ln→"ln", log→"log", sin→"sin", cos→"cos", tan→"tan", cot→"cot", asin→"asin", acos→"acos", cbrt→"∛", log10→"log₁₀"
-   - Fallback: if operation not in mapping, use operation name
-
-3. Rename CalculatorApp to GuiCalculator (maintain all existing public API)
-
-4. Replace _setup_gui() method completely:
-   - Window: 400×680 minimum size, bg from _THEME
-   - Result display: full-width label, right-aligned, _THEME colors/font
-   - Mode toggle button: full-width, text="Scientific"/"Normal", _THEME colors
-   - Number grid: 3×4, buttons 0-9 with grid layout
-   - Operation grid: 4 columns, grid layout, all buttons square
-   - All buttons have hover effects via _bind_hover_effect()
-
-5. Add helper methods:
-   - _on_mode_toggle() — toggle mode, update button text, rebuild operation grid
-   - _on_number_button(digit) — append digit to operand
-   - _on_operation_button(op_name) — select operation
-   - _bind_hover_effect(widget) — bind <Enter>/<Leave> events
-   - _get_button_color(op_name) — return (bg, fg, activebackground) for operation
-   - _get_symbol_for_operation(op_name) — return symbol or operation name
-
-6. Preserve all existing public methods:
-   - calculate(), switch_mode(), get_current_mode_operations(), get_history(), is_unary_operation(), run()
-   - _parse_operand() static method
-
-**Files NOT Modified:**
-- src/calculator.py
-- src/operation_registry.py
-- src/infrastructure/history.py
-- src/ui/modes.py
-- src/core/operations.py
-- src/__main__.py
-
-**Architectural Impact:**
-- Public API preserved; all existing tests continue to pass
-- Visual-only change; no data model or calculation logic changes
-- Theme centralization makes future visual updates trivial
-- Grid layout replaces form-based layout
-- Backward compatibility maintained (tests using mocked root will work)
-
-**Execution Order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
-
-**Test Specifications (31 scenarios, detailed below in Section 1 of output):**
-- Frame structure tests: top, content (left+right), bottom frames exist and positioned correctly
-- Left panel tests: number grid is 3×4, buttons 1–9 in grid, button 0 spans 3 columns
-- Right panel tests: 4 arithmetic buttons vertically stacked
-- Bottom panel tests: grid with 4 columns, operation count matches mode, buttons rebuild on mode switch
-- Button functionality tests: digit press updates operand, operation press selects operation, mode toggle rebuilds bottom
-- Styling tests: colors from _THEME, hover effects, fonts, alignment
-
-**Handoff to pytest-edge-tester (WRITE):**
-Write 31 test scenarios covering layout structure, button placement, frame organization, mode switch behavior, and basic functionality. All tests use mocked root and check widget attributes. Tests must FAIL initially (new GUI code not yet written).
-
-**Handoff to python-code-implementer:**
-Implement complete GUI redesign in `src/ui/gui.py` per source changes plan. Key deliverables:
-- _THEME dict with all visual constants
-- Symbol mapping dictionary
-- GuiCalculator class (renamed from CalculatorApp) with new _setup_gui() implementation
-- Grid-based layout for number and operation buttons
-- Mode toggle button with dynamic text
-- Hover effects on all buttons
-- All existing public API methods preserved
-
----
-
 ### 2026-04-25 — PR #466 — Left/Right/Bottom Layout Redesign (Unresolved Owner Feedback)
 
 **Task:** Refactor iOS-style GUI layout from current single-column model to **left + right + bottom distributed layout**:
@@ -401,68 +249,72 @@ Implement complete GUI redesign in `src/ui/gui.py` per source changes plan. Key 
 
 **Critical Issues Identified (from PR owner feedback):**
 
-1. **BLOCKER 1: __main__.py imports CalculatorApp instead of GuiCalculator**
-   - Line 19 in `src/__main__.py`: `from .ui.gui import CalculatorApp`
-   - Owner says: "In __main__.py change: from .ui.gui import CalculatorApp, to from .ui.gui import GuiCalculator."
-   - IMPACT: `python -m src --gui` launches old CalculatorApp (form-based), not new GuiCalculator
-   - FIX: Update import in `src/__main__.py` line 19 to import GuiCalculator
+1. **BLOCKER 1: __main__.py imports CalculatorApp instead of GuiCalculator** — ALREADY FIXED IN SOURCE
+   - Line 19 in `src/__main__.py`: CORRECT — imports GuiCalculator
+   - Line 20: CORRECT — instantiates GuiCalculator
+   - STATUS: No change needed; this is already correct
 
-2. **BLOCKER 2: GUI widgets not rendering (display shows blank window)**
-   - Owner says: "When launching the new design, nothing shows up. That's because tk.button was changed to _Tkstub…"
-   - ANALYSIS: GuiCalculator uses `_TkStub` class for widget creation in all tests/headless envs
-   - ISSUE: _TkStub does not render real tkinter widgets; it only stores config for test assertions
-   - ROOT CAUSE: When `tkinter` import fails (line 138–141), code creates a stub tk module with tk.Button = _TkStub
-   - FIX: When real tkinter is available, use real tk.Button/tk.Frame/tk.Label; _TkStub is only for headless tests
-   - Current behavior: tk.Button is always _TkStub (created at module load if tkinter unavailable); once set, never uses real tkinter
-   - SOLUTION: In production, tkinter IS available; code should use real tk classes. Test environment should mock appropriately.
-   - VERIFICATION NEEDED: Check if headless CI actually imports real tkinter or not
+2. **BLOCKER 2: GUI widgets not rendering (display shows blank window)** — ROOT CAUSE: _make_button, _make_label, _make_frame ALWAYS RETURN _TkStub
+   - Lines 676–724: `_make_button()` always returns `_TkStub()` instance (line 705)
+   - Lines 726–760: `_make_label()` always returns `_TkStub()` instance (line 758)
+   - Lines 762–778: `_make_frame()` always returns `_TkStub()` instance (line 776)
+   - ROOT CAUSE: Widget factory methods create _TkStub directly; never use real tk.Button/tk.Label/tk.Frame
+   - IMPACT: When tkinter IS available (normal Python environment), code still uses stubs; widgets don't render
+   - FIX: Change _make_button, _make_label, _make_frame to use REAL tk classes when available
+   - ARCHITECTURE PROBLEM: Current code tries to support both real and mocked tk, but implementation is inverted
+   - SOLUTION: When _TK_AVAILABLE==True, use real tk.* classes; only use _TkStub for testing/mocking
 
 3. **BLOCKER 3: Test suite does not match actual implementation**
    - Owner says: "Modify/Delete all the tests and development artifacts so that the testing suite and artifacts reflect the real behavior."
    - CURRENT STATE: test_gui_redesign.py (566 lines) tests GuiCalculator layout, colors, symbols, hover effects
    - STATUS: Tests reference attributes like `_btn_add`, `_btn_multiply`, `_operation_buttons` which ARE created in GuiCalculator
-   - ISSUE: Some tests check mocked tk.Tk behavior that may not reflect actual layout (e.g., grid positioning via grid_info())
+   - ISSUE: Tests check mocked tk.Tk behavior that may not reflect actual widget creation
    - SPECIFIC TEST ISSUES:
      - Tests mock tk.Tk; _TkStub.grid_info() returns stored kwargs, not actual grid geometry
-     - Tests that check grid layout via grid_info() might not reflect real layout behavior
-     - Tests that expect button creation may pass but buttons not visible because _TkStub doesn't render
-   - FIX: Update tests to verify actual widget structure (tree walk, attribute checks) rather than relying on mocked grid_info()
-   - DELETE: Remove any tests that assert internal implementation details unrelated to user-visible behavior
-   - ADD: Tests that verify the three-panel layout is actually visible (frames exist, buttons are in them, layout is correct)
+     - Tests verify _TkStub behavior, which won't match real tkinter behavior
+     - Some assertions depend on mocked behavior that won't occur in real GUI
+   - FIX: Tests must remain; they validate the correct structure. But they need to account for real tk behavior vs mock.
+
+**Root Cause Analysis:**
+
+The three-panel layout IS correctly implemented in GuiCalculator. The real issue is that _make_button, _make_label, _make_frame are broken:
+
+```python
+# Lines 705, 758, 776 in _make_button, _make_label, _make_frame:
+def _make_button(self, parent, text, bg, fg, active_bg, command=None):
+    try:
+        btn = _TkStub(...)  # <-- ALWAYS creates _TkStub, never tk.Button!
+        ...
+        return btn
+```
+
+**Correct behavior should be:**
+- If _TK_AVAILABLE==True: use `tk.Button(parent, ...)` to create REAL buttons
+- If _TK_AVAILABLE==False: use `_TkStub(...)` for testing
+
+**Current behavior:**
+- Always returns `_TkStub()`, even when real tkinter is available
+- This causes widgets to be test doubles instead of real UI elements
+- Display is blank because _TkStub doesn't render anything
 
 **Remaining Work Required:**
 
-1. **Fix Entry Point** (`src/__main__.py` line 19):
-   - Change: `from .ui.gui import CalculatorApp`
-   - To: `from .ui.gui import GuiCalculator`
-   - Line 20: Change: `app = CalculatorApp()`
-   - To: `app = GuiCalculator()`
+1. **Fix Widget Factory Methods** (`src/ui/gui.py` lines 676–778):
+   - `_make_button()` should return `tk.Button(...)` when _TK_AVAILABLE, else _TkStub
+   - `_make_label()` should return `tk.Label(...)` when _TK_AVAILABLE, else _TkStub
+   - `_make_frame()` should return `tk.Frame(...)` when _TK_AVAILABLE, else _TkStub
+   - Keep all hover binding and theming logic
+   - Preserve attribute assignment (_orig_bg, _active_bg) for styling access
 
-2. **Verify Real tkinter Rendering**:
-   - When code runs with real tkinter installed, tk.Button should be real tkinter.Button, NOT _TkStub
-   - Current code: lines 138–169 create a fallback tk module if import fails
-   - The fallback is CORRECT; but once imported, code uses whatever tk module was set up
-   - VERIFICATION: Run `python -m src --gui` in environment where tkinter IS installed
-   - EXPECTED: Real tkinter window opens with three-panel layout (left digit grid, right arithmetic, bottom ops)
-   - If not: Debug why tkinter import is being skipped or overridden
+2. **Update Test Suite** (test_gui.py and test_gui_redesign.py):
+   - KEEP: All structural tests (frame existence, button existence, mode toggle)
+   - KEEP: Color and styling assertions (from _THEME dict)
+   - KEEP: Layout tests that validate grid layout
+   - UPDATE: Tests must mock tk.Tk at module load (not just in test patches)
+   - DELETE: Tests that assert _TkStub-specific behavior (grid_info, cget return values from _TkStub)
+   - ADD: Tests that verify real widgets work (if running in environment with real tkinter)
 
-3. **Update/Delete Test Suite**:
-   - Review test_gui_redesign.py and test_gui.py
-   - TESTS TO KEEP:
-     - _THEME dictionary structure validation (lines 27–68)
-     - _OPERATION_SYMBOLS dictionary validation (lines 70–108)
-     - GuiCalculator class existence (lines 110–125)
-     - Widget attribute existence tests (result_label, mode_toggle_btn, digit buttons, operation buttons)
-     - Color value assertions (from _THEME, not from mocked widget cget)
-   - TESTS TO FIX:
-     - Button hierarchy/positioning tests: use actual widget tree instead of mocked grid_info()
-     - Layout structure tests: verify frames exist and buttons are children
-     - Mode toggle text tests: ensure they reflect current implementation
-   - TESTS TO DELETE:
-     - Any test that only checks mocked tk behavior without business logic value
-     - Any test that asserts internal _TkStub state rather than user-visible behavior
-
-**Architecture Summary (for layout ref):**
+**Architecture Summary (for reference):**
 
 Three-panel hierarchy (from `_setup_ios_gui()`):
 - Root window (black bg, 480x640)
@@ -472,21 +324,23 @@ Three-panel hierarchy (from `_setup_ios_gui()`):
     - _right_panel: arithmetic ops vertically stacked (divide, multiply, subtract, add)
   - _bottom_frame (row=2): operation grid (4 columns, variable rows per mode)
 
-**Handoff Notes:**
+**Handoff Plan (TDD Order):**
 
-BLOCKER FIX ORDER:
-1. Fix `src/__main__.py` imports (trivial, 2 lines)
-2. Verify tkinter rendering (run test launch, debug if blank)
-3. Create comprehensive test plan for layout verification (15-20 new tests)
-4. Update/delete tests to match real behavior
+1. **pytest-edge-tester (WRITE):** Create comprehensive tests for widget creation (button, label, frame) that verify:
+   - When _TK_AVAILABLE, widgets are real tk instances (not _TkStub)
+   - When testing (mocked), widgets are _TkStub instances
+   - Layout structure is correct (frames in right hierarchy)
+   - Button colors/fonts/relief are correct
+   - Mode toggle rebuilds bottom panel correctly
+   
+2. **python-code-implementer:** Fix _make_button, _make_label, _make_frame to:
+   - Use real tk classes when _TK_AVAILABLE==True
+   - Fall back to _TkStub when _TK_AVAILABLE==False
+   - Preserve all styling and binding behavior
+   
+3. **pytest-edge-tester (VERIFY):** Run full suite; all tests must pass
 
-MULTI-AGENT PIPELINE:
-- **Analyst:** Issue requirements analysis ✓ (done above)
-- **System Architect:** Create detailed test spec + source changes plan (THIS DOCUMENT)
-- **pytest-edge-tester (WRITE):** Create failing tests for layout, frame structure, button placement
-- **python-code-implementer:** Fix __main__.py imports; debug rendering if needed; update GUI if layout broken
-- **pytest-edge-tester (VERIFY):** Run full suite; fix any failing tests to match actual behavior
-- **Commit:** Merge PR with fixed imports and passing tests
+4. **Commit:** Close PR with fixed widget factories and passing tests
 
 ---
 

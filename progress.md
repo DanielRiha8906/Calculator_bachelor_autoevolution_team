@@ -1,3 +1,16 @@
+## Run: Fix PR #466 — widget factory real-tk rendering fix (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added `_is_real_tk_widget()` static method; modified `_make_button()`, `_make_label()`, `_make_frame()` to create real tkinter widgets when parent has a live Tk interpreter, falling back to `_TkStub` in headless/test environments
+  - `tests/test_gui_redesign.py` — added 10 tests: `TestWidgetFactoryRealStubBehavior` (6 tests for `_is_real_tk_widget` and factory stub detection) and `TestButtonStylingWithTkStub` (4 tests for color/attribute configuration)
+- **Purpose:** Fix GUI blank-screen issue: widget factories always returned _TkStub even when real tkinter was available, preventing any rendering on screen; now use real tk widgets in production and stubs only in CI/headless environments
+- **Risks:** None — headless detection uses isinstance check on Tcl/Tk interpreter object; existing test suite unaffected
+- **Tests passed:** 526 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #466 (review feedback) — feat: iOS-style GuiCalculator redesign (2026-04-25)
 
 - **Branch:** task/issue-465-ios-calculator-redesign

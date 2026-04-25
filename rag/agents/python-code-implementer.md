@@ -560,3 +560,30 @@ Only after ALL those test changes are committed (and passing against old flat fi
 **Test result:** 504/504 passed (2 previously failing tests now pass, 0 regressions).
 
 **Handoff notes for next agent:** No new dependencies. The fix is confined to the headless-CI stub path; real tkinter environments are unaffected.
+
+### 2026-04-25 — Fix widget factories to use real tkinter on live displays (issue-465-ios-calculator-redesign)
+
+**Task:** Modify `_make_button()`, `_make_label()`, `_make_frame()` in `GuiCalculator` to use real `tk.Button`, `tk.Label`, `tk.Frame` when a real Tk display is available, while keeping `_TkStub` for headless/CI environments.
+
+**Files changed:**
+- `src/ui/gui.py` — four targeted changes in `GuiCalculator`:
+  1. Added `_is_real_tk_widget(parent)` static method: checks `_TK_AVAILABLE` and then `isinstance(getattr(parent, 'tk', None), _tkinter.TkappType)`. Returns True only when parent has a real Tcl/Tk interpreter; MagicMock parents return False.
+  2. `_make_button()`: now calls `_is_real_tk_widget(parent)`; if True creates `tk.Button(parent, ...)` with all kwargs including `command`; if False creates `_TkStub(...)` as before. `_orig_bg`, `_active_bg`, and hover bindings applied in both paths.
+  3. `_make_label()`: now calls `_is_real_tk_widget(parent)`; if True creates `tk.Label(parent, **kwargs)`; if False creates `_TkStub(**kwargs)`.
+  4. `_make_frame()`: now calls `_is_real_tk_widget(parent)`; if True creates `tk.Frame(parent, **kwargs)`; if False creates `_TkStub(**kwargs)`.
+
+**Key decisions:**
+- The architect's plan specified checking `_TK_AVAILABLE` flag. However, in CI, `_TK_AVAILABLE = True` (tkinter IS installed) but tests use `MagicMock()` as root. A naive `_TK_AVAILABLE` check would cause real widget creation with MagicMock parents, making `cget()` return MagicMock objects instead of hex color strings — breaking all colour/font assertion tests.
+- Solution: `_is_real_tk_widget(parent)` uses `isinstance(parent.tk, _tkinter.TkappType)`. Real tkinter widgets have `.tk` as a C-level `_tkinter.TkappType`; MagicMock objects have `.tk` as another MagicMock. `isinstance(MagicMock, TkappType)` = False. This correctly routes to `_TkStub` in tests and to real widgets on a live display.
+- `_tkinter` is stdlib (present whenever tkinter is installed), so the import inside `_is_real_tk_widget` adds no new dependency.
+- `__main__.py` (CHANGE 4 in the plan) already uses `GuiCalculator` and calls `app.run()` — no change needed.
+- Layout redesign (CHANGE 5) was already implemented in a previous cycle — three-panel structure, `_content_frame`, `_left_panel`, `_right_panel`, `_bottom_frame` all exist and are tested — no change needed.
+
+**Patterns found:**
+- `isinstance(getattr(widget, 'tk', None), _tkinter.TkappType)` is the canonical way to distinguish real tkinter widgets from mocks/stubs. MagicMock auto-creates `.tk` as another MagicMock, but `isinstance(MagicMock_instance, _tkinter.TkappType)` is always False.
+- When `_TK_AVAILABLE = True` (tkinter installed) but no display is available, `isinstance(parent.tk, TkappType)` still works because the test's MagicMock parent is never a real tkapp — the check routes to `_TkStub` correctly regardless of whether a display environment variable exists.
+- Always check the parent widget's Tcl backing (`.tk`) rather than checking the root or environment variables — this is the most reliable signal at widget-factory call time.
+
+**Test result:** 516/516 passed (0 regressions).
+
+**Handoff notes for next agent:** No new pip dependencies introduced (`_tkinter` is stdlib). On a real display (e.g. `DISPLAY=:0`), `GuiCalculator` will now create real `tk.Button`, `tk.Label`, `tk.Frame` widgets that render on screen. In CI (MagicMock root), it continues to return `_TkStub` instances so all `cget()` assertions pass. If future tests create a real `tk.Tk()` as the root (not MagicMock), they will now get real widgets — ensure those tests don't assert on specific hex color strings from `cget()` unless they destroy the root properly.
