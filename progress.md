@@ -15,7 +15,7 @@
 - **Risks:** None — single 4-line change in MODE_TOGGLE branch; no public interfaces changed
 - **Tests passed:** 378 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 584.2s | Cost: $1.131471 USD | Turns: 16
 
 ## Run: Issue #410 — V3 Task 14 - Naive/team (2026-04-24)
 
