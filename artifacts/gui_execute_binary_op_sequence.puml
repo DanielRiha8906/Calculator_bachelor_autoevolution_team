@@ -1,0 +1,87 @@
+@startuml gui_execute_binary_op_sequence
+title GUI — Binary Operation Execution — Sequence Diagram
+
+actor User
+participant GUIWindow as window
+participant GUIController as controller
+participant OperationRegistry as registry
+participant Operation as op
+
+== Step 1: Enter first operand ==
+
+User ->> window: press digit(s) (e.g. "5")
+activate window
+window ->> window: _on_digit("5")
+window ->> window: _display_var.set("5")
+window -->> User: display shows "5"
+deactivate window
+
+== Step 2: Press operator ==
+
+User ->> window: press operator button (e.g. "+")
+activate window
+window ->> window: _on_operator("add")
+note over window
+  _operand1 = "5"
+  _pending_op = "add"
+  _awaiting_second = True
+end note
+window -->> User: display unchanged
+deactivate window
+
+== Step 3: Enter second operand ==
+
+User ->> window: press digit(s) (e.g. "3")
+activate window
+window ->> window: _on_digit("3")
+note over window
+  _awaiting_second=True → clear display first
+  _awaiting_second = False
+end note
+window ->> window: _display_var.set("3")
+window -->> User: display shows "3"
+deactivate window
+
+== Step 4: Press equals ==
+
+User ->> window: press "=" button
+activate window
+window ->> window: _on_equals()
+note over window
+  _pending_op != None → proceed
+  operand2 = "3" (from display)
+end note
+
+window ->> controller: execute_operation("add", ["5", "3"])
+activate controller
+
+controller ->> registry: get("add")
+activate registry
+registry -->> controller: Add operation instance
+deactivate registry
+
+controller ->> op: execute(5.0, 3.0)
+activate op
+op -->> controller: 8.0
+deactivate op
+
+controller -->> window: {"success": True, "result": 8.0}
+deactivate controller
+
+window ->> window: _display_var.set("8")
+note over window
+  _pending_op = None
+  _awaiting_second = False
+end note
+window -->> User: display shows "8"
+deactivate window
+
+== Error path: operation fails ==
+
+alt Operation error (e.g. division by zero)
+  controller -->> window: {"success": False, "error": "..."}
+  window ->> window: _display_var.set("Error")
+  window -->> User: display shows "Error"
+end
+
+@enduml

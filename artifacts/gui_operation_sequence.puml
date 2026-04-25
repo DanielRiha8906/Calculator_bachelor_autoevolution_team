@@ -1,5 +1,5 @@
-@startuml GUI_Operation_Execution
-title GUI Operation Execution — Sequence Diagram
+@startuml GUI_Operation_Sequence
+title GUI Button-Press Interactions — Sequence Diagram
 
 participant User
 participant GUIWindow as window
@@ -7,75 +7,88 @@ participant GUIController as controller
 participant OperationRegistry as registry
 participant Operation as op
 
-User ->> window: select operation from dropdown
+== Path 1: Digit Input ==
+
+User ->> window: press digit button "5"
 activate window
-window ->> controller: get_operation_arity(op_name)
+window ->> window: _on_digit("5")
+window ->> window: check _awaiting_second (false → skip clear)
+window ->> window: _display_var.set("5")
+window -->> User: display shows "5"
+deactivate window
+
+== Path 2: Operator then Second Digit ==
+
+User ->> window: press operator button "+"
+activate window
+window ->> window: _on_operator("add")
+note over window: via _OP_SYMBOL_MAP: "+" → "add"\n_operand1="5", _pending_op="add", _awaiting_second=True
+window -->> User: display unchanged
+deactivate window
+
+User ->> window: press digit button "3"
+activate window
+window ->> window: _on_digit("3")
+note over window: _awaiting_second=True → clear display first
+window ->> window: _display_var.set("3")
+window -->> User: display shows "3"
+deactivate window
+
+== Path 3: Equals (Success) ==
+
+User ->> window: press button "="
+activate window
+window ->> window: _on_equals()
+window ->> controller: execute_operation("add", [5.0, 3.0])
 activate controller
-controller ->> registry: get(op_name)
+controller ->> registry: get("add")
 activate registry
-registry -->> controller: Operation instance
+registry -->> controller: Add operation
 deactivate registry
-controller -->> window: arity (0, 1, or 2)
+controller ->> op: execute(5.0, 3.0)
+activate op
+op -->> controller: 8.0
+deactivate op
+controller -->> window: {"success": True, "result": 8.0}
 deactivate controller
-window ->> window: _update_operand_fields(arity)
+window ->> window: _display_var.set("8")
+window -->> User: display shows "8"
 deactivate window
 
-User ->> window: enter operand value(s)
-note over window: User clicks Calculate button
+== Path 4: Scientific Operation ==
 
-User ->> window: _on_calculate_clicked()
+note over window: scientific panel visible (mode="scientific")
+User ->> window: press button "√"
 activate window
-window ->> window: read operand entry fields
-alt Valid number format
-  window ->> window: convert string to float
-  window ->> controller: execute_operation(op_name, operands)
-  activate controller
-
-  alt Correct arity
-    controller ->> registry: has(op_name)
-    activate registry
-    registry -->> controller: True/False
-    deactivate registry
-
-    controller ->> registry: get(op_name)
-    activate registry
-    registry -->> controller: Operation instance
-    deactivate registry
-
-    controller ->> controller: validate arity
-
-    alt Arity matches
-      controller ->> op: execute(*operands)
-      activate op
-      op -->> controller: result (numeric)
-      deactivate op
-      controller ->> controller: append to _session_history
-      controller -->> window: {"success": True, "operation": ..., "operands": ..., "result": ...}
-      deactivate controller
-
-      window ->> window: _format_result_display(result_dict)
-      window ->> window: update result label
-      window ->> controller: get_session_history()
-      activate controller
-      controller -->> window: list[str] of formatted entries
-      deactivate controller
-      window ->> window: update history listbox
-      window -->> User: Display result
-    else Arity mismatch
-      controller -->> window: {"success": False, "error": "requires N operand(s)"}
-      deactivate controller
-      window ->> window: update result label with error message
-      window -->> User: Display error message
-    end
-  else Unknown operation
-    controller -->> window: {"success": False, "error": "Unknown operation"}
-    deactivate controller
-    window -->> User: Display error message
-  end
-else Invalid number format
-  window ->> window: catch ValueError
-  window -->> User: Display "Error: Invalid number '<value>'"
-end
+window ->> window: _on_scientific_op("square_root")
+window ->> controller: get_operation_arity("square_root")
+activate controller
+controller -->> window: 1
+deactivate controller
+window ->> controller: execute_operation("square_root", [16.0])
+activate controller
+controller ->> registry: get("square_root")
+activate registry
+registry -->> controller: SquareRoot operation
+deactivate registry
+controller ->> op: execute(16.0)
+activate op
+op -->> controller: 4.0
+deactivate op
+controller -->> window: {"success": True, "result": 4.0}
+deactivate controller
+window ->> window: _display_var.set("4")
+window -->> User: display shows "4"
 deactivate window
+
+== Error Paths (Equals) ==
+
+alt Operation error (e.g., division by zero)
+  controller -->> window: {"success": False, "error": "..."}
+  window ->> window: _display_var.set("Error")
+else ValueError (invalid number)
+  window ->> window: catch ValueError
+  window ->> window: _display_var.set("Error")
+end
 
 @enduml

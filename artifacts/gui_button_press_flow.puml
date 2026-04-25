@@ -1,0 +1,110 @@
+@startuml gui_button_press_flow
+title GUI — All Button Press Workflows — Activity Diagram
+
+start
+
+:tkinter mainloop running;
+
+repeat
+
+  fork
+    :Digit button pressed (0-9 or ".");
+    :_on_digit(digit);
+    if (_awaiting_second == True?) then (yes)
+      :clear display;
+      :_awaiting_second = False;
+    else (no)
+    endif
+    if (display == "0" AND digit != "."?) then (yes)
+      :replace display with digit;
+    else (no)
+      :append digit to display;
+    endif
+    :_display_var.set(new_value);
+
+  fork again
+    :Operator button pressed\n(+, -, x, /);
+    :_on_operator(op_name);
+    :_operand1 = display value;
+    :_pending_op = op_name;
+    :_awaiting_second = True;
+
+  fork again
+    :Equals button pressed;
+    :_on_equals();
+    if (_pending_op is None?) then (yes)
+      :return — no-op;
+    else (no)
+      :operand2 = display value;
+      :_controller.execute_operation\n(_pending_op, [_operand1, operand2]);
+      if (success?) then (yes)
+        :format result;
+        :_display_var.set(result);
+      else (no)
+        :_display_var.set("Error");
+      endif
+      :_pending_op = None;
+      :_awaiting_second = False;
+    endif
+
+  fork again
+    :Clear button pressed (C);
+    :_on_clear();
+    :_display_var.set("0");
+    :_operand1 = "";
+    :_pending_op = None;
+    :_awaiting_second = False;
+
+  fork again
+    :Delete button pressed (Del);
+    :_on_delete();
+    :remove last character from display;
+    if (display is empty?) then (yes)
+      :_display_var.set("0");
+    endif
+
+  fork again
+    :Mode button pressed;
+    :_on_mode_toggle();
+    :_scientific_panel_visible = NOT _scientific_panel_visible;
+    :_rebuild_scientific_panel();
+    if (_scientific_panel_visible == True?) then (yes)
+      :_build_scientific_panel();
+      :create _scientific_frame;
+      :grid 6 scientific buttons;
+      :add buttons to _buttons dict;
+    else (no)
+      :destroy _scientific_frame;
+      :remove scientific buttons from _buttons dict;
+    endif
+
+  fork again
+    note right: Only visible when\nscientific panel is shown
+    :Scientific unary button pressed\n(sqrt, square, factorial, ln, log10);
+    :_on_scientific_op(op_name);
+    :operand = display value (float);
+    :_controller.execute_operation(op_name, [operand]);
+    if (success?) then (yes)
+      :_display_var.set(result);
+    else (no)
+      :_display_var.set("Error");
+    endif
+
+  fork again
+    note right: Only visible when\nscientific panel is shown
+    :Scientific binary button pressed\n(xʸ = power);
+    :_on_scientific_op("power");
+    :_operand1 = display value;
+    :_pending_op = "power";
+    :_awaiting_second = True;
+    note right: User then enters exponent\nand presses = to execute
+
+  end fork
+
+repeat while (window open?)
+
+:User closes window;
+:tkinter mainloop exits;
+stop
+
+@enduml

@@ -1,3 +1,41 @@
+## Run: Fix PR #467 — Issue #464: Redesign calculator GUI to iOS-inspired dark grid layout (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/window.py` — added `_scientific_frame`/`_scientific_panel_visible` state vars; replaced `_on_mode_toggle()` to toggle panel visibility; replaced `_on_scientific_op()` to treat "power" as binary pending-op; added `_rebuild_scientific_panel()` method; updated `_build_scientific_panel()` to store frame reference
+  - `tests/test_gui_window_redesign.py` — 34 new tests covering scientific panel toggle, power binary operation, and unary scientific ops
+- **Purpose:** Fix two reviewer-identified issues: (1) Mode button now toggles scientific panel visibility; (2) xʸ operation now accepts two user-entered operands (base^exponent) instead of hardcoding exponent=2
+- **Risks:** None — changes localized to window.py; GUIController unchanged; all existing tests remain green
+- **Tests passed:** 496 passed, 3 skipped, 0 failed
+
+Duration: 555.5s | Cost: $1.181715 USD | Turns: 13
+
+## Run: update-diagrams — Redesign GUI to iOS-inspired dark grid layout (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — updated to show _ButtonConfig class, new GUIWindow fields/methods (grid layout), removed old form-based members
+  - `artifacts/gui_calculate_flow.puml` — replaced dropdown-based flow with button-press grid flow, two-step arithmetic state machine, scientific panel conditional path
+  - `artifacts/gui_operation_sequence.puml` — replaced Calculate-button sequence with digit/operator/equals/scientific button interaction paths
+
+Duration: 454.8s | Cost: $0.990516 USD | Turns: 17
+
+## Run: Issue #464 — V3 Task 16 - Redesign - Structured/team (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/window.py` — complete rewrite to iOS-inspired dark grid calculator (4×5 button grid, color constants, _ButtonConfig helper, scientific panel)
+  - `tests/test_gui_window_redesign.py` — new test suite (46 tests) covering colors, layout, symbols, and button structure
+  - `tests/test_main_entry_gui.py` — updated stale test that expected GUI to not exist
+- **Purpose:** Redesign calculator GUI to modern iOS-inspired dark interface with black background, orange operators, flat buttons, and Unicode symbols
+- **Risks:** None — no logic changes, all calculation delegates to GUIController unchanged
+- **Tests passed:** 462 passed, 0 failed, 3 skipped
+
+Duration: 1229.4s | Cost: $2.266919 USD | Turns: 33
+
 ## Run: Issue #414 — V3 Task 15 - Structured/team (2026-04-25)
 
 - **Branch:** task/issue-414-tkinter-gui
@@ -427,3 +465,17 @@ Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
   - `artifacts/gui_operation_sequence.puml` — new sequence diagram for GUI operation execution showing interactions between User, GUIWindow, GUIController, OperationRegistry, and Operation
 
 Duration: 343.9s | Cost: $0.663255 USD | Turns: 4
+
+## Run: update-diagrams — Redesign GUI (task/issue-464-redesign-gui) (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** task/issue-464-redesign-gui
+- **Files changed:**
+  - `artifacts/gui_classes.puml` — class diagram for GUIWindow, _ButtonConfig, GUIController with iOS redesign attributes
+  - `artifacts/gui_button_layout.puml` — new: 4x5 standard grid and 2x3 scientific sidebar button layout
+  - `artifacts/gui_button_press_flow.puml` — activity diagram for all button press workflows
+  - `artifacts/gui_mode_toggle_flow.puml` — new: activity diagram for scientific panel toggle
+  - `artifacts/gui_execute_binary_op_sequence.puml` — sequence diagram for binary operation execution
+  - `artifacts/gui_execute_unary_op_sequence.puml` — new: sequence diagram for unary scientific operation execution
+
+Duration: 271.5s | Cost: $0.683201 USD | Turns: 4

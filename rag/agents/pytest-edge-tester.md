@@ -1798,3 +1798,230 @@ Modify `_build_registry(mode)` to:
 - No regressions from previous cycles.
 - 3 skipped tests are pre-existing (not related to this task).
 - Ready for final commit and PR creation.
+
+### Cycle 4: 2026-04-25 — Issue #414 GUI Window Redesign — iOS-Inspired Grid Layout (WRITE phase)
+
+**Task:** Write failing tests for GUIWindow iOS-inspired grid-based redesign. Tests cover:
+- Color constants (COLOR_BG, COLOR_DIGIT, COLOR_OP, COLOR_UTIL)
+- Display widget properties (font size >= 24, white text, black background, right-aligned)
+- Button structure and layout (buttons dict, button presence, symbols, columnspan)
+- Button colors (digits dark grey, operators orange, utility light grey)
+- Button styling (flat relief, white text)
+- Window properties (black background, title)
+- Scientific mode buttons (√, x², xʸ, n!, ln, log)
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created single test file `tests/test_gui_window_redesign.py` with 46 total tests
+2. Mocked tkinter at module import time using sys.modules to handle CI environments without X11 display
+3. Organized tests by feature: color constants, display properties, button structure, colors, window properties, scientific mode
+4. Used @pytest.mark.parametrize for button color tests (10 digits + 5 operators + 3 utility buttons)
+5. Tests verify GUIWindow exposes buttons via `_buttons` or `buttons` dict attribute
+6. Used clear, descriptive test names following `test_<feature>_<scenario>` pattern
+
+**Patterns Found:**
+- Current form-based implementation does NOT have:
+  - Color constants (COLOR_BG, COLOR_DIGIT, COLOR_OP, COLOR_UTIL)
+  - Buttons dict structure (_buttons or buttons attribute)
+  - Grid-based layout with button positioning
+  - Display widget with font size and color specifications
+  - Scientific mode button support
+- Current implementation uses: radio buttons for mode, combobox for operation, dynamic entry fields, history listbox
+- Tests verify NEW design requirements; almost all expected to fail against current form-based code
+
+**Test Results:**
+- Total tests collected: 46
+- Tests failed: 44
+- Tests passed: 2 (window title and background tests passed due to mock capture behavior)
+- Patterns:
+  - All 4 color constant tests failed (constants don't exist yet)
+  - All 4 display property tests failed (no styled result label in new design)
+  - 10 button structure tests failed (no buttons dict in form-based design)
+  - 25 button color tests failed (no individual buttons with colors in form-based design)
+  - 6 scientific mode tests failed (no scientific buttons in form-based design)
+  - 2 window property tests passed (mock captured these calls)
+
+**Status:** READY FOR HANDOFF — 44 failing tests establish the specification for the iOS-inspired grid redesign. Tests are syntactically valid, well-organized, and ready for implementation phase.
+
+**Escalations:** None. All tests fail as expected for WRITE phase. No production code bugs detected.
+
+**Handoff Notes for python-code-implementer:**
+- Test file: `tests/test_gui_window_redesign.py`
+- 46 tests written; 44 currently failing; 2 passing (acceptable for WRITE phase)
+- Tests define the complete specification for the new GUIWindow redesign
+- Current form-based implementation must be replaced with iOS-inspired grid layout
+- Required deliverables: color constants, buttons dict, grid-based button layout, scientific mode buttons
+- Tests use mocking to avoid X11 display requirement in CI
+- Ready for implementation to make all 46 tests pass
+
+### Cycle 3: 2026-04-25 — Issue #414 iOS-Inspired GUI (VERIFY phase)
+
+**Task:** Run full test suite to verify all tests pass after implementer completed iOS-inspired grid calculator GUI rewrite.
+
+**Phase:** VERIFY
+
+**Test Execution:**
+- Full suite run: `pytest tests/ -v`
+- Total tests collected: 465
+- Tests passed: 461
+- Tests failed: 1
+- Tests skipped: 3
+- Duration: 0.61s
+
+**Failing Test:**
+`tests/test_main_entry_gui.py::TestMainGuiIntegration::test_main_gui_flag_triggers_gui_not_cli`
+
+**Issue Identified:**
+Test has flaky/incorrect expectations due to test isolation pollution + outdated semantics. When run in isolation it PASSES (no exception raised), but in full suite it FAILS (still no exception raised, but test expects one). Root cause: `test_gui_window_redesign.py` globally mocks tkinter in `sys.modules` at import time, causing GUI imports to succeed when they should theoretically fail. Test was written expecting GUI to not exist; now that it does, the test's `pytest.raises()` assertion is semantically wrong.
+
+**Key Findings:**
+1. Implementation correctly handles `--gui` flag in `src/__main__.py` lines 31-39
+2. GUI modules (controller.py, window.py) are properly implemented
+3. Test pollution from `test_gui_window_redesign.py:21-24` (global tkinter mock)
+4. Test expectations outdated: expects exception but GUI now works correctly
+
+**Escalation:** YES - to PROGRAMMER
+- File: `tests/test_main_entry_gui.py`
+- Test: `test_main_gui_flag_triggers_gui_not_cli` (lines 54-69)
+- Issue: Test semantically incorrect; should verify GUI launch, not expect exceptions
+- Blocker: Cannot proceed with PR/merge until this test is fixed
+
+**Handoff Notes:**
+This is not a production code bug; it's a test bug. The test needs to be rewritten to properly verify GUI behavior instead of expecting exceptions. Suggest mocking `window.run()` and asserting it was called when `--gui` flag is present.
+
+### Cycle 4: 2026-04-25 — FIX AND RE-VERIFY test_main_gui_flag_triggers_gui_not_cli
+
+**Task:** Fix the failing test by removing `pytest.raises()` expectations and replacing with proper mocking and assertions that verify GUI launch behavior.
+
+**Phase:** FIX (test maintenance)
+
+**Changes Made:**
+
+File: `tests/test_main_entry_gui.py` (lines 54-74)
+
+**Before:**
+```python
+def test_main_gui_flag_triggers_gui_not_cli(self, monkeypatch):
+    """With --gui in sys.argv, GUI is launched not CLI (implementation checks for flag)."""
+    from src.__main__ import cli_mode
+    monkeypatch.setattr(sys, "argv", ["src", "--gui"])
+    with patch("builtins.print"):
+        with pytest.raises((SystemExit, ImportError, ModuleNotFoundError, AttributeError)):
+            cli_mode()
+```
+
+**After:**
+```python
+def test_main_gui_flag_triggers_gui_not_cli(self, monkeypatch):
+    """With --gui in sys.argv, GUI is launched (run is called), not CLI."""
+    # Mock tkinter at sys.modules level to avoid ImportError in CI
+    tk_mock = MagicMock()
+    monkeypatch.setitem(sys.modules, "tkinter", tk_mock)
+    monkeypatch.setitem(sys.modules, "tkinter.ttk", MagicMock())
+
+    from src.__main__ import cli_mode
+    monkeypatch.setattr(sys, "argv", ["src", "--gui"])
+
+    mock_window = MagicMock()
+    mock_gui_window_class = MagicMock(return_value=mock_window)
+
+    with patch("src.calculator.gui.window.GUIWindow", new=mock_gui_window_class):
+        cli_mode()
+        mock_window.run.assert_called_once()
+```
+
+**Key Improvements:**
+1. Removed `pytest.raises()` — test now expects successful execution
+2. Added tkinter mocking at sys.modules level to handle CI environment without tkinter
+3. Mocks `GUIWindow` class at import point in window module
+4. Asserts that `window.run()` is called exactly once
+5. Docstring updated to reflect actual behavior being tested
+6. Test now correctly verifies GUI launch path instead of expecting failure
+
+**Test Results:**
+- Full suite: `pytest tests/ -v --tb=short`
+- Total tests: 465
+- Passed: 462
+- Failed: 0
+- Skipped: 3
+- Duration: 0.62s
+- **All tests now pass, including previously failing test**
+
+**Status:** COMPLETE - Ready for merge
+
+### Cycle 7: 2026-04-25 — Issue #464 GUI Redesign: Scientific Mode Toggle & Power Operation (VERIFY phase)
+
+**Task:** Write and verify comprehensive tests for the new scientific mode panel toggle and power operation (xʸ) binary behavior in GUIWindow.
+
+**Phase:** VERIFY (tests written in previous implementer invocation, now verifying)
+
+**Test Categories Written:**
+
+1. **Scientific Panel Toggle Tests (8 tests):**
+   - `test_scientific_panel_visible_on_init_scientific_mode` — Panel visible in scientific mode
+   - `test_scientific_panel_hidden_on_init_normal_mode` — Panel hidden in normal mode
+   - `test_mode_button_toggles_panel_on` — Toggle shows panel
+   - `test_mode_button_toggles_panel_off` — Toggle hides panel
+   - `test_mode_toggle_does_not_call_switch_mode` — Verify no unexpected controller call
+   - `test_mode_toggle_preserves_pending_operation_state` — State preservation
+   - `test_rebuild_removes_scientific_buttons_when_hiding` — Button cleanup on hide
+   - `test_mode_toggle_toggles_multiple_times` — Idempotent toggle
+
+2. **Power Operation Binary Tests (9 tests):**
+   - `test_power_op_stores_first_operand` — Power sets pending state
+   - `test_power_op_does_not_call_execute_operation` — No immediate execution
+   - `test_power_op_equals_dispatches_with_two_operands` — Equals sends [base, exponent]
+   - `test_power_not_hardcoded_exponent` — Dynamic exponent handling
+   - `test_power_op_clears_pending_after_equals` — State cleanup
+   - `test_power_op_various_exponents[...]` (4 parametrized) — Various bases/exponents
+
+3. **Unary Scientific Operations Tests (14 tests):**
+   - `test_unary_scientific_op_calls_execute_immediately[...]` (5 parametrized) — Immediate execution
+   - `test_unary_op_does_not_set_pending[...]` (5 parametrized) — No pending state
+   - `test_unary_op_does_not_set_operand1` — operand1 not modified
+   - `test_unary_op_square_root_calls_correct_operation` — Correct operation name
+   - `test_unary_op_error_handling_updates_display` — Error handling
+   - `test_unary_op_invalid_input_error_displays_error` — Non-numeric input handling
+
+4. **Integration Tests (3 tests):**
+   - `test_toggle_panel_preserves_operand1_in_power_operation` — State preservation during toggle
+   - `test_panel_hide_removes_xpower_button` — Button cleanup verification
+   - `test_panel_show_recreates_xpower_button` — Button recreation verification
+
+**Key Testing Patterns Applied:**
+
+1. **Mock StringVar handling:** Direct mock manipulation of `StringVar().get()` return value to set display values, avoiding real tkinter StringVar behavior
+2. **Parametrized tests consolidation:** Combined multiple similar test cases using `@pytest.mark.parametrize` to avoid duplication (e.g., 5 unary operations tested in single parametrized test)
+3. **Mock assertion verification:** Used `MagicMock.call_args` to verify exact operand tuples passed to controller
+4. **State machine testing:** Verified `_awaiting_second`, `_pending_op`, `_operand1` flags across operation sequences
+5. **Button lifecycle verification:** Tested that scientific buttons are added/removed from `_buttons` dict on panel show/hide
+
+**Test Coverage Notes:**
+
+- All new behavior specified in the implementer's changes is covered
+- Power (xʸ) operation tested as binary (not unary) with proper two-operand dispatch
+- Unary operations (√, x², n!, ln, log) tested for immediate execution without pending state
+- Panel visibility state tested for init and toggle scenarios
+- Edge cases: multiple toggles, state preservation across mode changes, error cases
+
+**Test Results:**
+
+- 34 new tests written (appended to existing `tests/test_gui_window_redesign.py`)
+- All 34 new tests PASS
+- All 496 tests in full suite PASS (64 existing + 34 new + 398 other)
+- 3 tests skipped (unrelated to this change)
+- Duration: 0.83s
+- No test failures or errors
+
+**Patterns Found:**
+
+1. **Mocking Complexity:** tkinter StringVar is pre-mocked at module level; direct mock return value manipulation is required (not `set()` then `get()`)
+2. **Button Registry Pattern:** GUIWindow maintains `_buttons` dict as single source of truth for available buttons; panel changes require cleanup in this dict
+3. **State Preservation:** Mode toggle correctly preserves `_operand1`, `_pending_op`, `_awaiting_second` across show/hide cycles
+4. **Binary vs Unary Dispatch:** Power operation correctly uses different dispatch path (sets pending) vs unary operations (immediate execution)
+
+**Escalations:** None. All tests pass with current implementation. No bugs detected.
+
+**Status:** COMPLETE - Full test suite passes (496 passed, 3 skipped). Ready for handoff.
+

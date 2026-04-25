@@ -445,3 +445,276 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 - Confirm no regressions: all existing tests still pass
 - Confirm new tests pass: 44 GUI tests pass
 - Total expected: 100+ tests, 100% pass rate
+
+### Cycle 6: 2026-04-25 — Issue #464 V3 Task 16 — GUI Redesign (Modern iOS-Inspired Calculator)
+
+**Task:** Redesign the existing tkinter GUI to present a modern, minimal dark interface inspired by the iOS Calculator app. This is purely a visual/UI redesign task—no changes to calculation logic. The current GUI must be replaced with a layout matching a precise 4×5 button grid in standard mode, a dark color scheme with strategic use of orange for primary operators, and large right-aligned result display.
+
+**Key Decisions:**
+
+1. **Scope (CRITICAL):** Visual redesign only. No logic changes, no changes to GUIController, no changes to entry point or public API. The redesigned GUIWindow will be a drop-in replacement for the existing window.py file.
+
+2. **Color Scheme (CRITICAL):**
+   - Window background: `#000000` (black)
+   - Digit buttons (0-9, .): `#333333` (dark grey)
+   - Primary operators (+, −, ×, ÷, =): `#FF9500` (orange)
+   - Utility buttons (C, Del, Mode): `#A5A5A5` (light grey)
+   - Text on all buttons: `#FFFFFF` (white)
+   - Result display text: `#FFFFFF` (white) on `#000000` (black) background
+
+3. **Standard Mode Layout (4 columns × 5 rows, grid-based):**
+   - Row 0: C (Clear), Del (Delete), Mode (mode switcher), ÷ (Divide) — all operators as symbols
+   - Row 1: 7, 8, 9, × (Multiply)
+   - Row 2: 4, 5, 6, [empty spacer]
+   - Row 3: 1, 2, 3, − (Subtract)
+   - Row 4: 0 (columnspan=2), . (Decimal), = (Equals)
+   - All buttons use grid() geometry manager with explicit row/column indices and columnspan
+
+4. **Result Display:**
+   - Large font: 24pt minimum (suggest 28pt TkDefaultFont or similar)
+   - Right-aligned: justify=RIGHT or anchor=E
+   - White text (#FFFFFF) on black background (#000000)
+   - Displays result after operation or error message
+
+5. **Scientific Mode Sidebar:**
+   - Separate visual section (not integrated into main 4×5 grid)
+   - Displays 6 scientific functions: √, x², xʸ, n!, ln, log
+   - Positioned to the left of or above the main grid (clear visual separation)
+   - Same color scheme: operators use #FF9500, text uses mathematical symbols
+   - Grid layout: arrange 6 buttons vertically or in a 2×3 sub-grid
+
+6. **Button Styling:**
+   - relief=FLAT (no 3D beveling)
+   - Uniform size (suggest 60×60 px or larger for readability)
+   - activebackground set for hover/press feedback
+   - White text, bold, readable font size
+
+7. **Mathematical Symbols (Critical for UI):**
+   - Multiplication: × (U+00D7), not "*"
+   - Division: ÷ (U+00F7), not "/"
+   - Subtract/Minus: − (U+2212), not "-"
+   - Square root: √ (U+221A)
+   - Square: x² (x followed by superscript 2 U+00B2)
+   - Power: xʸ (x followed by superscript y U+02B8)
+   - Factorial: n! (n followed by exclamation U+0021)
+   - Natural log: ln (two-letter abbreviation)
+   - Common log: log (three-letter abbreviation)
+
+8. **Event Handlers (Core Logic Preserved):**
+   - `_on_mode_changed()`: still calls controller.switch_mode(), rebuilds grid
+   - `_on_calculate_clicked()`: still calls execute_operation(), displays result
+   - Clear button: clears result display and input state
+   - Delete button: removes last character from display (if numeric entry state exists)
+   - Number/operator buttons: direct click handlers that update display
+
+9. **No Changes to:**
+   - GUIController: public API unchanged; window calls same methods
+   - src/__main__.py: entry point unchanged
+   - src/calculator/gui/__init__.py: package exports unchanged
+   - GUIController tests: existing tests remain valid
+   - Calculation logic: all operations unchanged
+
+10. **Implementation Approach:**
+    - Create color constants at module top: COLOR_BG, COLOR_DIGIT, COLOR_OP, COLOR_UTIL, COLOR_DECIMAL, COLOR_TEXT
+    - Replace combobox-driven UI with direct button-grid UI
+    - Build 4×5 button grid using tkinter.Button with grid() geometry manager
+    - Build separate scientific sidebar with 6 buttons
+    - Result display: tk.Label with large font, right alignment, white text
+    - Mode selection: remain as radio buttons at top (or integrate into grid if space permits)
+    - History panel: optional (can be removed or minimized; not required by task)
+
+**Patterns Observed:**
+- GUIController provides clean business-logic boundary; window only needs to reuse existing public methods
+- Button grid layout is deterministic: row/column indices are fixed; no dynamic layout needed
+- Color constants reduce maintenance burden; single source of truth
+- Mathematical symbols are standard Unicode characters; can be string literals
+
+**Architectural Impact:**
+- **Visual redesign is purely cosmetic:** no logic changes, no behavioral changes
+- **GUIWindow becomes more calculator-like:** direct button grid instead of form-based UI
+- **Scientific functions more discoverable:** dedicated sidebar instead of hidden in dropdown
+- **Modern appearance:** iOS-inspired dark theme with orange accents
+- **Backward compatible:** GUIController interface unchanged; all existing tests pass without modification
+
+**Test Coverage (40 test cases):**
+- **Widget existence & properties (10 tests):** background color, display font, display alignment, button grid layout, scientific sidebar
+- **Standard mode layout (13 tests):** button positions in 4×5 grid, row/column indices, columnspan for 0 button
+- **Button styling (8 tests):** color assignments (digits, operators, utilities), flat relief, white text, button size uniformity
+- **Symbol labels (9 tests):** mathematical symbols for all operators and scientific functions
+- **Behavior & integration (0 tests beyond above):** clear/delete/calculate actions preserve existing test coverage via integration tests
+
+**Risks & Mitigations:**
+- **Risk:** tkinter grid geometry complexity. Mitigation: use explicit row/column indices in test assertions; verify each button position programmatically
+- **Risk:** Unicode symbol rendering across platforms. Mitigation: use standard Unicode code points; test on CI for compatibility
+- **Risk:** Font size/color may not render correctly. Mitigation: use platform-agnostic TkDefaultFont; explicit hex color codes (#RRGGBB)
+- **Risk:** Scientific sidebar positioning. Mitigation: use separate Frame for sidebar; position with pack() or grid() beside main frame
+
+**Handoff Notes for pytest-edge-tester (WRITE phase):**
+- Create new test file: `tests/test_gui_window_redesign.py`
+- Write 40 failing test functions covering:
+  - **Widget existence & properties (10 tests):**
+    1. test_gui_window_dark_background
+    2. test_gui_window_display_font_size
+    3. test_gui_window_display_text_color
+    4. test_gui_window_display_right_aligned
+    5. test_gui_window_standard_mode_button_grid_layout_4x5
+    6. test_gui_window_window_title
+    7. test_gui_window_display_empty_on_init
+    8. test_gui_window_all_buttons_same_size
+    9. test_gui_window_mode_radio_buttons_present
+    10. test_gui_window_no_operation_registry_exposed
+  - **Standard mode layout (13 tests):**
+    1-5. Button position tests: C (0,0), Del (0,1), Mode (0,2), ÷ (0,3), 7-9 row, 4-6 row, 1-3 row, 0 colspan 2, . position, = position
+    6. test_gui_window_row2_numbers_7_8_9_multiply
+    7. test_gui_window_row3_numbers_4_5_6
+    8. test_gui_window_row4_numbers_1_2_3_subtract
+    9. test_gui_window_row5_zero_decimal_equals
+    10. test_gui_window_zero_button_colspan_2
+  - **Button styling (8 tests):**
+    1-3. Color tests: digit buttons (#333333), operators (#FF9500), utilities (#A5A5A5)
+    4. test_gui_window_decimal_point_color
+    5. test_gui_window_button_flat_relief
+    6. test_gui_window_button_text_white
+    7. test_gui_window_equals_button_primary_operator_color
+  - **Symbol labels (9 tests):**
+    1. test_gui_window_button_label_multiply_symbol (×)
+    2. test_gui_window_button_label_divide_symbol (÷)
+    3. test_gui_window_button_label_subtract_symbol (−)
+    4. test_gui_window_button_label_square_root_symbol (√)
+    5. test_gui_window_button_label_square_symbol (x²)
+    6. test_gui_window_button_label_power_symbol (xʸ)
+    7. test_gui_window_button_label_factorial_symbol (n!)
+    8. test_gui_window_button_label_ln_symbol (ln)
+    9. test_gui_window_button_label_log_symbol (log)
+  - **Scientific mode (2 tests):**
+    1. test_gui_window_scientific_mode_left_panel_functions
+    2. test_gui_window_scientific_mode_left_panel_grid
+- All 40 tests must FAIL before implementation
+- Use `monkeypatch` to mock tkinter if running in headless CI; or use pytest-qt or similar for widget testing
+- Assertions must check widget properties programmatically: query bg, fg, grid_info(), winfo_children(), text attributes
+- Test file location: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui_window_redesign.py`
+
+**Handoff Notes for python-code-implementer:**
+- **File: `src/calculator/gui/window.py`**
+  - Completely rewrite file (no code preservation from current version)
+  - Keep class name `GUIWindow` and `__init__` signature identical: `def __init__(self, controller: GUIController, title: str = "Calculator")`
+  - Keep public method `run()` unchanged: `def run(self) -> None: self.root.mainloop()`
+  - Add color constants at module top:
+    ```python
+    COLOR_BG = "#000000"
+    COLOR_DIGIT = "#333333"
+    COLOR_OP = "#FF9500"
+    COLOR_UTIL = "#A5A5A5"
+    COLOR_DECIMAL = "#333333"
+    COLOR_TEXT = "#FFFFFF"
+    ```
+  - Implement `_build_standard_mode_grid()`: creates 4×5 button grid with C, Del, Mode, ÷ in row 0, etc.
+  - Implement `_build_scientific_sidebar()`: creates separate Frame with 6 scientific function buttons
+  - Result display: tk.Label with font=("TkDefaultFont", 28), fg=COLOR_TEXT, bg=COLOR_BG, justify=RIGHT
+  - Implement mode switching: clear grid, rebuild appropriate view
+  - All buttons: relief=FLAT, command callbacks to internal methods
+  - Use grid() geometry manager for button placement; explicit row/column/columnspan
+  - No combobox; no dynamic operation listing (buttons are hardcoded per mode)
+  - Clear/Delete buttons: implement logic to update display state
+- No changes to GUIController
+- No changes to __init__.py or entry point
+- All 40 redesign tests must pass
+- All existing GUIController tests must remain passing (no behavioral changes)
+
+**Handoff Notes for pytest-edge-tester (VERIFY phase):**
+- Run full test suite: `pytest tests/` (all tests)
+- Confirm new 40 redesign tests all pass
+- Confirm all existing GUI tests (test_gui_controller.py, test_gui_integration.py, test_main_entry_gui.py) still pass
+- Confirm all core tests remain passing (test_calculator.py, test_cli_mode.py, etc.)
+- Total expected: 140+ tests, 100% pass rate
+
+### Cycle 7: 2026-04-25 — Issue #467 — Fix Scientific Mode Toggle and Binary Power Operation
+
+**Task:** Fix two critical GUI issues found in PR #467:
+1. Scientific mode toggle not properly implemented — clicking Mode button should toggle scientific panel visibility, not switch modes
+2. Power (xʸ) operation incorrectly implemented as unary — must be binary like +, −, ×, ÷
+
+**Key Decisions:**
+
+1. **Scientific panel visibility tracking (Issue 1 root cause):**
+   - Add `_scientific_panel_visible: bool` instance variable to track panel visibility independent of mode
+   - Mode toggle (clicking "Mode" button) should toggle panel visibility, not call `controller.switch_mode()`
+   - Panel visibility persists across operand entry and operation execution
+   - This decouples UI state (panel shown/hidden) from business logic state (normal/scientific mode)
+
+2. **Power operation binary implementation (Issue 2 root cause):**
+   - Power operation currently hardcoded with second operand of 2 in `_on_scientific_op()` (line 378: `[op1, 2]`)
+   - Must refactor to flow through same binary operator pipeline as +, −, ×, ÷
+   - On "xʸ" button press: store operand1, set pending_op="power", set awaiting_second=True (like _on_operator)
+   - On "=" press: retrieve operand2 from display, call execute_operation("power", [op1, op2])
+   - Unary scientific operations (√, x², n!, ln, log) keep existing immediate-execution behavior
+
+3. **UI flow preservation:**
+   - Pending operation state (_operand1, _pending_op, _awaiting_second) preserved across panel toggles
+   - Display shows first operand, user enters second operand, pressing = executes binary operation
+   - Display correctly clears/resets for awaiting_second state (when first operand stored)
+
+4. **No changes to:**
+   - GUIController — no logic changes needed; power operation already supports arity=2
+   - src/__main__.py entry point
+   - Calculation logic in operations
+   - Existing tests (all 462 must remain green)
+
+**Patterns Observed:**
+- Binary operator flow already established: _on_operator() → stores operand1, sets pending_op, awaits second → _on_equals() executes
+- Scientific operations grouped separately; can distinguish binary (power) from unary (others)
+- Panel visibility toggle requires frame reconstruction, not mode switching
+
+**Architectural Impact:**
+- **UI layer separation strengthened:** window state (panel visibility) decoupled from controller state (mode)
+- **Power operation unified:** consistent binary operator semantics across all binary operations
+- **State management clarified:** _pending_op now correctly handles power like +, −, ×, ÷
+- **Backward compatible:** no API changes; visual behavior matches iOS calculator expectations
+
+**Test Coverage (14 test cases):**
+- **Issue 1 — Scientific panel toggle (7 tests):**
+  1. test_scientific_panel_visible_on_init_scientific_mode
+  2. test_scientific_panel_hidden_on_init_normal_mode
+  3. test_mode_button_toggles_scientific_panel_from_normal
+  4. test_mode_button_toggles_scientific_panel_from_scientific
+  5. test_mode_toggle_preserves_display_and_state
+  6. test_mode_button_text_does_not_change
+  7. test_scientific_panel_grids_correctly_when_toggled_on
+- **Issue 2 — Binary power operation (7 tests):**
+  1. test_power_button_stores_first_operand
+  2. test_power_button_waits_for_second_operand
+  3. test_power_equals_executes_binary_operation
+  4. test_power_button_not_hardcoded_to_square
+  5. test_power_button_calls_controller_with_correct_arity
+  6. test_power_button_clears_pending_state_after_equals
+  7. test_power_button_can_chain_operations
+
+**Risks & Mitigations:**
+- **Risk:** Panel toggle changes window layout; may cause widget sizing issues. Mitigation: test grid positions after toggle in test suite
+- **Risk:** Power operation execution with wrong arity breaks controller call. Mitigation: verify [op1, op2] list length before controller.execute_operation() call
+- **Risk:** Pending state corruption across panel toggles. Mitigation: preserve _operand1, _pending_op, _awaiting_second across panel changes
+- **Risk:** Existing tests fail if display/state handling changes. Mitigation: run full test suite after implementation; only modify window.py, no logic changes
+
+**Handoff Notes for pytest-edge-tester (WRITE phase):**
+- Create new test file: `tests/test_gui_issue_467_fixes.py`
+- Write 14 failing test functions covering both issues (see test specs above)
+- All tests must use mocked tkinter (headless environment)
+- Use `monkeypatch` to inject GUIController and GUIWindow instances
+- Test file location: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui_issue_467_fixes.py`
+
+**Handoff Notes for python-code-implementer:**
+- **File: `src/calculator/gui/window.py`**
+  - Modify `__init__()`: add `self._scientific_panel_visible: bool` instance variable
+  - Refactor `_on_mode_toggle()`: toggle `_scientific_panel_visible` boolean, call `_rebuild_scientific_panel()`, preserve state
+  - Refactor `_on_scientific_op()`: treat power as binary operator (store operand1, set pending_op, await second); keep others as unary
+  - Add `_rebuild_scientific_panel()` method: show/hide scientific panel based on `_scientific_panel_visible`
+  - Modify `_build_scientific_panel()`: support repeated calls (frame creation check)
+  - All changes localized to window.py; no changes to GUIController or entry point
+- All 14 tests must pass
+- All existing tests (462) must remain passing
+
+**Handoff Notes for pytest-edge-tester (VERIFY phase):**
+- Run full test suite: `pytest tests/` (all tests)
+- Confirm 14 new tests pass
+- Confirm all 462 existing tests remain green
+- No regressions

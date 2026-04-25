@@ -52,21 +52,26 @@ class TestMainGuiIntegration:
                 # (either exit was called or function returned)
 
     def test_main_gui_flag_triggers_gui_not_cli(self, monkeypatch):
-        """With --gui in sys.argv, GUI is launched not CLI (implementation checks for flag)."""
+        """With --gui in sys.argv, GUI is launched (run is called), not CLI."""
+        # Mock tkinter at sys.modules level to avoid ImportError in CI
+        tk_mock = MagicMock()
+        monkeypatch.setitem(sys.modules, "tkinter", tk_mock)
+        monkeypatch.setitem(sys.modules, "tkinter.ttk", MagicMock())
+
         from src.__main__ import cli_mode
 
         # Mock sys.argv to simulate: python -m src --gui
         monkeypatch.setattr(sys, "argv", ["src", "--gui"])
 
-        # The function should recognize --gui flag and either:
-        # 1. Launch a GUI (if implementation exists)
-        # 2. Exit with error (if --gui not yet supported)
-        # 3. Fall back gracefully
-        # We just verify that it doesn't treat --gui as an operation name
-        with patch("builtins.print"):
-            with pytest.raises((SystemExit, ImportError, ModuleNotFoundError, AttributeError)):
-                # Expected to fail since --gui feature is not yet implemented
-                cli_mode()
+        # Mock GUIWindow class at the point where it's imported in the window module
+        mock_window = MagicMock()
+        mock_gui_window_class = MagicMock(return_value=mock_window)
+
+        with patch("src.calculator.gui.window.GUIWindow", new=mock_gui_window_class):
+            # cli_mode should recognize --gui, create GUIWindow, and call run()
+            cli_mode()
+            # Verify that run() was called exactly once on the created instance
+            mock_window.run.assert_called_once()
 
     def test_main_interactive_mode_without_gui_flag(self, monkeypatch):
         """Interactive mode works normally without --gui flag."""

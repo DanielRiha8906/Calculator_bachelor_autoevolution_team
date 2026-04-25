@@ -1,0 +1,47 @@
+@startuml gui_mode_toggle_flow
+title GUI — Scientific Panel Toggle — Activity Diagram
+
+start
+
+:User presses Mode button;
+:_on_mode_toggle() called;
+
+:_scientific_panel_visible = NOT _scientific_panel_visible;
+
+:_rebuild_scientific_panel();
+
+if (_scientific_panel_visible == True?) then (yes)
+
+  :_build_scientific_panel();
+  :create tk.Frame → _scientific_frame;
+  :grid _scientific_frame next to standard grid;
+
+  fork
+    :create button "√" (square_root)\n_make_button(row=0, col=0);
+  fork again
+    :create button "x²" (square)\n_make_button(row=0, col=1);
+  fork again
+    :create button "xʸ" (power)\n_make_button(row=0, col=2);
+  fork again
+    :create button "n!" (factorial)\n_make_button(row=1, col=0);
+  fork again
+    :create button "ln" (ln)\n_make_button(row=1, col=1);
+  fork again
+    :create button "log" (log10)\n_make_button(row=1, col=2);
+  end fork
+
+  :register all 6 buttons in _buttons dict;
+  :scientific panel is now visible;
+
+else (no)
+
+  :destroy _scientific_frame widget;
+  :_scientific_frame = None;
+  :remove scientific button keys from _buttons dict\n(sqrt, square, power, factorial, ln, log10);
+  :scientific panel is now hidden;
+
+endif
+
+stop
+
+@enduml

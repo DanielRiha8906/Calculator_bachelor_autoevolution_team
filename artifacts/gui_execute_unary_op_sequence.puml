@@ -1,0 +1,52 @@
+@startuml gui_execute_unary_op_sequence
+title GUI — Unary Scientific Operation Execution — Sequence Diagram
+
+actor User
+participant GUIWindow as window
+participant GUIController as controller
+participant Operation as op
+
+note over window
+  Scientific panel is visible.
+  Display shows a value (e.g. "16").
+end note
+
+== Step 1: Press unary scientific button ==
+
+User ->> window: press scientific button (e.g. "√")
+activate window
+window ->> window: _on_scientific_op("square_root")
+
+note over window
+  op_name != "power" → treat as unary
+  operand = float(display) = 16.0
+end note
+
+== Step 2: Delegate to controller ==
+
+window ->> controller: execute_operation("square_root", [16.0])
+activate controller
+
+controller ->> op: execute(16.0)
+activate op
+op -->> controller: 4.0
+deactivate op
+
+controller -->> window: {"success": True, "result": 4.0}
+deactivate controller
+
+== Step 3: Update display ==
+
+window ->> window: _display_var.set("4")
+window -->> User: display shows "4"
+deactivate window
+
+== Error path ==
+
+alt Operation error (e.g. square root of negative)
+  controller -->> window: {"success": False, "error": "..."}
+  window ->> window: _display_var.set("Error")
+  window -->> User: display shows "Error"
+end
+
+@enduml

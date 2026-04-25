@@ -1,5 +1,77 @@
 @startuml GUI_Class_Diagram
-title GUI Package — Class Diagram
+title GUI Package — iOS-Inspired Grid Design — Class Diagram
+
+namespace calculator.gui.window {
+  class COLOR_BG <<constant>> {
+    "#000000"
+  }
+  class COLOR_DIGIT <<constant>> {
+    "#333333"
+  }
+  class COLOR_OP <<constant>> {
+    "#FF9500"
+  }
+  class COLOR_UTIL <<constant>> {
+    "#A5A5A5"
+  }
+  class COLOR_TEXT <<constant>> {
+    "#FFFFFF"
+  }
+
+  class _BUTTON_LAYOUT <<data>> {
+    list[tuple]: 19 button specs
+    for 4×5 standard grid
+  }
+  class _SCIENTIFIC_BUTTONS <<data>> {
+    list[tuple]: 6 scientific
+    button specs (√, x², xʸ, n!, ln, log)
+  }
+  class _OP_SYMBOL_MAP <<data>> {
+    dict[str, str]
+    symbol → op name
+  }
+
+  class _ButtonConfig {
+    - _widget: object
+    - _bg: str
+    - _fg: str
+    - _relief: str
+    - _row: int
+    - _column: int
+    - _columnspan: int
+    --
+    + __init__(widget, bg, fg, relief, row, column, columnspan=1)
+    + cget(key: str): str | None
+    + grid_info(): dict
+  }
+
+  class GUIWindow {
+    + root: tk.Tk
+    - _controller: GUIController
+    - _buttons: dict[str, _ButtonConfig]
+    - _display_var: tk.StringVar
+    - _display: tk.Label
+    - _operand1: str
+    - _pending_op: str | None
+    - _awaiting_second: bool
+    --
+    + __init__(controller: GUIController, title: str = "Calculator")
+    + run()
+    - _build_display()
+    - _build_standard_grid()
+    - _build_scientific_panel()
+    - _make_button(frame, text, bg, row, col, colspan, command): _ButtonConfig
+    - _make_command(text: str): object
+    - _make_scientific_command(op_name: str): object
+    - _on_digit(digit: str)
+    - _on_operator(op_name: str)
+    - _on_equals()
+    - _on_clear()
+    - _on_delete()
+    - _on_mode_toggle()
+    - _on_scientific_op(op_name: str)
+  }
+}
 
 namespace calculator.gui {
   class GUIController {
@@ -7,41 +79,14 @@ namespace calculator.gui {
     - _active_registry: OperationRegistry
     - _session_history: list[dict]
     --
-    + __init__(mode: str = "scientific"): None
+    + __init__(mode: str)
     + get_current_mode(): str
-    + switch_mode(mode: str): None
+    + switch_mode(mode: str)
     + get_available_operations(): list[str]
     + get_operation_arity(operation_name: str): int
     + execute_operation(operation_name: str, operands: list): dict
-    + get_session_history(): list[str]
-    + clear_session_history(): None
-  }
-
-  class GUIWindow {
-    - _controller: GUIController
-    - root: tk.Tk
-    - _mode_var: tk.StringVar
-    - _operation_dropdown: ttk.Combobox
-    - _operand_frame: tk.Frame
-    - _operand_entries: list[tk.Entry]
-    - _result_label: tk.Label
-    - _history_listbox: tk.Listbox
-    --
-    + __init__(controller: GUIController, title: str = "Calculator"): None
-    + run(): None
-    - _build_mode_frame(): None
-    - _build_operation_frame(): None
-    - _build_operand_frame(): None
-    - _build_calculate_button(): None
-    - _build_result_label(): None
-    - _build_history_frame(): None
-    - _on_mode_changed(): None
-    - _on_operation_selected(event): None
-    - _on_calculate_clicked(): None
-    - _update_operation_dropdown(): None
-    - _update_operand_fields(arity: int): None
-    - _update_history_display(): None
-    - _format_result_display(result_dict: dict): str
+    + get_session_history(): list[dict]
+    + clear_session_history()
   }
 }
 
@@ -49,7 +94,7 @@ namespace calculator.operations {
   class OperationRegistry {
     - _ops: dict[str, Operation]
     --
-    + register(operation: Operation, name: str | None): None
+    + register(operation: Operation, name: str | None)
     + get(name: str): Operation
     + list_all(): list[str]
     + has(name: str): bool
@@ -57,26 +102,25 @@ namespace calculator.operations {
 
   class Operation <<interface>> {
     --
-    {abstract} + name: str {property}
-    {abstract} + arity: int {property}
+    {abstract} + name: str
+    {abstract} + arity: int
     {abstract} + execute(*args: float): float
   }
 }
 
-namespace calculator.main {
-  class MODE_NORMAL <<constant>>
-  class MODE_SCIENTIFIC <<constant>>
-  class VALID_MODES <<constant>>
-  function _build_registry(mode: str): OperationRegistry
-}
-
 ' Composition and dependencies
 GUIWindow "1" *-- "1" GUIController : "composes"
+GUIWindow "1" *-- "*" _ButtonConfig : "owns via _buttons dict"
 GUIController "1" -- "1" OperationRegistry : "uses"
 OperationRegistry "1" -- "*" Operation : "contains"
-GUIController --> MODE_NORMAL : "references"
-GUIController --> MODE_SCIENTIFIC : "references"
-GUIController --> VALID_MODES : "references"
-GUIController --> _build_registry : "calls"
+
+GUIWindow ..> COLOR_BG : "uses"
+GUIWindow ..> COLOR_DIGIT : "uses"
+GUIWindow ..> COLOR_OP : "uses"
+GUIWindow ..> COLOR_UTIL : "uses"
+GUIWindow ..> COLOR_TEXT : "uses"
+GUIWindow ..> _BUTTON_LAYOUT : "iterates"
+GUIWindow ..> _SCIENTIFIC_BUTTONS : "iterates"
+GUIWindow ..> _OP_SYMBOL_MAP : "looks up"
 
 @enduml
