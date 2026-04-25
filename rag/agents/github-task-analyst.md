@@ -723,3 +723,149 @@ The single PR comment from DanielRiha8906 (owner) marks **"Fix needed"** and spe
 - Backward compatibility violation: normal mode less capable than pre-split calculator
 - Test coverage incomplete: no tests for new scientific functions or correct mode split behavior
 
+### 2026-04-25 | V3 Task 15 - Structured/team (Issue #414)
+
+**Issue:** Add a graphical user interface for the calculator application using tkinter. The GUI must provide access to the calculator's currently supported functionality (both normal and scientific modes). The interface must allow operation selection, operand entry, result display, and session history viewing. The GUI must be an extension of the application, not a replacement—existing CLI/interactive modes remain available and fully functional. Update relevant tests to ensure consistency.
+
+**Key Requirements Identified:**
+- Build tkinter-based GUI for the calculator application
+- Support both normal and scientific mode operation selection in the GUI
+- Support operand entry and result display
+- Support session history viewing within the application
+- GUI is an extension, not a replacement (CLI and interactive modes remain fully functional)
+- All existing tests must remain consistent with the new GUI functionality
+
+**Explicit Requirements:**
+- **Functional:** GUI access to all currently supported calculator operations (from prior tasks: arithmetic, factorial, square, cube, sqrt, cbrt, power, log, ln, and upcoming from PR #459: trig, inverse trig, hyperbolic, exponential, constants)
+- **Functional:** GUI operation selection mechanism (buttons? dropdown menu? search box?)
+- **Functional:** GUI operand entry (text fields? spinboxes? numeric input widgets?)
+- **Functional:** GUI result display (labels? text output area? history panel?)
+- **Functional:** Session history viewing within GUI (history panel? window? integration with result display?)
+- **Functional:** Normal mode vs. Scientific mode toggling in GUI (mode selector widget?)
+- **Functional:** All existing CLI and interactive modes remain fully operational
+- **Testing:** Update relevant tests to accommodate GUI code and maintain test suite consistency
+
+**Ambiguities & Gaps (Inherent to Task):**
+- **GUI framework:** tkinter is specified; no version constraints
+- **Operation display in GUI:** Unclear how operations are listed/accessible:
+  - Grid of buttons (one per operation)? Unscalable for 20+ operations
+  - Dropdown menu? Searchable menu? Categorized menus?
+  - Text input with autocomplete?
+  - Operation palette scrollable list?
+- **Operand input:** Unclear how many operand fields to display:
+  - Fixed number (e.g., 2 fields always visible, 1 for unary ops unused)?
+  - Dynamic based on selected operation (show 1 for unary, 2 for binary)?
+  - Text input parsing (user enters "5" and "3", parser determines count)?
+- **Mode switching in GUI:** Unclear how user toggles normal ↔ scientific mode:
+  - Toggle button? Radio buttons? Menu item? Tab interface?
+  - Does mode switch clear pending operands or preserve state?
+- **Result display:** Unclear what to show:
+  - Numeric result only? Full operation transcript (op + args + result)?
+  - Error messages inline or in separate area?
+  - Precision/formatting of numeric results?
+- **History viewing:** Unclear what "view session history" means in GUI context:
+  - Display history in dedicated panel/window?
+  - Scrollable list of past operations?
+  - Integration with file-based history from Task 9 or session-only view?
+- **GUI layout:** No specification of visual organization:
+  - Single window with all controls? Multi-window? Tabbed interface?
+  - Responsive layout? Fixed size? Resizable?
+- **Error handling in GUI:** How are errors presented:
+  - Message box? Status bar? Error log panel?
+  - Same validation/retry logic as Task 8, or simplified GUI-specific handling?
+- **Relationship to existing modes:** Task states "keep existing behavior available outside GUI" but unclear:
+  - Can same process run both GUI and CLI simultaneously? (likely not)
+  - Should GUI be optional (e.g., `--gui` flag or default entry point)?
+  - Does GUI mode prevent interactive/CLI usage or supplement it?
+- **Test strategy:** Unclear how to test GUI code:
+  - Unit tests on GUI functions? Integration tests? Manual testing?
+  - Mock tkinter? Use a testing framework like unittest.mock?
+  - How to verify GUI behavior (button clicks, text input) in automated tests?
+- No comments provided; issue body is minimal
+- No wireframes, mockups, or design specifications
+- No mention of accessibility, themes, or UI customization
+- No platform/OS requirements (tkinter is cross-platform but behavior may vary)
+
+**Assumed Resolution (for Architect):**
+- **GUI Architecture:** Separate GUI layer using tkinter, not integrated into core calculator logic:
+  - `src/calculator/gui.py` or `src/calculator/ui/` directory for GUI-related code
+  - GUI layer calls calculator.core functions; maintains separation of concerns from Task 11 refactoring
+  - Keep `main.py` decision logic: if `--gui` flag or default, launch GUI; otherwise, interactive/CLI modes
+- **Operation Selection:** Recommend dynamic dropdown menu or searchable/categorized operation selector:
+  - Dropdown menu populated from operation registry (allows easy addition of new operations)
+  - If list is long (20+), group operations: Normal Mode (add, subtract, etc.) | Scientific Mode (factorial, sqrt, etc.)
+  - Alternative: tabbed interface with Normal and Scientific tabs, each with operation buttons/list
+- **Operand Input:** Dynamic widget approach:
+  - After operation selected, GUI determines operation arity (unary vs. binary)
+  - Display appropriate number of input fields
+  - Accept numeric input; validation deferred to calculator core (consistent with Task 8 error handling)
+- **Result Display:** Full operation transcript:
+  - Show operation name + operands + result (e.g., "add(5, 3) = 8")
+  - Error messages appear in same result area (red text or error styling)
+  - Results accumulate in scrollable output/history panel
+- **History Viewing:** Integrated session history panel:
+  - Display list of operations performed in current session (from calculator.core session history, not file)
+  - Clicking a history entry shows operation details (operation, operands, result)
+  - Alternative: separate "History" window/panel showing all session operations
+  - Note: Distinct from file-based history (Task 9); GUI shows session-only history unless explicitly integrated
+- **Mode Switching in GUI:** Toggle button or radio buttons:
+  - Two radio buttons or toggle: "Normal Mode" | "Scientific Mode"
+  - Mode switch dynamically updates operation dropdown/selector (shows only operations available in selected mode)
+  - Preserves mode choice across operations (if user switches to scientific, stays in scientific until manually switched back)
+  - Clear indication of current mode (e.g., mode label at top of window or highlighted radio button)
+- **GUI Layout:** Single main window with panes:
+  - Pane 1 (left/top): Operation selector + operand input fields
+  - Pane 2 (center/right): Result display area (scrollable text or output panel)
+  - Pane 3 (bottom): Session history panel (list of operations) or separate History window
+  - Mode toggle at top
+  - Resizable window; no fixed minimum size requirement (responsive design not required)
+- **Error Handling in GUI:** Consistent with Task 8 validation:
+  - Invalid operand input: show error message in result area (e.g., "Invalid operand: 'abc' is not a number")
+  - Operation errors (division by zero, sqrt of negative): show error message in result area
+  - Failure counting from Task 8 still applies if GUI uses same calculator backend
+  - No modal dialogs for errors; display in result area for cohesive UX
+- **GUI/CLI/Interactive Coexistence:**
+  - Main entry point (`main.py` or `__main__.py`) decides which mode to enter:
+    - If `--gui` flag provided, launch tkinter GUI
+    - Else if arguments provided, enter CLI mode (from Task 7)
+    - Else enter interactive mode (from Task 5)
+  - GUI is optional; CLI and interactive modes remain primary entry points
+  - Only one mode runs per process invocation (not simultaneous GUI + CLI in same process)
+- **Test Strategy:**
+  - GUI code should be minimally testable; focus on calculator.core logic tests (already exist)
+  - For GUI-specific code (widget setup, event handlers), consider:
+    - Separate GUI logic from tkinter calls (e.g., a `GUIController` class with testable methods, separate from `TkinterGUI` widget code)
+    - Mock tkinter imports or use a GUI testing library like `pytest-qt` (if switching to Qt) or manual integration tests
+    - Or defer GUI testing to manual QA (acceptable for single-file GUI module)
+  - All existing tests (from Tasks 1-14) must continue to pass unmodified
+  - New tests may be added for GUI-specific logic if separated from tkinter directly
+- **Implementation Notes:**
+  - Tkinter is bundled with Python; no new dependencies required
+  - GUI must not modify calculator.core behavior; it is a pure interface layer
+  - Keep GUI code isolated in its own module(s) to maintain separation of concerns
+  - Consult current codebase structure (from Tasks 11-12 refactoring) for module organization
+
+**Context from Related Issues:**
+- V3 Task 14 (#411): Scientific mode with mode switching (GUI must expose mode toggle and operation categories)
+- PR #459: Scientific mode implementation with feedback on missing trigonometric/hyperbolic/exponential functions (GUI must display all implemented operations)
+- V3 Tasks 1-13 (#372-408): All prior calculator functionality must be accessible via GUI
+- V3 Task 11 (#402): Refactored separation of concerns (GUI fits as input/UI layer above calculator.core)
+- V3 Task 9 (#396): Session history (GUI history panel should integrate or reference this)
+
+**Patterns:**
+- V3 Task 15 is the final UI/user-facing task in the structured/team cycle
+- Task 15 follows completion of all core operations (Tasks 1-4), refactoring (Tasks 11-12), and mode organization (Task 14)
+- Task 15 is an "optional" feature in the sense that it supplements (not replaces) existing CLI/interactive modes
+- Minimal specification consistent with V3 series; architecture decisions (layout, widget choices) left to implementer
+- "ai-implement:structured-team" label consistent; no new operations, pure UI/UX addition
+- Task 15 likely completes V3 structured/team cycle: all calculator features accessible via multiple interfaces (CLI, interactive, GUI)
+- Key assumption: GUI is a convenience feature; core calculator behavior unmodified
+- No mention of themes, styling, or visual polish; basic functional GUI sufficient
+
+**Priority Assessment:**
+- GUI feature is a "Could Have" in terms of core calculator function (existing modes remain fully viable)
+- However, task is explicitly required by Issue #414; treat as "Must Have" for this specific task
+- All acceptance criteria must be verifiable in automated tests where possible; GUI interactions may require manual verification
+
+---
+

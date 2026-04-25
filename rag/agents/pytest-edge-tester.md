@@ -1534,6 +1534,82 @@ All 7 failures are CORRECT and EXPECTED. They indicate the code still has the WR
 - 7 failing tests will pass once the mode split is fixed correctly
 - 375 passing tests must continue to pass (no regressions)
 
+### Cycle 30: 2026-04-25 — Issue #414 Tkinter GUI Controller (WRITE phase)
+
+**Task:** Write failing tests for new GUI controller module. Specifications: 29 tests across 2 files covering GUIController class (initialization, operation availability, mode switching, execution, arity, history) and GUI entry point integration.
+
+**Phase:** WRITE
+
+**Key Decisions:**
+1. Created new test file `tests/test_gui_controller.py` with 26 test functions covering:
+   - `TestGUIControllerInitialization`: 2 tests for normal/scientific mode initialization
+   - `TestGUIControllerOperationAvailability`: 2 tests for operation listing by mode
+   - `TestGUIControllerModeSwitch`: 4 tests for mode switching and current mode queries
+   - `TestGUIControllerOperationExecution`: 9 tests for operation execution (1 parametrized with 5 variants)
+   - `TestGUIControllerOperationArity`: 4 tests for operation arity queries
+   - `TestGUIControllerSessionHistory`: 5 tests for history tracking and clearing
+2. Created new test file `tests/test_main_entry_gui.py` with 4 tests covering:
+   - GUI flag recognition and handling
+   - CLI mode continues to work without GUI
+   - Interactive mode not broken by GUI changes
+   - GUI flag takes precedence when present
+3. Tests import GUIController from non-existent `src.calculator.gui.controller` module
+4. All parametrization done for execute_operation_add_variants to test 5 valid input scenarios
+5. Tests expect ImportError for test_gui_controller.py; main tests gracefully handle missing GUI
+
+**Patterns Found:**
+- GUIController is new; must be created in src/calculator/gui/controller.py
+- Class must accept mode parameter (normal or scientific) in __init__
+- Must provide: get_available_operations(), switch_mode(), get_current_mode(), execute_operation(), get_operation_arity(), get_session_history(), clear_session_history()
+- execute_operation() returns dict with {"success": bool, "result": value, ...} or {"success": False, "error": msg}
+- Session history tracks only successful operations, not errors
+
+**Test Results:**
+- **test_gui_controller.py**: 26 test functions written
+  - 26 tests FAILED (collection-time ImportError — module doesn't exist)
+  - Failure: ModuleNotFoundError: No module named 'src.calculator.gui'
+  - Expected behavior: all tests fail because implementation doesn't exist
+- **test_main_entry_gui.py**: 4 tests written
+  - 4 tests PASSED (tests gracefully handle missing GUI module)
+  - Tests verify existing CLI/interactive modes work and --gui flag is recognized
+- Full test suite: 382 existing tests + 30 new = 412 tests total (26 functions in controller + 1 parametrized×5 + 4 main)
+- Duration: 0.01s for collection error on test_gui_controller.py
+
+**Status:** READY FOR HANDOFF — 26 test functions fail as expected (ImportError). GUI controller implementation required.
+
+**Test Breakdown:**
+- Initialization: 2 tests (normal, scientific)
+- Operation Availability: 2 tests (normal has 13 ops, scientific has 25 ops)
+- Mode Switching: 4 tests (normal↔scientific, current mode queries)
+- Operation Execution: 9 tests (add, factorial, divide, errors, arity mismatch, unavailable ops)
+- Operation Arity: 4 tests (add=2, factorial=1, pi=0, unknown)
+- Session History: 5 tests (empty, record, multiple, no-record-on-error, clear)
+- Main Entry: 4 tests (cli_mode import, --gui handling, mode preservation)
+
+**Escalations:** None. All failures are due to missing GUIController class (expected in WRITE phase).
+
+**Handoff Notes for python-code-implementer:**
+- Create new module `src/calculator/gui/controller.py` with GUIController class
+- Class signature: `GUIController(mode: str = "normal")`
+- Public methods:
+  - `__init__(mode: str)`: Initialize with "normal" or "scientific" mode
+  - `get_current_mode() -> str`: Return current mode
+  - `switch_mode(mode: str) -> None`: Change to new mode
+  - `get_available_operations() -> list[str]`: Return operation names available in current mode
+  - `execute_operation(operation: str, operands: list) -> dict`: Execute operation, return success/error dict
+  - `get_operation_arity(operation: str) -> int`: Return arity of operation (raises KeyError if not found)
+  - `get_session_history() -> list[str]`: Return list of successful operations (not errors)
+  - `clear_session_history() -> None`: Clear session history
+- Implementation notes:
+  - Normal mode: 13 operations (add, subtract, multiply, divide, modulo, factorial, square, cube, square_root, cube_root, power, log10, ln)
+  - Scientific mode: 25 operations (13 from normal + 12 new: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e)
+  - execute_operation() returns: `{"success": True, "result": value, "operation": name, "operands": list}` on success
+  - execute_operation() returns: `{"success": False, "error": message}` on error
+  - Session history only records successful operations (errors do not appear in history)
+- 26 failing tests ready for implementation verification
+- 4 main entry tests must remain passing (backward compatibility)
+- Full test suite (382 existing) must continue passing
+
 ### Cycle 29: 2026-04-25 — Issue #411 Test Fixture Correction (VERIFY phase)
 
 **Task:** Fix 2 remaining failing tests in `tests/test_mode_switching.py` with incorrect assertions about operation availability in normal mode.
@@ -1666,3 +1742,59 @@ Modify `_build_registry(mode)` to:
 - 3 mode registry tests are failing and will pass once mode split is corrected
 - Full test suite (233 existing tests) will remain passing after fix
 
+
+### Cycle 28: 2026-04-25 — Issue #414 Tkinter GUI Integration (VERIFY phase)
+
+**Task:** Run full test suite after implementer adds GUI support (controller, window, __main__.py --gui flag).
+
+**Phase:** VERIFY
+
+**Implementation Summary:**
+- Added `src/calculator/gui/__init__.py`: Package initialization
+- Added `src/calculator/gui/controller.py`: GUIController class managing mode switching, operation execution, and session history
+- Added `src/calculator/gui/window.py`: GUIWindow class for tkinter UI rendering and event handling
+- Modified `src/__main__.py`: Added --gui flag detection that launches GUI instead of CLI/interactive mode
+- Created `tests/test_gui_controller.py`: 30 tests for GUIController initialization, mode switching, operation execution, arity, and session history
+- Created `tests/test_main_entry_gui.py`: 4 tests for --gui flag integration with CLI entry point
+
+**Test Results:**
+- Total tests collected: 419
+- Passed: 416
+- Failed: 0
+- Skipped: 3 (pre-existing modularization tests in test_modularization.py)
+- Duration: 0.38s
+
+**Status:** ALL TESTS PASS ✓
+
+**Test Coverage Summary:**
+- Baseline tests (233): All passing
+- Scientific operations tests (75): All passing
+- Mode registry tests (16): All passing (mode split was fixed in previous cycle)
+- GUI controller tests (30): All passing
+- Main entry GUI tests (4): All passing
+- All tests from previous cycles: Confirmed passing with no regressions
+
+**GUI Test Details:**
+- **TestGUIControllerInitialization** (2 tests): Normal and scientific mode initialization
+- **TestGUIControllerOperationAvailability** (2 tests): Operation list retrieval for each mode
+- **TestGUIControllerModeSwitch** (4 tests): Mode switching and current mode retrieval
+- **TestGUIControllerOperationExecution** (8 tests): Operation execution with success, error, and edge cases
+- **TestGUIControllerOperationArity** (4 tests): Arity retrieval for various operations
+- **TestGUIControllerSessionHistory** (5 tests): History tracking, recording, and clearing
+- **TestMainGuiIntegration** (4 tests): --gui flag detection, CLI vs GUI mode selection
+
+**Implementation Quality:**
+- GUIController correctly manages mode state and switching
+- Operations execute with proper error handling (ZeroDivisionError, ValueError, etc.)
+- Session history is accurately recorded for successful operations only
+- --gui flag properly overrides CLI/interactive mode in entry point
+- No import errors, no runtime failures
+
+**Escalations:** None. All tests pass. No bugs found in implementation.
+
+**Handoff Notes for Orchestrator:**
+- VERIFY phase complete. Full test suite (416 tests) passing.
+- GUI implementation is solid and well-tested.
+- No regressions from previous cycles.
+- 3 skipped tests are pre-existing (not related to this task).
+- Ready for final commit and PR creation.

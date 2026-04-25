@@ -1,3 +1,20 @@
+## Run: Issue #414 — V3 Task 15 - Structured/team (2026-04-25)
+
+- **Branch:** task/issue-414-tkinter-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/__init__.py` — new GUI package init, exports GUIController and GUIWindow
+  - `src/calculator/gui/controller.py` — new GUIController class: pure Python business logic (no tkinter), mode management, operation execution with error dicts, session history
+  - `src/calculator/gui/window.py` — new GUIWindow class: tkinter GUI with mode radio buttons, operation dropdown, dynamic operand fields, result label, scrollable history listbox
+  - `src/__main__.py` — added --gui flag support to launch tkinter GUI instead of CLI/interactive mode
+  - `tests/test_gui_controller.py` — 30 new tests for GUIController logic (modes, execution, history, arity)
+  - `tests/test_main_entry_gui.py` — 4 new tests for --gui flag entry point integration
+- **Purpose:** Add tkinter GUI extending the calculator application (Issue #414); GUI is additive, CLI and interactive modes unchanged
+- **Risks:** tkinter unavailable in headless CI — mitigated by lazy import in __init__.py; GUIWindow tests mock tkinter
+- **Tests passed:** 416 passed, 0 failed, 3 skipped
+
+Duration: 902.5s | Cost: $1.831267 USD | Turns: 27
+
 ## Run: Fix PR #459 — feat: add scientific mode with interactive mode switching (2026-04-25)
 
 - **Branch:** task/issue-411-scientific-mode
@@ -399,3 +416,14 @@ Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
   - `artifacts/mode-switching-state-machine.puml` — state machine for MODE_NORMAL ↔ MODE_SCIENTIFIC transitions
 
 Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
+
+## Run: update-diagrams — Tkinter GUI PlantUML Diagrams (2026-04-25)
+
+- **Branch:** task/issue-414-tkinter-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — new class diagram for GUI package showing GUIController, GUIWindow, and their relationships to core calculator components
+  - `artifacts/gui_calculate_flow.puml` — new activity diagram showing the full GUI calculate flow from launch through mode selection, operation execution, and history update
+  - `artifacts/gui_operation_sequence.puml` — new sequence diagram for GUI operation execution showing interactions between User, GUIWindow, GUIController, OperationRegistry, and Operation
+
+Duration: 343.9s | Cost: $0.663255 USD | Turns: 4

@@ -1,0 +1,61 @@
+@startuml GUI_Calculate_Flow
+title GUI Calculate Flow — Activity Diagram
+
+start
+:User launches ``python -m src --gui``;
+:Application creates GUIController(mode="scientific");
+:Application creates GUIWindow(controller);
+:GUIWindow builds UI and calls run();
+:tkinter mainloop starts;
+:GUI displays with Scientific mode selected;
+:GUIWindow updates operation dropdown with available operations;
+
+repeat
+  :User selects operation from dropdown;
+  if (operation has arity > 0?) then
+    :GUIWindow creates dynamic operand entry fields;
+    :User enters operand values;
+  else
+    note right: For constants like pi, e (arity = 0)
+    :No operand fields displayed;
+  endif
+
+  :User clicks Calculate button;
+  :GUIWindow reads operand text from entry fields;
+
+  if (All operands valid numbers?) then
+    :Convert operand strings to float;
+    :Call GUIController.execute_operation(op_name, operands);
+    if (Operation execution succeeds?) then
+      :GUIWindow formats result display string;
+      :Update result label with formatted result;
+      :GUIController appends result to _session_history;
+      :GUIWindow calls get_session_history();
+      :Update history listbox;
+    else
+      :Extract error message from result dict;
+      :Display error in result label;
+    endif
+  else
+    :Display "Error: Invalid number" in result label;
+  endif
+
+  :User can modify operands and recalculate;
+  :User can select different operation;
+
+  if (User clicks mode radio button?) then
+    :Call GUIController.switch_mode(new_mode);
+    :GUIController clears _session_history;
+    :GUIWindow updates operation dropdown;
+    :GUIWindow clears operand entry fields;
+    :GUIWindow updates history listbox (now empty);
+    :Continue with new mode;
+  endif
+
+repeat while (User keeps calculator window open?)
+
+:User closes window;
+:tkinter mainloop terminates;
+stop
+
+@enduml
