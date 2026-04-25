@@ -1,3 +1,14 @@
+## Run: update-diagrams — Redesign GUI to iOS-inspired dark grid layout (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — updated to show _ButtonConfig class, new GUIWindow fields/methods (grid layout), removed old form-based members
+  - `artifacts/gui_calculate_flow.puml` — replaced dropdown-based flow with button-press grid flow, two-step arithmetic state machine, scientific panel conditional path
+  - `artifacts/gui_operation_sequence.puml` — replaced Calculate-button sequence with digit/operator/equals/scientific button interaction paths
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #464 — V3 Task 16 - Redesign - Structured/team (2026-04-25)
 
 - **Branch:** task/issue-464-redesign-gui

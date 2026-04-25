@@ -1,58 +1,103 @@
 @startuml GUI_Calculate_Flow
-title GUI Calculate Flow — Activity Diagram
+title GUI Button-Press Grid — Activity Diagram
 
 start
-:User launches ``python -m src --gui``;
-:Application creates GUIController(mode="scientific");
-:Application creates GUIWindow(controller);
-:GUIWindow builds UI and calls run();
-:tkinter mainloop starts;
-:GUI displays with Scientific mode selected;
-:GUIWindow updates operation dropdown with available operations;
+:User launches with --gui flag;
+:GUIWindow created with GUIController(mode="scientific");
+:_build_display() → result label
+(28pt, right-aligned, white-on-black);
+:_build_standard_grid() → 4×5 button grid;
+if (mode == "scientific"?) then (yes)
+  :_build_scientific_panel() → 2×3 scientific buttons;
+endif
+:run() → tkinter mainloop starts;
 
 repeat
-  :User selects operation from dropdown;
-  if (operation has arity > 0?) then
-    :GUIWindow creates dynamic operand entry fields;
-    :User enters operand values;
-  else
-    note right: For constants like pi, e (arity = 0)
-    :No operand fields displayed;
-  endif
 
-  :User clicks Calculate button;
-  :GUIWindow reads operand text from entry fields;
-
-  if (All operands valid numbers?) then
-    :Convert operand strings to float;
-    :Call GUIController.execute_operation(op_name, operands);
-    if (Operation execution succeeds?) then
-      :GUIWindow formats result display string;
-      :Update result label with formatted result;
-      :GUIController appends result to _session_history;
-      :GUIWindow calls get_session_history();
-      :Update history listbox;
-    else
-      :Extract error message from result dict;
-      :Display error in result label;
+  fork
+    :Digit button pressed (0–9 or ".");
+    :_on_digit(digit);
+    if (_awaiting_second == True?) then (yes)
+      :clear display;
+      :set _awaiting_second = False;
+    else (no)
     endif
-  else
-    :Display "Error: Invalid number" in result label;
-  endif
+    :append digit to display
+    (replace "0" if sole character);
 
-  :User can modify operands and recalculate;
-  :User can select different operation;
+  fork again
+    :Operator button pressed (+, −, ×, ÷);
+    :_on_operator(op_name);
+    :store display value in _operand1;
+    :store op_name in _pending_op;
+    :set _awaiting_second = True;
 
-  if (User clicks mode radio button?) then
-    :Call GUIController.switch_mode(new_mode);
-    :GUIController clears _session_history;
-    :GUIWindow updates operation dropdown;
-    :GUIWindow clears operand entry fields;
-    :GUIWindow updates history listbox (now empty);
-    :Continue with new mode;
-  endif
+  fork again
+    :Equals button pressed;
+    :_on_equals();
+    if (_pending_op is None?) then (yes)
+      :return (do nothing);
+    else (no)
+      :convert _operand1 and display to float;
+      if (conversion fails?) then (yes)
+        :set display to "Error";
+      else (no)
+        :GUIController.execute_operation\n(_pending_op, [op1, op2]);
+        if (success?) then (yes)
+          :format result;
+          :update display;
+        else (no)
+          :set display to "Error";
+        endif
+      endif
+      :reset _pending_op = None;
+      :reset _awaiting_second = False;
+    endif
 
-repeat while (User keeps calculator window open?)
+  fork again
+    :Clear button pressed (C);
+    :_on_clear();
+    :set display to "0";
+    :reset _operand1, _pending_op, _awaiting_second;
+
+  fork again
+    :Delete button pressed (Del);
+    :_on_delete();
+    :remove last character;
+    if (display empty?) then (yes)
+      :show "0";
+    endif
+
+  fork again
+    :Mode button pressed;
+    :_on_mode_toggle();
+    :get current mode from GUIController;
+    :switch to opposite mode;
+    :GUIController.switch_mode(new_mode);
+    if (new_mode == "scientific"?) then (yes)
+      :_build_scientific_panel() shows scientific buttons;
+    endif
+
+  fork again
+    note right: Only visible in scientific mode
+    :Scientific button pressed\n(√, x², xʸ, n!, ln, log);
+    :_on_scientific_op(op_name);
+    :get operand from display as float;
+    :GUIController.get_operation_arity(op_name);
+    if (arity == 1?) then (yes)
+      :execute_operation(op_name, [operand]);
+    else (no)
+      :execute_operation(op_name, [operand, 2]);
+    endif
+    if (success?) then (yes)
+      :update display with result;
+    else (no)
+      :set display to "Error";
+    endif
+
+  end fork
+
+repeat while (window open?)
 
 :User closes window;
 :tkinter mainloop terminates;
