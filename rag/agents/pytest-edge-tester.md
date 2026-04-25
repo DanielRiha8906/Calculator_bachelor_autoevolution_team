@@ -1530,3 +1530,117 @@ WRITE phase complete. All new tests written and passing. Implementation already 
 - Calculation tests use string conversion and float parsing to handle GUI result formatting
 - Unary operation classification tests use simple boolean assertions for clear intent
 
+### Cycle 11 (2026-04-25)
+**Task:** Issue #465 — iOS Calculator Redesign (test specifications)  
+**Phase:** WRITE  
+**Test Cases Added:** 34 new tests  
+- **Category 1 (Theme Dictionary - 3 tests):** _THEME module-level dict existence, required keys (16 color/style keys), valid hex color format  
+- **Category 2 (Operation Symbols Dictionary - 3 tests):** _OPERATION_SYMBOLS existence, required operation keys (14 operations), string values  
+- **Category 3 (GuiCalculator Class - 2 tests):** Class existence, instantiation with mocked root  
+- **Category 4 (Result Display - 4 tests):** Background color #000000, foreground color #FFFFFF, font (monospace, size 32, bold), right alignment (anchor='e')  
+- **Category 5 (Mode Toggle Button - 4 tests):** Button attribute existence, text "Scientific" in normal mode, text "Normal" in scientific mode, toggle switches mode  
+- **Category 6 (Number Pad - 2 tests):** Buttons 1-9 exist, zero button columnspan=3  
+- **Category 7 (Operation Grid - 3 tests):** 4-column layout, normal mode buttons, scientific mode buttons  
+- **Category 8 (Symbol Mapping - 3 tests):** Add→"+", Multiply→"×", Sqrt→"√"  
+- **Category 9 (Button Theming - 5 tests):** Arithmetic operators orange (#FF9500), normal ops gray (#333333), scientific ops dark (#1C1C1E), relief flat, borderwidth 0  
+- **Category 10 (Hover Effects - 3 tests):** Enter/Leave bindings exist, hover changes bg, leave reverts bg  
+- **Category 11 (Window Theming - 2 tests):** Window bg from theme (#000000), frame backgrounds from theme  
+
+**Test Status:** ALL 34 NEW TESTS FAIL as expected. Error patterns:
+- Tests 1-3: `AttributeError: module 'src.ui.gui' has no attribute '_THEME'` — _THEME dict not defined
+- Tests 4-6: `AttributeError: module 'src.ui.gui' has no attribute '_OPERATION_SYMBOLS'` — operation symbols dict not defined  
+- Tests 7-34: `AttributeError: module 'src.ui.gui' has no attribute 'GuiCalculator'` — GuiCalculator class not defined
+
+This is correct behavior for WRITE phase; the entire GuiCalculator class and its dependencies are new to implement.
+
+**Test File Structure:**
+- New test file: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui_redesign.py`
+- Uses `@patch('src.ui.gui.tk.Tk')` and `MagicMock()` for tkinter mocking, enabling headless testing
+- Tests organized into 11 logical test classes matching architectural components
+- Uses `hasattr()` and `cget()` for widget introspection where available
+- Tests gracefully handle both mocked and real tkinter widget behavior
+- Theme tests use regex pattern matching for hex color validation
+- Button theming tests parametrize across multiple operations (arithmetic, normal, scientific)
+
+**Collected Tests:** 34 tests successfully collected by pytest
+
+**Handoff Notes:** 
+All 34 test specifications from the architect have been implemented and confirmed failing. The test file is syntactically valid (34/34 tests collected). Ready for python-code-implementer to implement:
+1. _THEME dictionary (16 required keys with valid hex colors)
+2. _OPERATION_SYMBOLS dictionary (14 required operation symbol mappings)
+3. GuiCalculator class with:
+   - Result display label with specific colors/font/alignment
+   - Mode toggle button with dynamic text
+   - Number pad (1-9 buttons, zero with columnspan)
+   - Operation grid (4 columns, mode-specific buttons)
+   - Button theming (colors by operation type, flat relief, zero borderwidth)
+   - Hover effect handlers with visual feedback
+   - Window and frame background theming from _THEME
+
+**Patterns Found:**
+- iOS calculator redesign requires pure UI/styling tests (no calculation logic)
+- Widget introspection via `cget()` enables theme/config verification in mocked environments
+- Mode toggle button text is inverted to suggest the other mode (UI affordance)
+- Button colors follow iOS convention: arithmetic orange, normal gray, scientific darker
+- Hover effects require bidirectional handlers (_on_button_enter, _on_button_leave)
+- All colors must be valid hex format (#RRGGBB); font specs include size and weight
+
+
+### Cycle 11 (2026-04-25)
+**Task:** Issue #465 — iOS Calculator Redesign (GUI Enhancements)
+**Phase:** VERIFY
+**Test Execution:** Full test suite run via `python -m pytest tests/ -v`
+
+**Results Summary:**
+- Total tests run: 504
+- Tests passing: 502 (99.6%)
+- Tests failing: 2 (0.4%)
+- Suite status: **RED** (2 failures in existing tests; 34 new tests all PASS)
+
+**New Test Suite (test_gui_redesign.py) Status:**
+- 34 new tests in test_gui_redesign.py covering GUI redesign features
+- **ALL 34 NEW TESTS PASS** ✓
+  - TestThemeDictionary (3 tests): PASS
+  - TestOperationSymbolsDictionary (3 tests): PASS
+  - TestGuiCalculatorClass (2 tests): PASS
+  - TestResultDisplay (4 tests): PASS
+  - TestModeToggleButton (4 tests): PASS
+  - TestNumberPadLayout (2 tests): PASS
+  - TestOperationGridLayout (3 tests): PASS
+  - TestSymbolMapping (3 tests): PASS
+  - TestButtonTheming (5 tests): PASS
+  - TestHoverBindings (3 tests): PASS
+  - TestWindowTheming (2 tests): PASS
+
+**Failing Tests (in test_gui.py - existing tests, regression issue):**
+1. `test_op_var_reset_to_first_scientific_operation` 
+   - Expected: `_op_var.get()` returns `'acos'` (first scientific operation)
+   - Actual: `_op_var.get()` returns `''` (empty string)
+   - Root cause: _TkStub.set() method (line 84) doesn't store the value; _TkStub.get() (line 85) always returns `""`
+
+2. `test_op_var_valid_normal_operation_after_switch`
+   - Expected: `_op_var.get()` returns a valid normal-mode operation
+   - Actual: `_op_var.get()` returns `''` (empty string)
+   - Root cause: Same as above — _TkStub mock implementation doesn't preserve StringVar values
+
+**Root Cause Analysis:**
+In `src/ui/gui.py` lines 62-85, the `_TkStub` class is used as a mock for tkinter widgets when tk is unavailable. The issue:
+- Line 84: `def set(self, *a, **kw): pass` — silently ignores any value
+- Line 85: `def get(self, *a, **kw): return ""` — always returns empty string
+
+When `_rebuild_operation_menu()` calls `self._op_var.set(ops[0])` (line 199), the stub's set() doesn't store the value. When the test calls `self._op_var.get()`, it returns `""` instead of the stored value.
+
+The _TkStub needs to be enhanced to maintain state for set()/get() pairs, especially for StringVar operations.
+
+**Assessment:**
+- The 34 new redesign tests all PASS, indicating the new implementation code is correct
+- The 2 failing tests are a regression in an existing test suite, caused by insufficient mock implementation
+- This is an implementation bug in src/ui/gui.py _TkStub class, NOT a test bug
+- All other existing tests (500 tests) continue to PASS
+
+**Escalation Required:**
+YES — Escalating to PROGRAMMER to fix the _TkStub.set()/get() implementation in src/ui/gui.py to properly store and retrieve StringVar values during test mocking.
+
+**Handoff Notes:**
+The implementer must enhance the _TkStub class to track values in set()/get() calls. A simple approach: add an instance variable like `self._value = ""` that gets set in set() and returned in get(). This fix will unblock the 2 failing tests while preserving all other passing tests.
+

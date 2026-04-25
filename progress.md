@@ -16,6 +16,19 @@
 
 Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 
+## Run: Issue #465 — V3 Task 16 - Redesign - Expert/team (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added _THEME dict (16 keys), _OPERATION_SYMBOLS dict (19 mappings), GuiCalculator class with iOS-style layout (result display, mode toggle, number grid, operation grid, hover effects); fixed _TkStub set()/get() to preserve state
+  - `tests/test_gui_redesign.py` — 34 new tests covering theme dict, symbol mapping, GuiCalculator class, result display styling, mode toggle, number pad layout, operation grid, button theming, hover bindings, window theming
+- **Purpose:** Fully redesign GuiCalculator in gui.py to iOS-style layout with centralized _THEME dict, symbol-mapped operation buttons, color-grouped buttons (orange operators, gray normal, dark scientific), hover effects, and explicit background propagation.
+- **Risks:** tkinter still unavailable in headless CI; GuiCalculator uses same _TkStub stub pattern as CalculatorApp for test safety. CalculatorApp preserved unchanged for backward compatibility.
+- **Tests passed:** 504 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction — trig ops (2026-04-25)
 
 - **Branch:** task/issue-415-tkinter-gui

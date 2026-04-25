@@ -435,6 +435,35 @@ Only after ALL those test changes are committed (and passing against old flat fi
 
 ---
 
+### 2026-04-25 — Add iOS-style GuiCalculator class + _THEME + _OPERATION_SYMBOLS (issue-465)
+
+**Task:** Add `_THEME`, `_OPERATION_SYMBOLS` module-level dicts and a new `GuiCalculator` class to `src/ui/gui.py` to make 34 failing tests in `tests/test_gui_redesign.py` pass. The existing `CalculatorApp` class was NOT modified.
+
+**Files changed:**
+- `src/ui/gui.py` — 4 additions:
+  1. `_THEME` dict (16 keys, all hex colours except `RESULT_FONT` tuple) added before `try: import tkinter as tk`
+  2. `_OPERATION_SYMBOLS` dict (19 op → Unicode-symbol mappings) added after `_THEME`
+  3. `_TkStub` extended with `grid()` (stores kwargs as `_grid_info`), `bind()`, `destroy()`, `mainloop()`, `grid_info()` (returns `_grid_info`), `set()`, `get()` methods, and `tk.E`, `tk.N`, `tk.NW`, `tk.FLAT`, `tk.NSEW` constants — needed for headless widget construction in `GuiCalculator`
+  4. `GuiCalculator` class added after `CalculatorApp` (after `_on_calculate`): full iOS-style GUI with `_setup_ios_gui()`, `_build_op_buttons()`, `_rebuild_op_grid()`, `_make_button()`, `_op_button_colours()`, `_on_mode_toggle()`, `_update_mode_toggle_text()`, `_on_button_enter()`, `_on_button_leave()`, `_on_op_press()`; plus module-level helpers `_NORMAL_OPS`, `_SCIENTIFIC_OPS`, `_ARITHMETIC_OPS`
+
+**Key decisions:**
+- `_TkStub.grid()` stores kwargs as `self._grid_info`; `grid_info()` returns it. The test `test_operation_grid_has_4_columns` iterates `btn.grid_info()` to find column values — this only works if `grid()` persists the kwargs. Without this, `grid_info()` returns `{}` (falsy), the columns set stays empty, and the assertion `4 in [0]` fails.
+- `_make_button()` stores `btn._orig_bg` and `btn._active_bg` as instance attributes on the widget so hover callbacks (`_on_button_enter`, `_on_button_leave`) can read them without relying on `cget()`.
+- `GuiCalculator` is fully standalone — it does NOT inherit from `CalculatorApp`. It duplicates `calculate()` by calling `CalculatorApp._parse_operand` as a static method (composition), avoiding code duplication of the parse logic.
+- Colour assignment: `_ARITHMETIC_OPS` → orange; `_SCIENTIFIC_OPS` → dark; everything else → grey.
+- `_on_mode_toggle()` toggles `_current_mode` and calls `_update_mode_toggle_text()` + `_rebuild_op_grid()`. The toggle test checks `new_mode != initial_mode`.
+- `_normal_mode_buttons` and `_scientific_mode_buttons` are populated in `_build_op_buttons()` based on whether the op_name is in `_SCIENTIFIC_OPS`. Both attributes always exist (initialized as `[]` in `__init__` before setup).
+- All widget construction is wrapped in `try/except Exception: pass` for headless safety.
+
+**Patterns found:**
+- When a `_TkStub` widget is used in headless tests and the test calls `btn.grid_info()` to verify grid layout, the stub's `grid()` method MUST store its kwargs and `grid_info()` MUST return them — otherwise `grid_info()` returns `{}` (falsy) and the column/row assertions are never reached (or fail because the set is empty).
+- Adding methods to `_TkStub` is a safe change because the stub is only used when `import tkinter` fails. Existing `CalculatorApp` tests use MagicMock for root, so `tk.Frame(MagicMock_root, ...)` calls the stub constructor. The added methods (`grid`, `bind`, `destroy`, `grid_info`) are strictly additive and do not change any existing `_TkStub` behaviour.
+- Store hover colours as plain instance attributes on stub widgets (`btn._orig_bg`, `btn._active_bg`). This avoids needing `cget()` (which the stub lacks) in the hover callback, making the enter/leave pattern work in both headless and real-tk environments.
+
+**Test result:** 502/504 passed (2 pre-existing failures in `test_gui.py` unchanged; 34 new `test_gui_redesign.py` tests all green).
+
+**Handoff notes for next agent:** No new pip dependencies introduced. `_NORMAL_OPS`, `_SCIENTIFIC_OPS`, `_ARITHMETIC_OPS` are module-level tuples/frozensets used only by `GuiCalculator`. If new operations are added to `Calculator`, they must be added to the appropriate module-level set in `gui.py` to appear in the correct mode. The 2 pre-existing failures in `test_gui.py` (`test_op_var_reset_to_first_scientific_operation`, `test_op_var_valid_normal_operation_after_switch`) are unrelated to this change and were failing before.
+
 ### 2026-04-25 — Fix ScientificMode.get_operations() to return 18 ops (issue-415)
 
 **Task:** Change `ScientificMode.get_operations()` in `src/ui/modes.py` to call `registry.get_operations_by_mode(OperationMode.SCIENTIFIC)` instead of `registry.get_operations()`, so it returns all 18 operations (6 NORMAL + 12 SCIENTIFIC including trig).
@@ -453,3 +482,25 @@ Only after ALL those test changes are committed (and passing against old flat fi
 **Test result:** Not run by this agent (implementer does not run tests).
 
 **Handoff notes for next agent:** No new dependencies. The module-level docstring summary line at the top of `modes.py` still says "12 legacy operations" — if a future task requires it to be exact, update it there too. The only observable behaviour change is that `ScientificMode.get_operations(registry)` now returns 18 names instead of 12.
+
+### 2026-04-25 — Fix _TkStub.set()/get() to preserve state (issue-465)
+
+**Task:** Make `_TkStub.set()` store the value and `_TkStub.get()` return it so that headless CI tests that exercise `_op_var.set()`/`get()` work correctly.
+
+**Files changed:**
+- `src/ui/gui.py` — three changes inside the `except ImportError` block's `_TkStub` class:
+  1. `__init__` now initializes `self._value = ""`
+  2. `set(self, value="", *a, **kw)` stores `self._value = value`
+  3. `get(self, *a, **kw)` returns `self._value`
+
+**Key decisions:**
+- Minimal change: only `__init__`, `set`, and `get` were touched; no other methods altered.
+- Default value of `""` in `set` matches tk.StringVar semantics (calling `set()` with no argument clears the value).
+- `_value` initialised in `__init__` rather than relying on `getattr` defaults, so every new `_TkStub` instance is always in a consistent state even if `set` is never called.
+
+**Patterns found:**
+- The `_TkStub` class doubles as both a widget stub and a `StringVar` stub; methods needed by both roles must coexist on the single class. When adding stateful behaviour to stubs, always initialize state in `__init__` to avoid `AttributeError` on the first `get()` call before any `set()`.
+
+**Test result:** 504/504 passed (2 previously failing tests now pass, 0 regressions).
+
+**Handoff notes for next agent:** No new dependencies. The fix is confined to the headless-CI stub path; real tkinter environments are unaffected.

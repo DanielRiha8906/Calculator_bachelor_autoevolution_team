@@ -677,3 +677,96 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Owner mention of "18 operations" introduces new ambiguity about operation scope; may indicate missing trig ops or misalignment on expected feature set
   - Mode switching is core to issue #415 requirement; its failure is blocking PR merge
 
+### Cycle: 2026-04-25 — Issue #465: V3 Task 16 - GUI Redesign (iOS-Style) — CURRENT CYCLE
+- **Task Type:** Visual redesign (GUI layer styling and layout overhaul)
+- **Scope:** Fully redesign tkinter GUI to adopt modern iOS-style calculator appearance; preserve all calculation logic, operation functionality, and mode switching; focus is visual layout and styling only
+- **Key Patterns:**
+  - Clear, explicit specification of layout, colors, fonts, symbols, and visual behavior
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "visual redesign only, not a restyle of existing widgets — rebuild layout from scratch inside GuiCalculator"
+  - Explicitly lists 5 major layout sections with precise specifications (result display, mode toggle, number grid, operation grid, button colors)
+  - Explicit out-of-scope: do NOT modify Calculator, OperationDispatcher, History, Mode, BaseMode, OPERATIONS, or any file outside gui.py
+  - Follows completion of GUI implementation (issue #415); builds on working tkinter GUI that needs visual overhaul
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** **Result Display Panel** — full-width label, right-aligned, black bg (#000000), white text (#FFFFFF), 32pt bold monospaced font; shows current result or "0" on startup
+  2. **FR2 (MUST HAVE):** **Mode Toggle Button** — text changes based on mode ("Scientific" if normal mode, "Normal" if scientific mode); clicking switches modes
+  3. **FR3 (MUST HAVE):** **Number Grid** — 3 columns × 4 rows; numbers 1–9 in top 3 rows, digit 0 in bottom row across all 3 columns; all buttons square
+  4. **FR4 (MUST HAVE):** **Operation Button Grid** — 4 columns, rows determined by operation count in current mode; all buttons square (equal width/height via grid weight), flat relief (no border)
+  5. **FR5 (MUST HAVE):** **Button Color Categorization** — Three color groups with specified bg and activebackground:
+     - Arithmetic operators (add, subtract, multiply, divide): bg=#FF9500, fg=#FFFFFF, activebackground=#FFB143
+     - Scientific/utility ops (in scientific mode): bg=#1C1C1E, fg=#FFFFFF, activebackground=#2C2C2E
+     - Standard ops (in normal mode): bg=#333333, fg=#FFFFFF, activebackground=#4D4D4D
+  6. **FR6 (MUST HAVE):** **Operation Symbol Mapping** — Use Unicode symbols instead of descriptions. Provided mapping: add→"+", subtract→"−", multiply→"×", divide→"÷", sqrt→"√", square→"x²", cube→"x³", power→"xʸ", factorial→"n!", log→"log", ln→"ln", sin→"sin", cos→"cos", tan→"tan", pi→"π", e→"e" (plus additional as appropriate)
+  7. **FR7 (MUST HAVE):** **Centralized Theme Dictionary** — Single `_THEME` dict at top of gui.py containing all color, font, and visual constants; no hardcoded values elsewhere
+  8. **FR8 (MUST HAVE):** **Explicit Background Color Assignment** — Window, all frames, all non-button widgets must explicitly set `bg` from `_THEME`; tkinter does not inherit colors automatically
+  9. **FR9 (MUST HAVE):** **Hover Effects** — All buttons bind `<Enter>` and `<Leave>` events; on hover, swap background to lighter shade (defined in `_THEME`); on leave, revert to default
+- **Constraints (from issue body):**
+  - **SC1:** Do NOT modify `Calculator`, `OperationDispatcher`, `History`, `Mode`, `BaseMode`, `OPERATIONS`, or any file outside `gui.py`
+  - **SC2:** Calculation logic must remain unchanged; redesign is visual-only
+  - **SC3:** All styling must be centralized in `_THEME` dict
+  - **SC4:** Update relevant tests to reflect changes
+- **Current State (Discovered from RAG + Prior Context):**
+  - **GUI already exists:** Issue #415 implemented tkinter GUI with mode switching, operation selection, operand entry
+  - **Current GUI status:** Tests passing (445+); manual testing reveals mode switching issues (from PR #462 feedback)
+  - **Current operations:** 12 confirmed (add, subtract, multiply, divide, power, factorial, square, cube, sqrt, cbrt, ln, log10); possibly 18 if trig ops from #412 are implemented
+  - **Mode support:** SimpleMode (6 ops) and ScientificMode (12 ops) exist; mode switching broken in GUI (per PR #462 feedback)
+  - **Existing GUI structure:** Likely uses basic tkinter layout (pack/grid mix); lacks theme dict and may have hardcoded colors/fonts
+- **Key Ambiguities Requiring Architect Clarification:**
+  1. **Window Dimensions and Responsiveness** — Issue specifies iOS-style layout but no window size. Fixed size (e.g., 400×600px) or resizable? Does layout scale, or widgets maintain fixed sizes? (ASSUMPTION: fixed or minimum window size acceptable)
+  2. **Hover Shade Definitions** — Issue states "lighter shade" but only provides one example (#FFB143 for orange). What are hover shades for gray (#333333) and dark (#1C1C1E)? (ASSUMPTION: architect must define all hover shades in _THEME)
+  3. **Monospace Font Family** — Task specifies "monospaced" but tkinter has different names per OS. Use "Courier", "Courier New", "TkFixedFont", or platform-agnostic? (ASSUMPTION: architect to specify)
+  4. **Operand Entry Mechanism** — Existing GUI supports operand entry; should number buttons append to operand, or replace? (ASSUMPTION: reuse existing operand entry logic; visual redesign does not change interaction model)
+  5. **Decimal Point Button** — Issue omits decimal point; should GUI include it (would require layout adjustment)? Or integers only? (ASSUMPTION: out of scope for this redesign; not mentioned)
+  6. **Equals/Compute Button** — Issue omits explicit equals button; is result auto-computed on operand entry, or does equals button exist? (ASSUMPTION: reuse existing computation model; visual redesign does not change when result is computed)
+  7. **Trig Operations Display** — Issue includes sin/cos/tan/pi/e in symbol mapping but unclear if these operations are available. If not implemented, should GUI stub them? (ASSUMPTION: architect must clarify which operations are actually available)
+  8. **Mode Toggle Position and Style** — Issue specifies "A button" but no details on position (between result and number grid?), size, or styling. (ASSUMPTION: architect to specify exact placement and styling)
+- **Constraints:**
+  - Must modify ONLY `src/ui/gui.py` (or whatever the current GUI file is named)
+  - Must not change calculation logic, operation registry, mode switching logic
+  - Must not change any file outside gui.py
+  - All 445+ existing tests must pass after redesign (no regressions)
+  - Visual redesign is cosmetic-only; behavior unchanged
+- **Acceptance Criteria (Measurable):**
+  1. **AC1 — Layout Integrity:** GUI has 5 distinct visual sections (result, mode toggle, number grid, operation grid, colors) visible and properly positioned per spec
+  2. **AC2 — Result Display:** Panel shows "0" on startup, updates after operations, right-aligned, black bg (#000000), white text (#FFFFFF), 32pt bold monospaced
+  3. **AC3 — Mode Toggle:** Button exists, text switches ("Scientific"/"Normal"), clicking switches modes, operation grid re-renders within 100ms
+  4. **AC4 — Number Grid:** 10 buttons (0–9) arranged 3×3 + 1×3, all square, aligned, clickable, responsive
+  5. **AC5 — Operation Grid:** 4 columns, rows = ceil(operation_count/4), buttons square, flat relief, no border
+  6. **AC6 — Color Accuracy:** Sample 5 buttons and verify colors match spec exactly (orange #FF9500, dark #1C1C1E, gray #333333, whites #FFFFFF)
+  7. **AC7 — Symbol Mapping:** All specified symbols render correctly as Unicode (no mojibake); source code is UTF-8; symbols are literal, not escape sequences
+  8. **AC8 — Theme Dictionary:** `_THEME` dict exists at top of gui.py; contains all colors, fonts, padding; no hardcoded values outside dict
+  9. **AC9 — Background Propagation:** Sample 5 widgets (window, frames, labels) and verify all have `bg=_THEME[...]` explicitly set
+  10. **AC10 — Hover Effects:** All buttons respond to `<Enter>`/`<Leave>` events; background swaps to lighter shade on hover, reverts on leave; hover does not break clicks
+  11. **AC11 — Test Regression:** All 445+ tests pass; no tests broken or removed; test count same or increased
+  12. **AC12 — Functional Parity:** Operations produce same results as before; mode switching logic unchanged; history and logging unaffected
+- **Handoff Notes for Architect:**
+  1. **Clarify window size and responsiveness** — fixed dimensions or resizable? Minimum size? (Recommend: fixed 400×600 or similar for stable iOS-style layout)
+  2. **Define all hover shade colors** — provide hex codes for each color group (orange hover, gray hover, dark hover)
+  3. **Specify monospace font strategy** — which font family (Courier, Courier New, TkFixedFont, or system default)?
+  4. **Clarify mode toggle placement** — exact position in layout (between result and number grid?), size, styling
+  5. **Confirm available operations** — are trig ops (sin, cos, tan, etc.) currently implemented and should appear in scientific mode?
+  6. **Produce ASCII/mockup layout diagram** — showing exact grid proportions, widget positioning, color assignments
+  7. **Clarify operand entry and computation** — should number buttons append to operand (iOS-style) or replace? When is result computed?
+  8. **Provide test specs** — covering layout structure, result display, colors, symbols, background propagation, hover effects, regression
+- **Files to Modify:**
+  - `src/ui/gui.py` (primary GUI implementation) — add `_THEME` dict, refactor layout, apply colors/fonts, add hover bindings
+  - Possibly `tests/test_gui.py` (if existing tests reference old GUI structure) — update assertions to match new layout
+- **Test Strategy:**
+  - Verify layout structure (5 sections, grids have correct dimensions)
+  - Verify result display styling (font, colors, alignment)
+  - Verify button colors match spec per category
+  - Verify symbol mapping (Unicode rendering)
+  - Verify background colors explicitly set on all containers
+  - Verify hover effects (binding, color swap, revert)
+  - Verify no regression in functionality (operations, mode switching, history)
+- **Out of Scope:**
+  - No changes to calculation logic
+  - No changes to mode switching behavior
+  - No changes to operation registry or available operations
+  - No changes to history or logging
+  - No changes outside gui.py
+  - No new features beyond visual redesign
+  - No keyboard shortcuts or advanced GUI features
+  - No accessibility overhaul (WCAG compliance not required)
+- **Label:** `ai-implement:expert-team` (expert team delivery with visual design focus)
+
