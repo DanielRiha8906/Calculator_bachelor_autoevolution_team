@@ -1,0 +1,57 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "tkinter" {
+  class Tk
+  class Entry
+  class Label
+  class messagebox <<module>>
+}
+
+class Calculator {
+  +add(a: float, b: float) : float
+  +subtract(a: float, b: float) : float
+  +multiply(a: float, b: float) : float
+  +divide(a: float, b: float) : float
+  +power(base: float, exp: float) : float
+  +square(x: float) : float
+  +cube(x: float) : float
+  +square_root(x: float) : float
+  +cube_root(x: float) : float
+  +factorial(x: float) : float
+  +log(x: float) : float
+  +ln(x: float) : float
+}
+
+class CalculatorGUI {
+  -root: object
+  -entry: object
+  -display: object
+  -calc: Calculator
+  -current_input: str
+  -pending_op: str | None
+  -first_operand: float | None
+  +__init__(root: object | None = None) : void
+  -_set_operator(op: str) : void
+  -_apply_unary(op: str) : float | None
+  -_calculate() : float | None
+  -_clear() : void
+  +destroy() : void
+}
+
+note as launch_note
+  launch_gui()
+  Creates Tk root, instantiates
+  CalculatorGUI, calls mainloop()
+end note
+
+CalculatorGUI *-- Calculator : calc
+CalculatorGUI --> Tk : root
+CalculatorGUI --> Entry : entry
+CalculatorGUI --> Label : display
+CalculatorGUI ..> messagebox : uses
+
+launch_note ..> CalculatorGUI : creates
+launch_note ..> Tk : creates
+
+@enduml

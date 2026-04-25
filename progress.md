@@ -476,3 +476,14 @@ Duration: 211.6s | Cost: $0.600988 USD | Turns: 5
   - `artifacts/activity_scientific_dispatch.puml` — new activity diagram: arity-based dispatch and domain-validation for scientific operations
 
 Duration: 227.1s | Cost: $0.516747 USD | Turns: 4
+
+## Run: update-diagrams — tkinter GUI UML diagrams (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_gui.puml` — new class diagram for CalculatorGUI component and its relationships
+  - `artifacts/activity_gui_operation.puml` — new activity diagram for GUI operation flow with binary, unary, and clear paths
+  - `artifacts/sequence_gui_calculation.puml` — new sequence diagram for binary calculation including error path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
