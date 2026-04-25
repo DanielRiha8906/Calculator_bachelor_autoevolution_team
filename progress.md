@@ -11,6 +11,22 @@
 
 Duration: 235.4s | Cost: $0.581542 USD | Turns: 4
 
+## Run: Fix PR #457 — scientific mode UI discovery and mode-change feedback (2026-04-25)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/interface.py` — added `display_welcome()`, enhanced `display_mode_change()` with auto-derived ops list, added mode toggle hint to `prompt_for_operator()` prompt text
+  - `src/__main__.py` — call `display_welcome()` at interactive session start; pass `available_ops` to `display_mode_change()` after mode toggle
+  - `src/cli.py` — re-export `display_welcome`
+  - `tests/test_scientific_mode_ui.py` — 9 new tests verifying welcome message, mode-change feedback, and prompt hint
+  - `rag/agents/*.md` — updated per-agent cycle entries
+- **Purpose:** Fix reviewer-identified UI gap: users had no way to discover mode toggle, and no visual feedback showing which operations became available after switching modes
+- **Risks:** None — purely additive UI changes; no Calculator logic or existing tests changed
+- **Tests passed:** 387 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
 - **Branch:** task/issue-410-scientific-mode

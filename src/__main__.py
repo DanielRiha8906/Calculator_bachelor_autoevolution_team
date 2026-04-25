@@ -2,7 +2,12 @@ import sys
 
 from .calculator import Calculator
 from .cli import run_calculator, display_error, MaxRetriesExceeded, persist_history_to_file
-from .interface import display_mode_change
+from .interface import (
+    display_mode_change,
+    display_welcome,
+    OPERATIONS,
+    SCIENTIFIC_OPERATIONS,
+)
 
 
 def main() -> None:
@@ -35,6 +40,7 @@ def main() -> None:
     else:
         calc = Calculator()
         mode = "normal"
+        display_welcome()
         try:
             while True:
                 try:
@@ -44,10 +50,13 @@ def main() -> None:
                     if result == "MODE_TOGGLE":
                         if mode == "normal":
                             calc.enable_scientific_mode()
+                            mode = "scientific"
+                            available_ops = list(SCIENTIFIC_OPERATIONS.keys())
                         else:
                             calc.disable_scientific_mode()
-                        mode = "scientific" if mode == "normal" else "normal"
-                        display_mode_change(mode)
+                            mode = "normal"
+                            available_ops = list(OPERATIONS.keys())
+                        display_mode_change(mode, available_ops)
                         continue
                 except MaxRetriesExceeded as e:
                     display_error(str(e))

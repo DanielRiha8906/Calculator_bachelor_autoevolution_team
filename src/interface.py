@@ -148,7 +148,7 @@ def prompt_for_operator(max_retries: int = 3, mode: str = "normal") -> str:
     while True:
         raw = input(
             "Enter an operator or operation (+, -, *, /, square, cube, sqrt, cbrt, "
-            "factorial, power, log, ln): "
+            "factorial, power, log, ln) [type 'mode' to switch modes]: "
         )
         if raw.lower() in ("quit", "exit"):
             return "QUIT"
@@ -271,6 +271,16 @@ def display_history(calc: "Calculator") -> None:
         print(formatted)
 
 
+def display_welcome() -> None:
+    """Print a welcome banner and usage tip at the start of a session.
+
+    Informs the user about mode toggling capability.
+    Prints to stdout only; has no side effects on any state.
+    """
+    print("Welcome to the Calculator!")
+    print("Tip: Type 'mode' or 'sci' at the operator prompt to switch between modes.")
+
+
 def display_error(error_message: str) -> None:
     """Print an error message in a user-friendly format.
 
@@ -280,13 +290,27 @@ def display_error(error_message: str) -> None:
     print(f"Error: {error_message}")
 
 
-def display_mode_change(new_mode: str) -> None:
+def display_mode_change(new_mode: str, available_ops: list[str] | None = None) -> None:
     """Print a user-friendly message indicating a mode change.
+
+    If ``available_ops`` is not provided, the list is derived automatically
+    from the OPERATIONS or SCIENTIFIC_OPERATIONS registry based on ``new_mode``.
 
     Args:
         new_mode: The name of the new mode (e.g. "scientific" or "normal").
+        available_ops: Optional explicit list of operation keys to display.
+            When None, computed automatically from ``new_mode``.
     """
-    print(f"Switched to {new_mode} mode.")
+    if available_ops is None:
+        if new_mode == "scientific":
+            available_ops = list(SCIENTIFIC_OPERATIONS.keys())
+        else:
+            available_ops = list(OPERATIONS.keys())
+    ops_str = ", ".join(available_ops)
+    if new_mode == "scientific":
+        print(f"Switched to scientific mode. New operations: {ops_str}")
+    else:
+        print(f"Switched to normal mode. Available operations: {ops_str}")
 
 
 def persist_history_to_file(calc: Calculator, filepath: str = "history.txt") -> None:
