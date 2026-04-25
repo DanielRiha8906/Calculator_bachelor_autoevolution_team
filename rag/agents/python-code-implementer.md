@@ -520,6 +520,25 @@ Only after ALL those test changes are committed (and passing against old flat fi
 
 **Handoff notes for next agent:** The `_make_button()` / `_make_label()` / `_make_frame()` helpers now always return `_TkStub` instances. In a real display environment, these won't render actual tkinter widgets. If a future task requires real GUI rendering alongside test compatibility, consider adding a `_TK_DISPLAY_AVAILABLE` check using `os.environ.get('DISPLAY')` to choose between `_TkStub` and real widget creation in the helpers. No new external dependencies introduced.
 
+### 2026-04-25 — Wire GuiCalculator into __main__.py --gui flag (issue-465-ios-calculator-redesign)
+
+**Task:** Change the `--gui` branch in `src/__main__.py` to import and instantiate `GuiCalculator` instead of `CalculatorApp`, making 2 failing tests pass (`test_main_imports_gui_calculator`, `test_main_gui_flag_instantiates_gui_calculator`).
+
+**Files changed:**
+- `src/__main__.py` — line 19: `from .ui.gui import CalculatorApp` → `from .ui.gui import GuiCalculator`; line 20: `app = CalculatorApp()` → `app = GuiCalculator()`
+
+**Key decisions:**
+- Minimal 2-line change; no other content in `__main__.py` was touched.
+- `GuiCalculator` already exists in `src/ui/gui.py` (implemented in a prior cycle); no changes to that file were needed.
+- Both failing tests read `src/__main__.py` as a text file and assert string presence, so the change must be exact name matches.
+
+**Patterns found:**
+- Tests that assert presence of a class name in a source file as a string are sensitive to exact spelling. Always confirm the class name in both the test assertions and the target source file.
+
+**Test result:** Not run by this agent (implementer does not run tests). Expected: 2 previously failing tests now pass, 44 other tests continue to pass.
+
+**Handoff notes for next agent:** No new dependencies introduced. `CalculatorApp` is no longer referenced in `__main__.py`; it still exists in `src/ui/gui.py` and is still used by `tests/test_gui.py`. If a future task removes `CalculatorApp`, those GUI tests must be updated first.
+
 ### 2026-04-25 — Fix _TkStub.set()/get() to preserve state (issue-465)
 
 **Task:** Make `_TkStub.set()` store the value and `_TkStub.get()` return it so that headless CI tests that exercise `_op_var.set()`/`get()` work correctly.

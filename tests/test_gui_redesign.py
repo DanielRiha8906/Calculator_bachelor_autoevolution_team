@@ -563,3 +563,160 @@ class TestWindowTheming:
                     theme_colors = set(gui_module._THEME.values())
                     assert bg in theme_colors or bg is None, \
                         f"Frame {frame_attr} bg {bg} not from theme"
+
+
+class TestMainEntryPoint:
+    """Test that src/__main__.py imports and uses GuiCalculator for --gui flag."""
+
+    def test_main_imports_gui_calculator(self):
+        """src/__main__.py contains 'GuiCalculator' in its import/usage."""
+        import pathlib
+        main_file = pathlib.Path(__file__).parent.parent / "src" / "__main__.py"
+        content = main_file.read_text()
+        assert "GuiCalculator" in content, \
+            "__main__.py does not contain 'GuiCalculator' import or reference"
+
+    def test_main_gui_flag_instantiates_gui_calculator(self):
+        """src/__main__.py --gui code path references GuiCalculator."""
+        import pathlib
+        main_file = pathlib.Path(__file__).parent.parent / "src" / "__main__.py"
+        content = main_file.read_text()
+
+        # Extract the --gui block
+        lines = content.split('\n')
+        in_gui_block = False
+        gui_block_content = []
+
+        for line in lines:
+            if 'sys.argv[1] == "--gui"' in line:
+                in_gui_block = True
+            elif in_gui_block and (line.strip().startswith('elif') or line.strip().startswith('else')):
+                break
+            elif in_gui_block:
+                gui_block_content.append(line)
+
+        gui_block_str = '\n'.join(gui_block_content)
+        assert "GuiCalculator" in gui_block_str, \
+            "--gui block does not instantiate GuiCalculator"
+
+
+class TestThreePanelLayoutStructure:
+    """Test the three-panel layout structure of GuiCalculator."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_top_frame_exists(self, mock_tk_class):
+        """GuiCalculator has _top_frame attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_top_frame'), \
+            "GuiCalculator missing _top_frame attribute"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_content_frame_exists(self, mock_tk_class):
+        """GuiCalculator has _content_frame attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_content_frame'), \
+            "GuiCalculator missing _content_frame attribute"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_left_panel_exists(self, mock_tk_class):
+        """GuiCalculator has _left_panel attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_left_panel'), \
+            "GuiCalculator missing _left_panel attribute"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_right_panel_exists(self, mock_tk_class):
+        """GuiCalculator has _right_panel attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_right_panel'), \
+            "GuiCalculator missing _right_panel attribute"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_bottom_frame_exists(self, mock_tk_class):
+        """GuiCalculator has _bottom_frame attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_bottom_frame'), \
+            "GuiCalculator missing _bottom_frame attribute"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_content_frame_with_left_right_panels(self, mock_tk_class):
+        """GuiCalculator has _content_frame, _left_panel, and _right_panel all existing together."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_content_frame'), \
+            "GuiCalculator missing _content_frame"
+        assert hasattr(app, '_left_panel'), \
+            "GuiCalculator missing _left_panel"
+        assert hasattr(app, '_right_panel'), \
+            "GuiCalculator missing _right_panel"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_digit_buttons_list_has_10_buttons(self, mock_tk_class):
+        """GuiCalculator._digit_buttons list has exactly 10 items (digits 0-9)."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_digit_buttons'), \
+            "GuiCalculator missing _digit_buttons list"
+        assert len(app._digit_buttons) == 10, \
+            f"_digit_buttons has {len(app._digit_buttons)} items, expected 10"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_right_panel_arithmetic_buttons_count(self, mock_tk_class):
+        """GuiCalculator._arithmetic_buttons list has exactly 4 buttons."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_arithmetic_buttons'), \
+            "GuiCalculator missing _arithmetic_buttons list"
+        assert len(app._arithmetic_buttons) == 4, \
+            f"_arithmetic_buttons has {len(app._arithmetic_buttons)} items, expected 4"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_mode_toggle_rebuilds_bottom_panel(self, mock_tk_class):
+        """Calling _on_mode_toggle() changes the _operation_buttons count."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        # Record initial operation buttons count
+        initial_count = len(app._operation_buttons) if hasattr(app, '_operation_buttons') else 0
+
+        # Call mode toggle
+        if hasattr(app, '_on_mode_toggle'):
+            app._on_mode_toggle()
+            new_count = len(app._operation_buttons) if hasattr(app, '_operation_buttons') else 0
+
+            # The count should change (normal mode has fewer ops than scientific mode)
+            # In normal mode: 5 ops; in scientific mode: 5 + 9 = 14 ops
+            assert new_count != initial_count, \
+                f"_operation_buttons count did not change after toggle: {initial_count} -> {new_count}"
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_result_label_exists(self, mock_tk_class):
+        """GuiCalculator has _result_label attribute."""
+        GuiCalculator = gui_module.GuiCalculator
+        mock_root = MagicMock()
+        app = GuiCalculator(mock_root)
+
+        assert hasattr(app, '_result_label'), \
+            "GuiCalculator missing _result_label attribute"

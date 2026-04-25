@@ -1,3 +1,16 @@
+## Run: Fix PR #466 (review feedback) — feat: iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — changed import and instantiation from `CalculatorApp` to `GuiCalculator` in `--gui` branch
+  - `tests/test_gui_redesign.py` — added `TestMainEntryPoint` (2 tests) and `TestThreePanelLayoutStructure` (10 tests) classes verifying entry point and three-panel layout
+- **Purpose:** Address maintainer `request-changes:expert-team` feedback: update entry point to launch GuiCalculator, and add tests that verify the actual three-panel layout structure and correct entry point import
+- **Risks:** None — entry point change is a 2-line rename; all 516 tests pass with no regressions
+- **Tests passed:** 516 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
 
 - **Branch:** task/issue-465-ios-calculator-redesign

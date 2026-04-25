@@ -355,19 +355,16 @@ Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest
 
 **Execution Order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
 
-**Handoff to pytest-edge-tester (WRITE):**
-Write 31 test scenarios covering:
-- _THEME dict structure and values
-- GuiCalculator instantiation (widget creation)
-- Result display properties (colors, font, alignment)
-- Mode toggle button (text, functionality)
-- Number grid structure and buttons
-- Operation grid structure, colors, symbols
-- Button properties (relief, borderwidth, geometry)
-- Background color propagation
-- Hover effect bindings and behavior
+**Test Specifications (31 scenarios, detailed below in Section 1 of output):**
+- Frame structure tests: top, content (left+right), bottom frames exist and positioned correctly
+- Left panel tests: number grid is 3×4, buttons 1–9 in grid, button 0 spans 3 columns
+- Right panel tests: 4 arithmetic buttons vertically stacked
+- Bottom panel tests: grid with 4 columns, operation count matches mode, buttons rebuild on mode switch
+- Button functionality tests: digit press updates operand, operation press selects operation, mode toggle rebuilds bottom
+- Styling tests: colors from _THEME, hover effects, fonts, alignment
 
-All tests use mocked root (tk.Tk mock) and check widget attributes. Tests must FAIL initially (new GUI code not yet written).
+**Handoff to pytest-edge-tester (WRITE):**
+Write 31 test scenarios covering layout structure, button placement, frame organization, mode switch behavior, and basic functionality. All tests use mocked root and check widget attributes. Tests must FAIL initially (new GUI code not yet written).
 
 **Handoff to python-code-implementer:**
 Implement complete GUI redesign in `src/ui/gui.py` per source changes plan. Key deliverables:
@@ -381,12 +378,6 @@ Implement complete GUI redesign in `src/ui/gui.py` per source changes plan. Key 
 
 ---
 
-**Key Deliverable:**
-
-iOS-style calculator GUI with modern visual design, centralized theme system, and interactive button layouts while preserving all underlying calculation logic and operation functionality.
-
----
-
 ### 2026-04-25 — PR #466 — Left/Right/Bottom Layout Redesign (Unresolved Owner Feedback)
 
 **Task:** Refactor iOS-style GUI layout from current single-column model to **left + right + bottom distributed layout**:
@@ -396,162 +387,106 @@ iOS-style calculator GUI with modern visual design, centralized theme system, an
 
 **Status:** PR #466 is under review. Owner feedback (unresolved) requests a fundamental layout restructuring of `GuiCalculator` in `src/ui/gui.py`. Current layout has number grid and operations in sequential frames; new layout requires simultaneous left/right positioning with dynamic bottom section rebuild on mode switch.
 
-**Key Decisions:**
-1. **Overall Frame Structure:**
-   - Main window 480×640 pixels
-   - Top section: Result display + mode toggle (full-width, spans all columns)
-   - Main content area: 3-panel horizontal layout using tkinter Frame geometry
-     - LEFT PANEL: Number grid (3 columns wide, 4 rows tall)
-     - RIGHT PANEL: Arithmetic operations vertically stacked (1 column, 4 rows)
-     - These two panels side-by-side in a horizontal container frame
-   - BOTTOM PANEL: Remaining operations in dynamic 4-column grid below left/right panels
-   - Panels positioned with grid() manager for flexible layout
+**Current PR State (from source reading):**
+- `GuiCalculator` class exists in `src/ui/gui.py` (lines 475–1086)
+- `_THEME` dict complete (lines 12–29) with all required colors
+- `_OPERATION_SYMBOLS` dict complete (lines 31–51)
+- Three-panel layout already implemented: TOP (result + mode toggle), CONTENT (left + right), BOTTOM (operations)
+- Helper methods exist: `_build_left_panel()`, `_build_right_panel()`, `_build_bottom_panel()`, `_rebuild_bottom_panel()`
+- Mode toggle callback `_on_mode_toggle()` implemented with bottom panel rebuild
+- Digit press handler `_on_digit_press()` implemented
+- Operation press handler `_on_op_press()` implemented
+- Hover effects via `_on_button_enter()` and `_on_button_leave()` already in place
+- _TkStub class (lines 54–136) implements all necessary widget methods for headless testing
 
-2. **Number Grid (LEFT SIDE):**
-   - Digits 1–9 arranged in 3×3 grid (rows 0–2, cols 0–2)
-   - Digit 0 spans all 3 columns (row 3, cols 0–2, columnspan=3)
-   - All buttons themed with BUTTON_NORMAL colors
-   - Buttons stored in `self._digit_buttons` list for mode-independent persistence
+**Critical Issues Identified (from PR owner feedback):**
 
-3. **Arithmetic Operations (RIGHT SIDE):**
-   - Vertical stack: ÷ (divide) at top, × (multiply) second, − (subtract) third, + (add) bottom
-   - Layout: 1 column, 4 rows (indices row=0–3, col=0)
-   - Buttons themed with BUTTON_OPERATOR colors (orange #FF9500)
-   - Buttons stored in `self._arithmetic_buttons` list (persistent, never rebuilt)
+1. **BLOCKER 1: __main__.py imports CalculatorApp instead of GuiCalculator**
+   - Line 19 in `src/__main__.py`: `from .ui.gui import CalculatorApp`
+   - Owner says: "In __main__.py change: from .ui.gui import CalculatorApp, to from .ui.gui import GuiCalculator."
+   - IMPACT: `python -m src --gui` launches old CalculatorApp (form-based), not new GuiCalculator
+   - FIX: Update import in `src/__main__.py` line 19 to import GuiCalculator
 
-4. **Bottom Operations Section (BOTTOM PANEL):**
-   - 4-column grid for remaining operations
-   - SIMPLE MODE: Shows _NORMAL_OPS only (sqrt, square, factorial, ln, log10) = 5 ops → 2 rows (fill row 1 with 1 op)
-   - SCIENTIFIC MODE: Shows _NORMAL_OPS + _SCIENTIFIC_OPS (5 + 9 = 14 ops) → 4 rows (4 cols × 4 rows = up to 16 slots)
-   - DESTROYED and REBUILT on mode switch (not just hidden)
-   - Operations themed per _op_button_colours() (orange for arithmetic, dark for scientific, gray for normal)
-   - Buttons stored in `self._operation_buttons` list; cleared on rebuild
+2. **BLOCKER 2: GUI widgets not rendering (display shows blank window)**
+   - Owner says: "When launching the new design, nothing shows up. That's because tk.button was changed to _Tkstub…"
+   - ANALYSIS: GuiCalculator uses `_TkStub` class for widget creation in all tests/headless envs
+   - ISSUE: _TkStub does not render real tkinter widgets; it only stores config for test assertions
+   - ROOT CAUSE: When `tkinter` import fails (line 138–141), code creates a stub tk module with tk.Button = _TkStub
+   - FIX: When real tkinter is available, use real tk.Button/tk.Frame/tk.Label; _TkStub is only for headless tests
+   - Current behavior: tk.Button is always _TkStub (created at module load if tkinter unavailable); once set, never uses real tkinter
+   - SOLUTION: In production, tkinter IS available; code should use real tk classes. Test environment should mock appropriately.
+   - VERIFICATION NEEDED: Check if headless CI actually imports real tkinter or not
 
-5. **Geometry Management (Grid):**
-   - Top frame (result + mode toggle): row=0, sticky=NSEW, full-width
-   - Content frame (left + right): row=1, sticky=NSEW
-     - Left subframe (number grid): column=0, sticky=NSEW, padx=(10,5)
-     - Right subframe (arithmetic): column=1, sticky=NSEW, padx=(5,10)
-   - Bottom frame (operation grid): row=2, sticky=NSEW, padx=10, pady=(0,10)
-   - Root window: `columnconfigure(0, weight=1)`, `rowconfigure([0,1,2], weight=1)` for dynamic resizing
-   - Panel frames: auto-expand to fill space; buttons use sticky=NSEW for square geometry
+3. **BLOCKER 3: Test suite does not match actual implementation**
+   - Owner says: "Modify/Delete all the tests and development artifacts so that the testing suite and artifacts reflect the real behavior."
+   - CURRENT STATE: test_gui_redesign.py (566 lines) tests GuiCalculator layout, colors, symbols, hover effects
+   - STATUS: Tests reference attributes like `_btn_add`, `_btn_multiply`, `_operation_buttons` which ARE created in GuiCalculator
+   - ISSUE: Some tests check mocked tk.Tk behavior that may not reflect actual layout (e.g., grid positioning via grid_info())
+   - SPECIFIC TEST ISSUES:
+     - Tests mock tk.Tk; _TkStub.grid_info() returns stored kwargs, not actual grid geometry
+     - Tests that check grid layout via grid_info() might not reflect real layout behavior
+     - Tests that expect button creation may pass but buttons not visible because _TkStub doesn't render
+   - FIX: Update tests to verify actual widget structure (tree walk, attribute checks) rather than relying on mocked grid_info()
+   - DELETE: Remove any tests that assert internal implementation details unrelated to user-visible behavior
+   - ADD: Tests that verify the three-panel layout is actually visible (frames exist, buttons are in them, layout is correct)
 
-6. **Number Button Functionality:**
-   - Single command callback: `_on_digit_press(digit)` (shared by all 10 buttons)
-   - Appends digit to current operand display (stored in `self._current_operand`)
-   - Updates result label with live operand value
+**Remaining Work Required:**
 
-7. **Arithmetic Button Functionality:**
-   - Individual command callbacks per operation: `_on_operation_press("add")`, etc.
-   - Stores selected operation name in `self._selected_operation`
-   - Does NOT trigger calculation; sets up for next operand input
+1. **Fix Entry Point** (`src/__main__.py` line 19):
+   - Change: `from .ui.gui import CalculatorApp`
+   - To: `from .ui.gui import GuiCalculator`
+   - Line 20: Change: `app = CalculatorApp()`
+   - To: `app = GuiCalculator()`
 
-8. **Operation Grid Button Functionality:**
-   - Individual command callbacks per operation: `_on_operation_press(op_name)`
-   - Same behavior as arithmetic buttons (operation selection)
-   - Special handling for "equals" or "clear" (if included): execute calculation or reset state
+2. **Verify Real tkinter Rendering**:
+   - When code runs with real tkinter installed, tk.Button should be real tkinter.Button, NOT _TkStub
+   - Current code: lines 138–169 create a fallback tk module if import fails
+   - The fallback is CORRECT; but once imported, code uses whatever tk module was set up
+   - VERIFICATION: Run `python -m src --gui` in environment where tkinter IS installed
+   - EXPECTED: Real tkinter window opens with three-panel layout (left digit grid, right arithmetic, bottom ops)
+   - If not: Debug why tkinter import is being skipped or overridden
 
-9. **Mode Switch Behavior:**
-   - User clicks mode toggle button → `_on_mode_toggle()` called
-   - Mode flips (NORMAL ↔ SCIENTIFIC)
-   - Mode toggle button text updates: "Scientific" (when in NORMAL) or "Normal" (when in SCIENTIFIC)
-   - Arithmetic buttons (right side) remain unchanged
-   - Bottom operation grid is DESTROYED completely (clear `self._operation_buttons` list)
-   - `_build_bottom_operation_frame()` is called to rebuild with new operation set
+3. **Update/Delete Test Suite**:
+   - Review test_gui_redesign.py and test_gui.py
+   - TESTS TO KEEP:
+     - _THEME dictionary structure validation (lines 27–68)
+     - _OPERATION_SYMBOLS dictionary validation (lines 70–108)
+     - GuiCalculator class existence (lines 110–125)
+     - Widget attribute existence tests (result_label, mode_toggle_btn, digit buttons, operation buttons)
+     - Color value assertions (from _THEME, not from mocked widget cget)
+   - TESTS TO FIX:
+     - Button hierarchy/positioning tests: use actual widget tree instead of mocked grid_info()
+     - Layout structure tests: verify frames exist and buttons are children
+     - Mode toggle text tests: ensure they reflect current implementation
+   - TESTS TO DELETE:
+     - Any test that only checks mocked tk behavior without business logic value
+     - Any test that asserts internal _TkStub state rather than user-visible behavior
 
-10. **Styling:**
-    - All colors from `_THEME` (no hardcoded hex values)
-    - All fonts from `_THEME`
-    - Hover effects on all buttons (arithmetic + bottom ops, not digits per aesthetic choice)
-    - Digit buttons use gray theme; arithmetic buttons use orange; operation buttons color-coded per type
+**Architecture Summary (for layout ref):**
 
-11. **Result Display:**
-    - Top of window, full-width label
-    - Black background, white right-aligned monospace text (32pt bold)
-    - Initially shows "0"
-    - Updates on digit press (shows current operand) and after calculation (shows result)
+Three-panel hierarchy (from `_setup_ios_gui()`):
+- Root window (black bg, 480x640)
+  - _top_frame (row=0): result_label + mode_toggle_btn
+  - _content_frame (row=1): _left_panel (col=0) + _right_panel (col=1)
+    - _left_panel: digit buttons 1-9 in 3x3 grid, button 0 spanning cols 0-2
+    - _right_panel: arithmetic ops vertically stacked (divide, multiply, subtract, add)
+  - _bottom_frame (row=2): operation grid (4 columns, variable rows per mode)
 
-12. **Styling from Issue #465 (PRESERVED):**
-    - Result display: black bg (#000000), white text (#FFFFFF), 32pt bold Courier
-    - Mode toggle: dark gray (#2C2C2E), white text, FLAT relief
-    - Arithmetic ops: orange (#FF9500)
-    - Scientific ops: dark gray (#1C1C1E)
-    - Normal ops: medium gray (#333333)
-    - Hover effects on all operation buttons
-    - Window background: black (#000000)
-    - All frame backgrounds: black (#000000)
+**Handoff Notes:**
 
-**Architecture Observations (from current src/ui/gui.py):**
-- `GuiCalculator` class already exists with:
-  - `_THEME` dict (complete with all colors/fonts)
-  - `_OPERATION_SYMBOLS` dict (operation name → Unicode symbol)
-  - Helper methods: `_make_button()`, `_op_button_colours()`, `_on_button_enter()`, `_on_button_leave()`
-  - Mode tracking: `_current_mode` (OperationMode.NORMAL or SCIENTIFIC)
-  - Operation tracking: `_operation_buttons` list, `_normal_mode_buttons` list, `_scientific_mode_buttons` list
-  - Methods: `_on_mode_toggle()`, `_update_mode_toggle_text()`, `_build_op_buttons()`, `_rebuild_op_grid()`, `_on_op_press()`
-- Current layout: sequential frames (input_frame → result_frame → mode_toggle → number_frame → operation_frame)
-- Public API: `get_current_mode_operations()`, `calculate()`, `get_history()`, `is_unary_operation()`, `run()` — all preserved
+BLOCKER FIX ORDER:
+1. Fix `src/__main__.py` imports (trivial, 2 lines)
+2. Verify tkinter rendering (run test launch, debug if blank)
+3. Create comprehensive test plan for layout verification (15-20 new tests)
+4. Update/delete tests to match real behavior
 
-**Changes Needed in `src/ui/gui.py`:**
-1. **Refactor `_setup_ios_gui()` method:**
-   - Delete current sequential frame structure
-   - Create hierarchical frame structure: top section (result + mode toggle), content section (left + right panels), bottom section (operations)
-   - Implement grid-based layout with proper geometry configuration
-
-2. **Create/Modify helper methods:**
-   - `_build_left_panel(parent_frame)` — create number grid in left frame
-   - `_build_right_panel(parent_frame)` — create arithmetic operation stack in right frame
-   - `_build_bottom_panel(parent_frame)` — create bottom operation grid; call before mode toggle initially
-   - `_rebuild_bottom_panel()` — destroy old bottom ops, rebuild with new mode ops (called by `_on_mode_toggle()`)
-   - `_on_digit_press(digit)` — append digit to operand, update display
-   - `_on_operation_press(op_name)` — select operation (already exists, reuse)
-   - Modify `_on_mode_toggle()` to call `_rebuild_bottom_panel()` instead of `_rebuild_op_grid()`
-
-3. **Preserve existing:**
-   - All public API methods
-   - `_make_button()`, `_op_button_colours()`, `_on_button_enter()`, `_on_button_leave()`
-   - `_THEME` and `_OPERATION_SYMBOLS` dictionaries
-   - Mode toggle button text update logic
-   - Hover effects on all operation buttons
-
-4. **Sizing and Spacing:**
-   - Window: 480×640 (width × height)
-   - Padding: 10px margins on all sides, 5px between left/right panels
-   - Button geometry: square (equal row/col weights in grid)
-   - Result display: 10px padx, 10px pady
-
-**Backward Compatibility:**
-- Public API fully preserved
-- Internal state variables (_current_mode, _operation_buttons, etc.) preserved
-- Tests that mock root and check widget attributes will need updates to assert grid layout, but existing widget presence tests should pass
-
-**Execution Order (Multi-Agent Pipeline):**
-1. **pytest-edge-tester (WRITE phase):** Create failing tests for new layout (15–20 scenarios covering frame structure, panel positions, button presence and placement in each panel, mode switch rebuild, etc.)
-2. **python-code-implementer:** Implement layout restructuring per source changes plan above
-3. **pytest-edge-tester (VERIFY phase):** Run full test suite; confirm all tests pass
-4. **Commit and PR:** Document layout change in PR description
-
-**Test Specifications (15–20 scenarios, detailed below in Section 1 of output):**
-- Frame structure tests: top, content (left+right), bottom frames exist and positioned correctly
-- Left panel tests: number grid is 3×4, buttons 1–9 in grid, button 0 spans 3 columns
-- Right panel tests: 4 arithmetic buttons vertically stacked
-- Bottom panel tests: grid with 4 columns, operation count matches mode, buttons rebuild on mode switch
-- Button functionality tests: digit press updates operand, operation press selects operation, mode toggle rebuilds bottom
-- Styling tests: colors from _THEME, hover effects, fonts, alignment
-
-**Handoff to pytest-edge-tester (WRITE):**
-Write 15–20 test scenarios covering layout structure, button placement, frame organization, mode switch behavior, and basic functionality. All tests must FAIL initially. Tests should use mocked root and verify grid positioning (via `grid_info()` calls and widget hierarchy inspection).
-
-**Handoff to python-code-implementer (upon tester's WRITE report):**
-Refactor `_setup_ios_gui()` and related methods in `src/ui/gui.py` per source changes plan. Key deliverables:
-1. Hierarchical frame structure: top (result + mode toggle), content (left number grid + right arithmetic), bottom (operations)
-2. Left panel: 3×4 number grid with digit 0 spanning 3 columns
-3. Right panel: 4 vertically stacked arithmetic operation buttons
-4. Bottom panel: 4-column operation grid, dynamically rebuilt on mode switch
-5. All layout via grid() geometry manager with proper row/col weights
-6. Styling from _THEME preserved; hover effects on operation buttons
-7. Mode toggle rebuilds bottom panel; digit press updates operand; operation press selects operation
-8. Public API fully preserved; backward compatible
+MULTI-AGENT PIPELINE:
+- **Analyst:** Issue requirements analysis ✓ (done above)
+- **System Architect:** Create detailed test spec + source changes plan (THIS DOCUMENT)
+- **pytest-edge-tester (WRITE):** Create failing tests for layout, frame structure, button placement
+- **python-code-implementer:** Fix __main__.py imports; debug rendering if needed; update GUI if layout broken
+- **pytest-edge-tester (VERIFY):** Run full suite; fix any failing tests to match actual behavior
+- **Commit:** Merge PR with fixed imports and passing tests
 
 ---
 
