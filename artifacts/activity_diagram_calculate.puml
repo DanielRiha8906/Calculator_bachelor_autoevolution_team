@@ -1,0 +1,49 @@
+@startuml
+skinparam activityFontSize 13
+skinparam activityDiamondFontSize 12
+
+title User Calculation Flow — CalculatorApp._on_calculate()
+
+start
+
+:Read op_name from operation dropdown;
+:Read operand1 from input field;
+
+if (is_unary_operation(op_name)?) then (yes)
+  :Call calculate(op_name, operand1);
+else (no — binary)
+  :Read operand2 from input field;
+  :Call calculate(op_name, operand1, operand2);
+endif
+
+partition "calculate()" {
+  :_parse_operand(operand1);
+
+  if (binary operation?) then (yes)
+    :_parse_operand(operand2);
+  endif
+
+  if (parse error?) then (yes)
+    :Return "Error: {message}";
+  else (ok)
+    :registry.call(op_name, *parsed_operands);
+
+    if (exception raised?) then (yes)
+      :Return "Error: {message}";
+    else (success)
+      :history.record(op_name, operands, result);
+      :Return str(result);
+    endif
+  endif
+}
+
+if (result starts with "Error"?) then (yes)
+  :Display error message in result label;
+else (no)
+  :Display result in result label;
+  :Append entry to history panel;
+endif
+
+stop
+
+@enduml

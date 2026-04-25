@@ -86,8 +86,9 @@ package "src/ui" {
     }
 
     note bottom of ScientificMode
-        Returns all 12 operations
-        via registry.get_operations()
+        Returns 18 SCIENTIFIC-mode
+        operations (incl. trig) via
+        registry.get_operations_by_mode(SCIENTIFIC)
     end note
 
     class CalculatorApp {
@@ -97,6 +98,7 @@ package "src/ui" {
         - _root: tk.Tk
         - _current_mode: OperationMode
         - _modes: dict[OperationMode, CalculatorMode]
+        - {static} _UNARY_OPS: frozenset
         --
         + __init__(root, calculator, registry)
         + get_current_mode_operations() : List[str]
@@ -106,8 +108,9 @@ package "src/ui" {
         + is_unary_operation(op_name) : bool
         + run()
         - _setup_gui()
+        - _rebuild_operation_menu()
         - _on_calculate()
-        - {static} _parse_operand(value) : object
+        - _parse_operand(value) : object
     }
 }
 

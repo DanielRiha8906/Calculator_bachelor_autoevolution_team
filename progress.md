@@ -528,3 +528,15 @@ Duration: 407.8s | Cost: $0.703099 USD | Turns: 4
   - `artifacts/gui_mode_switch_activity.puml` — activity diagram for mode switching and operation menu rebuild
 
 Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI mode abstraction and CalculatorApp relationships
+  - `artifacts/activity_diagram_calculate.puml` — activity diagram for user calculation flow
+  - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram for mode switching mechanism
+  - `artifacts/activity_diagram_entry_point.puml` — activity diagram for entry point routing
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
