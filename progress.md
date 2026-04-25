@@ -1,4 +1,19 @@
 
+## Run: Issue #463 — V3 Task 16 - Redesign - Naive/team (2026-04-25)
+
+- **Branch:** task/issue-463-redesign-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/gui.py` — applied iOS-inspired dark theme styling: black background, orange operator buttons, dark gray digit buttons, white text, flat relief, enlarged 30pt display
+  - `tests/test_gui_style.py` — 15 new tests verifying dark theme styling properties
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+- **Purpose:** Redesign calculator GUI to match iOS calculator aesthetic (black bg, orange operators, flat buttons, large display)
+- **Risks:** None — styling-only changes; no logic altered; all existing tests pass
+- **Tests passed:** 456 passed, 1 skipped, 0 failed
+
+Duration: 827.1s | Cost: $1.489116 USD | Turns: 15
+
 ## Run: update-diagrams — Scientific mode PlantUML diagrams (2026-04-25)
 
 - **Branch:** task/issue-410-scientific-mode
@@ -515,3 +530,14 @@ Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
 Duration: 234.5s | Cost: $0.576341 USD | Turns: 4
 
 Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20
+
+## Run: update-diagrams — iOS dark theme GUI redesign (#463) (2026-04-25)
+
+- **Branch:** task/issue-463-redesign-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_gui.puml` — updated class diagram: theme sections, button color groups, hex value notes
+  - `artifacts/activity_gui_theme_routing.puml` — new activity diagram: button press routing with dark/orange theme annotations
+  - `artifacts/sequence_gui_binary_op.puml` — updated sequence: dark-theme init phase prepended before binary operation flow
+
+Duration: 298.7s | Cost: $0.825349 USD | Turns: 12

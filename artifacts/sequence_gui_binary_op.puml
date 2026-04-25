@@ -1,40 +1,57 @@
 @startuml
-title Binary Operation Flow: 5 + 3 =
+title GUI Dark-Theme Initialization and Binary Operation (5 + 3 = 8)
 
 actor User
 participant CalculatorGUI
-participant Calculator
-participant "Label (display)" as Display
+participant "Root:Tk" as Root
+participant "display:Label" as display
+participant "entry:Entry" as entry
+participant "calc:Calculator" as calc
 
-User -> CalculatorGUI : click "5"
+== Dark Theme Initialization ==
+User -> CalculatorGUI : CalculatorGUI(root)
 activate CalculatorGUI
-CalculatorGUI -> CalculatorGUI : _on_number_click("5")\ncurrent_input = "5"
-CalculatorGUI ->> Display : config(text="5")
+CalculatorGUI -> Root : config(bg="#000000")
+CalculatorGUI -> Root : geometry("350x450")
+CalculatorGUI -> Root : grid_rowconfigure(0..10, weight=1)
+CalculatorGUI -> Root : grid_columnconfigure(0..4, weight=1)
+CalculatorGUI -> display : Label(bg="#000000", fg="white", font=Arial 30)
+CalculatorGUI -> entry : Entry(bg="#000000", fg="white")
+note right of CalculatorGUI
+  Digit buttons: bg=#333333, fg=white, relief=flat
+  Operator buttons: bg=#FF9500, fg=white, relief=flat
+  Scientific buttons: bg=#FF9500, grid_remove() on creation
+end note
 deactivate CalculatorGUI
 
-User -> CalculatorGUI : click "+"
+== Binary Operation: 5 + 3 = 8 ==
+User -> CalculatorGUI : click "5" (bg=#333333)
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _on_number_click("5")
+CalculatorGUI -> entry : insert("5")
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : click "+" (bg=#FF9500)
 activate CalculatorGUI
 CalculatorGUI -> CalculatorGUI : _on_operator_click("add")
-CalculatorGUI -> CalculatorGUI : _set_operator("add")\nfirst_operand = 5.0\npending_op = "add"\ncurrent_input = ""
-CalculatorGUI ->> Display : config(text="")
+note right: stores first_operand=5.0, pending_op="add"
+CalculatorGUI -> entry : delete()
 deactivate CalculatorGUI
 
-User -> CalculatorGUI : click "3"
+User -> CalculatorGUI : click "3" (bg=#333333)
 activate CalculatorGUI
-CalculatorGUI -> CalculatorGUI : _on_number_click("3")\ncurrent_input = "3"
-CalculatorGUI ->> Display : config(text="3")
+CalculatorGUI -> CalculatorGUI : _on_number_click("3")
+CalculatorGUI -> entry : insert("3")
 deactivate CalculatorGUI
 
-User -> CalculatorGUI : click "="
+User -> CalculatorGUI : click "=" (bg=#FF9500)
 activate CalculatorGUI
-CalculatorGUI -> CalculatorGUI : _calculate()\nsecond = float("3") = 3.0
-CalculatorGUI ->> Calculator : add(5.0, 3.0)
-activate Calculator
-Calculator -->> CalculatorGUI : 8.0
-deactivate Calculator
-CalculatorGUI -> CalculatorGUI : current_input = "8.0"\npending_op = None
-CalculatorGUI ->> Display : config(text="8.0")
-CalculatorGUI -->> User : result 8.0 shown
+CalculatorGUI -> CalculatorGUI : _calculate()
+CalculatorGUI -> calc : add(5.0, 3.0)
+activate calc
+calc --> CalculatorGUI : 8.0
+deactivate calc
+CalculatorGUI -> display : config(text="8.0")
 deactivate CalculatorGUI
 
 @enduml

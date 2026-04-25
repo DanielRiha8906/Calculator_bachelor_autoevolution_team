@@ -71,18 +71,33 @@ class CalculatorGUI:
             self.root = root
 
         self.root.title("Calculator")
+        self.root.config(bg="#000000")
+        self.root.geometry("350x450")
+
+        # Configure grid weights for even expansion.
+        for i in range(11):
+            self.root.grid_rowconfigure(i, weight=1)
+        for j in range(5):
+            self.root.grid_columnconfigure(j, weight=1)
 
         # Row 0: Display label showing current result.
         self.display = tkinter.Label(
             self.root,
             text="0",
             anchor="e",
-            font=("Arial", 18),
+            font=("Arial", 30),
+            bg="#000000",
+            fg="white",
         )
         self.display.grid(row=0, column=0, columnspan=5, sticky="nsew")
 
         # Row 1: Entry field for typing input.
-        self.entry = tkinter.Entry(self.root, font=("Arial", 14))
+        self.entry = tkinter.Entry(
+            self.root,
+            font=("Arial", 14),
+            bg="#000000",
+            fg="white",
+        )
         self.entry.grid(row=1, column=0, columnspan=5, sticky="nsew")
 
         # ------------------------------------------------------------------
@@ -100,124 +115,152 @@ class CalculatorGUI:
         tkinter.Button(
             self.root, text="7",
             command=lambda: self._on_number_click("7"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=2, column=0, sticky="nsew")
         tkinter.Button(
             self.root, text="8",
             command=lambda: self._on_number_click("8"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=2, column=1, sticky="nsew")
         tkinter.Button(
             self.root, text="9",
             command=lambda: self._on_number_click("9"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=2, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="/",
             command=lambda: self._on_operator_click("divide"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=2, column=3, sticky="nsew")
         tkinter.Button(
             self.root, text="x²",
             command=lambda: self._apply_unary("square"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=2, column=4, sticky="nsew")
 
         # Row 3
         tkinter.Button(
             self.root, text="4",
             command=lambda: self._on_number_click("4"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=3, column=0, sticky="nsew")
         tkinter.Button(
             self.root, text="5",
             command=lambda: self._on_number_click("5"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=3, column=1, sticky="nsew")
         tkinter.Button(
             self.root, text="6",
             command=lambda: self._on_number_click("6"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=3, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="*",
             command=lambda: self._on_operator_click("multiply"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=3, column=3, sticky="nsew")
         tkinter.Button(
             self.root, text="x³",
             command=lambda: self._apply_unary("cube"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=3, column=4, sticky="nsew")
 
         # Row 4
         tkinter.Button(
             self.root, text="1",
             command=lambda: self._on_number_click("1"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=4, column=0, sticky="nsew")
         tkinter.Button(
             self.root, text="2",
             command=lambda: self._on_number_click("2"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=4, column=1, sticky="nsew")
         tkinter.Button(
             self.root, text="3",
             command=lambda: self._on_number_click("3"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=4, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="-",
             command=lambda: self._on_operator_click("subtract"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=4, column=3, sticky="nsew")
         tkinter.Button(
             self.root, text="√",
             command=lambda: self._apply_unary("square_root"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=4, column=4, sticky="nsew")
 
         # Row 5
         tkinter.Button(
             self.root, text="0",
             command=lambda: self._on_number_click("0"),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=5, column=0, sticky="nsew")
         tkinter.Button(
             self.root, text=".",
             command=lambda: self._on_number_click("."),
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=5, column=1, sticky="nsew")
         tkinter.Button(
             self.root, text="±",
             command=self._on_sign_toggle,
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=5, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="+",
             command=lambda: self._on_operator_click("add"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=5, column=3, sticky="nsew")
         tkinter.Button(
             self.root, text="∛",
             command=lambda: self._apply_unary("cube_root"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=5, column=4, sticky="nsew")
 
         # Row 6
         tkinter.Button(
             self.root, text="←",
             command=self._on_backspace,
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=6, column=0, sticky="nsew")
         tkinter.Button(
             self.root, text="C",
             command=self._clear,
+            bg="#333333", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=6, column=1, sticky="nsew")
         tkinter.Button(
             self.root, text="^",
             command=lambda: self._on_operator_click("power"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=6, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="log",
             command=lambda: self._apply_unary("log"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=6, column=3, sticky="nsew")
         tkinter.Button(
             self.root, text="ln",
             command=lambda: self._apply_unary("ln"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=6, column=4, sticky="nsew")
 
         # Row 7: equals, factorial, sci/norm toggle
         tkinter.Button(
             self.root, text="=",
             command=self._calculate,
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=7, column=0, columnspan=2, sticky="nsew")
         tkinter.Button(
             self.root, text="!",
             command=lambda: self._apply_unary("factorial"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=7, column=2, sticky="nsew")
         tkinter.Button(
             self.root, text="Sci/Norm",
             command=self._toggle_scientific_mode,
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         ).grid(row=7, column=3, columnspan=2, sticky="nsew")
 
         # ------------------------------------------------------------------
@@ -240,6 +283,7 @@ class CalculatorGUI:
             btn = tkinter.Button(
                 self.root, text=label,
                 command=lambda m=method: self._apply_unary(m),
+                bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
             )
             btn.grid(row=row, column=col, sticky="nsew")
             btn.grid_remove()
@@ -249,6 +293,7 @@ class CalculatorGUI:
         pi_btn = tkinter.Button(
             self.root, text="π",
             command=lambda: self._on_constant_click("get_pi"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         )
         pi_btn.grid(row=10, column=0, sticky="nsew")
         pi_btn.grid_remove()
@@ -257,6 +302,7 @@ class CalculatorGUI:
         e_btn = tkinter.Button(
             self.root, text="e",
             command=lambda: self._on_constant_click("get_e"),
+            bg="#FF9500", fg="white", relief="flat", padx=3, pady=3,
         )
         e_btn.grid(row=10, column=1, sticky="nsew")
         e_btn.grid_remove()
