@@ -417,7 +417,7 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 **Patterns:**
 - V3 Task 10 is logging/observability task following Task 9 (operation history)
 - Task 10 consolidates error handling from Tasks 1, 7, 8 into structured, persistent log file
-- V3 sequence: error handling (1) → test suite (2) → operations (3-4) → interactive UI (5) → CLI (7) → input validation (8) → operation history (9) → error logging (10)
+- V3 sequence: error handling (1) → test suite (2) → operations (3-4) → interactive UI (5) → CLI (7) → validation (8) → operation history (9) → error logging (10)
 - Task 10 is likely final integration/observability task for V3
 - Minimal specification consistent with V3 series; key ambiguities are file location, format, retention policy
 - "ai-implement:structured-team" label consistent; no new operations, pure observability/logging addition
@@ -579,7 +579,7 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
 
 **Patterns:**
 - V3 Task 13 is documentation/user-facing task following Task 12 modular refactoring
-- V3 sequence: core features (1-4) → interactive/CLI (5, 7) → validation (8) → logging (9-10) → refactoring (11-12) → documentation (13)
+- V3 sequence: core features (1-4) → interactive/CLI (5, 7) → validation (8) → logging (9-10) → refactoring (11) → documentation (13)
 - Task 13 is near-final task in V3 cycle; represents capture of all prior work in user-accessible form
 - Minimal specification consistent with V3 series; documentation architect/writer has flexibility in format and organization
 - "ai-implement:structured-team" label consistent; no new features or code, pure documentation/communication
@@ -866,6 +866,137 @@ The single PR comment from DanielRiha8906 (owner) marks **"Fix needed"** and spe
 - GUI feature is a "Could Have" in terms of core calculator function (existing modes remain fully viable)
 - However, task is explicitly required by Issue #414; treat as "Must Have" for this specific task
 - All acceptance criteria must be verifiable in automated tests where possible; GUI interactions may require manual verification
+
+### 2026-04-25 | V3 Task 16 - Structured/team (Issue #464)
+
+**Issue:** Redesign the calculator GUI to look like a modern calculator app inspired by iOS. The goal is a clean, minimal dark interface with a fixed layout (not responsive). Replaces the generic tkinter GUI from Task 15 with a professional, modern appearance emphasizing visual hierarchy through color and typography.
+
+**Key Requirements Identified:**
+- Redesign existing GUI from Task 15 to modern iOS-inspired aesthetic
+- Replace generic GUI with dark theme, professional button styling, and specific layout grid
+- Standard mode: fixed 4-column × 5-row button grid with specified button positions and functions
+- Scientific mode: additional grid on left side containing scientific operations
+- Precise color scheme: black (#000000) background, dark grey (#333333) standard buttons, orange (#FF9500) primary operators, light grey (#A5A5A5) utility buttons
+- Result display: 24pt+ white text, right-aligned on black background
+- Button styling: flat (no 3D relief), square or slightly rounded, uniform size
+- Use mathematical symbols for button labels (√, x², ÷, ×, −, n!, ln, etc.)
+- Pure presentation/styling change; no logic modifications
+
+**Explicit Requirements:**
+- **Layout (Standard Mode):**
+  - 4 columns, 5 rows (20 buttons)
+  - Row 1: C, Del, Mode, /
+  - Row 2: 7, 8, 9, *
+  - Row 3: 4, 5, 6, (empty)
+  - Row 4: 1, 2, 3, −
+  - Row 5: 0 (2 columns wide), ., =
+- **Layout (Scientific Mode):** Additional grid on left; exact layout TBD but displays all scientific functions
+- **Color Scheme:**
+  - Window background: #000000 (pure black)
+  - Standard operation buttons: #333333 (dark grey)
+  - Primary operators (±, ×, ÷): #FF9500 (orange)
+  - Utility buttons (C, Del, Mode, ., =): #A5A5A5 (light grey)
+- **Typography:**
+  - Result display: 24pt or larger, white text, right-aligned
+  - Button labels: short symbols (+, −, ×, ÷, √, x², xʸ, n!, ln, log)
+- **Button Styling:**
+  - Flat appearance (no 3D relief borders)
+  - Square or slightly rounded corners
+  - Uniform size within grid
+  - Compact, minimal aesthetic (iOS Calculator inspired)
+- **Functionality:**
+  - All buttons functional (numeric, operators, utility)
+  - Clear (C) resets state and display
+  - Delete (Del) removes last digit
+  - Mode toggle switches between normal and scientific
+  - Equals (=) computes and displays result
+  - Decimal point, numeric input, operator logic all work unchanged
+- **Non-Functional:**
+  - No changes to calculation logic or operation implementations
+  - No changes to error handling, validation, or logging from prior tasks
+  - All existing tests must pass without modification
+  - CLI and interactive modes remain available and unchanged
+
+**Ambiguities & Gaps:**
+- **Scientific grid layout on left:** Issue states "add a grid to the left... but not shown methods" — phrasing unclear
+  - Interpretation: Scientific operations hidden in normal mode; left sidebar/grid displays them when mode switches to scientific
+  - Exact positioning (fixed width sidebar vs. expanded grid), button count, and layout of scientific grid not specified
+- **Visual feedback on button interaction:** No specification of hover/press effects
+  - Assumed: Basic tkinter visual feedback (color change, relief change on click) sufficient
+- **Error display:** How errors shown (division by zero, domain violations)?
+  - Assumed: Error messages appear in result display area, likely with styling/color differentiation
+- **Decimal point handling:** Prevent multiple decimals in one number?
+  - Assumed: Yes, standard calculator behavior
+- **Leading zeros:** Display "03" or "3" after pressing 0 then 3?
+  - Assumed: Standard behavior (likely "3" to match iOS)
+- **Scientific mode state:** Does mode switch clear pending operands?
+  - Assumed: Mode switch provides fresh state; no carryover of partial operations
+- **Responsive design:** Grid is fixed (4×5) — no dynamic resizing?
+  - Implied: Fixed layout, not responsive; window may be resizable but grid structure unchanged
+- **Accessibility:** No mention of keyboard support, screen readers, or themes
+  - Out of scope per specification
+- No comments provided; issue body is minimal
+- No wireframes, mockups, or design specifications beyond text layout
+- No mention of animations, transitions, or advanced visual effects
+
+**Assumed Resolution (for Architect):**
+- **GUI framework:** Tkinter (inherited from Task 15); no new dependencies
+- **Visual design:**
+  - Use tkinter Grid geometry manager for precise button positioning in 4×5 grid
+  - Apply exact hex colors via tkinter button/frame background colors
+  - Use tkinter font system to set result display to 24pt+ white text
+  - Implement flat button appearance by setting relief=tk.FLAT and borderwidth=0
+  - Apply slight rounding via tkinter's highlightthickness and compound/image properties (or accept square appearance; rounding is nice-to-have)
+- **Color-based hierarchy:**
+  - Dark grey (#333333) for standard numeric/operation buttons (most common interactions)
+  - Orange (#FF9500) for primary operators (±, ×, ÷) to draw attention
+  - Light grey (#A5A5A5) for utility buttons (C, Del, Mode) and decimal/equals to show secondary importance
+  - Black background maintains minimal, professional aesthetic
+- **Scientific mode display:**
+  - When mode switches to scientific, dynamically update GUI to show left-side grid or expand button grid
+  - All scientific operations (from PR #459: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) become available via buttons or dropdown
+  - Exact layout TBD by architect; could be:
+    - Fixed left sidebar (separate pane) with scientific buttons
+    - Expanded grid that adds columns/rows on left
+    - Modal/popup scientific function selector
+- **Button factory/helper:** Create function to generate buttons with consistent styling:
+  - `create_button(text, color, row, col, command)` helper
+  - Centralizes color, font, size, relief settings for maintainability
+- **Result display widget:**
+  - Use tkinter Label or Entry (read-only) with large font, right-alignment, white color, black background
+  - Update on every operation or numeric input
+- **Mode toggle logic:**
+  - Link to Task 14's mode system; mode switch triggers GUI rebuild or hiding/showing of scientific buttons
+  - Clear visual indication of current mode (mode label, button highlight, or pane visibility)
+- **Event binding:**
+  - Button clicks → call calculator.core operation logic; delegate all computation
+  - GUI remains pure presentation layer; no calculation logic in GUI code
+- **Integration with Task 15 architecture:**
+  - This task replaces the generic Task 15 GUI with the modern design
+  - Keep GUI in separate module (`src/calculator/gui.py` or similar)
+  - Entry point logic remains: `--gui` flag launches GUI (now with modern design)
+
+**Context from Related Issues:**
+- V3 Task 15 (#414): Previous GUI implementation (Task 16 redesigns/replaces this)
+- PR #459: Scientific functions available in scientific mode (Task 16 must display all of them)
+- V3 Task 14 (#411): Mode architecture (Task 16 uses mode system to show/hide operations)
+- V3 Tasks 1-13: All calculator operations must be accessible via redesigned GUI
+
+**Patterns:**
+- V3 Task 16 is final UI/design-refinement task in V3 structured/team cycle
+- Task 16 is a pure visual redesign; no functional changes or new features
+- Minimal specification consistent with V3 series; specific hex colors and layout are fixed; implementation details (scientific grid layout, animation) left to architect
+- "ai-implement:structured-team" label consistent; no new operations, pure UI/UX refinement
+- Task 16 likely final V3 task; represents completion of calculator with professional, polished UI
+- Key assumption: Task 15 GUI already exists and is functionally complete; Task 16 replaces appearance while preserving functionality
+- No mention of themes, customization, or accessibility; fixed design per specification
+- Task demonstrates importance of visual design in user-facing software; professional appearance enhances usability
+
+**Priority Assessment:**
+- GUI redesign is "Should Have" / "Could Have" from core calculator perspective (existing modes remain viable)
+- However, task is explicitly scoped and labeled as required (Issue #464); treat as "Must Have" for this task
+- All acceptance criteria are verifiable: layout matches spec, colors match hex codes, buttons function, typography meets size requirement
+- Design decisions (scientific grid placement, rounding degree, spacing) are architect's choice within spec
 
 ---
 
