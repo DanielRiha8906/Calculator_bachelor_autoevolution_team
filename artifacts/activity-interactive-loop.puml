@@ -1,0 +1,79 @@
+@startuml activity-interactive-loop
+!theme plain
+
+start
+
+:current_mode = initial_mode;
+:consecutive_failures = 0;
+:active_registry = _build_registry(initial_mode);
+
+repeat
+
+  :Display available ops from active_registry.list_all();
+  :Prompt user for input;
+  :raw = input().strip().lower();
+
+  if (raw in {quit, exit, q}?) then (yes)
+    stop
+  endif
+
+  if (raw == "history"?) then (yes)
+    :Display session history;
+    :consecutive_failures = 0;
+  elseif (raw starts with "mode"?) then (yes)
+    :mode_arg = raw.split()[1];
+    if (mode_arg in {normal, norm}?) then (yes)
+      :current_mode = MODE_NORMAL;
+      :active_registry = _build_registry(MODE_NORMAL);
+      :Print "Mode switched to normal.";
+      :consecutive_failures = 0;
+    elseif (mode_arg in {scientific, sci}?) then (yes)
+      :current_mode = MODE_SCIENTIFIC;
+      :active_registry = _build_registry(MODE_SCIENTIFIC);
+      :Print "Mode switched to scientific.";
+      :consecutive_failures = 0;
+    else (invalid alias)
+      :Print "Unknown mode. Use normal or scientific.";
+      :consecutive_failures += 1;
+    endif
+  elseif (not active_registry.has(raw)?) then (yes)
+    :ErrorLog.log_error("unsupported_operation", ...);
+    :Print "Error: Unknown operation";
+    :consecutive_failures += 1;
+  else (operation found)
+    :op_obj = active_registry.get(raw);
+    :operands = [];
+    fork
+      :Collect arity operands via InputValidator;
+    fork again
+      note right
+        Loop arity times;
+        arity = 0, 1, or 2
+      end note
+    end fork
+    if (parse error on any operand?) then (yes)
+      :ErrorLog.log_error("invalid_input", ...);
+      :consecutive_failures += 1;
+    else (all operands valid)
+      :result = op_obj.execute(*operands);
+      if (ValueError or ZeroDivisionError?) then (yes)
+        :ErrorLog.log_error("calculation_error", ...);
+        :consecutive_failures += 1;
+      else (success)
+        :Print result;
+        :OperationHistory.record(raw, operands, result);
+        :consecutive_failures = 0;
+      endif
+    endif
+  endif
+
+  if (consecutive_failures >= 3?) then (yes)
+    :Print "Too many invalid attempts. Exiting.";
+    stop
+  endif
+
+repeat while (user continues)
+
+stop
+
+@enduml

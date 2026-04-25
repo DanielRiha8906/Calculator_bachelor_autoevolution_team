@@ -1,3 +1,48 @@
+## Run: Fix PR #459 — feat: add scientific mode with interactive mode switching (2026-04-25)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/operations/scientific.py` — added 12 new Operation subclasses: ScientificSin, ScientificCos, ScientificTan, ScientificAsin, ScientificAcos, ScientificAtan, ScientificSinh, ScientificCosh, ScientificTanh, ScientificExp, ScientificPi, ScientificE
+  - `src/calculator/main.py` — corrected mode split: normal mode now has 13 ops, scientific mode has 25; updated _SCIENTIFIC_OPS_BLOCKED to only block 12 new scientific ops; updated imports; added dynamic prompt
+  - `tests/test_scientific_operations.py` — 75 new tests for all 12 new scientific operation classes
+  - `tests/test_mode_registry.py` — 16 new tests for mode registry size and operation availability
+  - `tests/test_mode_switching.py` — updated tests to reflect correct normal mode (13 ops); square and other advanced ops now expected to succeed in normal mode
+  - `tests/test_mode_operations.py` — updated tests to reflect correct mode split
+- **Purpose:** Address reviewer feedback on PR #459 — fix architectural mismatch where normal mode was incorrectly limited to 5 operations; implement 12 missing scientific functions; correct mode split so scientific is a proper superset of normal
+- **Risks:** None — all existing tests updated to match corrected behavior; no new dependencies
+- **Tests passed:** 382 passed, 3 skipped, 0 failed
+
+Duration: 1293.0s | Cost: $3.181510 USD | Turns: 20
+
+## Run: update-diagrams — Scientific Mode (2026-04-24)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/class_diagram_scientific_mode.puml` — class diagram: Operation hierarchy, OperationRegistry, 13 operation subclasses, mode constants
+  - `artifacts/activity_diagram_interactive_mode.puml` — activity diagram: interactive session loop with mode switching, operation filtering, consecutive failure tracking
+  - `artifacts/sequence_diagram_mode_switch.puml` — sequence diagram: mode switch command processing through registry rebuild
+
+Duration: 330.0s | Cost: $0.626322 USD | Turns: 4
+
+## Run: Issue #411 — V3 Task 14 - Structured/team (2026-04-24)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/main.py` — added mode constants (MODE_NORMAL/MODE_SCIENTIFIC), mode-aware `_build_registry()`, mode switching command parsing in interactive loop, CLI mode defaulting to MODE_NORMAL
+  - `src/__main__.py` — updated wrapper to provide backward-compatible CLI with full scientific ops
+  - `tests/test_mode_switching.py` — 20 new tests for mode initialization, switching, operation filtering, failure counting, CLI behavior
+  - `tests/test_mode_operations.py` — 8 new parametrized tests for operation availability in each mode
+  - `rag/agents/python-code-implementer.md` — cycle log entry
+  - `rag/agents/pytest-edge-tester.md` — cycle log entry
+- **Purpose:** Add scientific mode to calculator with interactive mode switching; normal mode restricts to arithmetic operations, scientific mode enables all 13 operations
+- **Risks:** None — backward compatible; existing tests unmodified
+- **Tests passed:** 291 passed, 3 skipped, 0 failed
+
+Duration: 1385.9s | Cost: $3.383282 USD | Turns: 16
+
 ## Run: Issue #408 — V3 Task 13 - Structured/team (2026-04-24)
 
 - **Branch:** task/issue-408-add-documentation
@@ -341,3 +386,16 @@ Duration: 202.9s | Cost: $0.495948 USD | Turns: 4
   - `artifacts/activity_interactive.puml` — activity diagram for Interactive REPL mode with 3-strike consecutive-failure logic
 
 Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
+
+## Run: update-diagrams — Scientific Mode UML (2026-04-25)
+
+- **Branch:** task/issue-411-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class-operations-hierarchy.puml` — class diagram for Operation hierarchy and OperationRegistry with 25 subclasses
+  - `artifacts/activity-interactive-loop.puml` — activity diagram for interactive REPL with mode switching and failure tracking
+  - `artifacts/sequence-scientific-mode-interactions.puml` — sequence diagram for mode switch, operation execution, and three-failure exit scenarios
+  - `artifacts/registry-mode-split.puml` — component diagram showing MODE_NORMAL (13 ops) vs MODE_SCIENTIFIC (25 ops) registries
+  - `artifacts/mode-switching-state-machine.puml` — state machine for MODE_NORMAL ↔ MODE_SCIENTIFIC transitions
+
+Duration: 249.6s | Cost: $0.569755 USD | Turns: 4

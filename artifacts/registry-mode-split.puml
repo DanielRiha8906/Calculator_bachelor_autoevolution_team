@@ -1,0 +1,74 @@
+@startuml registry-mode-split
+!theme plain
+skinparam componentStyle rectangle
+
+component "_build_registry(mode)" as Builder
+
+package "MODE_NORMAL Registry (13 ops)" as NormalReg {
+  package "Arithmetic (6)" {
+    [add]
+    [subtract]
+    [multiply]
+    [divide]
+    [modulo]
+    [factorial]
+  }
+  package "Scientific-Core (7)" {
+    [square]
+    [cube]
+    [square_root]
+    [cube_root]
+    [power]
+    [log10]
+    [ln]
+  }
+}
+
+package "MODE_SCIENTIFIC Registry (25 ops)" as SciReg {
+  package "Arithmetic (6) " {
+    [add ]
+    [subtract ]
+    [multiply ]
+    [divide ]
+    [modulo ]
+    [factorial ]
+  }
+  package "Scientific-Core (7) " {
+    [square ]
+    [cube ]
+    [square_root ]
+    [cube_root ]
+    [power ]
+    [log10 ]
+    [ln ]
+  }
+  package "Scientific-New (12) — added in scientific mode" {
+    package "Trigonometric" {
+      [sin]
+      [cos]
+      [tan]
+      [asin]
+      [acos]
+      [atan]
+    }
+    package "Hyperbolic & Exponential" {
+      [sinh]
+      [cosh]
+      [tanh]
+      [exp]
+      [pi]
+      [e]
+    }
+  }
+}
+
+Builder --> NormalReg : mode = "normal" / "norm"
+Builder --> SciReg   : mode = "scientific" / "sci"
+
+note bottom of Builder
+  Called by _run_interactive_loop()
+  on startup and on every "mode" command.
+  Returns a fully populated OperationRegistry.
+end note
+
+@enduml

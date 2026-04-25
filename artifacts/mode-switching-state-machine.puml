@@ -1,0 +1,25 @@
+@startuml mode-switching-state-machine
+!theme plain
+
+[*] --> MODE_NORMAL : cli_mode(mode=MODE_NORMAL)\nentry: _build_registry(MODE_NORMAL)\nconsecutive_failures = 0
+
+state MODE_NORMAL {
+  MODE_NORMAL : 13 operations available\n(6 Arithmetic + 7 Scientific-Core)
+  MODE_NORMAL : Scientific-New ops NOT available
+}
+
+state MODE_SCIENTIFIC {
+  MODE_SCIENTIFIC : 25 operations available\n(13 MODE_NORMAL + 12 Scientific-New)
+  MODE_SCIENTIFIC : All trig, hyperbolic, exp, pi, e available
+}
+
+MODE_NORMAL --> MODE_SCIENTIFIC : "mode scientific" | "mode sci"\n/ active_registry = _build_registry(MODE_SCIENTIFIC)\n/ consecutive_failures = 0
+
+MODE_SCIENTIFIC --> MODE_NORMAL : "mode normal" | "mode norm"\n/ active_registry = _build_registry(MODE_NORMAL)\n/ consecutive_failures = 0
+
+MODE_NORMAL --> [*] : quit | exit | q
+MODE_SCIENTIFIC --> [*] : quit | exit | q
+MODE_NORMAL --> [*] : consecutive_failures >= 3\n"Too many invalid attempts. Exiting."
+MODE_SCIENTIFIC --> [*] : consecutive_failures >= 3\n"Too many invalid attempts. Exiting."
+
+@enduml

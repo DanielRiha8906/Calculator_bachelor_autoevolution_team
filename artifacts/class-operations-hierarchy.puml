@@ -1,0 +1,99 @@
+@startuml class-operations-hierarchy
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+abstract class Operation {
+  {abstract} +name : str
+  {abstract} +arity : int
+  {abstract} +execute(*args : float) : float
+}
+
+class OperationRegistry {
+  - _ops : dict[str, Operation]
+  + register(operation : Operation, name : str = None) : None
+  + get(name : str) : Operation
+  + has(name : str) : bool
+  + list_all() : list[str]
+}
+
+note top of OperationRegistry
+  Built by _build_registry(mode)
+  MODE_NORMAL  => 13 operations
+  MODE_SCIENTIFIC => 25 operations
+end note
+
+package "Arithmetic (arity=2 unless noted)" {
+  class ArithmeticAdd       { name = "add" \n arity = 2 }
+  class ArithmeticSubtract  { name = "subtract" \n arity = 2 }
+  class ArithmeticMultiply  { name = "multiply" \n arity = 2 }
+  class ArithmeticDivide    { name = "divide" \n arity = 2 }
+  class ArithmeticModulo    { name = "modulo" \n arity = 2 }
+  class ArithmeticFactorial { name = "factorial" \n arity = 1 }
+}
+
+package "Scientific-Core (arity=1 unless noted)" {
+  class ScientificSquare     { name = "square" \n arity = 1 }
+  class ScientificCube       { name = "cube" \n arity = 1 }
+  class ScientificSquareRoot { name = "square_root" \n arity = 1 }
+  class ScientificCubeRoot   { name = "cube_root" \n arity = 1 }
+  class ScientificPower      { name = "power" \n arity = 2 }
+  class ScientificLog10      { name = "log10" \n arity = 1 }
+  class ScientificLn         { name = "ln" \n arity = 1 }
+}
+
+package "Scientific-New — Trigonometric (arity=1)" {
+  class ScientificSin  { name = "sin" }
+  class ScientificCos  { name = "cos" }
+  class ScientificTan  { name = "tan" }
+  class ScientificAsin { name = "asin" \n domain [-1, 1] }
+  class ScientificAcos { name = "acos" \n domain [-1, 1] }
+  class ScientificAtan { name = "atan" }
+}
+
+package "Scientific-New — Hyperbolic & Exponential (arity=1 unless noted)" {
+  class ScientificSinh { name = "sinh" }
+  class ScientificCosh { name = "cosh" }
+  class ScientificTanh { name = "tanh" }
+  class ScientificExp  { name = "exp" }
+  class ScientificPi   { name = "pi" \n arity = 0 }
+  class ScientificE    { name = "e" \n arity = 0 }
+}
+
+' Inheritance — Arithmetic
+Operation <|-- ArithmeticAdd
+Operation <|-- ArithmeticSubtract
+Operation <|-- ArithmeticMultiply
+Operation <|-- ArithmeticDivide
+Operation <|-- ArithmeticModulo
+Operation <|-- ArithmeticFactorial
+
+' Inheritance — Scientific-Core
+Operation <|-- ScientificSquare
+Operation <|-- ScientificCube
+Operation <|-- ScientificSquareRoot
+Operation <|-- ScientificCubeRoot
+Operation <|-- ScientificPower
+Operation <|-- ScientificLog10
+Operation <|-- ScientificLn
+
+' Inheritance — Scientific-New Trig
+Operation <|-- ScientificSin
+Operation <|-- ScientificCos
+Operation <|-- ScientificTan
+Operation <|-- ScientificAsin
+Operation <|-- ScientificAcos
+Operation <|-- ScientificAtan
+
+' Inheritance — Scientific-New Hyperbolic & Exponential
+Operation <|-- ScientificSinh
+Operation <|-- ScientificCosh
+Operation <|-- ScientificTanh
+Operation <|-- ScientificExp
+Operation <|-- ScientificPi
+Operation <|-- ScientificE
+
+' OperationRegistry composition
+OperationRegistry "1" *-- "0..25" Operation : contains
+
+@enduml
