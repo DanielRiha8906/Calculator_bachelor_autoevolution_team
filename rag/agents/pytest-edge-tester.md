@@ -1741,3 +1741,82 @@ Files Modified:
 7. Can be launched via src/__main__.py with --gui flag
 
 The test suite comprehensively validates all GUI functionality with 25 passing tests covering window creation, widget accessibility, arithmetic operations, unary operations, error handling, clear functionality, operation sequences, and input types. Full backward compatibility is maintained - all 387 prior tests continue to pass with zero failures across the entire 412-test suite.
+
+### 2026-04-25 | task/issue-463-redesign-gui | WRITE | 15 tests written, 12 failing
+
+**Task:** Write comprehensive failing tests for GUI dark-mode styling (issue #463). Tests verify that the CalculatorGUI applies consistent dark-mode styling: display font size 28-32pt, black/dark backgrounds, white text, orange operator buttons, dark gray digit buttons, and flat button relief.
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented:**
+- TestDisplayFontSize (2 tests): font size minimum 28pt, maximum 32pt
+- TestDisplayColors (2 tests): black background, white text
+- TestRootWindowBackground (1 test): root window black background
+- TestEntryFieldColors (2 tests): entry black background, white text
+- TestDigitButtonColors (2 tests): digit buttons dark gray (#333333) bg, white text
+- TestOperatorButtonColors (2 tests): operator buttons orange (#FF9500) bg, white text
+- TestEqualsButtonColor (1 test): equals button orange background
+- TestButtonRelief (1 test): buttons use flat relief
+- TestBackwardCompatibility (2 tests): operations still work, scientific toggle still works
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui_style.py`
+
+**Environment Setup:**
+- Installed python3-tk via apt-get (required for tkinter tests)
+- Used xvfb-run wrapper for headless display (no :0 display available in container)
+- Fixed import to use: `from src.gui import CalculatorGUI` with sys.path manipulation
+
+**Test Results:**
+- Total tests: 15
+- Passed: 3 (backward compatibility tests - operations still work)
+- Failed: 12 (styling tests fail as expected - feature not implemented)
+- Skipped: 0
+- Errors: 0
+
+**Failing Tests (Expected - Feature Not Yet Implemented):**
+1. test_display_font_size_minimum - Current: 18pt, Expected: ≥28pt
+2. test_display_background_black - Current: #d9d9d9, Expected: #000000
+3. test_display_foreground_white - Current: #000000, Expected: white
+4. test_root_background_black - Current: #d9d9d9, Expected: #000000
+5. test_entry_background_black - Current: #ffffff, Expected: #000000
+6. test_entry_foreground_white - Current: #000000, Expected: white
+7. test_digit_button_background_dark_gray - Current: #d9d9d9, Expected: #333333
+8. test_digit_button_foreground_white - Current: #000000, Expected: white
+9. test_operator_button_background_orange - Current: #d9d9d9, Expected: #ff9500
+10. test_operator_button_foreground_white - Current: #000000, Expected: white
+11. test_equals_button_orange - Current: #d9d9d9, Expected: #ff9500
+12. test_all_buttons_relief_flat - Current: raised, Expected: flat
+
+**Passing Tests (Backward Compatibility):**
+1. test_backward_compatibility_operations_work - No exceptions during square operation
+2. test_backward_compatibility_scientific_toggle_works - Scientific mode flag toggles correctly
+
+**Test Pattern & Quality:**
+- All tests use real tkinter widgets (not mocks) for accurate color/font property assertions
+- Fixture `gui_root_and_instance()` properly creates/destroys root window for each test
+- Tests inspect actual widget properties: cget("bg"), cget("fg"), cget("font"), cget("relief")
+- Color normalization handles both hex (#000000) and named ("black", "white") color formats
+- Font size extraction handles both tuple and string font configuration formats
+- Button identification by widget type and text content (digits 0-9, operators +/-/*/^, equals =)
+- Comprehensive failure messages show actual vs expected values for debugging
+
+**Test Coverage:**
+- Display styling: font size bounds, colors
+- Root/entry styling: background colors
+- Button styling: colors differentiated by button type (digit/operator/equals), relief
+- Backward compatibility: core operations unaffected by styling changes
+
+**Commit:**
+- Message: "test: add failing GUI style tests for issue #463"
+- Commit hash: 74d1b9f
+- All 12 failing tests committed successfully
+
+**Handoff Note:** 15 tests written (12 failing, 3 passing). Ready for python-code-implementer to apply dark-mode styling to src/gui.py:
+1. Set root window bg to #000000
+2. Set display label: font 28-32pt, bg #000000, fg white
+3. Set entry: bg #000000, fg white
+4. Set digit buttons (0-9): bg #333333, fg white, relief flat
+5. Set operator buttons (+, -, *, /, ^): bg #ff9500, fg white, relief flat
+6. Set other buttons (=, !, Sci/Norm, etc.): bg #ff9500 or #333333, fg white, relief flat
+7. Verify backward compatibility tests (2 tests) continue to pass
+
