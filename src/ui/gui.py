@@ -114,13 +114,34 @@ class CalculatorApp:
         return mode_obj.get_operations(self._registry)
 
     def switch_mode(self, mode: OperationMode) -> None:
-        """Switch the calculator to the given mode.
+        """Switch the calculator to the given mode and rebuild the operation menu.
 
         Args:
             mode: The ``OperationMode`` to switch to (NORMAL or SCIENTIFIC).
         """
         if mode in self._modes:
             self._current_mode = mode
+            self._rebuild_operation_menu()
+
+    def _rebuild_operation_menu(self) -> None:
+        """Rebuild the operation OptionMenu widget for the current mode.
+
+        Destroys the existing OptionMenu (if present) and creates a new one
+        populated with the operations available in the current mode.  Silently
+        ignores any exception so that headless / mocked test environments do
+        not crash.
+        """
+        try:
+            ops = self.get_current_mode_operations()
+            if hasattr(self, "_op_menu"):
+                self._op_menu.destroy()
+            if hasattr(self, "_op_frame") and hasattr(self, "_op_var"):
+                self._op_menu = tk.OptionMenu(self._op_frame, self._op_var, *ops)
+                self._op_menu.pack(side=tk.LEFT)
+                if ops:
+                    self._op_var.set(ops[0])
+        except Exception:  # noqa: BLE001 — mocked root or missing tk; ignore gracefully
+            pass
 
     @staticmethod
     def _parse_operand(value: object) -> object:
@@ -251,6 +272,7 @@ class CalculatorApp:
             op_frame.pack(fill=tk.X, padx=5, pady=5)
 
             tk.Label(op_frame, text="Operation:").pack(side=tk.LEFT)
+            self._op_frame = op_frame
             self._op_var = tk.StringVar(value="add")
             initial_ops = self.get_current_mode_operations()
             self._op_menu = tk.OptionMenu(op_frame, self._op_var, *initial_ops)

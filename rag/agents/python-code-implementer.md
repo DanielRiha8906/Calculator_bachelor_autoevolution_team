@@ -405,3 +405,30 @@ Only after ALL those test changes are committed (and passing against old flat fi
 **Test result:** 445/445 passed (415 pre-existing + 30 new GUI tests, 0 regressions).
 
 **Handoff notes for next agent:** No new pip dependencies introduced. The tkinter stub in `gui.py` covers only the widget classes used in `_setup_gui()`. If new widgets are added to the GUI, their stub counterparts must also be added to the `except ImportError` block. The `--gui` flag in `__main__.py` will fail in headless CI because it calls `tk.Tk()` with no mock — this is expected behavior (GUI can only run with a real display).
+
+---
+
+### 2026-04-25 — Fix OptionMenu not updating on mode switch (issue-415)
+
+**Task:** Fix the bug where `switch_mode()` updated `_current_mode` but did not rebuild the OptionMenu widget, leaving it showing the old mode's operations.
+
+**Files changed:**
+- `src/ui/gui.py` — three targeted changes:
+  1. In `_setup_gui()`, added `self._op_frame = op_frame` immediately before `self._op_var = tk.StringVar(...)` to persist a reference to the operation selector frame.
+  2. Added new method `_rebuild_operation_menu()` between `switch_mode()` and `_parse_operand()` — calls `get_current_mode_operations()`, destroys the old `_op_menu`, creates a new `tk.OptionMenu` with the new op list, packs it, and resets `_op_var` to the first operation. Entire body wrapped in `try/except Exception: pass` to match the existing headless-safety pattern.
+  3. In `switch_mode()`, added a call to `self._rebuild_operation_menu()` immediately after `self._current_mode = mode`.
+
+**Key decisions:**
+- `_op_frame` reference is stored at the line where `op_frame` is assigned in `_setup_gui()`, before `_op_var` is set, so the order of attribute initialisation remains consistent.
+- `_rebuild_operation_menu()` uses `hasattr` guards for `_op_menu`, `_op_frame`, and `_op_var` before acting on them — consistent with how `_on_calculate` guards its attribute accesses in the same file.
+- The `try/except Exception: pass` wrapping is identical to the pattern in `_setup_gui()` — silent failure in headless environments, no crash.
+- `_op_var.set(ops[0])` resets the selection to the first item in the new op list, which is the expected UX behavior when switching modes.
+- No changes made to `_setup_gui()`'s existing `try/except` block structure; the `self._op_frame = op_frame` line is inside the existing try block.
+
+**Patterns found:**
+- When a widget frame reference is needed in a later method, store it as `self._xxx` in `_setup_gui()` inside the same try block where the frame is created. The `hasattr` guard in the consuming method handles the case where setup failed silently.
+- The "destroy + recreate" pattern for rebuilding an OptionMenu is the canonical tkinter approach; there is no in-place update API for OptionMenu's choices.
+
+**Test result:** Not run by this agent (implementer does not run tests).
+
+**Handoff notes for next agent:** No new dependencies. The `_op_frame` attribute is only set inside `_setup_gui()`'s try block; if setup fails (headless), `_op_frame` will not exist and `_rebuild_operation_menu()` will silently no-op due to the `hasattr` guard. Tests that call `switch_mode()` and then assert on the updated op list should use `get_current_mode_operations()` (which is pure-logic, no widget) rather than introspecting the OptionMenu widget directly.

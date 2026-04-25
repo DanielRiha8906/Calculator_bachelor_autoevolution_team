@@ -16,6 +16,23 @@
 
 Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 
+## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added `_rebuild_operation_menu()` method and `_op_frame` reference; `switch_mode()` now calls `_rebuild_operation_menu()` to update the OptionMenu widget on mode change
+  - `tests/test_gui.py` — 12 new tests in `TestModeSwitchingBehavior` class covering mode switch operation counts, _op_var reset, persistence, stability, scientific-only ops, and no-exception guarantees
+  - `rag/agents/github-task-analyst.md` — cycle entry appended
+  - `rag/agents/pytest-edge-tester.md` — cycle entry appended
+  - `rag/agents/python-code-implementer.md` — cycle entry appended
+  - `rag/agents/system-architect.md` — cycle entry appended
+- **Purpose:** Fix PR #462 review blocker: mode switching in the GUI was non-functional because the OptionMenu widget was built once in _setup_gui() and never rebuilt when the mode changed. The fix adds a _rebuild_operation_menu() helper that destroys and recreates the widget with the correct operation list for the new mode.
+- **Risks:** None — change is isolated to GUI layer; no core logic touched; headless test safety preserved via try/except wrapper
+- **Tests passed:** 457 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Calculator Modes (2026-04-24)
 
 - **Branch:** task/issue-412-calculator-modes

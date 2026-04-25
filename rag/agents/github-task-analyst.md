@@ -574,3 +574,65 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - **Tests:** `tests/test_gui.py` or similar (new GUI test module)
   - **May reference (no modification):** `src/calculator.py`, `src/operation_registry.py`, `src/infrastructure/history.py`, `src/infrastructure/error_logger.py`
 - **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+
+### Cycle: 2026-04-25 — PR #462 Review: Unresolved Feedback on Issue #415 Implementation
+- **Task Type:** PR review feedback analysis (identify unresolved requirements from owner comment)
+- **Scope:** Extract and structure unresolved owner feedback on PR #462 (Issue #415 tkinter GUI implementation)
+- **PR Status:** OPEN (likely with `request-changes` label based on owner feedback)
+- **PR Implementation Summary (from PR body):**
+  - **`src/ui/modes.py`** — New `CalculatorMode` abstract base class with `SimpleMode` (6 ops: add, subtract, multiply, divide, square, sqrt) and `ScientificMode` (all 12 legacy ops) subclasses; clean OO mode abstraction as required
+  - **`src/ui/gui.py`** — New `CalculatorApp` tkinter GUI that reuses `Calculator`, `OperationRegistry`, and `OperationHistory` without modification; supports mode switching, dynamic unary/binary operand fields, error display in GUI label, and scrollable session history; fully injectable (`root`, `calculator`, `registry` params) for testability
+  - **`src/__main__.py`** — Added `--gui` flag: `python -m src --gui` launches GUI; existing CLI and interactive paths unchanged
+  - **`tests/test_gui.py`** — 30 new tests covering modes, calculations, error handling, history tracking, and operation classification (all headless via mocked tkinter root)
+  - **`tests/test_core_separation.py`** — Fixed pre-existing test isolation bug in `test_circular_imports`: `sys.modules` was cleared but never restored, causing 5 GUI tests to fail when the full suite ran together
+- **UNRESOLVED BLOCKER (Critical):**
+  - **Owner Comment (2026-04-25 15:42:36Z):** "**Fix needed**" with explicit task list:
+    1. **"When changing modes from Normal to Scientific, nothing changes."** — Mode switching in GUI does not update displayed operations
+    2. **"When Selecting the Scientific modes, the operations are not updated."** — Scientific mode operations list not reflected in UI controls
+    3. **"Add the Scientific operations when scientific mode is selected, add the functionality to them."** — Scientific mode must display/enable additional operations (power, cube, cbrt, factorial, log10, ln) not shown in simple mode
+    4. **"Every functionality from CLI should be incorporated into the GUI"** — GUI must support ALL operations available via CLI (or via operation registry); no feature gaps between CLI and GUI
+  - **Status:** Single unresolved comment; no code-level review comments or review threads; comment is owner's functional test result (mode switching broken, operations not filtering)
+- **Requirements Extracted from Unresolved Feedback:**
+  1. **FR1 (MUST HAVE):** Implement **dynamic operation filtering** in GUI when user switches modes
+     - When user selects simple mode: display only 6 basic operations (add, subtract, multiply, divide, square, sqrt)
+     - When user selects scientific mode: display all 12 operations (simple 6 + power, cube, cbrt, factorial, log10, ln)
+     - Current state: mode switching does not update operation controls
+  2. **FR2 (MUST HAVE):** Ensure **mode switch persists across operand re-entry and result display**
+     - User switches from simple to scientific → operation list updates → user can select scientific operation → calculate → result shown → mode remains scientific
+     - Current state: mode switching appears to have no effect on available operations
+  3. **FR3 (MUST HAVE):** Ensure **GUI operation set matches or exceeds CLI operation set**
+     - CLI supports: add, subtract, multiply, divide, power, factorial, square, cube, sqrt, cbrt, ln, log10 (12 ops)
+     - GUI simple mode must support: add, subtract, multiply, divide, square, sqrt (6 ops)
+     - GUI scientific mode must support: all 12 CLI ops (6 simple + 6 scientific)
+     - Verify no operations are missing or inaccessible in GUI vs CLI
+  4. **FR4 (MUST HAVE):** Verify **operation functionality matches CLI behavior**
+     - Each operation in GUI (simple or scientific) must produce the same result and error behavior as CLI
+     - Domain errors, input validation, and result precision must match CLI
+     - Current state: unclear if this is a separate issue or related to mode switching bug
+  5. **NFR1:** Mode switching must be **responsive** (instant UI update, no lag, no need to restart GUI)
+  6. **NFR2:** **Error message clarity** — if scientific operation selected in simple mode (by mistake), error message should guide user to scientific mode
+  7. **NFR3:** All **445 tests must pass** after fixes (PR summary claims 445 passing; no regressions allowed)
+- **Critical Ambiguities / Clarifications Needed:**
+  1. **Mode persistence mechanism:** When user switches mode, is it persisted in an instance variable in `CalculatorMode`-based object, and is the GUI observing/listening to mode changes? (Current code may have mode object but GUI controls not bound to re-render on mode change)
+  2. **Operation list update trigger:** What should trigger operation list update in GUI? (a) mode selection radio button click, (b) dropdown selection, (c) menu choice? Which UI element is responsible for triggering the filter?
+  3. **Default mode on GUI launch:** Should GUI start in simple mode (conservative) or scientific mode (feature-complete)? (Owner comment implies simple mode is the "default" based on wording "changing modes from Normal to Scientific")
+  4. **Operation display implementation:** Are operations shown as: (a) buttons that gray out when not available, (b) dynamic list that is cleared/repopulated, (c) tabs, (d) dropdown menu? If (a), buttons must be re-enabled/disabled on mode change; if (b)/(c)/(d), UI must re-render.
+  5. **Operand field adaptation:** When user switches modes, do operand entry fields adapt for unary vs binary ops? (PR summary mentions "dynamic unary/binary operand fields" but unclear if mode switching triggers re-layout)
+  6. **Scientific operations behavior:** Are the 6 additional scientific operations (power, cube, cbrt, factorial, log10, ln) already fully implemented and tested in CLI/core modules, or are they new stubs needing implementation? (Assumed: already implemented; issue #382 added these ops; GUI just needs to filter them)
+- **Owner Expectations Inferred:**
+  - Mode switching MUST work visually; owner tested manually and found it non-functional
+  - All 12 operations must be accessible in scientific mode within the GUI
+  - Owner expects feature parity: if operation works in CLI, it must work in GUI
+  - Four-point task list suggests multiple interconnected issues, not a single root cause
+- **Handoff Notes:**
+  - For system architect: Clarify mode persistence and operation filtering mechanism; specify which UI elements (buttons, dropdowns, tabs) trigger and reflect mode changes
+  - For implementer: Debug mode switching code path in `src/ui/gui.py`; ensure operation controls (buttons/dropdown/tabs) are programmatically updated when `CalculatorMode` object switches modes; verify all 12 operations accessible in scientific mode; test mode switching end-to-end
+  - For tester: Write new tests specifically for mode switching behavior (dynamic operation list update, persist across operations, match CLI operation set); verify all 445 tests pass after fixes
+  - For debugging: Root cause likely is: (a) mode object changes internally but GUI controls not re-rendered, (b) operation filtering logic not hooked to mode UI element, or (c) operation list not repopulated on mode switch
+  - Critical: This is blocking the PR merge; all 4 functional issues must be resolved before acceptance
+- **Label:** `request-changes:expert-team` (blocking feedback; functional regression on mode switching)
+- **Patterns Observed:**
+  - Owner tested PR manually and found functional failure (mode switching broken)
+  - PR passes automated test suite (30 tests + 445 total) but fails owner's manual functional test
+  - Suggests test suite may not adequately cover mode switching UI behavior (tests may be mocking/headless without verifying actual UI control updates)
+  - Strong indication that GUI code has logic for modes but UI binding/reactivity is incomplete

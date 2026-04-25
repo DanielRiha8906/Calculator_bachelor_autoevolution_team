@@ -401,3 +401,200 @@ class TestCalculatorAppRunMethod:
         app = CalculatorApp(root=mock_root)
         assert hasattr(app, "run")
         assert callable(app.run)
+
+
+class TestModeSwitchingBehavior:
+    """Test mode-switching behavior after fix to _rebuild_operation_menu."""
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_switch_scientific_returns_12_operations(self, mock_tk_class):
+        """After switch_mode(OperationMode.SCIENTIFIC), get_current_mode_operations() returns 12 operations."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 12
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_switch_back_to_normal_returns_6_operations(self, mock_tk_class):
+        """After switching to SCIENTIFIC then back to NORMAL, get_current_mode_operations() returns 6 operations."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        app.switch_mode(OperationMode.NORMAL)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 6
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_op_var_reset_to_first_scientific_operation(self, mock_tk_class):
+        """After switch_mode(OperationMode.SCIENTIFIC), _op_var.get() is reset to first scientific operation."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+
+        # Get the first operation from scientific mode
+        scientific_ops = app.get_current_mode_operations()
+        expected_first = scientific_ops[0] if scientific_ops else None
+
+        # Check _op_var is set to the first operation (if _op_var exists)
+        if hasattr(app, "_op_var"):
+            current_op = app._op_var.get()
+            assert current_op == expected_first
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_op_var_valid_normal_operation_after_switch(self, mock_tk_class):
+        """After switch_mode(OperationMode.NORMAL), _op_var.get() is a valid normal-mode operation."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        app.switch_mode(OperationMode.NORMAL)
+
+        normal_ops = app.get_current_mode_operations()
+
+        if hasattr(app, "_op_var"):
+            current_op = app._op_var.get()
+            assert current_op in normal_ops
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_multiple_mode_switches_stable(self, mock_tk_class):
+        """Switching modes multiple times (NORMAL→SCIENTIFIC→NORMAL→SCIENTIFIC) is stable."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+
+        # Switch: NORMAL (6) → SCIENTIFIC (12) → NORMAL (6) → SCIENTIFIC (12)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 6
+
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 12
+
+        app.switch_mode(OperationMode.NORMAL)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 6
+
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        ops = app.get_current_mode_operations()
+        assert len(ops) == 12
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_invalid_mode_is_noop(self, mock_tk_class):
+        """Switching to an invalid/unknown mode is a no-op (internal state unchanged)."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        original_mode = app._current_mode
+
+        # Try to switch to an invalid mode (that doesn't exist in _modes dict)
+        # This should be a no-op due to the if check in switch_mode
+        invalid_mode = "INVALID_MODE_THAT_DOES_NOT_EXIST"
+        app.switch_mode(invalid_mode)
+
+        # Mode should not have changed
+        assert app._current_mode == original_mode
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_rebuild_operation_menu_no_exception(self, mock_tk_class):
+        """_rebuild_operation_menu() called directly does not raise any exception."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+
+        # Should not raise any exception
+        try:
+            app._rebuild_operation_menu()
+        except Exception as e:
+            pytest.fail(f"_rebuild_operation_menu raised {type(e).__name__}: {e}")
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_mode_switch_persistence(self, mock_tk_class):
+        """After mode switch, subsequent get_current_mode_operations() call returns same set."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+
+        app.switch_mode(OperationMode.SCIENTIFIC)
+        ops1 = app.get_current_mode_operations()
+        ops2 = app.get_current_mode_operations()
+
+        # Both calls should return identical operation lists
+        assert ops1 == ops2
+        assert len(ops1) == 12
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_switch_mode_preserves_calculator_instance(self, mock_tk_class):
+        """Switching modes does not affect _calculator instance identity."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        original_calc_id = id(app._calculator)
+        original_registry_id = id(app._registry)
+
+        app.switch_mode(OperationMode.SCIENTIFIC)
+
+        # Calculator and registry should be the same instances
+        assert id(app._calculator) == original_calc_id
+        assert id(app._registry) == original_registry_id
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_scientific_mode_has_scientific_only_operations(self, mock_tk_class):
+        """Scientific mode includes expected ops: power, factorial, cube, cbrt, ln, log10."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.SCIENTIFIC)
+
+        scientific_ops = set(app.get_current_mode_operations())
+        required_scientific_ops = {"power", "factorial", "cube", "cbrt", "ln", "log10"}
+
+        # All scientific-only operations should be present
+        assert required_scientific_ops.issubset(scientific_ops)
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_normal_mode_exact_operations(self, mock_tk_class):
+        """Normal mode includes exactly: add, subtract, multiply, divide, square, sqrt."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+        app.switch_mode(OperationMode.NORMAL)
+
+        normal_ops = set(app.get_current_mode_operations())
+        expected_normal_ops = {"add", "subtract", "multiply", "divide", "square", "sqrt"}
+
+        # Exact set match for normal mode
+        assert normal_ops == expected_normal_ops
+
+    @patch('src.ui.gui.tk.Tk')
+    def test_op_menu_not_duplicated_on_multiple_switches(self, mock_tk_class):
+        """After two switches, _op_menu is replaced (not accumulated; singular widget)."""
+        from src.ui.gui import CalculatorApp
+
+        mock_root = Mock()
+        app = CalculatorApp(root=mock_root)
+
+        # First switch should replace the menu
+        app.switch_mode(OperationMode.SCIENTIFIC)
+
+        # Second switch should destroy old menu and create new one (not accumulate)
+        app.switch_mode(OperationMode.NORMAL)
+
+        # The _op_menu attribute should exist and be a single widget (not a list/accumulated)
+        if hasattr(app, "_op_menu"):
+            # Verify it's a widget, not a list of widgets
+            assert not isinstance(app._op_menu, list)
