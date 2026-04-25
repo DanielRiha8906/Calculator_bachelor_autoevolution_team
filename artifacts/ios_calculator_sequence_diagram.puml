@@ -1,0 +1,62 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam participantFontSize 12
+title iOS Calculator — Mode Toggle & Calculation Execution
+
+actor User
+participant "GuiCalculator" as GUI
+participant "OperationRegistry" as Registry
+participant "Calculator" as Calc
+participant "OperationHistory" as History
+participant "Button widgets" as Buttons
+
+== Mode Toggle ==
+
+User -> GUI : click _mode_toggle_btn
+activate GUI
+GUI -> GUI : _on_mode_toggle()
+note right of GUI : flip _current_mode\n(NORMAL ↔ SCIENTIFIC)
+GUI -> GUI : _update_mode_toggle_text()
+GUI -> Buttons : destroy all existing op buttons
+deactivate Buttons
+GUI -> GUI : _build_op_buttons()
+activate GUI
+GUI -> Registry : get_operations_by_mode(_current_mode)
+activate Registry
+Registry --> GUI : op_names : list
+deactivate Registry
+
+loop for each op_name in op_names
+    GUI -> GUI : _op_button_colours(op_name) → (bg, fg, active_bg)
+    GUI -> Buttons : _make_button(parent, symbol, bg, fg, active_bg, command)
+    activate Buttons
+    GUI -> Buttons : bind(<Enter>, _on_button_enter)
+    GUI -> Buttons : bind(<Leave>, _on_button_leave)
+    GUI -> Buttons : grid(row, col)
+end
+deactivate GUI
+
+GUI --> User : updated operation grid visible
+deactivate GUI
+
+== Calculation Execution ==
+
+actor ExternalCaller
+ExternalCaller -> GUI : calculate('add', 3, 5)
+activate GUI
+GUI -> Registry : call('add', 3, 5)
+activate Registry
+Registry -> Calc : add(3, 5)
+activate Calc
+Calc --> Registry : 8
+deactivate Calc
+Registry --> GUI : 8
+deactivate Registry
+GUI -> History : record('add', (3, 5), 8)
+activate History
+History --> GUI : ok
+deactivate History
+GUI --> ExternalCaller : "8"
+deactivate GUI
+
+@enduml

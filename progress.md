@@ -553,3 +553,14 @@ Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
   - `artifacts/activity_diagram_entry_point.puml` — activity diagram for entry point routing
 
 Duration: 431.7s | Cost: $0.715237 USD | Turns: 5
+
+## Run: update-diagrams — iOS Calculator GUI Redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/ios_calculator_class_diagram.puml` — new class diagram for GuiCalculator and dependencies
+  - `artifacts/ios_calculator_activity_diagram.puml` — new activity diagram for mode toggle and operation press flows
+  - `artifacts/ios_calculator_sequence_diagram.puml` — new sequence diagram for mode toggle and calculation execution
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

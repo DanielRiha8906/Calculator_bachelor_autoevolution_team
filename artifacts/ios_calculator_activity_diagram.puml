@@ -1,0 +1,57 @@
+@startuml
+skinparam activityFontSize 12
+skinparam activityDiamondFontSize 11
+title iOS Calculator — Mode Toggle & Operation Press Flows
+
+|GuiCalculator|
+start
+
+partition "Mode Toggle Flow" {
+    :User clicks mode toggle button;
+    :_on_mode_toggle();
+    if (current mode == NORMAL?) then (yes)
+        :_current_mode = SCIENTIFIC;
+    else (no)
+        :_current_mode = NORMAL;
+    endif
+    :_update_mode_toggle_text();
+    note right: Update button label\nto "Scientific" or "Normal"
+    :_rebuild_op_grid() → _build_op_buttons();
+    :Destroy all existing operation buttons;
+    :Clear _operation_buttons, _normal_mode_buttons,\n_scientific_mode_buttons lists;
+    if (mode == NORMAL?) then (yes)
+        :Determine operation set\n(9 ops: sqrt, square, factorial,\n ln, log10 + arithmetic);
+    else (no)
+        :Determine operation set\n(18 ops: NORMAL + cube, cbrt,\n power, sin, cos, tan, cot, asin, acos);
+    endif
+    fork
+        :For each op:;
+        :_op_button_colours(op_name)\n→ (bg, fg, active_bg);
+        :_make_button(parent, symbol, bg, fg, active_bg, command);
+        :grid-place button;
+        :store reference in button list;
+    fork again
+        :Bind <Enter> → _on_button_enter();
+        :Bind <Leave> → _on_button_leave();
+    end fork
+    :Widget tree updated — new op grid visible;
+}
+
+partition "Operation Button Press Flow" {
+    :User clicks operation button;
+    :Lambda command fires: _on_op_press(op_name);
+    :_selected_op = op_name;
+    note right: Operation name stored\nfor next calculate() call
+    fork
+        :Button press registered;
+    fork again
+        :<Enter> event → _on_button_enter(btn);
+        :Lighten button background;
+        :<Leave> event → _on_button_leave(btn);
+        :Restore original background;
+    end fork
+    :Operation selection complete;
+}
+
+stop
+@enduml
