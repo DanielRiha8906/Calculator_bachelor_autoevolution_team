@@ -13,7 +13,7 @@
 - **Risks:** tkinter unavailable in headless CI — mitigated by lazy import in __init__.py; GUIWindow tests mock tkinter
 - **Tests passed:** 416 passed, 0 failed, 3 skipped
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 902.5s | Cost: $1.831267 USD | Turns: 27
 
 ## Run: Fix PR #459 — feat: add scientific mode with interactive mode switching (2026-04-25)
 
