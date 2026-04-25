@@ -501,4 +501,17 @@ Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
 - **Risks:** None; GUI is additive, CLI change only affects error path, test path fix is portable
 - **Tests passed:** 441 passed, 1 skipped, 0 failed
 
+## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** task/issue-413-tkinter-gui
+- **Files changed:**
+  - `artifacts/class_gui.puml` — new class diagram for CalculatorGUI and Calculator relationship
+  - `artifacts/sequence_gui_binary_op.puml` — new sequence diagram for binary operation flow
+  - `artifacts/sequence_gui_error.puml` — new sequence diagram for error handling flow
+  - `artifacts/activity_gui_calculation.puml` — new activity diagram for user calculation flow
+  - `artifacts/component_calculator.puml` — new/updated component diagram including gui module
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20

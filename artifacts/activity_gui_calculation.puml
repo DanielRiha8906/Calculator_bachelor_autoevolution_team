@@ -1,0 +1,47 @@
+@startuml
+title Calculator GUI — User Calculation Flow
+
+start
+
+:User opens GUI\nlaunch_gui() called\nroot = Tk()\nCalculatorGUI(root) created;
+
+:root.mainloop() blocks\nGUI is visible and interactive;
+
+repeat
+
+  :User enters digits via number buttons\ncurrent_input builds up;
+
+  if (user chooses operation type?) then (unary)
+    :User clicks unary button\n(sqrt, square, factorial, sin, ...);
+    :_apply_unary(op) called\nval = float(current_input);
+    if (Calculator raises exception?) then (yes)
+      :messagebox.showerror shown\nGUI state unchanged;
+    else (no)
+      :display updated with result\ncurrent_input = str(result);
+    endif
+
+  else (binary)
+    :User clicks operator button (+, -, *, /)\n_on_operator_click(op) called;
+    :first_operand stored\npending_op stored\ncurrent_input cleared;
+    :User enters second number;
+    :User clicks [=]\n_calculate() called;
+    if (Calculator raises exception?) then (yes)
+      :messagebox.showerror shown\nGUI state unchanged;
+    else (no)
+      :display updated with result\ncurrent_input = str(result)\npending_op = None;
+    endif
+
+  endif
+
+  if (user clicks [C]?) then (yes)
+    :_clear() called\ncurrent_input = ""\nfirst_operand = None\npending_op = None\ndisplay reset to "0";
+  endif
+
+repeat while (user continues?) is (yes)
+-> no;
+
+:User closes window\nroot destroyed;
+
+stop
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+title Module Dependency — Calculator (CLI + GUI)
+
+package "src/" {
+
+  component "__main__.py" as Main {
+    [main()]
+    [parse sys.argv]
+  }
+
+  component "gui.py" as GUI {
+    [CalculatorGUI]
+    [launch_gui()]
+  }
+
+  component "cli.py" as CLI {
+    [run_calculator()]
+    [OPERATIONS dict]
+  }
+
+  component "interface.py" as Interface {
+    [prompt_for_operator()]
+    [display_result()]
+    [display_mode_change()]
+  }
+
+  component "batch_cli.py" as Batch {
+    [run_batch()]
+  }
+
+  component "calculator_core.py" as Core {
+    [Calculator]
+  }
+
+}
+
+package "stdlib" {
+  component "tkinter" as Tkinter
+  component "math" as Math
+}
+
+Main --> GUI : lazy import\n(--gui flag)
+Main --> CLI : imports run_calculator
+Main --> Interface : imports display_*
+Main --> Batch : imports run_batch
+
+CLI --> Core : Calculator
+Interface --> Core : Calculator
+Batch --> Core : Calculator
+GUI --> Core : Calculator\n(composition)
+GUI --> Tkinter : widgets + messagebox
+
+Core --> Math : math functions
+
+note right of Main
+  --gui / gui argument
+  triggers lazy import
+  of launch_gui from gui.py
+end note
+
+note right of GUI
+  CalculatorGUI composes
+  Calculator directly;
+  no CLI layer involved
+end note
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+title Error Handling Flow: sqrt(-1)
+
+actor User
+participant CalculatorGUI
+participant Calculator
+participant "messagebox" as MsgBox
+
+User -> CalculatorGUI : click "-", "1"\ncurrent_input = "-1"
+User -> CalculatorGUI : click [sqrt]
+activate CalculatorGUI
+
+CalculatorGUI -> CalculatorGUI : _apply_unary("square_root")\nval = float("-1") = -1.0
+
+CalculatorGUI ->> Calculator : square_root(-1.0)
+activate Calculator
+Calculator -->> CalculatorGUI : raises ValueError\n"Cannot take sqrt of negative"
+deactivate Calculator
+
+CalculatorGUI -> CalculatorGUI : except ValueError as e
+CalculatorGUI ->> MsgBox : showerror("Error", str(e))
+activate MsgBox
+MsgBox -->> User : modal dialog shown\n(user dismisses)
+deactivate MsgBox
+
+note right of CalculatorGUI
+  GUI state unchanged:
+  current_input = "-1"
+  pending_op unchanged
+end note
+
+CalculatorGUI -->> User : returns None
+deactivate CalculatorGUI
+
+@enduml
