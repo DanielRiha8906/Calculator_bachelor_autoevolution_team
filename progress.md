@@ -31,7 +31,7 @@ Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 - **Risks:** None — change is isolated to GUI layer; no core logic touched; headless test safety preserved via try/except wrapper
 - **Tests passed:** 457 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 786.0s | Cost: $1.383743 USD | Turns: 15
 
 ## Run: update-diagrams — Calculator Modes (2026-04-24)
 
