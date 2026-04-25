@@ -9,7 +9,7 @@
 - **Risks:** None — changes localized to window.py; GUIController unchanged; all existing tests remain green
 - **Tests passed:** 496 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 555.5s | Cost: $1.181715 USD | Turns: 13
 
 ## Run: update-diagrams — Redesign GUI to iOS-inspired dark grid layout (2026-04-25)
 
