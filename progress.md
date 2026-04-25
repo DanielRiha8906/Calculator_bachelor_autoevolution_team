@@ -486,4 +486,4 @@ Duration: 227.1s | Cost: $0.516747 USD | Turns: 4
   - `artifacts/activity_gui_operation.puml` — new activity diagram for GUI operation flow with binary, unary, and clear paths
   - `artifacts/sequence_gui_calculation.puml` — new sequence diagram for binary calculation including error path
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
