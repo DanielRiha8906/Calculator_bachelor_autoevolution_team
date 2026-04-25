@@ -14,7 +14,7 @@
 - **Risks:** tkinter is unavailable in CI headless environment; gui.py uses a try/except ImportError stub for tk so tests can patch it without a real display. Production use requires a display server.
 - **Tests passed:** 445 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 
 ## Run: update-diagrams — Calculator Modes (2026-04-24)
 
