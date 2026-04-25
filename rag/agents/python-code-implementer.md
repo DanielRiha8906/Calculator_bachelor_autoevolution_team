@@ -204,6 +204,29 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Appending to an existing README avoids overwriting the project's Czech-language thesis documentation, which is load-bearing for the experiment context.
 - **Test result:** 340 passed, 1 skipped (pre-existing skip). All 16 documentation tests pass.
 
+### 2026-04-25 — issue-413: tkinter GUI module
+
+- **Task:** Create `src/gui.py` with `CalculatorGUI` class and `launch_gui()` entry-point; update `src/__main__.py` to route `--gui`/`gui` CLI argument to the GUI; satisfy 25 failing tests in `tests/test_gui.py`.
+- **Files changed:** `src/gui.py` (created), `src/__main__.py` (3-line routing block added)
+- **Changes made:**
+  - Created `src/gui.py` with `CalculatorGUI` class:
+    - `__init__(self, root=None)`: creates `tkinter.Tk()` when root is None; sets `root.title("Calculator")`; creates `self.entry` (Entry) and `self.display` (Label); initialises `current_input=""`, `pending_op=None`, `first_operand=None`, and a `Calculator` instance.
+    - `_set_operator(op)`: converts `current_input` to float → `first_operand`; stores `op` in `pending_op`; clears `current_input`.
+    - `_apply_unary(op)`: `float(current_input)` → `getattr(self.calc, op)(x)` → updates display; catches `ValueError`/`ZeroDivisionError` and calls `tkinter.messagebox.showerror`.
+    - `_calculate()`: raises `ValueError`/`TypeError` for non-numeric `current_input` (not caught here — test asserts the exception propagates); for domain errors calls `tkinter.messagebox.showerror`.
+    - `_clear()`: resets state; sets display text to "0".
+    - `destroy()`: calls `self.root.destroy()`.
+    - `launch_gui()`: module-level function creating a real `Tk()` root and entering `mainloop()`.
+  - Updated `src/__main__.py`: added three-line block before the existing `len(sys.argv) > 1` branch that checks `sys.argv[1:] in (["--gui"], ["gui"])` and calls `launch_gui()` then `sys.exit(0)`.
+- **Key design decision:** `CalculatorGUI()` takes no required arguments. Tests call `CalculatorGUI()` with no args and then access `gui.root`. So `__init__` creates `tkinter.Tk()` internally when no root is passed. The `tkinter_mock.Tk()` call returns a MagicMock which is stored as `self.root`; `gui.root.title("Calculator")` is then the assertion target.
+- **Critical invariant for `_calculate` error handling:** invalid non-numeric input (e.g. `"abc"`) raises `ValueError` before any Calculator call — this exception is NOT caught in `_calculate`, so it propagates to the caller. The test `test_gui_invalid_input` asserts `pytest.raises((ValueError, TypeError))`. Domain errors (e.g. division by zero) are caught and shown via `messagebox.showerror`.
+- **Tkinter mock routing:** tests set `sys.modules['tkinter'] = tkinter_mock`. Code in `src/gui.py` uses bare `import tkinter` and then `tkinter.messagebox.showerror(...)`, which resolves to `tkinter_mock.messagebox.showerror(...)` — exactly what the test asserts.
+- **Patterns found:**
+  - When tkinter is mocked via `sys.modules`, `tkinter.Entry(...)` and `tkinter.Label(...)` return MagicMocks; they are non-None by default, satisfying `assert gui.entry is not None`.
+  - `_apply_unary` uses exact Calculator method names (`square_root`, `cube_root`, etc.) not the display variants (`sqrt`, `cbrt`). Tests call `_apply_unary('square_root')` — read the test file, not the architect spec, for the authoritative key names.
+  - `float(result)` cast after Calculator calls is needed because `factorial` returns `int`, not `float`, but tests assert `result == 120.0` (float equality).
+- **Test result:** 412 passed, 1 skipped (pre-existing skip). All 25 new GUI tests pass.
+
 ### 2026-04-25 — issue-410: scientific mode — welcome banner, enhanced mode-change feedback, prompt hint
 
 - **Task:** Add `display_welcome()` to `src/interface.py`; enhance `display_mode_change()` with `available_ops` parameter and mode-specific messages; add mode hint to `prompt_for_operator()` prompt text; update `src/__main__.py` to call `display_welcome()` and pass `available_ops` to `display_mode_change()`; add `display_welcome` to `src/cli.py` facade.

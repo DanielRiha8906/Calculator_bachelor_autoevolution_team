@@ -25,6 +25,11 @@ def main() -> None:
     Supports switching between 'normal' and 'scientific' mode via 'mode'/'sci'
     input at the operator prompt.
     """
+    if sys.argv[1:] in (["--gui"], ["gui"]):
+        from .gui import launch_gui
+        launch_gui()
+        sys.exit(0)
+
     if len(sys.argv) > 1:
         if sys.argv[1:] == ["history"]:
             try:
