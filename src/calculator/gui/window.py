@@ -148,6 +148,8 @@ class GUIWindow:
         self._operand1: str = ""
         self._pending_op: str | None = None
         self._awaiting_second: bool = False
+        self._scientific_frame: tk.Frame | None = None  # Store reference to scientific panel frame
+        self._scientific_panel_visible: bool = (controller.get_current_mode() == "scientific")
 
         self.root = tk.Tk()
         self.root.title(title)
@@ -156,7 +158,7 @@ class GUIWindow:
         self._build_display()
         self._build_standard_grid()
 
-        if controller.get_current_mode() == "scientific":
+        if self._scientific_panel_visible:
             self._build_scientific_panel()
 
     # ------------------------------------------------------------------
@@ -187,16 +189,28 @@ class GUIWindow:
             command = self._make_command(text)
             self._make_button(frame, text, bg, row, col, colspan, command)
 
+    def _rebuild_scientific_panel(self) -> None:
+        """Rebuild the scientific panel: show if visible, hide if not."""
+        if self._scientific_frame is not None:
+            self._scientific_frame.destroy()
+            for key in list(self._buttons.keys()):
+                if key in ["√", "x²", "xʸ", "n!", "ln", "log"]:
+                    del self._buttons[key]
+            self._scientific_frame = None
+
+        if self._scientific_panel_visible:
+            self._build_scientific_panel()
+
     def _build_scientific_panel(self) -> None:
         """Build the supplementary scientific-function button panel."""
-        frame = tk.Frame(self.root, bg=COLOR_BG)
-        frame.grid(row=2, column=0, columnspan=4, sticky="nsew")
+        self._scientific_frame = tk.Frame(self.root, bg=COLOR_BG)
+        self._scientific_frame.grid(row=2, column=0, columnspan=4, sticky="nsew")
 
         for idx, (text, bg, op_name) in enumerate(_SCIENTIFIC_BUTTONS):
             row = idx // 3
             col = idx % 3
             command = self._make_scientific_command(op_name)
-            self._make_button(frame, text, bg, row, col, 1, command)
+            self._make_button(self._scientific_frame, text, bg, row, col, 1, command)
 
     # ------------------------------------------------------------------
     # Button factory helpers
@@ -357,27 +371,26 @@ class GUIWindow:
             self._display_var.set("0")
 
     def _on_mode_toggle(self) -> None:
-        """Toggle between normal and scientific modes."""
-        current_mode = self._controller.get_current_mode()
-        new_mode = "scientific" if current_mode == "normal" else "normal"
-        self._controller.switch_mode(new_mode)
+        """Toggle scientific panel visibility."""
+        self._scientific_panel_visible = not self._scientific_panel_visible
+        self._rebuild_scientific_panel()
 
     def _on_scientific_op(self, op_name: str) -> None:
-        """Execute a unary or binary scientific operation on the current display.
+        """Handle scientific operation: binary (power) or unary (others).
 
         Args:
             op_name: The operation name known to the controller.
         """
+        if op_name == "power":
+            self._operand1 = self._display_var.get()
+            self._pending_op = op_name
+            self._awaiting_second = True
+            return
+
         operand = self._display_var.get()
         try:
             op1 = float(operand)
-            arity = self._controller.get_operation_arity(op_name)
-            if arity == 1:
-                result = self._controller.execute_operation(op_name, [op1])
-            elif arity == 2:
-                result = self._controller.execute_operation(op_name, [op1, 2])
-            else:
-                result = self._controller.execute_operation(op_name, [])
+            result = self._controller.execute_operation(op_name, [op1])
             if result["success"]:
                 val = result["result"]
                 self._display_var.set(

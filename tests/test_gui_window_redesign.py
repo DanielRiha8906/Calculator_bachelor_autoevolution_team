@@ -463,3 +463,377 @@ class TestScientificModeButtons:
         buttons_dict = getattr(window, "_buttons", None) or getattr(window, "buttons", None)
         assert buttons_dict is not None, "No buttons dict found"
         assert "log" in buttons_dict, "Button 'log' not found in scientific mode"
+
+
+# ============================================================================
+# Scientific Mode Toggle Tests (Issue: Dynamic Panel Visibility)
+# ============================================================================
+
+class TestScientificModePanelToggle:
+    """Test scientific panel visibility toggling with _on_mode_toggle()."""
+
+    def test_scientific_panel_visible_on_init_scientific_mode(self, controller_scientific, mock_tkinter):
+        """When initialized in scientific mode, _scientific_panel_visible is True."""
+        window = GUIWindow(controller_scientific)
+
+        assert window._scientific_panel_visible is True, \
+            "Expected _scientific_panel_visible to be True in scientific mode"
+        assert window._scientific_frame is not None, \
+            "Expected _scientific_frame to be created in scientific mode"
+
+    def test_scientific_panel_hidden_on_init_normal_mode(self, controller, mock_tkinter):
+        """When initialized in normal mode, _scientific_panel_visible is False."""
+        window = GUIWindow(controller)
+
+        assert window._scientific_panel_visible is False, \
+            "Expected _scientific_panel_visible to be False in normal mode"
+        assert window._scientific_frame is None, \
+            "Expected _scientific_frame to be None in normal mode"
+
+    def test_mode_button_toggles_panel_on(self, controller, mock_tkinter):
+        """Calling _on_mode_toggle() when panel is hidden shows it."""
+        window = GUIWindow(controller)
+        # Initial state: normal mode, panel hidden
+        assert window._scientific_panel_visible is False
+
+        window._on_mode_toggle()
+
+        assert window._scientific_panel_visible is True, \
+            "Expected _scientific_panel_visible to be True after toggle"
+        assert window._scientific_frame is not None, \
+            "Expected _scientific_frame to be created after toggle"
+
+    def test_mode_button_toggles_panel_off(self, controller_scientific, mock_tkinter):
+        """Calling _on_mode_toggle() when panel is visible hides it."""
+        window = GUIWindow(controller_scientific)
+        # Initial state: scientific mode, panel visible
+        assert window._scientific_panel_visible is True
+
+        window._on_mode_toggle()
+
+        assert window._scientific_panel_visible is False, \
+            "Expected _scientific_panel_visible to be False after toggle"
+        assert window._scientific_frame is None, \
+            "Expected _scientific_frame to be None after toggle"
+
+    def test_mode_toggle_does_not_call_switch_mode(self, controller, mock_tkinter):
+        """_on_mode_toggle() should not call controller.switch_mode()."""
+        window = GUIWindow(controller)
+        controller.switch_mode = MagicMock()
+
+        window._on_mode_toggle()
+
+        controller.switch_mode.assert_not_called()
+
+    def test_mode_toggle_preserves_pending_operation_state(self, controller, mock_tkinter):
+        """_on_mode_toggle() preserves pending operation state."""
+        window = GUIWindow(controller)
+        # Set up pending operation
+        window._operand1 = "5"
+        window._pending_op = "add"
+        window._awaiting_second = True
+
+        window._on_mode_toggle()
+
+        # Verify state is preserved
+        assert window._operand1 == "5", "Expected _operand1 to be preserved"
+        assert window._pending_op == "add", "Expected _pending_op to be preserved"
+        assert window._awaiting_second is True, "Expected _awaiting_second to be preserved"
+
+    def test_rebuild_removes_scientific_buttons_when_hiding(self, controller_scientific, mock_tkinter):
+        """When hiding panel, scientific button keys are removed from _buttons."""
+        window = GUIWindow(controller_scientific)
+        # Verify scientific buttons exist initially
+        buttons_dict = window._buttons
+        scientific_buttons = ["√", "x²", "xʸ", "n!", "ln", "log"]
+        for btn in scientific_buttons:
+            assert btn in buttons_dict, f"Expected button '{btn}' to exist in scientific mode"
+
+        window._on_mode_toggle()
+
+        # Verify scientific buttons are removed
+        buttons_dict = window._buttons
+        for btn in scientific_buttons:
+            assert btn not in buttons_dict, \
+                f"Expected button '{btn}' to be removed from _buttons after hiding panel"
+
+    def test_mode_toggle_toggles_multiple_times(self, controller, mock_tkinter):
+        """_on_mode_toggle() can be called multiple times to toggle on/off."""
+        window = GUIWindow(controller)
+
+        # Toggle 1: off -> on
+        window._on_mode_toggle()
+        assert window._scientific_panel_visible is True
+
+        # Toggle 2: on -> off
+        window._on_mode_toggle()
+        assert window._scientific_panel_visible is False
+
+        # Toggle 3: off -> on
+        window._on_mode_toggle()
+        assert window._scientific_panel_visible is True
+
+
+# ============================================================================
+# Power Operation (xʸ) Tests: Binary Operation Behavior
+# ============================================================================
+
+class TestPowerOperationBinary:
+    """Test power (xʸ) operation as a binary pending operation."""
+
+    def test_power_op_stores_first_operand(self, controller_scientific, mock_tkinter):
+        """Calling _on_scientific_op("power") stores operand1 and sets pending state."""
+        window = GUIWindow(controller_scientific)
+        # Directly set the display value using the mock
+        mock_tkinter["StringVar"].return_value.get.return_value = "2"
+
+        window._on_scientific_op("power")
+
+        assert window._operand1 == "2", "Expected _operand1 to be '2'"
+        assert window._pending_op == "power", "Expected _pending_op to be 'power'"
+        assert window._awaiting_second is True, "Expected _awaiting_second to be True"
+
+    def test_power_op_does_not_call_execute_operation(self, controller_scientific, mock_tkinter):
+        """Calling _on_scientific_op("power") should NOT immediately execute."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = "2"
+        controller_scientific.execute_operation = MagicMock()
+
+        window._on_scientific_op("power")
+
+        controller_scientific.execute_operation.assert_not_called()
+
+    def test_power_op_equals_dispatches_with_two_operands(self, controller_scientific, mock_tkinter):
+        """After power operation, _on_equals() calls execute_operation with two operands."""
+        window = GUIWindow(controller_scientific)
+        window._operand1 = "2"
+        window._pending_op = "power"
+        window._awaiting_second = True
+        mock_tkinter["StringVar"].return_value.get.return_value = "3"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 8.0}
+        )
+
+        window._on_equals()
+
+        controller_scientific.execute_operation.assert_called_once_with("power", [2.0, 3.0])
+
+    def test_power_not_hardcoded_exponent(self, controller_scientific, mock_tkinter):
+        """Power operation uses the actual second operand, not hardcoded value."""
+        window = GUIWindow(controller_scientific)
+        window._operand1 = "3"
+        window._pending_op = "power"
+        window._awaiting_second = True
+        mock_tkinter["StringVar"].return_value.get.return_value = "4"
+
+        # Mock controller to return 81 (3^4)
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 81.0}
+        )
+
+        window._on_equals()
+
+        # Verify the call was made with [3.0, 4.0], not [3.0, 2.0]
+        call_args = controller_scientific.execute_operation.call_args
+        assert call_args[0][1] == [3.0, 4.0], \
+            f"Expected operands [3.0, 4.0], got {call_args[0][1]}"
+
+    def test_power_op_clears_pending_after_equals(self, controller_scientific, mock_tkinter):
+        """After executing power with equals, pending state is cleared."""
+        window = GUIWindow(controller_scientific)
+        window._operand1 = "2"
+        window._pending_op = "power"
+        window._awaiting_second = True
+        mock_tkinter["StringVar"].return_value.get.return_value = "3"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 8.0}
+        )
+
+        window._on_equals()
+
+        assert window._pending_op is None, "Expected _pending_op to be None after equals"
+        assert window._awaiting_second is False, "Expected _awaiting_second to be False after equals"
+
+    @pytest.mark.parametrize("base,exponent,expected", [
+        ("2", "3", 8.0),
+        ("2", "10", 1024.0),
+        ("10", "2", 100.0),
+        ("5", "0", 1.0),
+    ])
+    def test_power_op_various_exponents(self, base, exponent, expected, controller_scientific, mock_tkinter):
+        """Power operation correctly handles various base and exponent combinations."""
+        window = GUIWindow(controller_scientific)
+        window._operand1 = base
+        window._pending_op = "power"
+        window._awaiting_second = True
+        mock_tkinter["StringVar"].return_value.get.return_value = exponent
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": expected}
+        )
+
+        window._on_equals()
+
+        # Verify the operation was called with correct operands
+        call_args = controller_scientific.execute_operation.call_args
+        assert call_args[0][0] == "power", "Expected operation 'power'"
+        assert call_args[0][1] == [float(base), float(exponent)], \
+            f"Expected operands [{float(base)}, {float(exponent)}], got {call_args[0][1]}"
+
+
+# ============================================================================
+# Unary Scientific Operations Tests
+# ============================================================================
+
+class TestUnaryScientificOperations:
+    """Test unary scientific operations (square root, square, factorial, ln, log)."""
+
+    @pytest.mark.parametrize("op_name,operand,expected_result", [
+        ("square_root", "9", 3.0),
+        ("square", "4", 16.0),
+        ("factorial", "5", 120.0),
+        ("ln", "2.718", 1.0),
+        ("log10", "100", 2.0),
+    ])
+    def test_unary_scientific_op_calls_execute_immediately(self, op_name, operand, expected_result,
+                                                           controller_scientific, mock_tkinter):
+        """Unary scientific operations execute immediately via controller."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = operand
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": expected_result}
+        )
+
+        window._on_scientific_op(op_name)
+
+        # Verify execute_operation was called with single operand
+        controller_scientific.execute_operation.assert_called_once_with(op_name, [float(operand)])
+
+    @pytest.mark.parametrize("op_name", ["square_root", "square", "factorial", "ln", "log10"])
+    def test_unary_op_does_not_set_pending(self, op_name, controller_scientific, mock_tkinter):
+        """Unary operations do not set pending operation state."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = "5"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 25.0}
+        )
+
+        window._on_scientific_op(op_name)
+
+        # Pending state should not be set for unary operations
+        assert window._pending_op is None, \
+            f"Expected _pending_op to be None for unary operation '{op_name}'"
+        assert window._awaiting_second is False, \
+            f"Expected _awaiting_second to be False for unary operation '{op_name}'"
+
+    def test_unary_op_does_not_set_operand1(self, controller_scientific, mock_tkinter):
+        """Unary operations do not set _operand1."""
+        window = GUIWindow(controller_scientific)
+        window._operand1 = ""  # Clear initial state
+        mock_tkinter["StringVar"].return_value.get.return_value = "16"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 4.0}
+        )
+
+        window._on_scientific_op("square_root")
+
+        # _operand1 should remain empty, not set to the display value
+        assert window._operand1 == "", \
+            "Expected _operand1 to remain empty for unary operations"
+
+    def test_unary_op_square_root_calls_correct_operation(self, controller_scientific, mock_tkinter):
+        """Square root operation calls execute_operation with 'square_root'."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = "16"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": True, "result": 4.0}
+        )
+
+        window._on_scientific_op("square_root")
+
+        # Verify correct operation name
+        call_args = controller_scientific.execute_operation.call_args
+        assert call_args[0][0] == "square_root", \
+            "Expected operation name 'square_root'"
+
+    def test_unary_op_error_handling_updates_display(self, controller_scientific, mock_tkinter):
+        """Unary operation error calls set on display to show 'Error'."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = "5"
+
+        controller_scientific.execute_operation = MagicMock(
+            return_value={"success": False, "result": None}
+        )
+
+        window._on_scientific_op("square_root")
+
+        # Verify that set was called with "Error"
+        display_var = window._display_var
+        display_var.set.assert_called_with("Error")
+
+    def test_unary_op_invalid_input_error_displays_error(self, controller_scientific, mock_tkinter):
+        """Unary operation with non-numeric input displays 'Error'."""
+        window = GUIWindow(controller_scientific)
+        mock_tkinter["StringVar"].return_value.get.return_value = "abc"
+
+        window._on_scientific_op("square_root")
+
+        # Verify that set was called with "Error" on exception
+        display_var = window._display_var
+        display_var.set.assert_called_with("Error")
+
+
+# ============================================================================
+# Integration Tests: Mode Toggle + Operations
+# ============================================================================
+
+class TestModeToggleWithOperations:
+    """Test interaction between mode toggle and pending operations."""
+
+    def test_toggle_panel_preserves_operand1_in_power_operation(self, controller, mock_tkinter):
+        """Toggling panel visibility preserves operand1 during power operation setup."""
+        window = GUIWindow(controller)
+        window._display_var.set("5")
+
+        # Switch to scientific mode
+        window._on_mode_toggle()
+
+        # Set up power operation (becomes available in scientific mode)
+        window._operand1 = "5"
+        window._pending_op = "power"
+        window._awaiting_second = True
+
+        # Toggle back to normal mode
+        window._on_mode_toggle()
+
+        # Verify pending state is preserved
+        assert window._operand1 == "5"
+        assert window._pending_op == "power"
+        assert window._awaiting_second is True
+
+    def test_panel_hide_removes_xpower_button(self, controller, mock_tkinter):
+        """When panel is hidden, 'xʸ' button is removed from _buttons."""
+        window = GUIWindow(controller)
+        window._on_mode_toggle()  # Show panel
+        assert "xʸ" in window._buttons
+
+        window._on_mode_toggle()  # Hide panel
+        assert "xʸ" not in window._buttons
+
+    def test_panel_show_recreates_xpower_button(self, controller, mock_tkinter):
+        """When panel is shown again, 'xʸ' button is recreated in _buttons."""
+        window = GUIWindow(controller)
+        window._on_mode_toggle()  # Show panel
+        assert "xʸ" in window._buttons
+
+        window._on_mode_toggle()  # Hide panel
+        assert "xʸ" not in window._buttons
+
+        window._on_mode_toggle()  # Show panel again
+        assert "xʸ" in window._buttons

@@ -1,3 +1,16 @@
+## Run: Fix PR #467 — Issue #464: Redesign calculator GUI to iOS-inspired dark grid layout (2026-04-25)
+
+- **Branch:** task/issue-464-redesign-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `src/calculator/gui/window.py` — added `_scientific_frame`/`_scientific_panel_visible` state vars; replaced `_on_mode_toggle()` to toggle panel visibility; replaced `_on_scientific_op()` to treat "power" as binary pending-op; added `_rebuild_scientific_panel()` method; updated `_build_scientific_panel()` to store frame reference
+  - `tests/test_gui_window_redesign.py` — 34 new tests covering scientific panel toggle, power binary operation, and unary scientific ops
+- **Purpose:** Fix two reviewer-identified issues: (1) Mode button now toggles scientific panel visibility; (2) xʸ operation now accepts two user-entered operands (base^exponent) instead of hardcoding exponent=2
+- **Risks:** None — changes localized to window.py; GUIController unchanged; all existing tests remain green
+- **Tests passed:** 496 passed, 3 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: update-diagrams — Redesign GUI to iOS-inspired dark grid layout (2026-04-25)
 
 - **Branch:** task/issue-464-redesign-gui

@@ -627,3 +627,94 @@ Accumulated architectural context for this experiment branch. Each cycle entry r
 - Confirm all existing GUI tests (test_gui_controller.py, test_gui_integration.py, test_main_entry_gui.py) still pass
 - Confirm all core tests remain passing (test_calculator.py, test_cli_mode.py, etc.)
 - Total expected: 140+ tests, 100% pass rate
+
+### Cycle 7: 2026-04-25 — Issue #467 — Fix Scientific Mode Toggle and Binary Power Operation
+
+**Task:** Fix two critical GUI issues found in PR #467:
+1. Scientific mode toggle not properly implemented — clicking Mode button should toggle scientific panel visibility, not switch modes
+2. Power (xʸ) operation incorrectly implemented as unary — must be binary like +, −, ×, ÷
+
+**Key Decisions:**
+
+1. **Scientific panel visibility tracking (Issue 1 root cause):**
+   - Add `_scientific_panel_visible: bool` instance variable to track panel visibility independent of mode
+   - Mode toggle (clicking "Mode" button) should toggle panel visibility, not call `controller.switch_mode()`
+   - Panel visibility persists across operand entry and operation execution
+   - This decouples UI state (panel shown/hidden) from business logic state (normal/scientific mode)
+
+2. **Power operation binary implementation (Issue 2 root cause):**
+   - Power operation currently hardcoded with second operand of 2 in `_on_scientific_op()` (line 378: `[op1, 2]`)
+   - Must refactor to flow through same binary operator pipeline as +, −, ×, ÷
+   - On "xʸ" button press: store operand1, set pending_op="power", set awaiting_second=True (like _on_operator)
+   - On "=" press: retrieve operand2 from display, call execute_operation("power", [op1, op2])
+   - Unary scientific operations (√, x², n!, ln, log) keep existing immediate-execution behavior
+
+3. **UI flow preservation:**
+   - Pending operation state (_operand1, _pending_op, _awaiting_second) preserved across panel toggles
+   - Display shows first operand, user enters second operand, pressing = executes binary operation
+   - Display correctly clears/resets for awaiting_second state (when first operand stored)
+
+4. **No changes to:**
+   - GUIController — no logic changes needed; power operation already supports arity=2
+   - src/__main__.py entry point
+   - Calculation logic in operations
+   - Existing tests (all 462 must remain green)
+
+**Patterns Observed:**
+- Binary operator flow already established: _on_operator() → stores operand1, sets pending_op, awaits second → _on_equals() executes
+- Scientific operations grouped separately; can distinguish binary (power) from unary (others)
+- Panel visibility toggle requires frame reconstruction, not mode switching
+
+**Architectural Impact:**
+- **UI layer separation strengthened:** window state (panel visibility) decoupled from controller state (mode)
+- **Power operation unified:** consistent binary operator semantics across all binary operations
+- **State management clarified:** _pending_op now correctly handles power like +, −, ×, ÷
+- **Backward compatible:** no API changes; visual behavior matches iOS calculator expectations
+
+**Test Coverage (14 test cases):**
+- **Issue 1 — Scientific panel toggle (7 tests):**
+  1. test_scientific_panel_visible_on_init_scientific_mode
+  2. test_scientific_panel_hidden_on_init_normal_mode
+  3. test_mode_button_toggles_scientific_panel_from_normal
+  4. test_mode_button_toggles_scientific_panel_from_scientific
+  5. test_mode_toggle_preserves_display_and_state
+  6. test_mode_button_text_does_not_change
+  7. test_scientific_panel_grids_correctly_when_toggled_on
+- **Issue 2 — Binary power operation (7 tests):**
+  1. test_power_button_stores_first_operand
+  2. test_power_button_waits_for_second_operand
+  3. test_power_equals_executes_binary_operation
+  4. test_power_button_not_hardcoded_to_square
+  5. test_power_button_calls_controller_with_correct_arity
+  6. test_power_button_clears_pending_state_after_equals
+  7. test_power_button_can_chain_operations
+
+**Risks & Mitigations:**
+- **Risk:** Panel toggle changes window layout; may cause widget sizing issues. Mitigation: test grid positions after toggle in test suite
+- **Risk:** Power operation execution with wrong arity breaks controller call. Mitigation: verify [op1, op2] list length before controller.execute_operation() call
+- **Risk:** Pending state corruption across panel toggles. Mitigation: preserve _operand1, _pending_op, _awaiting_second across panel changes
+- **Risk:** Existing tests fail if display/state handling changes. Mitigation: run full test suite after implementation; only modify window.py, no logic changes
+
+**Handoff Notes for pytest-edge-tester (WRITE phase):**
+- Create new test file: `tests/test_gui_issue_467_fixes.py`
+- Write 14 failing test functions covering both issues (see test specs above)
+- All tests must use mocked tkinter (headless environment)
+- Use `monkeypatch` to inject GUIController and GUIWindow instances
+- Test file location: `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui_issue_467_fixes.py`
+
+**Handoff Notes for python-code-implementer:**
+- **File: `src/calculator/gui/window.py`**
+  - Modify `__init__()`: add `self._scientific_panel_visible: bool` instance variable
+  - Refactor `_on_mode_toggle()`: toggle `_scientific_panel_visible` boolean, call `_rebuild_scientific_panel()`, preserve state
+  - Refactor `_on_scientific_op()`: treat power as binary operator (store operand1, set pending_op, await second); keep others as unary
+  - Add `_rebuild_scientific_panel()` method: show/hide scientific panel based on `_scientific_panel_visible`
+  - Modify `_build_scientific_panel()`: support repeated calls (frame creation check)
+  - All changes localized to window.py; no changes to GUIController or entry point
+- All 14 tests must pass
+- All existing tests (462) must remain passing
+
+**Handoff Notes for pytest-edge-tester (VERIFY phase):**
+- Run full test suite: `pytest tests/` (all tests)
+- Confirm 14 new tests pass
+- Confirm all 462 existing tests remain green
+- No regressions

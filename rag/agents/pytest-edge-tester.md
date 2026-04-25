@@ -1950,3 +1950,78 @@ def test_main_gui_flag_triggers_gui_not_cli(self, monkeypatch):
 
 **Status:** COMPLETE - Ready for merge
 
+### Cycle 7: 2026-04-25 — Issue #464 GUI Redesign: Scientific Mode Toggle & Power Operation (VERIFY phase)
+
+**Task:** Write and verify comprehensive tests for the new scientific mode panel toggle and power operation (xʸ) binary behavior in GUIWindow.
+
+**Phase:** VERIFY (tests written in previous implementer invocation, now verifying)
+
+**Test Categories Written:**
+
+1. **Scientific Panel Toggle Tests (8 tests):**
+   - `test_scientific_panel_visible_on_init_scientific_mode` — Panel visible in scientific mode
+   - `test_scientific_panel_hidden_on_init_normal_mode` — Panel hidden in normal mode
+   - `test_mode_button_toggles_panel_on` — Toggle shows panel
+   - `test_mode_button_toggles_panel_off` — Toggle hides panel
+   - `test_mode_toggle_does_not_call_switch_mode` — Verify no unexpected controller call
+   - `test_mode_toggle_preserves_pending_operation_state` — State preservation
+   - `test_rebuild_removes_scientific_buttons_when_hiding` — Button cleanup on hide
+   - `test_mode_toggle_toggles_multiple_times` — Idempotent toggle
+
+2. **Power Operation Binary Tests (9 tests):**
+   - `test_power_op_stores_first_operand` — Power sets pending state
+   - `test_power_op_does_not_call_execute_operation` — No immediate execution
+   - `test_power_op_equals_dispatches_with_two_operands` — Equals sends [base, exponent]
+   - `test_power_not_hardcoded_exponent` — Dynamic exponent handling
+   - `test_power_op_clears_pending_after_equals` — State cleanup
+   - `test_power_op_various_exponents[...]` (4 parametrized) — Various bases/exponents
+
+3. **Unary Scientific Operations Tests (14 tests):**
+   - `test_unary_scientific_op_calls_execute_immediately[...]` (5 parametrized) — Immediate execution
+   - `test_unary_op_does_not_set_pending[...]` (5 parametrized) — No pending state
+   - `test_unary_op_does_not_set_operand1` — operand1 not modified
+   - `test_unary_op_square_root_calls_correct_operation` — Correct operation name
+   - `test_unary_op_error_handling_updates_display` — Error handling
+   - `test_unary_op_invalid_input_error_displays_error` — Non-numeric input handling
+
+4. **Integration Tests (3 tests):**
+   - `test_toggle_panel_preserves_operand1_in_power_operation` — State preservation during toggle
+   - `test_panel_hide_removes_xpower_button` — Button cleanup verification
+   - `test_panel_show_recreates_xpower_button` — Button recreation verification
+
+**Key Testing Patterns Applied:**
+
+1. **Mock StringVar handling:** Direct mock manipulation of `StringVar().get()` return value to set display values, avoiding real tkinter StringVar behavior
+2. **Parametrized tests consolidation:** Combined multiple similar test cases using `@pytest.mark.parametrize` to avoid duplication (e.g., 5 unary operations tested in single parametrized test)
+3. **Mock assertion verification:** Used `MagicMock.call_args` to verify exact operand tuples passed to controller
+4. **State machine testing:** Verified `_awaiting_second`, `_pending_op`, `_operand1` flags across operation sequences
+5. **Button lifecycle verification:** Tested that scientific buttons are added/removed from `_buttons` dict on panel show/hide
+
+**Test Coverage Notes:**
+
+- All new behavior specified in the implementer's changes is covered
+- Power (xʸ) operation tested as binary (not unary) with proper two-operand dispatch
+- Unary operations (√, x², n!, ln, log) tested for immediate execution without pending state
+- Panel visibility state tested for init and toggle scenarios
+- Edge cases: multiple toggles, state preservation across mode changes, error cases
+
+**Test Results:**
+
+- 34 new tests written (appended to existing `tests/test_gui_window_redesign.py`)
+- All 34 new tests PASS
+- All 496 tests in full suite PASS (64 existing + 34 new + 398 other)
+- 3 tests skipped (unrelated to this change)
+- Duration: 0.83s
+- No test failures or errors
+
+**Patterns Found:**
+
+1. **Mocking Complexity:** tkinter StringVar is pre-mocked at module level; direct mock return value manipulation is required (not `set()` then `get()`)
+2. **Button Registry Pattern:** GUIWindow maintains `_buttons` dict as single source of truth for available buttons; panel changes require cleanup in this dict
+3. **State Preservation:** Mode toggle correctly preserves `_operand1`, `_pending_op`, `_awaiting_second` across show/hide cycles
+4. **Binary vs Unary Dispatch:** Power operation correctly uses different dispatch path (sets pending) vs unary operations (immediate execution)
+
+**Escalations:** None. All tests pass with current implementation. No bugs detected.
+
+**Status:** COMPLETE - Full test suite passes (496 passed, 3 skipped). Ready for handoff.
+
