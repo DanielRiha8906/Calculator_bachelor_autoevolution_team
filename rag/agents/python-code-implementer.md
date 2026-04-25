@@ -248,6 +248,24 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - `display_mode_change` must remain backward-compatible (single-arg callers still work) — using `None` as the default for `available_ops` achieves this cleanly.
 - **Test result:** pending VERIFY phase.
 
+### 2026-04-25 — issue-463: apply iOS-inspired dark theme to calculator GUI
+
+- **Task:** Apply dark theme styling to `src/gui.py` to satisfy 12 failing tests in `tests/test_gui_style.py`. Tests use a real tkinter root (not a mock) and inspect widget properties via `cget()`.
+- **Files changed:** `src/gui.py`
+- **Changes made:**
+  - Added `self.root.config(bg="#000000")` after `root.title()`.
+  - Added `self.root.geometry("350x450")`.
+  - Added grid weight configuration: 11 rows and 5 columns all with `weight=1`.
+  - Changed display Label font from `("Arial", 18)` to `("Arial", 30)`; added `bg="#000000"`, `fg="white"`.
+  - Added `bg="#000000"`, `fg="white"` to entry Entry widget.
+  - Added `bg="#333333"`, `fg="white"`, `relief="flat"`, `padx=3`, `pady=3` to all digit buttons (0-9), decimal (.), sign toggle (±), backspace (←), and clear (C).
+  - Added `bg="#FF9500"`, `fg="white"`, `relief="flat"`, `padx=3`, `pady=3` to all operator buttons (+, -, *, /, ^), unary buttons (x², x³, √, ∛, log, ln, !), equals button (=), Sci/Norm toggle button, scientific mode loop buttons (sin, cos, tan, etc.), and constant buttons (π, e).
+- **Patterns found:**
+  - Tests that use real tkinter widgets (not mocks) require a real display server. In a headless CI environment, `Xvfb :99` must be started and `DISPLAY=:99` set before running these tests. Without a display, tests error at fixture setup, not assertion failure — so "failing" in the tester report means "erroring due to no display" when run without Xvfb, but they do pass with Xvfb.
+  - `root.cget("bg")` on a real tkinter window returns the canonical form of the color string (e.g. `"#000000"` not `"black"`). The tests accept both forms, so either works.
+  - `grid_rowconfigure`/`grid_columnconfigure` with `weight=1` must be called AFTER `root.title()` but BEFORE any `grid()` calls to ensure proper layout geometry — though technically tkinter applies them regardless of order.
+- **Test result:** 15/15 tests in `test_gui_style.py` passed (with Xvfb); 441 existing tests passed, 1 skipped — no regressions.
+
 ### 2026-04-25 — issue-413 (followup): sys.exit(1) on error paths and full button layout in GUI
 
 - **Task:** (1) Modify `src/__main__.py` interactive loop to call `sys.exit(1)` when `MaxRetriesExceeded` or domain errors terminate the session. (2) Extend `src/gui.py` with a complete button layout and all button handler methods.
