@@ -40,7 +40,7 @@ Duration: 500.2s | Cost: $1.102253 USD | Turns: 13
 - **Risks:** None — GUI is a new additive module; no Calculator core logic modified; existing modes unchanged
 - **Tests passed:** 412 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 666.0s | Cost: $1.172876 USD | Turns: 15
 
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
