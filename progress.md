@@ -398,4 +398,4 @@ Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
   - `artifacts/registry-mode-split.puml` — component diagram showing MODE_NORMAL (13 ops) vs MODE_SCIENTIFIC (25 ops) registries
   - `artifacts/mode-switching-state-machine.puml` — state machine for MODE_NORMAL ↔ MODE_SCIENTIFIC transitions
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
