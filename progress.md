@@ -487,3 +487,18 @@ Duration: 227.1s | Cost: $0.516747 USD | Turns: 4
   - `artifacts/sequence_gui_calculation.puml` — new sequence diagram for binary calculation including error path
 
 Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
+
+## Run: Fix PR #460 — feat: add tkinter GUI for calculator app (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/gui.py` — replaced empty widget stub with full tkinter GUI: grid layout, digit/operator/unary buttons, scientific mode toggle, error handling via messagebox
+  - `src/__main__.py` — added error_occurred flag to interactive loop; sys.exit(1) on MaxRetriesExceeded or domain errors while preserving history persistence
+  - `tests/test_gui.py` — rewrote with 54 comprehensive tests covering all GUI methods, operations, error handling, scientific mode, and edge cases
+  - `tests/test_separation.py` — replaced 3 hardcoded absolute paths with dynamic os.path calculation
+- **Purpose:** Address PR review feedback: GUI was non-functional (empty window), CLI tests expected sys.exit(1) on errors, separation tests used hardcoded paths
+- **Risks:** None; GUI is additive, CLI change only affects error path, test path fix is portable
+- **Tests passed:** 441 passed, 1 skipped, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
