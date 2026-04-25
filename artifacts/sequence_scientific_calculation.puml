@@ -1,22 +1,24 @@
-@startuml
-title Scientific Calculation Sequence: sin(x) Example
+@startuml sequence_scientific_calculation
+title Scientific Operation Dispatch (sin and pi examples)
 
 actor User
 participant "__main__" as main
 participant "interface\n(run_calculator)" as interface
-participant "Calculator\n(calculator_core)" as calc
+participant "Calculator" as calc
 participant "scientific_operations" as sci
-participant "History\n(internal)" as history
+participant "math" as mathmod
 
-main -> interface : run_calculator(mode="scientific")
+== Arity-1 example: sin(0.5) ==
+
+main -> interface : run_calculator(calc, mode="scientific")
 activate interface
 
 interface -> User : "Enter operator:"
 User -> interface : "sin"
 
 note right of interface
-  Looks up "sin" in SCIENTIFIC_OPERATIONS:
-  arity = 1, method_name = "sin"
+  Lookup "sin" in SCIENTIFIC_OPERATIONS:
+  arity=1, method_name="sin"
 end note
 
 interface -> User : "Enter the first number:"
@@ -24,30 +26,48 @@ User -> interface : "0.5"
 
 interface -> calc : sin(0.5)
 activate calc
-
 calc -> sci : sin(0.5)
 activate sci
-sci -> sci : math.sin(0.5)
+sci -> mathmod : math.sin(0.5)
+mathmod --> sci : 0.4794255...
 sci --> calc : 0.4794255...
 deactivate sci
-
-calc -> history : _record_operation("sin", [0.5], 0.4794255...)
-activate history
-history --> calc : appended to _history
-deactivate history
-
+calc -> calc : _record_operation("sin", [0.5], 0.4794255...)
 calc --> interface : 0.4794255...
 deactivate calc
 
 interface -> User : "sin(0.5) = 0.4794255..."
-interface -> User : "History saved to history.txt"
-
-interface --> main : 0.4794255... (float)
+interface --> main : 0.4794255...
 deactivate interface
 
-note over main
-  Result is not "QUIT" or "MODE_TOGGLE"
-  → loop continues
+== Arity-0 example: pi (no operand prompt) ==
+
+main -> interface : run_calculator(calc, mode="scientific")
+activate interface
+
+interface -> User : "Enter operator:"
+User -> interface : "pi"
+
+note right of interface
+  Lookup "pi" in SCIENTIFIC_OPERATIONS:
+  arity=0, method_name="get_pi"
+  → NO operand prompt
 end note
+
+interface -> calc : get_pi()
+activate calc
+calc -> sci : pi()
+activate sci
+sci -> mathmod : math.pi
+mathmod --> sci : 3.14159265...
+sci --> calc : 3.14159265...
+deactivate sci
+calc -> calc : _record_operation("pi", [], 3.14159265...)
+calc --> interface : 3.14159265...
+deactivate calc
+
+interface -> User : "pi = 3.14159265..."
+interface --> main : 3.14159265...
+deactivate interface
 
 @enduml

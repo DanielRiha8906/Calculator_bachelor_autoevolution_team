@@ -28,11 +28,22 @@ if (len(sys.argv) > 1?) then (yes — batch mode)
 else (no — interactive mode)
 
   :Create Calculator instance;
+  :mode = "normal";
 
   while (running?) is (yes)
-    :run_calculator(calc, max_retries=3);
+    :run_calculator(calc, mode);
+
     if (result == "QUIT"?) then (yes)
       break
+    elseif (result == "MODE_TOGGLE"?) then (yes)
+      if (mode == "normal"?) then (yes)
+        :calc.enable_scientific_mode();
+        :mode = "scientific";
+      else (no)
+        :calc.disable_scientific_mode();
+        :mode = "normal";
+      endif
+      :display_mode_change(mode);
     else (no)
       if (MaxRetriesExceeded raised?) then (yes)
         :display error message;
@@ -52,5 +63,12 @@ else (no — interactive mode)
   stop
 
 endif
+
+note left
+  Dual state sync:
+  - mode: str (local, controls UI)
+  - calc._scientific_mode: bool (internal)
+  Both updated together on MODE_TOGGLE.
+end note
 
 @enduml

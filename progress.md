@@ -1,4 +1,16 @@
 
+## Run: update-diagrams — Scientific mode PlantUML diagrams (2026-04-25)
+
+- **Branch:** task/issue-410-scientific-mode
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core.puml` — added scientific_operations module, updated Calculator class with scientific methods and mode management
+  - `artifacts/activity_diagram_main_flow.puml` — added MODE_TOGGLE branch and mode state transitions
+  - `artifacts/sequence_mode_toggle.puml` — new sequence diagram for mode toggle flow
+  - `artifacts/sequence_scientific_calculation.puml` — updated sequence diagram for scientific operation dispatch including arity-0 path
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
 - **Branch:** task/issue-410-scientific-mode

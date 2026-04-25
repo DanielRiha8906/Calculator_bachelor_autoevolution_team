@@ -1,0 +1,49 @@
+@startuml sequence_mode_toggle
+title Mode Toggle: normal → scientific (user types "sci")
+
+actor User
+participant "__main__" as main
+participant "interface\n(run_calculator)" as interface
+participant "interface\n(prompt_for_operator)" as prompt
+participant "Calculator" as calc
+participant "interface\n(display_mode_change)" as display
+
+main -> interface : run_calculator(calc, mode="normal")
+activate interface
+
+interface -> prompt : prompt_for_operator(mode="normal")
+activate prompt
+prompt -> User : show OPERATIONS menu, type "mode" or "sci" to switch
+User -> prompt : "sci"
+prompt --> interface : "MODE_TOGGLE"
+deactivate prompt
+
+interface --> main : "MODE_TOGGLE"
+deactivate interface
+
+note over main
+  Sentinel detected — do not continue
+  as a normal operation result
+end note
+
+main -> calc : enable_scientific_mode()
+activate calc
+calc -> calc : _scientific_mode = True
+calc --> main : None
+deactivate calc
+
+main -> main : mode = "scientific"
+
+main -> display : display_mode_change("scientific")
+activate display
+display -> User : "Scientific mode enabled"
+display --> main : None
+deactivate display
+
+note over main
+  Loop continues with mode="scientific".
+  Next call: run_calculator(calc, mode="scientific")
+  → shows both OPERATIONS and SCIENTIFIC_OPERATIONS.
+end note
+
+@enduml
