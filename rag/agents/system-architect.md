@@ -1310,7 +1310,7 @@ The refactoring was implemented as a copy-and-move (not a true move). Files were
    - `tests/test_cli.py` line 12: change `from src.cli import run_cli` to `from src.ui.cli import run_cli`
    - `tests/test_interactive.py` line 10: change `from src.interactive import run_interactive_session` to `from src.ui.interactive import run_interactive_session`
    - `tests/test_history.py` line 7: change `from src.history import OperationHistory` to `from src.infrastructure.history import OperationHistory`
-   - Search all test files for `from src.interactive`, `from src.cli`, `from src.history`, `from src.error_logger` and update to new paths
+   - Search all test files for `from src.(interactive|cli|history|error_logger)` and update to new paths
    - Rationale: Direct imports from new locations; verify backward-compat re-exports work for any imports that rely on them
 
 4. **Verify backward-compatibility re-exports** (optional)
@@ -1448,3 +1448,81 @@ Resolved blocker: All unresolved feedback items addressed:
 4. AC4: ✓ All 334 tests pass
 5. AC5: ✓ New sub-packages verified importable and reachable
 
+---
+
+### 2026-04-24 — Normal/Scientific Calculator Modes Feature Plan (CURRENT)
+
+**Task:** Add interactive mode support for users to select and switch between normal and scientific calculator modes during a session. Normal mode: {add, subtract, multiply, divide, square, sqrt}. Scientific mode: {all normal} + {power, cube, cbrt, factorial, log10, ln, sin, cos, tan, cot, asin, acos}.
+
+**Analyst Requirements Summary:**
+- Interactive mode shows operations filtered by current mode
+- Add 6 trig operations (sin, cos, tan, cot, asin, acos) — implementation required
+- Power is SCIENTIFIC-only (not in NORMAL mode per FR1)
+- Default mode: NORMAL at session start
+- Mode switching integrated into interactive menu flow
+- Trig functions use RADIANS (standard mathematical convention)
+- Full modular operation structure; no hardcoded lists
+
+**Key Architectural Decisions:**
+
+1. **OperationMode Enum (NEW)**: Add to `src/core/operations.py`
+   - NORMAL = "normal"
+   - SCIENTIFIC = "scientific"
+
+2. **Extend OperationMetadata**: Add mode field to dataclass in `src/core/operations.py`
+   - Each operation marked as NORMAL or SCIENTIFIC
+
+3. **Add 6 Trig Operations**: Implement in `src/calculator.py`
+   - sin(x), cos(x), tan(x), cot(x), asin(x), acos(x)
+   - Use math module; raise ValueError for domain errors (e.g., asin > 1)
+   - Use radians (standard mathematical convention)
+
+4. **Extend OperationRegistry**: Add to `src/operation_registry.py`
+   - Method: `get_operations_by_mode(mode: OperationMode) -> List[str]`
+   - Method: `get_operation_mode(operation_name: str) -> OperationMode`
+   - Method: `get_operation_metadata(operation_name: str) -> OperationMetadata`
+   - Metadata dictionary mapping all 18 operations to their mode
+
+5. **Interactive Mode Selection & Switching**: Modify `src/ui/interactive.py`
+   - Prompt for mode selection at session start ("0: Normal", "1: Scientific")
+   - Filter operation menu by current mode: `registry.get_operations_by_mode(mode)`
+   - Add "m: Switch mode" command to operation menu
+   - Handle mode switch mid-session (non-blocking; returns to continue prompt)
+
+6. **Backward Compatibility**: Update `src/__init__.py`
+   - Re-export OperationMode for public use
+   - All existing imports continue to work
+
+**Test Coverage (83 scenarios total):**
+- 8 tests for OperationMode enum and metadata
+- 30 tests for trig operations (sin, cos, tan, cot, asin, acos, atan, acot)
+- 15 tests for registry filtering by mode
+- 20 tests for interactive mode selection and switching
+- 10 tests for edge cases and error conditions
+
+**File Changes (Execution Order):**
+1. `src/core/operations.py` — ADD OperationMode enum, extend OperationMetadata
+2. `src/calculator.py` — ADD 6 trig operations (sin, cos, tan, cot, asin, acos)
+3. `src/operation_registry.py` — ADD metadata layer, filtering, mode queries
+4. `src/ui/interactive.py` — ADD mode selection, switching, menu filtering
+5. `src/__init__.py` — ADD OperationMode re-export
+
+**Execution Pipeline:**
+- pytest-edge-tester WRITE: Create 83 failing tests
+- python-code-implementer: Implement changes per above plan
+- pytest-edge-tester VERIFY: All 83 tests + existing tests pass
+- Commit: Normal/Scientific mode feature complete
+
+**Architectural Impact:**
+- Minimal impact on existing code (all backward compatible)
+- Extends operation metadata system (preparation for future mode expansion)
+- No changes to Calculator class API (all methods remain public)
+- No changes to CLI mode (all operations remain accessible)
+- Interactive session now stateful (tracks current mode)
+- All mode categories centralized in OperationRegistry
+
+**Risks & Mitigations:**
+- Risk: Trig domain errors (e.g., asin(1.5)) — Mitigation: Explicit ValueError with domain description
+- Risk: Mode switching breaks operation menu — Mitigation: Re-filter menu after mode switch
+- Risk: Backward compat breakage — Mitigation: All existing operations still accessible; public APIs unchanged
+- Risk: Test failure from trig precision — Mitigation: Use pytest.approx() for all floating-point comparisons

@@ -1,0 +1,87 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam packageStyle rectangle
+
+title Core Calculator Domain Model (Operations, Metadata, Registry)
+
+enum OperationType {
+    UNARY = "unary"
+    BINARY = "binary"
+}
+
+enum OperationMode {
+    NORMAL = "normal"
+    SCIENTIFIC = "scientific"
+}
+
+class OperationMetadata {
+    + name: str
+    + arity: int
+    + op_type: OperationType
+    + description: str
+    + mode: OperationMode
+}
+
+class Calculator {
+    .. Binary Operations ..
+    + add(a, b)
+    + subtract(a, b)
+    + multiply(a, b)
+    + divide(a, b)
+    + power(base, exponent)
+    .. Unary Operations ..
+    + factorial(n: int)
+    + square(x)
+    + cube(x)
+    + sqrt(x)
+    + cbrt(x)
+    + ln(x)
+    + log10(x)
+    .. Trigonometric (Scientific) ..
+    + sin(x)
+    + cos(x)
+    + tan(x)
+    + cot(x)
+    + asin(x)
+    + acos(x)
+}
+
+class OperationRegistry {
+    - _calculator: Calculator
+    - _operations: dict
+    - _sorted_names: list
+    .. Public ..
+    + get_operations() : list[str]
+    + get_arity(name) : int
+    + call(name, *args) : Any
+    + get_operation_metadata(name) : OperationMetadata
+    + get_operation_mode(name) : OperationMode
+    + get_operations_by_mode(mode: OperationMode) : list[str]
+    .. Module-level data ..
+    ~ _LEGACY_OPERATIONS: frozenset
+    ~ _OPERATION_METADATA: dict
+}
+
+note right of OperationRegistry
+  _LEGACY_OPERATIONS: 12 ops
+  (add, subtract, multiply, divide,
+   square, sqrt, power, factorial,
+   cube, cbrt, ln, log10)
+
+  _OPERATION_METADATA: 18 ops
+  NORMAL: add, subtract, multiply,
+          divide, square, sqrt
+  SCIENTIFIC: power, factorial, cube,
+              cbrt, ln, log10,
+              sin, cos, tan, cot,
+              asin, acos
+end note
+
+OperationRegistry *--> Calculator : uses
+OperationRegistry ..> OperationMetadata : looks up
+OperationRegistry ..> OperationMode : filters by
+OperationMetadata --> OperationType : op_type
+OperationMetadata --> OperationMode : mode
+
+@enduml

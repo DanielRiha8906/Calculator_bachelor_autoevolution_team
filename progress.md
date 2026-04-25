@@ -1,3 +1,32 @@
+## Run: update-diagrams — Calculator Modes (2026-04-24)
+
+- **Branch:** task/issue-412-calculator-modes
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_core_domain.puml` — class diagram showing OperationMode enum, OperationMetadata with mode field, Calculator with 6 new trig methods, OperationRegistry with mode-filtering methods
+  - `artifacts/activity_diagram_mode_selection.puml` — activity diagram for interactive mode selection and switching flow
+  - `artifacts/component_diagram_module_architecture.puml` — component diagram showing module dependencies and exports across src/
+
+Duration: 321.8s | Cost: $0.684742 USD | Turns: 4
+
+## Run: Issue #412 — V3 Task 14 - Expert/team (2026-04-24)
+
+- **Branch:** task/issue-412-calculator-modes
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/core/operations.py` — added OperationMode enum (NORMAL/SCIENTIFIC) and mode field to OperationMetadata
+  - `src/calculator.py` — added 6 trigonometric methods: sin, cos, tan, cot, asin, acos with domain validation
+  - `src/operation_registry.py` — added _OPERATION_METADATA dict with mode assignments, get_operation_mode(), get_operations_by_mode() methods
+  - `src/ui/interactive.py` — added mode selection UI (_select_mode helper), "m: Switch mode" hint, mode switching handler
+  - `src/__init__.py` — added OperationMode re-export
+  - `tests/test_calculator_modes.py` — 65 new tests covering modes, trig ops, registry filtering, interactive mode
+  - `rag/agents/*.md` — cycle entries appended for all four agents
+- **Purpose:** Add normal/scientific calculator modes to interactive session — users can select and switch modes, see only mode-appropriate operations, and use 6 new trig functions in scientific mode.
+- **Risks:** None — backward-compatible; get_operations() still returns legacy 12 ops; existing interactive tests unaffected by optional mode selection
+- **Tests passed:** 415 passed, 0 failed
+
+Duration: 1271.6s | Cost: $2.754782 USD | Turns: 15
+
 ## Run: update-diagrams — Issue #409 Documentation UML diagrams (2026-04-24)
 
 - **Branch:** task/issue-409-documentation

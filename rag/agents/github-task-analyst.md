@@ -414,3 +414,68 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Tests for documentation are meta-tests (they verify the README has required sections, not that code behaves correctly)
   - README now serves as authoritative user and developer guide; should be updated whenever feature behavior changes
 
+### Cycle: 2026-04-24 — Issue #412: V3 Task 14 - Expert/team
+- **Task Type:** Feature implementation (normal/scientific calculator mode selection in interactive mode)
+- **Scope:** Add interactive mode support for switching between normal and scientific operation sets during a session
+- **Key Patterns:**
+  - Clear, self-contained feature request with explicit operation lists for each mode
+  - No comments or linked issues; all requirements expressed in issue body
+  - Explicit scope constraint: "keep the change scoped to interactive mode switching rather than GUI or bash-based CLI mode selection"
+  - Follows completion of issues #376–#409 (all foundation features and refactoring established)
+  - Task explicitly defers GUI and CLI mode switching out of scope; focus is interactive-only
+  - Task explicitly reuses "existing modular operation structure" so normal/scientific remain cleanly separated
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** Add support for **normal and scientific calculator modes** in **interactive mode only**
+  2. **FR2 (MUST HAVE):** Allow user to **switch between modes during a session** without restarting application
+  3. **FR3 (MUST HAVE):** **Normal mode** operations: standard calculator ops (add, subtract, multiply, divide, square, sqrt)
+  4. **FR4 (MUST HAVE):** **Scientific mode** operations: expanded set including normal ops PLUS advanced functions (power, cube, cube root, factorial, log10, ln, sin, cos, tan, cot, asin, acos)
+  5. **FR5 (MUST HAVE):** **Interactive flow clearly presents** operations available in currently selected mode
+  6. **FR6 (MUST HAVE):** Use **existing modular operation structure** so normal and scientific functionality remain **separated cleanly**
+  7. **NFR1:** Scope is **interactive mode switching only** — no changes to GUI or bash-based CLI mode selection
+  8. **NFR2:** Maintain relevant tests so they accurately reflect current version of application
+- **Current State (Discovered from README + Codebase Map):**
+  - **Currently supported operations (12 total):**
+    - Binary: add, subtract, multiply, divide, power
+    - Unary: factorial, square, cube, sqrt, cbrt, ln, log10
+  - **Note:** sin, cos, tan, cot, asin, acos NOT YET IMPLEMENTED — task assumes these will be implemented elsewhere or this task includes their implementation
+  - **Current interactive mode:** Shows all 12 operations in a single menu; no mode selection exists yet
+  - **Current modular structure:** `src/core/operations.py`, `src/ui/interactive.py`, `src/operation_registry.py`
+- **Ambiguities Flagged:**
+  1. **Trigonometric operations (sin, cos, tan, cot, asin, acos):** Not in current implementation; task lists them as scientific-mode operations. CLARIFICATION NEEDED: Should this task include implementing these 6 new operations, or assume they exist? (Most likely: architect must determine if trig ops should be added as part of this task or are out of scope)
+  2. **Normal mode operations scope:** Issue lists "square" and "sqrt" as normal; current code has both; confirmed. But does "standard calculator operations" include power? (Issue lists power under scientific, but it's currently available; architect must clarify if power should be moved to scientific-only or remain in both modes)
+  3. **Mode selection mechanism:** No specification of how user selects/switches modes (dedicated menu option, command, etc.); architect discretion based on interactive mode pattern
+  4. **Mode persistence:** Does selected mode persist across multiple operations within a session, or reset after each operation? (ASSUMPTION: persists until user explicitly switches)
+  5. **Default mode on startup:** Which mode should interactive session default to — normal or scientific? (ASSUMPTION: normal, as conservative default)
+  6. **Trigonometric angle units:** If trig operations are implemented, are they in degrees or radians? (DEFERRED; only relevant if trig ops added in this task)
+  7. **CLI and GUI implications:** Task explicitly excludes CLI mode switching. But if user switches to scientific mode in interactive, can they later use those operations via CLI? (ASSUMPTION: CLI remains unchanged; CLI mode does not support mode switching, and only supports operations that exist at CLI entry point)
+- **Constraints:**
+  - Must use existing modular operation structure (don't break existing registry/core patterns)
+  - Scope limited to interactive mode; no CLI or GUI changes
+  - All existing tests must pass (no regression)
+  - Must maintain clean separation between normal and scientific operation sets
+- **Acceptance Criteria (inferred):**
+  - AC1: User can select between normal and scientific modes at session start or during session
+  - AC2: Only operations belonging to selected mode are shown in the interactive menu
+  - AC3: Mode can be switched without exiting the session
+  - AC4: Mode selection is clearly presented and intuitive
+  - AC5: Normal mode has 6 operations (add, subtract, multiply, divide, square, sqrt)
+  - AC6: Scientific mode has normal ops + 8 advanced ops (power, cube, cbrt, factorial, log10, ln, sin, cos, tan, cot, asin, acos)
+  - AC7: All existing tests pass; new tests cover mode selection and operation filtering
+  - AC8: Code organization reflects clean separation of normal vs scientific operations
+- **Handoff Notes for Architect:**
+  - **CRITICAL AMBIGUITY 1:** Are trigonometric functions (sin, cos, tan, cot, asin, acos) already implemented in this codebase, or should they be added as part of this task?
+  - **CRITICAL AMBIGUITY 2:** Should `power` operation be available in normal mode, scientific mode only, or both? (Currently available in all modes; issue lists under scientific)
+  - Architect must clarify mode selection UI (menu option, command string, etc.) and decide if any new operations must be implemented
+  - Architect should produce test specs covering: mode selection, operation filtering per mode, mode switching mid-session, normal mode operations (verify correct set), scientific mode operations (verify correct set), edge cases
+  - Architect should design data structure for separating normal vs scientific operations (could use operation tags, separate registries, or metadata flags on existing operations)
+  - Architect should consider whether to refactor `OperationType` enum or introduce new `OperationCategory` or `OperationMode` enum for this purpose
+- **Label:** `ai-implement:expert-team` (orchestrated expert team delivery)
+- **Patterns Observed:**
+  - Task builds on completed refactoring (#406); new mode selection feature leverages modular structure
+  - Issue provides operation lists but does not specify precise implementation structure (leaves architect flexibility)
+  - Trigonometric operations listed but not yet implemented; architect decision needed on scope
+- **Files Likely to Be Modified:**
+  - `src/operation_registry.py` — to support filtering operations by mode
+  - `src/ui/interactive.py` — to add mode selection menu and filter operation display
+  - `src/core/operations.py` — possibly to add mode metadata or new operation category enum
+  - `tests/` — new tests for mode selection and operation filtering
