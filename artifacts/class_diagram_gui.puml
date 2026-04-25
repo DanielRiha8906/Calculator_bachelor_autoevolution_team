@@ -1,0 +1,139 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam packageStyle rectangle
+
+title GUI + Mode + Core Component Class Hierarchy
+
+package "src/core" {
+    enum OperationType {
+        UNARY
+        BINARY
+    }
+
+    enum OperationMode {
+        NORMAL
+        SCIENTIFIC
+    }
+
+    class OperationMetadata <<dataclass>> {
+        + name: str
+        + arity: int
+        + op_type: OperationType
+        + description: str
+        + mode: OperationMode
+    }
+}
+
+package "src" {
+    class Calculator {
+        .. Binary ..
+        + add(a, b)
+        + subtract(a, b)
+        + multiply(a, b)
+        + divide(a, b)
+        + power(base, exponent)
+        .. Unary ..
+        + factorial(n: int)
+        + square(x)
+        + cube(x)
+        + sqrt(x)
+        + cbrt(x)
+        + ln(x)
+        + log10(x)
+    }
+
+    class OperationRegistry {
+        - _calculator: Calculator
+        - _operations: dict
+        - _sorted_names: List[str]
+        --
+        + get_operations() : List[str]
+        + get_arity(op_name) : int
+        + call(op_name, *args) : Any
+        + get_operations_by_mode(mode) : List[str]
+    }
+}
+
+package "src/infrastructure" {
+    class OperationHistory {
+        - _entries: list[str]
+        --
+        + record(op_name, operands, result)
+        + get_entries() : list[str]
+        + display() : str
+        + write_to_file(filepath)
+    }
+}
+
+package "src/ui" {
+    abstract class CalculatorMode {
+        {abstract} + get_operations(registry: OperationRegistry) : List[str]
+    }
+
+    class SimpleMode {
+        + get_operations(registry) : List[str]
+    }
+
+    note bottom of SimpleMode
+        Returns 6 NORMAL-mode
+        operations via
+        registry.get_operations_by_mode(NORMAL)
+    end note
+
+    class ScientificMode {
+        + get_operations(registry) : List[str]
+    }
+
+    note bottom of ScientificMode
+        Returns all 12 operations
+        via registry.get_operations()
+    end note
+
+    class CalculatorApp {
+        - _calculator: Calculator
+        - _registry: OperationRegistry
+        - _history: OperationHistory
+        - _root: tk.Tk
+        - _current_mode: OperationMode
+        - _modes: dict[OperationMode, CalculatorMode]
+        --
+        + __init__(root, calculator, registry)
+        + get_current_mode_operations() : List[str]
+        + switch_mode(mode: OperationMode)
+        + calculate(op_name, *operands) : str
+        + get_history() : List[str]
+        + is_unary_operation(op_name) : bool
+        + run()
+        - _setup_gui()
+        - _on_calculate()
+        - {static} _parse_operand(value) : object
+    }
+}
+
+' Inheritance
+CalculatorMode <|-- SimpleMode
+CalculatorMode <|-- ScientificMode
+
+' Composition inside CalculatorApp
+CalculatorApp *-- Calculator
+CalculatorApp *-- OperationRegistry
+CalculatorApp *-- OperationHistory
+
+' Aggregation: CalculatorApp holds a dict of mode instances
+CalculatorApp o-- CalculatorMode
+
+' OperationRegistry delegates to Calculator
+OperationRegistry --> Calculator : delegates calls
+
+' OperationRegistry uses metadata
+OperationRegistry ..> OperationMetadata : creates / reads
+
+' OperationMetadata carries enums
+OperationMetadata --> OperationMode : mode
+OperationMetadata --> OperationType : op_type
+
+' CalculatorApp uses OperationMode enum for switching
+CalculatorApp ..> OperationMode : mode switching
+
+@enduml

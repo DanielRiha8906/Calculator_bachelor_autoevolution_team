@@ -475,3 +475,14 @@ Duration: 509.7s | Cost: $0.996440 USD | Turns: 7
   - `artifacts/import_graph.puml` — new component diagram showing module import dependencies
 
 Duration: 217.7s | Cost: $0.525866 USD | Turns: 5
+
+## Run: update-diagrams — tkinter GUI diagrams (2026-04-25)
+
+- **Branch:** task/issue-415-tkinter-gui
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_diagram_gui.puml` — class diagram for GUI + mode + core components
+  - `artifacts/activity_diagram_gui_calculation.puml` — activity diagram for GUI calculation flow
+  - `artifacts/sequence_diagram_calculate.puml` — sequence diagram for calculate() interaction
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

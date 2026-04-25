@@ -1,0 +1,54 @@
+@startuml
+skinparam participantFontSize 13
+
+title calculate("add", "3", "5") — binary operation via GUI
+
+actor User
+participant "CalculatorApp" as App
+participant "OperationRegistry" as Reg
+participant "Calculator" as Calc
+participant "OperationHistory" as Hist
+
+User -> App : click Calculate button
+
+activate App
+App -> App : _on_calculate()
+note right of App
+  reads op_name = "add"
+  operand1 = "3", operand2 = "5"
+end note
+
+App -> App : is_unary_operation("add")
+App --> App : false  (binary op)
+
+App -> App : calculate("add", "3", "5")
+
+App -> App : _parse_operand("3") → 3 (int)
+App -> App : _parse_operand("5") → 5 (int)
+
+App -> Reg : call("add", 3, 5)
+activate Reg
+
+Reg -> Calc : add(3, 5)
+activate Calc
+Calc --> Reg : 8
+deactivate Calc
+
+Reg --> App : 8
+deactivate Reg
+
+App -> Hist : record("add", (3, 5), 8)
+activate Hist
+note right of Hist
+  stores "add(3, 5) = 8"
+end note
+Hist --> App : entry recorded
+deactivate Hist
+
+App --> App : calculate() returns "8"
+
+App -> User : update result label → "8"
+App -> User : append "add(3, 5) = 8" to history listbox
+deactivate App
+
+@enduml
