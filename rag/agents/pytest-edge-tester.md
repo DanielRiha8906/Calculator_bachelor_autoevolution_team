@@ -1446,3 +1446,113 @@ The test suite comprehensively validates the synchronization behavior across all
 7. Normal mode does NOT list scientific operations (negative case)
 
 Full test coverage of the new UI behaviors with all passing tests. Architecture remains clean with proper separation of concerns, and backward compatibility is fully maintained.
+
+### 2026-04-25 | task/issue-413-tkinter-gui | WRITE | 25 failing tests written, all fail as expected
+
+**Task:** Write comprehensive failing tests for CalculatorGUI class and launch_gui() function for tkinter-based GUI module (Issue #413).
+
+**Phase:** WRITE (Red phase)
+
+**Test Specifications Implemented (25 tests covering 10 test classes):**
+
+1. **TestGUIWindowCreation (2 tests):**
+   - test_gui_window_creation - Window created with title "Calculator"
+   - test_gui_window_closes - Window closes without exceptions
+
+2. **TestGUIWidgets (2 tests):**
+   - test_gui_entry_widget_exists - Entry widget accessible
+   - test_gui_display_area_exists - Display/result label accessible
+
+3. **TestGUIBasicArithmetic (4 tests):**
+   - test_gui_addition - 2 + 3 = 5.0
+   - test_gui_subtraction - 10 - 4 = 6.0
+   - test_gui_multiplication - 7 * 8 = 56.0
+   - test_gui_division - 20 / 4 = 5.0
+
+4. **TestGUIUnaryOperations (8 tests):**
+   - test_gui_square - 5² = 25.0
+   - test_gui_cube - 3³ = 27.0
+   - test_gui_square_root - √16 = 4.0
+   - test_gui_cube_root - ∛8 = 2.0
+   - test_gui_factorial - 5! = 120.0
+   - test_gui_power - 2^3 = 8.0
+   - test_gui_log - log(100) = 2.0
+   - test_gui_ln - ln(e) ≈ 1.0
+
+5. **TestGUIErrorHandling (4 tests):**
+   - test_gui_division_by_zero_error - Error popup/label on 5/0
+   - test_gui_sqrt_negative_error - Error on √(-4)
+   - test_gui_invalid_input - Error on "abc" input
+   - test_gui_factorial_negative_error - Error on factorial(-1)
+
+6. **TestGUIClearButton (1 test):**
+   - test_gui_clear_button - Clear button resets display
+
+7. **TestGUIOperationSequence (1 test):**
+   - test_gui_operation_sequence - Multiple operations: 2+3=5, then 5+5=10
+
+8. **TestGUIDecimalInput (1 test):**
+   - test_gui_decimal_input - 3.5 * 2 = 7.0
+
+9. **TestGUINegativeInput (1 test):**
+   - test_gui_negative_input - -5 + 3 = -2.0
+
+10. **TestLaunchGUI (1 test):**
+    - test_launch_gui_entry_function_exists - launch_gui() is callable
+
+**Test Results:**
+- Total tests: 25
+- Failed: 25 (all tests fail on import - ModuleNotFoundError: No module named 'src.gui') - EXPECTED
+- Skipped: 0
+- Errors: 0 (all tests fail during import, not collection)
+
+**Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_gui.py`
+
+**Key Test Patterns Used:**
+- Mock tkinter before importing gui module (sys.modules patching)
+- CalculatorGUI class instantiation and method calls
+- _set_operator(operation_name) for binary operations
+- _apply_unary(operation_name) for unary operations
+- _calculate() method for computing results
+- _clear() method for clear button
+- tkinter.messagebox.showerror() call verification for error cases
+- pytest.raises() for exception validation
+- pytest.approx() for floating-point comparison (ln test)
+- Direct attribute access for entry/display widget validation
+
+**Test Design Notes:**
+- All tests use direct method calls rather than widget event simulation (tkinter is mocked)
+- Tests follow existing codebase patterns and naming conventions
+- Each test class focuses on a single aspect (window lifecycle, widgets, operations, errors, etc.)
+- Tests validate both happy paths (correct results) and error cases (domain errors, invalid input)
+- All test assertions have clear expected/actual values for debugging
+
+**Expected CalculatorGUI Implementation Requirements:**
+The GUI module must provide:
+1. CalculatorGUI class with:
+   - __init__() - Creates tkinter Tk window with title "Calculator"
+   - entry attribute - Entry widget for user input
+   - display attribute - Label/text widget for displaying results
+   - current_input attribute - String tracking current user input
+   - _set_operator(op_name) method - Sets pending operation
+   - _apply_unary(op_name) method - Applies unary operation to current_input
+   - _calculate() method - Executes pending binary operation
+   - _clear() method - Resets display to "0" or ""
+   - destroy() method - Closes window cleanly
+   - is_scientific_mode() method (optional, for future scientific ops)
+
+2. launch_gui() function - Entry point that creates CalculatorGUI and runs mainloop
+
+**Handoff Note:** 25 failing tests committed successfully. All tests fail as expected with ModuleNotFoundError during import (src/gui.py doesn't exist). Tests comprehensively cover:
+- Window creation and lifecycle (2 tests)
+- Widget existence and accessibility (2 tests)
+- 4 basic arithmetic operations (4 tests)
+- 8 advanced unary operations (8 tests)
+- 4 error handling scenarios (4 tests)
+- Clear functionality (1 test)
+- Operation sequences (1 test)
+- Decimal input (1 test)
+- Negative input (1 test)
+- Launch entry function (1 test)
+
+Ready for python-code-implementer to create src/gui.py with complete CalculatorGUI class implementation.
