@@ -27,7 +27,7 @@ Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
 - **Risks:** tkinter still unavailable in headless CI; GuiCalculator uses same _TkStub stub pattern as CalculatorApp for test safety. CalculatorApp preserved unchanged for backward compatibility.
 - **Tests passed:** 504 passed, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1201.7s | Cost: $2.294038 USD | Turns: 19
 
 ## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction — trig ops (2026-04-25)
 
