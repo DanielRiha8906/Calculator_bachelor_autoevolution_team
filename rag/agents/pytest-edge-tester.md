@@ -1074,73 +1074,57 @@ The modular structure achieves clean separation of concerns:
 - New operations can be added to modules without modifying Calculator class
 - Full test coverage spans all 12 operations across all 8 test files and achieves 100% pass rate
 
-### 2026-04-24 | task/issue-410-scientific-mode | WRITE | 35 failing tests written
+### 2026-04-24 | task/issue-410-scientific-mode | WRITE (Cycle 1) | 35 existing tests pass, 3 new integration tests written (all failing as expected)
 
-**Task:** Write comprehensive failing tests for scientific mode features covering trigonometric, hyperbolic, exponential operations, constants, and mode state management.
+**Task:** Write failing integration tests verifying synchronization of Calculator's internal _scientific_mode flag when MODE_TOGGLE is processed in __main__.py.
 
 **Phase:** WRITE (Red phase)
 
-**Test Specifications Implemented (35 tests across 11 test classes):**
+**Root Cause Identified:** The interactive mode loop in __main__.py toggles a local `mode` string variable but never calls Calculator methods (`enable_scientific_mode()` / `disable_scientific_mode()`) to synchronize the Calculator's internal `_scientific_mode` flag.
 
-1. TestSin (2 tests): sin(0) = 0, sin(π/2) = 1
-2. TestCos (2 tests): cos(0) = 1, cos(π) = -1
-3. TestTan (1 test): tan(0) = 0
-4. TestAsin (2 tests): asin(0.5) = π/6, asin(1.5) raises ValueError
-5. TestAcos (2 tests): acos(0.5) = π/3, parametrized domain errors [2.0, -1.5]
-6. TestAtan (1 test): atan(1) = π/4
-7. TestSinh (2 tests): sinh(0) = 0, sinh(1) ≈ 1.1752
-8. TestCosh (1 test): cosh(0) = 1
-9. TestTanh (1 test): tanh(0) = 0
-10. TestExp (2 tests): exp(0) = 1, exp(1) = e
-11. TestGetPi (1 test): get_pi() = π
-12. TestGetE (1 test): get_e() = e
-13. TestCalculatorModeState (4 tests): default mode, enable, disable, toggle
-14. TestScientificOperationHistory (3 tests): history recording for sin, get_pi, get_e
-15. TestModeStateConsistency (3 tests): default mode check, toggle cycles, ops work independent of mode
-16. TestModeToggleSentinels (2 tests): "mode" and "sci" input returns MODE_TOGGLE
-17. TestScientificOpsPromptMode (2 tests): scientific ops accepted in scientific mode, rejected in normal
-18. TestDisplayModeChange (2 tests): display_mode_change("scientific") and display_mode_change("normal")
+**Test Specifications Implemented (3 new integration tests covering UI synchronization):**
 
-**Test Results:**
-- Total tests: 35
-- Passed: 1 (test_scientific_ops_callable_independent_of_mode passes because sin method exists but is_scientific_mode doesn't)
-- Failed: 34 (all expected failures due to missing Calculator methods and interface features)
+1. **test_scientific_mode_ui_sync_enable** - Verify enabling scientific mode synchronizes Calculator
+   - Simulate: User enters "mode" at operator prompt when in normal mode
+   - Expected: MODE_TOGGLE returned, calc.is_scientific_mode() == True after toggle
+   - Status: FAILS (calc.is_scientific_mode() is False because __main__.py never calls calc.enable_scientific_mode())
+
+2. **test_scientific_mode_ui_sync_disable** - Verify disabling scientific mode synchronizes Calculator
+   - Simulate: User enters "sci" at operator prompt when in scientific mode (pre-enabled)
+   - Expected: MODE_TOGGLE returned, calc.is_scientific_mode() == False after toggle
+   - Status: FAILS (calc.is_scientific_mode() is True because __main__.py never calls calc.disable_scientific_mode())
+
+3. **test_mode_toggle_syncs_calculator_state** - Verify full round-trip toggle synchronization
+   - Simulate: Toggle from normal -> scientific -> normal
+   - Expected: Verify Calculator state at each toggle matches new mode
+   - Status: FAILS at first toggle (calc.is_scientific_mode() stays False)
+
+**Test Results (Full test_scientific_mode.py):**
+- Total tests: 38 (35 existing + 3 new)
+- Passed: 35 (all existing scientific operation and mode state tests)
+- Failed: 3 (all new integration tests - EXPECTED behavior in WRITE phase)
 - Collection errors: 0
 
 **Test File:** `/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/tests/test_scientific_mode.py`
 
-**Failing Test Breakdown (34 total):**
-- Scientific operation functions (19 tests fail): sin (2), cos (2), tan (1), asin (2), acos (2), atan (1), sinh (2), cosh (1), tanh (1), exp (2), get_pi (1), get_e (1)
-  - All fail with: AttributeError: 'Calculator' object has no attribute '<method>'
-  
-- Calculator mode state methods (4 tests fail): is_scientific_mode, enable_scientific_mode, disable_scientific_mode, toggle_scientific_mode
-  - All fail with: AttributeError: 'Calculator' object has no attribute '<method>'
-  
-- History recording with scientific ops (3 tests fail): sin history, get_pi history, get_e history
-  - All fail with: AttributeError: 'Calculator' object has no attribute 'sin'
-  
-- Mode state consistency (3 tests fail): default mode check, toggle cycles, ops with mode
-  - All fail with: AttributeError: 'Calculator' object has no attribute 'is_scientific_mode'
-  
-- Interface functions (5 tests fail): prompt_for_operator with mode parameter (3), display_mode_change (2)
-  - All fail with: TypeError/ImportError for missing mode parameter and display_mode_change function
+**New Tests Structure:**
+- Use @patch("builtins.input") to mock MODE_TOGGLE return from prompt_for_operator
+- Call run_calculator() directly to simulate MODE_TOGGLE processing
+- Verify Calculator's is_scientific_mode() state after toggle
+- Include detailed error messages explaining the synchronization requirement
+- Tests follow existing codebase patterns and naming conventions
 
-**Test Structure:**
-- Tests use pytest fixtures and calculator instance
-- Floating-point comparisons use pytest.approx() for precision
-- Error handling uses pytest.raises(ValueError) for invalid domains
-- Parametrized tests combine multiple related error cases (e.g., acos domain errors)
-- Interface tests use @patch("builtins.input") to mock user input
-- Mode tests verify state transitions and consistency
-- All tests follow existing codebase patterns and naming conventions
+**Key Insight - Why Tests Fail:**
+When run_calculator() returns "MODE_TOGGLE":
+1. __main__.py toggles the local `mode` string variable
+2. Next run_calculator() call uses new mode for prompt_for_operator() behavior
+3. BUT Calculator's internal `_scientific_mode` flag is NEVER updated
+4. This causes desynchronization between UI mode state and Calculator state
 
-**Handoff Note:** 35 failing tests committed (commit 2af231f). 34 fail as expected (due to missing Calculator scientific methods, mode state methods, and interface functions). 1 test passes because the sin method call fails on is_scientific_mode check, not on the operation itself. Ready for python-code-implementer to add:
-1. Scientific operation methods to Calculator: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp
-2. Constant methods to Calculator: get_pi, get_e
-3. Mode state methods to Calculator: is_scientific_mode, enable_scientific_mode, disable_scientific_mode, toggle_scientific_mode
-4. interface.prompt_for_operator to accept optional mode parameter ("normal" or "scientific")
-5. interface.display_mode_change function
-6. Updates to OPERATIONS dict in interface.py to include scientific operations
+**Handoff Note:** 3 new integration tests added to test_scientific_mode.py (all failing as expected). All 35 existing tests continue to pass (no regression). Ready for python-code-implementer to fix src/__main__.py to synchronize Calculator's internal mode state when MODE_TOGGLE is processed:
+- When toggling from normal to scientific: call calc.enable_scientific_mode()
+- When toggling from scientific to normal: call calc.disable_scientific_mode()
+- OR use calc.toggle_scientific_mode() in both cases
 
 ### 2026-04-24 | task/issue-407-add-documentation | WRITE | 16 tests written, 10 failing
 

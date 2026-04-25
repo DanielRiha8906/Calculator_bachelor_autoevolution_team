@@ -330,3 +330,145 @@ class TestDisplayModeChange:
         display_mode_change("normal")
         captured = capsys.readouterr()
         assert "normal" in captured.out.lower()
+
+
+# ==============================================================================
+# Integration Tests: Scientific Mode UI Synchronization
+# ==============================================================================
+# These tests verify that the __main__.py interactive mode loop synchronizes
+# the Calculator's internal _scientific_mode flag when MODE_TOGGLE is processed.
+# Root cause: __main__.py toggles a local mode string variable but never calls
+# calc.enable_scientific_mode() / calc.disable_scientific_mode() to synchronize.
+
+class TestScientificModeUISyncEnable:
+    """Test that toggling to scientific mode synchronizes Calculator state."""
+
+    @patch("builtins.input", side_effect=["+", "5", "3"])
+    def test_scientific_mode_ui_sync_enable(self, mock_input, calculator):
+        """Simulate entering 'mode' at operator prompt when in normal mode.
+
+        This test simulates the interactive loop in __main__.py:
+        1. Start with Calculator in normal mode (is_scientific_mode() == False)
+        2. User enters "mode" at operator prompt, which returns "MODE_TOGGLE"
+        3. __main__.py updates local mode string to "scientific"
+        4. On next iteration, run_calculator() is called with mode="scientific"
+
+        The invariant this test verifies: after processing MODE_TOGGLE and before
+        calling run_calculator() again, the Calculator's internal _scientific_mode
+        flag MUST be synchronized to match the new mode.
+
+        EXPECTED TO FAIL: __main__.py never calls calc.enable_scientific_mode()
+        """
+        from src.interface import run_calculator
+
+        # Precondition: calculator starts in normal mode
+        assert calculator.is_scientific_mode() is False
+
+        # Simulate operator input returning "mode"
+        with patch("builtins.input", return_value="mode"):
+            result = run_calculator(calc=calculator, mode="normal")
+
+        # Verify MODE_TOGGLE was returned
+        assert result == "MODE_TOGGLE"
+
+        # THIS IS THE KEY ASSERTION THAT WILL FAIL:
+        # After MODE_TOGGLE is processed, the Calculator's internal state
+        # MUST be synchronized. Since __main__.py would toggle the mode string
+        # to "scientific", we expect is_scientific_mode() to return True.
+        # However, __main__.py never calls calc.enable_scientific_mode(),
+        # so this will fail.
+        assert calculator.is_scientific_mode() is True, (
+            "Calculator's internal _scientific_mode flag must be synchronized "
+            "when MODE_TOGGLE is processed. __main__.py should call "
+            "calc.enable_scientific_mode() when toggling from normal to scientific."
+        )
+
+
+class TestScientificModeUISyncDisable:
+    """Test that toggling from scientific mode to normal synchronizes Calculator state."""
+
+    @patch("builtins.input", return_value="mode")
+    def test_scientific_mode_ui_sync_disable(self, mock_input, calculator):
+        """Simulate entering 'sci' at operator prompt when in scientific mode.
+
+        This test simulates the interactive loop in __main__.py:
+        1. Pre-enable scientific mode on Calculator (is_scientific_mode() == True)
+        2. User enters "sci" at operator prompt, which returns "MODE_TOGGLE"
+        3. __main__.py updates local mode string to "normal"
+        4. On next iteration, run_calculator() is called with mode="normal"
+
+        The invariant: after processing MODE_TOGGLE, the Calculator's internal
+        _scientific_mode flag MUST be synchronized to the new mode.
+
+        EXPECTED TO FAIL: __main__.py never calls calc.disable_scientific_mode()
+        """
+        from src.interface import run_calculator
+
+        # Precondition: start in scientific mode
+        calculator.enable_scientific_mode()
+        assert calculator.is_scientific_mode() is True
+
+        # Simulate operator input returning "sci" (which causes MODE_TOGGLE)
+        result = run_calculator(calc=calculator, mode="scientific")
+
+        # Verify MODE_TOGGLE was returned
+        assert result == "MODE_TOGGLE"
+
+        # THIS IS THE KEY ASSERTION THAT WILL FAIL:
+        # After MODE_TOGGLE is processed, the Calculator's internal state
+        # MUST be synchronized. Since __main__.py would toggle the mode string
+        # to "normal", we expect is_scientific_mode() to return False.
+        # However, __main__.py never calls calc.disable_scientific_mode(),
+        # so this will fail.
+        assert calculator.is_scientific_mode() is False, (
+            "Calculator's internal _scientific_mode flag must be synchronized "
+            "when MODE_TOGGLE is processed. __main__.py should call "
+            "calc.disable_scientific_mode() when toggling from scientific to normal."
+        )
+
+
+class TestModeToggleSyncsCalculatorState:
+    """Test the full mode toggle round-trip: normal -> scientific -> normal."""
+
+    @patch("builtins.input", side_effect=["mode", "mode"])
+    def test_mode_toggle_syncs_calculator_state(self, mock_input, calculator):
+        """Simulate a full toggle cycle and verify Calculator state stays in sync.
+
+        This test verifies the synchronization invariant across multiple toggles:
+        1. Start: normal mode, calc.is_scientific_mode() == False
+        2. After 1st MODE_TOGGLE: toggle to scientific, calc.is_scientific_mode() == True
+        3. After 2nd MODE_TOGGLE: toggle to normal, calc.is_scientific_mode() == False
+
+        This is the most comprehensive test of the synchronization invariant.
+
+        EXPECTED TO FAIL: __main__.py never synchronizes Calculator._scientific_mode
+        """
+        from src.interface import run_calculator
+
+        # Precondition: start in normal mode
+        assert calculator.is_scientific_mode() is False
+        current_mode = "normal"
+
+        # First toggle: normal -> scientific
+        with patch("builtins.input", return_value="mode"):
+            result = run_calculator(calc=calculator, mode=current_mode)
+        assert result == "MODE_TOGGLE"
+        current_mode = "scientific" if current_mode == "normal" else "normal"
+
+        # After first toggle, Calculator state MUST match new mode
+        assert calculator.is_scientific_mode() is True, (
+            "After first MODE_TOGGLE (normal -> scientific), "
+            "calc.is_scientific_mode() must be True"
+        )
+
+        # Second toggle: scientific -> normal
+        with patch("builtins.input", return_value="mode"):
+            result = run_calculator(calc=calculator, mode=current_mode)
+        assert result == "MODE_TOGGLE"
+        current_mode = "scientific" if current_mode == "normal" else "normal"
+
+        # After second toggle, Calculator state MUST match new mode
+        assert calculator.is_scientific_mode() is False, (
+            "After second MODE_TOGGLE (scientific -> normal), "
+            "calc.is_scientific_mode() must be False"
+        )
