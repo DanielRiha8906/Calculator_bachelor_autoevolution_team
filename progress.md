@@ -10,7 +10,7 @@
   - `artifacts/sequence_gui_init.puml` — GuiCalculator initialization sequence
   - `artifacts/component_gui_layout.puml` — Widget hierarchy component diagram
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 286.3s | Cost: $0.629458 USD | Turns: 6
 
 ## Run: Fix PR #466 — feat: iOS-style GuiCalculator redesign (2026-04-25)
 
