@@ -1,0 +1,71 @@
+@startuml
+|User|
+|CalculatorGUI|
+|Calculator|
+|Tkinter|
+
+start
+
+|User|
+:Enter first number;
+
+fork
+  :Click binary operator;
+
+  |CalculatorGUI|
+  :_set_operator(op)\nstores first_operand, pending_op\nclears current_input;
+
+  |User|
+  :Enter second number;
+  :Click equals (=);
+
+  |CalculatorGUI|
+  :_calculate() called\nparse second operand;
+
+  if (operation executes without error?) then (yes)
+    |Calculator|
+    :method(first_operand, second_operand)\nreturns result;
+
+    |Tkinter|
+    :Label.config(text=result)\ndisplay updated;
+  else (no)
+    |Tkinter|
+    :messagebox.showerror("Error", msg)\ndialog shown;
+
+    |CalculatorGUI|
+    :return None;
+  endif
+
+fork again
+  :Click unary operator;
+
+  |CalculatorGUI|
+  :_apply_unary(op) called\nparse current_input;
+
+  if (operation executes without error?) then (yes)
+    |Calculator|
+    :method(x)\nreturns result;
+
+    |Tkinter|
+    :Label.config(text=result)\ndisplay updated;
+  else (no)
+    |Tkinter|
+    :messagebox.showerror("Error", msg)\ndialog shown;
+
+    |CalculatorGUI|
+    :return None;
+  endif
+
+fork again
+  :Click clear (C);
+
+  |CalculatorGUI|
+  :_clear() called\ncurrent_input=""\npending_op=None\nfirst_operand=None;
+
+  |Tkinter|
+  :Label.config(text="0")\ndisplay reset to 0;
+
+end fork
+
+stop
+@enduml

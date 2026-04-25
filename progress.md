@@ -27,6 +27,21 @@ Duration: 235.4s | Cost: $0.581542 USD | Turns: 4
 
 Duration: 500.2s | Cost: $1.102253 USD | Turns: 13
 
+## Run: Issue #413 — V3 Task 15 - Naive/team (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/gui.py` — new tkinter GUI module implementing CalculatorGUI class with all calculator operations and launch_gui() entry point
+  - `src/__main__.py` — added --gui/gui CLI routing to launch the tkinter GUI
+  - `tests/test_gui.py` — 25 new tests covering window creation, all arithmetic/unary operations, error handling, clear, sequences, decimal and negative inputs
+  - `rag/agents/*.md` — per-agent cycle entries updated
+- **Purpose:** Add tkinter-based GUI for the calculator app while preserving all existing CLI and interactive functionality
+- **Risks:** None — GUI is a new additive module; no Calculator core logic modified; existing modes unchanged
+- **Tests passed:** 412 passed, 1 skipped, 0 failed
+
+Duration: 666.0s | Cost: $1.172876 USD | Turns: 15
+
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
 - **Branch:** task/issue-410-scientific-mode
@@ -461,3 +476,42 @@ Duration: 211.6s | Cost: $0.600988 USD | Turns: 5
   - `artifacts/activity_scientific_dispatch.puml` — new activity diagram: arity-based dispatch and domain-validation for scientific operations
 
 Duration: 227.1s | Cost: $0.516747 USD | Turns: 4
+
+## Run: update-diagrams — tkinter GUI UML diagrams (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_gui.puml` — new class diagram for CalculatorGUI component and its relationships
+  - `artifacts/activity_gui_operation.puml` — new activity diagram for GUI operation flow with binary, unary, and clear paths
+  - `artifacts/sequence_gui_calculation.puml` — new sequence diagram for binary calculation including error path
+
+Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
+
+## Run: Fix PR #460 — feat: add tkinter GUI for calculator app (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `src/gui.py` — replaced empty widget stub with full tkinter GUI: grid layout, digit/operator/unary buttons, scientific mode toggle, error handling via messagebox
+  - `src/__main__.py` — added error_occurred flag to interactive loop; sys.exit(1) on MaxRetriesExceeded or domain errors while preserving history persistence
+  - `tests/test_gui.py` — rewrote with 54 comprehensive tests covering all GUI methods, operations, error handling, scientific mode, and edge cases
+  - `tests/test_separation.py` — replaced 3 hardcoded absolute paths with dynamic os.path calculation
+- **Purpose:** Address PR review feedback: GUI was non-functional (empty window), CLI tests expected sys.exit(1) on errors, separation tests used hardcoded paths
+- **Risks:** None; GUI is additive, CLI change only affects error path, test path fix is portable
+- **Tests passed:** 441 passed, 1 skipped, 0 failed
+
+## Run: update-diagrams — Add PlantUML diagrams for tkinter GUI (2026-04-25)
+
+- **Branch:** task/issue-413-tkinter-gui
+- **PR target:** task/issue-413-tkinter-gui
+- **Files changed:**
+  - `artifacts/class_gui.puml` — new class diagram for CalculatorGUI and Calculator relationship
+  - `artifacts/sequence_gui_binary_op.puml` — new sequence diagram for binary operation flow
+  - `artifacts/sequence_gui_error.puml` — new sequence diagram for error handling flow
+  - `artifacts/activity_gui_calculation.puml` — new activity diagram for user calculation flow
+  - `artifacts/component_calculator.puml` — new/updated component diagram including gui module
+
+Duration: 234.5s | Cost: $0.576341 USD | Turns: 4
+
+Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20

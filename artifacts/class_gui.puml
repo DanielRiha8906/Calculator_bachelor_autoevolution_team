@@ -1,0 +1,82 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "tkinter" {
+  class Label
+  class Entry
+  class Button
+  class messagebox <<module>>
+}
+
+class Calculator {
+  -_history: list[dict]
+  -_scientific_mode: bool
+  .. Basic ops ..
+  +add(a, b) : float
+  +subtract(a, b) : float
+  +multiply(a, b) : float
+  +divide(a, b) : float
+  .. Power / Root ..
+  +square(a) : float
+  +cube(a) : float
+  +square_root(a) : float
+  +cube_root(a) : float
+  +power(base, exp) : float
+  +factorial(n) : float
+  .. Scientific ..
+  +log(a) : float
+  +ln(a) : float
+  +sin(x) : float
+  +cos(x) : float
+  +tan(x) : float
+  +exp(x) : float
+  +get_pi() : float
+  +get_e() : float
+  .. State ..
+  +toggle_scientific_mode()
+  +get_history() : list
+  +clear_history()
+}
+
+class CalculatorGUI {
+  +calc: Calculator
+  -root: Tk
+  -display: Label
+  -entry: Entry
+  -current_input: str
+  -pending_op: str | None
+  -first_operand: float | None
+  -scientific_mode: bool
+  -scientific_buttons: list
+  --
+  +__init__(root=None)
+  +destroy()
+  --
+  -_on_number_click(digit: str)
+  -_on_operator_click(op: str)
+  -_apply_unary(op: str)
+  -_calculate()
+  -_clear()
+  -_on_backspace()
+  -_on_sign_toggle()
+  -_on_constant_click(op: str)
+  -_toggle_scientific_mode()
+  -_set_operator(op: str)
+}
+
+note as launch_note
+  launch_gui()
+  Creates Tk root,
+  instantiates CalculatorGUI,
+  calls root.mainloop()
+end note
+
+CalculatorGUI *-- Calculator : calc
+CalculatorGUI --> Label : display
+CalculatorGUI --> Entry : entry
+CalculatorGUI --> Button : scientific_buttons
+CalculatorGUI ..> messagebox : showerror on exception
+
+launch_note ..> CalculatorGUI : creates
+
+@enduml

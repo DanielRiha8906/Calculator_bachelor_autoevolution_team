@@ -1,0 +1,53 @@
+@startuml
+actor User
+participant CalculatorGUI
+participant Calculator
+participant messagebox
+participant "Label (display)" as Label
+
+== Binary Calculation: 5 + 3 ==
+
+User -> CalculatorGUI : enter "5"
+note right of CalculatorGUI : current_input="5"
+
+User -> CalculatorGUI : click "+"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _set_operator("add")
+note right of CalculatorGUI : first_operand=5.0\npending_op="add"\ncurrent_input=""
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : enter "3"
+note right of CalculatorGUI : current_input="3"
+
+User -> CalculatorGUI : click "="
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _calculate()
+
+alt successful calculation
+
+  CalculatorGUI -> CalculatorGUI : second = float("3") = 3.0
+  CalculatorGUI ->> Calculator : add(5.0, 3.0)
+  activate Calculator
+  Calculator -->> CalculatorGUI : 8.0
+  deactivate Calculator
+  CalculatorGUI ->> Label : config(text="8.0")
+  CalculatorGUI -->> User : returns 8.0
+
+else division by zero: 5 / 0
+
+  CalculatorGUI -> CalculatorGUI : second = float("0") = 0.0
+  CalculatorGUI ->> Calculator : divide(5.0, 0.0)
+  activate Calculator
+  Calculator -->> CalculatorGUI : raises ZeroDivisionError
+  deactivate Calculator
+  CalculatorGUI -> CalculatorGUI : catch ZeroDivisionError
+  CalculatorGUI ->> messagebox : showerror("Error", str(exception))
+  activate messagebox
+  messagebox -->> User : dialog shown
+  deactivate messagebox
+  CalculatorGUI -->> User : returns None
+
+end
+
+deactivate CalculatorGUI
+@enduml

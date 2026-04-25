@@ -354,3 +354,144 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Verify that users can actually call scientific operations from the interactive interface after toggling mode
   - This is NOT a logic issue (mode management and operation functions exist); it is a UI/interface integration issue
 - **Test Coverage:** Current 35 tests may pass in isolation but do not verify end-to-end UI integration of mode toggling and operation availability. New tests may be needed for this integration point.
+
+### Cycle: 2026-04-25 — Issue #413: V3 Task 15 - Naive/team
+- **Issue Title:** V3 Task 15 - Naive/team
+- **Task:** Add a GUI for the calculator app using tkinter, and make sure the existing calculator functionality can still be used through the application.
+- **Label:** ai-implement:naive-team
+- **Status:** OPEN
+- **Created:** 2026-04-24T13:33:42Z
+- **Updated:** 2026-04-25T15:01:35Z
+- **Issue Body:** Two sentences describing task requirement. No detailed acceptance criteria, test specs, edge cases, or implementation guidance.
+- **Issue Comments:** No comments in issue thread (empty).
+- **Position in V3 Cycle:** Task 15 is the 15th (and presumed final) task in the V3 sequence. V3 progression: (1–4) foundation/features → (5,7,8) interaction/robustness → (9–11) observability/architecture → (12) modularization → (13) documentation → (14) unknown → (15) **GUI implementation**.
+- **Key Functional Requirements (Must Have):**
+  1. Create a graphical user interface (GUI) for the calculator using tkinter (Python standard library)
+  2. Expose all existing calculator functionality through the GUI (all basic arithmetic + advanced operations)
+  3. Ensure the calculator logic remains accessible through existing non-GUI interfaces (CLI, interactive mode must not break)
+  4. GUI must support all operations: basic (add, subtract, multiply, divide), advanced (square, cube, sqrt, cbrt, power, log, ln, factorial, sin, cos, tan, etc.)
+  5. GUI must handle user input and display results
+- **Non-Functional Requirements (Should Have):**
+  1. GUI should be user-friendly and intuitive (standard calculator layout or similar)
+  2. GUI must not introduce regressions in existing functionality (CLI, interactive mode, tests must continue to pass)
+  3. GUI interaction should be responsive and clear (error messages visible to user, results displayed clearly)
+  4. Naive variant suggests straightforward tkinter implementation (standard layout, no advanced widgets or themes)
+- **Technical Constraints:**
+  1. Use tkinter (Python standard library — no new dependencies)
+  2. Must integrate with existing Calculator class (no breaking changes to calculator core)
+  3. Existing calculator functionality must remain accessible via CLI and interactive modes
+  4. All existing tests must continue to pass (currently 215+ passing tests)
+  5. Should be thin wrapper around existing Calculator class (no duplication of logic)
+- **Dependencies:**
+  - Implicit dependency on all prior V3 tasks: calculator core (1–4), user interaction (5,7,8), observability (9–10), architecture (11), modularization (12), documentation (13)
+  - Does NOT require changes to existing code; is purely additive (new GUI module)
+  - Assumes Calculator class and all operations are complete and stable
+  - Assumes interactive/CLI modes are complete; GUI is a new alternative interface
+- **Out of Scope:**
+  - Changing existing calculator logic
+  - Modifying CLI or interactive modes (they must remain functional)
+  - Changing core Calculator API
+  - Web-based GUI or other UI frameworks
+  - Remote functionality or network operations
+  - Persistence (history/logging) in GUI (unless mirroring existing functionality)
+- **Open Ambiguities:**
+  1. **GUI Layout:** Standard calculator button layout (0-9, +, -, *, /, =, C) or operation menu-based approach?
+  2. **Operation Selection:** How do users select advanced operations (sin, cos, power, etc.)? Buttons, dropdown menu, or command entry?
+  3. **Input Mode:** Direct numeric button clicks, text entry field, or both?
+  4. **Result Display:** Single-line display, multi-line history, or both?
+  5. **Error Handling:** How are errors (div by zero, invalid factorial, etc.) displayed to users (popup, status bar, inline)?
+  6. **History Integration:** Should GUI display operation history (from Task 9)? Or is this a separate concern?
+  7. **Mode Integration:** Should GUI support scientific mode toggle (from PR #410)? Or only normal mode?
+  8. **Logging/Validation:** Should errors/retries from GUI be captured in error.log (Task 10)? Should validation logic apply in GUI (Task 8)?
+  9. **Exit Behavior:** How does user exit the GUI (X button, Quit button, Ctrl+C)?
+  10. **Window Size/Responsiveness:** Fixed size or resizable? Any specific visual requirements?
+- **Recommended Working Assumptions:**
+  1. **Standard Calculator Layout:** Numeric buttons (0-9), basic operators (+, -, *, /), equals (=), clear (C), decimal point (.)
+  2. **Advanced Operations Menu:** Secondary menu/buttons or dropdown for advanced functions (square, cube, sqrt, sin, cos, etc.)
+  3. **Input Method:** Numeric buttons for input (with optional text entry field for advanced operations)
+  4. **Result Display:** Single display line showing current input/last result; optionally show operation history in secondary window or panel
+  5. **Error Handling:** Display errors in result field or popup dialogs (user-visible, not crashes)
+  6. **Integration Approach:** GUI module as separate file (e.g., `src/gui.py` or `src/calculator_gui.py`) with minimal coupling to calculator.py
+  7. **Validation:** Apply same validation logic as interactive/CLI modes (Task 8) so error messages are consistent
+  8. **Mode Support:** Start in normal mode; optionally support mode toggle if Task #410 (scientific mode) is complete
+  9. **Persistence:** Write operations to history.txt (Task 9) and errors to error.log (Task 10) just as CLI/interactive do
+  10. **Exit:** X button or Quit button to close window gracefully
+  11. **Testing:** Write tests for GUI behavior (button clicks, input, result display) to ensure functionality works as expected
+- **Comparison to Prior Cycles:**
+  - V2 had GUI tasks (issue #248: PlantUML diagrams suggest prior GUI work exists)
+  - V3 Task 15 GUI comes late in cycle, after all core features, observability, architecture, and documentation are complete
+  - This ordering suggests GUI is treated as an alternative/supplemental interface, not core to calculator function
+- **Recurring Pattern Insight:** V3 cycle structure: (1–4) foundation → (5,7) interaction modes → (8–10) robustness/observability → (11) architecture → (12) modularization → (13) documentation → (14-15) supplemental UIs. GUI as Task 15 (near-final) suggests it is the last major feature addition before the cycle concludes. This mirrors typical product development: core features → hardening → refactoring → documentation → optional/premium UIs.
+
+### Cycle: 2026-04-25 — PR #460: feat: add tkinter GUI for calculator app (issue #413)
+- **PR Title:** feat: add tkinter GUI for calculator app (issue #413)
+- **PR Number:** 460
+- **Created:** 2026-04-25T15:13:02Z
+- **Status:** OPEN with UNRESOLVED BLOCKING FEEDBACK
+- **Labels:** request-changes:naive-team
+- **Base:** exp3/naive-team (targeting non-main branch)
+- **Head:** task/issue-413-tkinter-gui (current working branch)
+- **Current PR Claims:**
+  - Adds `src/gui.py` with CalculatorGUI class + launch_gui() entry point
+  - Modifies `src/__main__.py` with --gui / gui CLI routing
+  - Adds `tests/test_gui.py` with 25 new tests
+  - Test results: "412 passed, 1 skipped, 0 failed"
+  - "No risks. GUI is additive and can be disabled without affecting any other mode."
+- **CRITICAL UNRESOLVED FEEDBACK (Comment ID 4319968526, created 2026-04-25T15:38:15Z):**
+  - **Status:** Flagged as "**Fix needed**" — BLOCKS PR ACCEPTANCE
+  - **Severity:** BLOCKING — Multiple critical defects identified
+- **Category 1: Test Suite Failures (6 failing tests)**
+  - **Pre-existing / unrelated to GUI:**
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_first_operand — AssertionError: expected call not found
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_operator — AssertionError: expected call not found
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_domain_error — StopIteration
+  - **Architectural/structural failures (module not found):**
+    - tests/test_separation.py::TestCalculatorHasNoUIImports::test_calculator_has_no_ui_imports — FileNotFoundError: /src/calculator.py
+    - tests/test_separation.py::TestInterfaceNoDirectMathLogic::test_interface_no_direct_math_logic — FileNotFoundError: /src/interface.py
+    - tests/test_separation.py::TestBatchCLIImportsFromInterface::test_batch_cli_imports_from_interface — FileNotFoundError: /src/batch_cli.py
+  - **Root Cause:** Test suite expects refactored module structure (Task #401 separation) that apparently has not been fully implemented. Files calculator.py, interface.py, batch_cli.py expected by tests do not exist in actual codebase.
+  - **Impact:** PR author claims "412 passed, 1 skipped, 0 failed" but local test runs show 6 failures. Contradicts PR description.
+- **Category 2: GUI Window Non-Functional — CRITICAL**
+  - **Observed Behavior:** `python -m src --gui` launches a tkinter window, but window is completely empty/blank — no UI elements visible
+  - **User Experience:** No display, no operations, no numbers, nothing
+  - **What's Missing (Must Implement Immediately):**
+    1. **Grid Layout Manager** — Window uses no layout manager; must use .grid() to arrange widgets
+    2. **Digit Buttons (0–9)** — All 10 numeric buttons missing
+    3. **Operator Buttons (+, −, ×, ÷)** — All 4 basic operators missing
+    4. **Equals Button (=)** — Submit/calculate button missing
+    5. **Clear Button (C)** — Reset button missing
+    6. **Decimal Point Button (.)** — Decimal input missing
+    7. **Button Click Bindings** — ALL buttons lack event handlers. No code wires button clicks to:
+       - Digit appending
+       - Operator selection
+       - Calculation execution
+       - Display clearing
+    8. **Display Widget** — No text display/label showing current input or result
+- **Category 3: Scientific Mode Toggle Missing — HIGH PRIORITY**
+  - **Current State:** GUI hardcoded to normal mode
+  - **What's Missing:**
+    1. **Mode Switch Button** — No UI button/toggle to switch modes
+    2. **Dynamic Button Creation** — When mode toggled, new buttons for scientific ops (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) must be created and added to grid
+    3. **Mode-Aware Display** — Available operations must update when mode changes
+    4. **Button Bindings for Scientific Ops** — Each scientific button must be bound to corresponding Calculator method
+- **Recurring Pattern Connection:** This mirrors PR #432 (user input) and PR #457 (scientific mode):
+  - PR #432 feedback: "ALL operations must be callable, not just basic four"
+  - PR #457 feedback: "Mode switching must be integrated into UI, not just logic"
+  - PR #460 feedback: "GUI must have actual buttons, layout, and bindings to be functional"
+  - **Pattern:** PRs that claim functionality complete but lack UI integration are rejected by author with "Fix needed" flag
+- **Open Questions Requiring Clarification:**
+  1. **Test Suite Mismatch:** Why does PR claim "412 passed, 0 failed" when local runs show 6 failures? Is PR description outdated, or are tests environment-dependent?
+  2. **Module Structure:** Do calculator.py, interface.py, batch_cli.py actually exist in current branch, or has refactoring been partial?
+  3. **GUI Implementation Status:** Is gui.py a stub/skeleton that was never completed, or is there actual code that simply isn't rendering?
+- **Assessment: PR Currently Unmergeaable**
+  - GUI is not functional (no visible UI elements, no interactions possible)
+  - Test suite shows failures contradicting PR claims
+  - PR requires substantial remediation across both GUI implementation and test suite alignment
+  - Blocking label "request-changes:naive-team" indicates review is pending fixes
+- **Suggested Priority Order for Fixes:**
+  1. **FIRST:** Diagnose and resolve 6 test failures (especially test_separation.py module-not-found errors)
+  2. **SECOND:** Implement complete GUI layout with buttons, display, and all event bindings (Frames, Buttons, Grid layout, click handlers)
+  3. **THIRD:** Implement mode toggle and dynamic scientific button creation
+  4. **FOURTH:** Verify all 25 GUI tests actually validate UI behavior (not just code paths)
+  5. **FIFTH:** Confirm test suite restoration ("412 passed, 1 skipped, 0 failed" state)
+

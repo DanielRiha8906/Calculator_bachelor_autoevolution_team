@@ -204,6 +204,29 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Appending to an existing README avoids overwriting the project's Czech-language thesis documentation, which is load-bearing for the experiment context.
 - **Test result:** 340 passed, 1 skipped (pre-existing skip). All 16 documentation tests pass.
 
+### 2026-04-25 — issue-413: tkinter GUI module
+
+- **Task:** Create `src/gui.py` with `CalculatorGUI` class and `launch_gui()` entry-point; update `src/__main__.py` to route `--gui`/`gui` CLI argument to the GUI; satisfy 25 failing tests in `tests/test_gui.py`.
+- **Files changed:** `src/gui.py` (created), `src/__main__.py` (3-line routing block added)
+- **Changes made:**
+  - Created `src/gui.py` with `CalculatorGUI` class:
+    - `__init__(self, root=None)`: creates `tkinter.Tk()` when root is None; sets `root.title("Calculator")`; creates `self.entry` (Entry) and `self.display` (Label); initialises `current_input=""`, `pending_op=None`, `first_operand=None`, and a `Calculator` instance.
+    - `_set_operator(op)`: converts `current_input` to float → `first_operand`; stores `op` in `pending_op`; clears `current_input`.
+    - `_apply_unary(op)`: `float(current_input)` → `getattr(self.calc, op)(x)` → updates display; catches `ValueError`/`ZeroDivisionError` and calls `tkinter.messagebox.showerror`.
+    - `_calculate()`: raises `ValueError`/`TypeError` for non-numeric `current_input` (not caught here — test asserts the exception propagates); for domain errors calls `tkinter.messagebox.showerror`.
+    - `_clear()`: resets state; sets display text to "0".
+    - `destroy()`: calls `self.root.destroy()`.
+    - `launch_gui()`: module-level function creating a real `Tk()` root and entering `mainloop()`.
+  - Updated `src/__main__.py`: added three-line block before the existing `len(sys.argv) > 1` branch that checks `sys.argv[1:] in (["--gui"], ["gui"])` and calls `launch_gui()` then `sys.exit(0)`.
+- **Key design decision:** `CalculatorGUI()` takes no required arguments. Tests call `CalculatorGUI()` with no args and then access `gui.root`. So `__init__` creates `tkinter.Tk()` internally when no root is passed. The `tkinter_mock.Tk()` call returns a MagicMock which is stored as `self.root`; `gui.root.title("Calculator")` is then the assertion target.
+- **Critical invariant for `_calculate` error handling:** invalid non-numeric input (e.g. `"abc"`) raises `ValueError` before any Calculator call — this exception is NOT caught in `_calculate`, so it propagates to the caller. The test `test_gui_invalid_input` asserts `pytest.raises((ValueError, TypeError))`. Domain errors (e.g. division by zero) are caught and shown via `messagebox.showerror`.
+- **Tkinter mock routing:** tests set `sys.modules['tkinter'] = tkinter_mock`. Code in `src/gui.py` uses bare `import tkinter` and then `tkinter.messagebox.showerror(...)`, which resolves to `tkinter_mock.messagebox.showerror(...)` — exactly what the test asserts.
+- **Patterns found:**
+  - When tkinter is mocked via `sys.modules`, `tkinter.Entry(...)` and `tkinter.Label(...)` return MagicMocks; they are non-None by default, satisfying `assert gui.entry is not None`.
+  - `_apply_unary` uses exact Calculator method names (`square_root`, `cube_root`, etc.) not the display variants (`sqrt`, `cbrt`). Tests call `_apply_unary('square_root')` — read the test file, not the architect spec, for the authoritative key names.
+  - `float(result)` cast after Calculator calls is needed because `factorial` returns `int`, not `float`, but tests assert `result == 120.0` (float equality).
+- **Test result:** 412 passed, 1 skipped (pre-existing skip). All 25 new GUI tests pass.
+
 ### 2026-04-25 — issue-410: scientific mode — welcome banner, enhanced mode-change feedback, prompt hint
 
 - **Task:** Add `display_welcome()` to `src/interface.py`; enhance `display_mode_change()` with `available_ops` parameter and mode-specific messages; add mode hint to `prompt_for_operator()` prompt text; update `src/__main__.py` to call `display_welcome()` and pass `available_ops` to `display_mode_change()`; add `display_welcome` to `src/cli.py` facade.
@@ -224,3 +247,34 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Splitting the ternary `mode = "scientific" if mode == "normal" else "normal"` into a proper if/else makes it safe to assign both `mode` and `available_ops` atomically in the same branch; the old ternary form would require re-reading the already-flipped `mode` to decide which op list to use.
   - `display_mode_change` must remain backward-compatible (single-arg callers still work) — using `None` as the default for `available_ops` achieves this cleanly.
 - **Test result:** pending VERIFY phase.
+
+### 2026-04-25 — issue-413 (followup): sys.exit(1) on error paths and full button layout in GUI
+
+- **Task:** (1) Modify `src/__main__.py` interactive loop to call `sys.exit(1)` when `MaxRetriesExceeded` or domain errors terminate the session. (2) Extend `src/gui.py` with a complete button layout and all button handler methods.
+- **Files changed:** `src/__main__.py` (error_occurred flag added), `src/gui.py` (full button layout + 6 new handler methods)
+- **Changes made:**
+  - `src/__main__.py`:
+    - Added `error_occurred: bool = False` flag before the loop.
+    - Changed `MaxRetriesExceeded` handler: added `error_occurred = True` before `break`.
+    - Changed `(ZeroDivisionError, ValueError)` handler from `pass`/continue to: `display_error(str(e))`, `error_occurred = True`, `break`.
+    - Replaced single `sys.exit(0)` after finally with conditional: `sys.exit(1)` when `error_occurred`, else `sys.exit(0)`.
+  - `src/gui.py`:
+    - Added `self.scientific_mode = False` and `self.scientific_buttons: list = []` to `__init__`.
+    - Added full grid layout: rows 2-7 with digit buttons 0-9, decimal, backspace, sign toggle, clear, equals, four binary operators, five unary buttons (x², x³, √, ∛, !) and power, log, ln buttons.
+    - Added scientific mode buttons (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, π, e) in rows 8-10 — created with `grid()` then immediately `grid_remove()`; stored in `self.scientific_buttons`.
+    - Added `_on_number_click(digit)`: appends digit to `current_input`, updates entry.
+    - Added `_on_operator_click(op)`: when `current_input` is non-empty, parses float and sets `first_operand`/`pending_op`/clears input; shows error dialog on `ValueError`.
+    - Updated `_apply_unary`: added early return `None` when `current_input` is empty; added entry update after success; extended except clause to include `AttributeError`.
+    - Updated `_calculate`: kept `float(self.current_input)` outside try (raises on invalid input as required by `test_gui_invalid_input`); added `if not self.pending_op: return None` guard after the float conversion.
+    - Updated `_clear`: added `self.entry.delete(0, tkinter.END)` to clear the entry widget too.
+    - Added `_on_backspace()`: removes last char from `current_input`, updates entry.
+    - Added `_on_sign_toggle()`: negates float value, updates `current_input` and entry.
+    - Added `_on_constant_click(op)`: calls zero-arg Calculator method, updates display and entry.
+    - Added `_toggle_scientific_mode()`: flips `self.scientific_mode`, shows/hides scientific buttons via `grid()`/`grid_remove()`.
+    - Added explicit `import tkinter.messagebox` at module top (was previously implicit via `import tkinter`).
+- **Patterns found:**
+  - `sys.exit(0)` in the normal exit path was wrong for error cases. Tracking `error_occurred` and branching AFTER the `finally` block is the correct pattern — `finally` always runs (for persistence) and the exit code decision is made after.
+  - When tkinter is mocked via `sys.modules`, `tkinter.messagebox` resolves to `tkinter_mock.messagebox`. A separate `import tkinter.messagebox` is not strictly needed when tkinter itself is mocked, but it is needed in production for the messagebox submodule to be loaded.
+  - `float(current_input)` outside the `try` in `_calculate` preserves the original contract: invalid numeric string raises `ValueError` directly to the caller. The `test_gui_invalid_input` test relies on this.
+  - Scientific buttons must be `grid()`-ed ONCE during construction (so tkinter records their grid position) and then `grid_remove()`-ed immediately. A subsequent `btn.grid()` with no arguments restores the recorded position — this is how show/hide toggling works in tkinter grid geometry manager.
+- **Test result:** 412 passed, 1 skipped (pre-existing skip). All 25 GUI tests pass. All 3 MainWithMaxRetries CLI tests pass.

@@ -6,6 +6,7 @@ from cli for backward compatibility.
 """
 
 import sys
+import os
 import importlib.util
 import inspect
 
@@ -16,7 +17,7 @@ class TestCalculatorHasNoUIImports:
     def test_calculator_has_no_ui_imports(self):
         """Verify that src/calculator.py contains no imports from cli, batch_cli, or interface."""
         # Read calculator.py source
-        calc_path = "/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/calculator.py"
+        calc_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "calculator.py"))
         with open(calc_path, 'r') as f:
             calc_source = f.read()
 
@@ -195,7 +196,7 @@ class TestInterfaceNoDirectMathLogic:
 
     def test_interface_no_direct_math_logic(self):
         """Verify that interface.py has no direct mathematical operations."""
-        interface_path = "/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/interface.py"
+        interface_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "interface.py"))
         with open(interface_path, 'r') as f:
             interface_source = f.read()
 
@@ -318,7 +319,7 @@ class TestBatchCLIImportsFromInterface:
     def test_batch_cli_imports_from_interface(self):
         """Verify that batch_cli.py imports OPERATIONS and display functions from interface."""
         # Read batch_cli.py source to verify imports
-        batch_cli_path = "/home/runner/work/Calculator_bachelor_autoevolution_team/Calculator_bachelor_autoevolution_team/src/batch_cli.py"
+        batch_cli_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "batch_cli.py"))
         with open(batch_cli_path, 'r') as f:
             batch_cli_source = f.read()
 

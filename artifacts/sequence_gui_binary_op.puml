@@ -1,0 +1,40 @@
+@startuml
+title Binary Operation Flow: 5 + 3 =
+
+actor User
+participant CalculatorGUI
+participant Calculator
+participant "Label (display)" as Display
+
+User -> CalculatorGUI : click "5"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _on_number_click("5")\ncurrent_input = "5"
+CalculatorGUI ->> Display : config(text="5")
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : click "+"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _on_operator_click("add")
+CalculatorGUI -> CalculatorGUI : _set_operator("add")\nfirst_operand = 5.0\npending_op = "add"\ncurrent_input = ""
+CalculatorGUI ->> Display : config(text="")
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : click "3"
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _on_number_click("3")\ncurrent_input = "3"
+CalculatorGUI ->> Display : config(text="3")
+deactivate CalculatorGUI
+
+User -> CalculatorGUI : click "="
+activate CalculatorGUI
+CalculatorGUI -> CalculatorGUI : _calculate()\nsecond = float("3") = 3.0
+CalculatorGUI ->> Calculator : add(5.0, 3.0)
+activate Calculator
+Calculator -->> CalculatorGUI : 8.0
+deactivate Calculator
+CalculatorGUI -> CalculatorGUI : current_input = "8.0"\npending_op = None
+CalculatorGUI ->> Display : config(text="8.0")
+CalculatorGUI -->> User : result 8.0 shown
+deactivate CalculatorGUI
+
+@enduml

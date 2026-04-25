@@ -25,6 +25,11 @@ def main() -> None:
     Supports switching between 'normal' and 'scientific' mode via 'mode'/'sci'
     input at the operator prompt.
     """
+    if sys.argv[1:] in (["--gui"], ["gui"]):
+        from .gui import launch_gui
+        launch_gui()
+        sys.exit(0)
+
     if len(sys.argv) > 1:
         if sys.argv[1:] == ["history"]:
             try:
@@ -40,6 +45,7 @@ def main() -> None:
     else:
         calc = Calculator()
         mode = "normal"
+        error_occurred = False
         display_welcome()
         try:
             while True:
@@ -60,16 +66,21 @@ def main() -> None:
                         continue
                 except MaxRetriesExceeded as e:
                     display_error(str(e))
+                    error_occurred = True
                     break
-                except (ZeroDivisionError, ValueError):
-                    # Error already displayed by run_calculator; continue loop
-                    pass
+                except (ZeroDivisionError, ValueError) as e:
+                    display_error(str(e))
+                    error_occurred = True
+                    break
         except KeyboardInterrupt:
             print("\nExiting...")
         finally:
             persist_history_to_file(calc)
 
-        sys.exit(0)
+        if error_occurred:
+            sys.exit(1)
+        else:
+            sys.exit(0)
 
 
 if __name__ == "__main__":
