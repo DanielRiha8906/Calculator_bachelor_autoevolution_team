@@ -1,13 +1,6 @@
 @startuml
 skinparam classAttributeIconSize 0
 
-package "tkinter" {
-  class Label
-  class Entry
-  class Button
-  class messagebox <<module>>
-}
-
 class Calculator {
   -_history: list[dict]
   -_scientific_mode: bool
@@ -39,44 +32,54 @@ class Calculator {
 }
 
 class CalculatorGUI {
-  +calc: Calculator
-  -root: Tk
-  -display: Label
-  -entry: Entry
+  == State Management ==
   -current_input: str
   -pending_op: str | None
   -first_operand: float | None
   -scientific_mode: bool
+  == Widgets ==
+  -root
+  -display: Label
+  -entry: Entry
   -scientific_buttons: list
+  == Calculator Engine ==
+  -calc: Calculator
   --
   +__init__(root=None)
   +destroy()
-  --
   -_on_number_click(digit: str)
   -_on_operator_click(op: str)
-  -_apply_unary(op: str)
-  -_calculate()
+  -_set_operator(op: str)
+  -_apply_unary(op: str) : float | None
+  -_calculate() : float | None
   -_clear()
   -_on_backspace()
   -_on_sign_toggle()
   -_on_constant_click(op: str)
   -_toggle_scientific_mode()
-  -_set_operator(op: str)
 }
 
-note as launch_note
-  launch_gui()
-  Creates Tk root,
-  instantiates CalculatorGUI,
-  calls root.mainloop()
+note bottom of CalculatorGUI
+  **Digit & Utility Buttons**
+  bg=#333333, fg=white, relief=flat
+  Keys: 0-9, ., ±, ←, C
+  ---
+  **Operator Buttons**
+  bg=#FF9500, fg=white, relief=flat
+  Keys: +, -, *, /, ^, x², x³, √, ∛, log, ln, !, =, Sci/Norm
+  ---
+  **Scientific Buttons** (hidden by default)
+  bg=#FF9500, fg=white, relief=flat
+  Keys: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, π, e
 end note
 
-CalculatorGUI *-- Calculator : calc
-CalculatorGUI --> Label : display
-CalculatorGUI --> Entry : entry
-CalculatorGUI --> Button : scientific_buttons
-CalculatorGUI ..> messagebox : showerror on exception
+note top of CalculatorGUI
+  **Window**
+  bg=#000000
+  geometry: 350×450
+  grid: 11 rows × 5 cols, weight=1
+end note
 
-launch_note ..> CalculatorGUI : creates
+CalculatorGUI ..> Calculator : uses
 
 @enduml

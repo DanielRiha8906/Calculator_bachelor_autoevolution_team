@@ -1,0 +1,73 @@
+@startuml
+title Button Press Event Routing with Dark Theme
+
+|User|
+start
+:Press button;
+
+|CalculatorGUI|
+if (Button type?) then (Digit/Utility)
+  :Digit (bg=#333333);
+  :_on_number_click(digit);
+  :Append to current_input;
+  |Tkinter Widgets|
+  :Entry.insert(digit);
+  |CalculatorGUI|
+else (Binary Operator)
+  if (Button type?) then (Binary Operator)
+    :Operator (bg=#FF9500);
+    :_on_operator_click(op);
+    :Store first_operand + pending_op;
+    :Clear entry;
+    |Tkinter Widgets|
+    :Entry.delete();
+    |CalculatorGUI|
+  else (Unary Operator)
+    if (Button type?) then (Unary Operator)
+      :Unary (bg=#FF9500);
+      :_apply_unary(op);
+      :Compute result;
+      if (Error?) then (Yes)
+        :Show error dialog;
+      else (No)
+        :Update display + entry;
+        |Tkinter Widgets|
+        :Entry.insert(result);
+        |CalculatorGUI|
+      endif
+    else (Equals)
+      if (Button type?) then (Equals)
+        := (bg=#FF9500);
+        :_calculate();
+        :Apply pending_op(first_operand, input);
+        if (Error?) then (Yes)
+          :Show error dialog;
+        else (No)
+          :Update display;
+          |Tkinter Widgets|
+          :Label.config(text=result);
+          |CalculatorGUI|
+        endif
+      else (Sci/Norm Toggle)
+        :Sci/Norm (bg=#FF9500);
+        :_toggle_scientific_mode();
+        if (scientific_mode?) then (True)
+          :grid() all scientific_buttons;
+        else (False)
+          :grid_remove() all scientific_buttons;
+        endif
+      endif
+    endif
+  endif
+endif
+
+|User|
+stop
+
+note right
+  Button color (bg=#333333 or #FF9500) is purely cosmetic.
+  Routing is determined by the lambda closure
+  bound at widget creation.
+end note
+
+@enduml

@@ -530,3 +530,14 @@ Duration: 338.1s | Cost: $0.657990 USD | Turns: 5
 Duration: 234.5s | Cost: $0.576341 USD | Turns: 4
 
 Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20
+
+## Run: update-diagrams — iOS dark theme GUI redesign (#463) (2026-04-25)
+
+- **Branch:** task/issue-463-redesign-gui
+- **PR target:** exp3/naive-team
+- **Files changed:**
+  - `artifacts/class_gui.puml` — updated class diagram: theme sections, button color groups, hex value notes
+  - `artifacts/activity_gui_theme_routing.puml` — new activity diagram: button press routing with dark/orange theme annotations
+  - `artifacts/sequence_gui_binary_op.puml` — updated sequence: dark-theme init phase prepended before binary operation flow
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
