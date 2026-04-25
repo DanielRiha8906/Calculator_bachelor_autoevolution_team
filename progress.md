@@ -416,3 +416,14 @@ Duration: 366.8s | Cost: $0.686150 USD | Turns: 5
   - `artifacts/mode-switching-state-machine.puml` — state machine for MODE_NORMAL ↔ MODE_SCIENTIFIC transitions
 
 Duration: 249.6s | Cost: $0.569755 USD | Turns: 4
+
+## Run: update-diagrams — Tkinter GUI PlantUML Diagrams (2026-04-25)
+
+- **Branch:** task/issue-414-tkinter-gui
+- **PR target:** exp3/structured-team
+- **Files changed:**
+  - `artifacts/gui_class_diagram.puml` — new class diagram for GUI package showing GUIController, GUIWindow, and their relationships to core calculator components
+  - `artifacts/gui_calculate_flow.puml` — new activity diagram showing the full GUI calculate flow from launch through mode selection, operation execution, and history update
+  - `artifacts/gui_operation_sequence.puml` — new sequence diagram for GUI operation execution showing interactions between User, GUIWindow, GUIController, OperationRegistry, and Operation
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

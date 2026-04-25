@@ -1,0 +1,82 @@
+@startuml GUI_Class_Diagram
+title GUI Package — Class Diagram
+
+namespace calculator.gui {
+  class GUIController {
+    - _current_mode: str
+    - _active_registry: OperationRegistry
+    - _session_history: list[dict]
+    --
+    + __init__(mode: str = "scientific"): None
+    + get_current_mode(): str
+    + switch_mode(mode: str): None
+    + get_available_operations(): list[str]
+    + get_operation_arity(operation_name: str): int
+    + execute_operation(operation_name: str, operands: list): dict
+    + get_session_history(): list[str]
+    + clear_session_history(): None
+  }
+
+  class GUIWindow {
+    - _controller: GUIController
+    - root: tk.Tk
+    - _mode_var: tk.StringVar
+    - _operation_dropdown: ttk.Combobox
+    - _operand_frame: tk.Frame
+    - _operand_entries: list[tk.Entry]
+    - _result_label: tk.Label
+    - _history_listbox: tk.Listbox
+    --
+    + __init__(controller: GUIController, title: str = "Calculator"): None
+    + run(): None
+    - _build_mode_frame(): None
+    - _build_operation_frame(): None
+    - _build_operand_frame(): None
+    - _build_calculate_button(): None
+    - _build_result_label(): None
+    - _build_history_frame(): None
+    - _on_mode_changed(): None
+    - _on_operation_selected(event): None
+    - _on_calculate_clicked(): None
+    - _update_operation_dropdown(): None
+    - _update_operand_fields(arity: int): None
+    - _update_history_display(): None
+    - _format_result_display(result_dict: dict): str
+  }
+}
+
+namespace calculator.operations {
+  class OperationRegistry {
+    - _ops: dict[str, Operation]
+    --
+    + register(operation: Operation, name: str | None): None
+    + get(name: str): Operation
+    + list_all(): list[str]
+    + has(name: str): bool
+  }
+
+  class Operation <<interface>> {
+    --
+    {abstract} + name: str {property}
+    {abstract} + arity: int {property}
+    {abstract} + execute(*args: float): float
+  }
+}
+
+namespace calculator.main {
+  class MODE_NORMAL <<constant>>
+  class MODE_SCIENTIFIC <<constant>>
+  class VALID_MODES <<constant>>
+  function _build_registry(mode: str): OperationRegistry
+}
+
+' Composition and dependencies
+GUIWindow "1" *-- "1" GUIController : "composes"
+GUIController "1" -- "1" OperationRegistry : "uses"
+OperationRegistry "1" -- "*" Operation : "contains"
+GUIController --> MODE_NORMAL : "references"
+GUIController --> MODE_SCIENTIFIC : "references"
+GUIController --> VALID_MODES : "references"
+GUIController --> _build_registry : "calls"
+
+@enduml

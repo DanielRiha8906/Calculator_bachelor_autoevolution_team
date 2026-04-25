@@ -1,0 +1,81 @@
+@startuml GUI_Operation_Execution
+title GUI Operation Execution — Sequence Diagram
+
+participant User
+participant GUIWindow as window
+participant GUIController as controller
+participant OperationRegistry as registry
+participant Operation as op
+
+User ->> window: select operation from dropdown
+activate window
+window ->> controller: get_operation_arity(op_name)
+activate controller
+controller ->> registry: get(op_name)
+activate registry
+registry -->> controller: Operation instance
+deactivate registry
+controller -->> window: arity (0, 1, or 2)
+deactivate controller
+window ->> window: _update_operand_fields(arity)
+deactivate window
+
+User ->> window: enter operand value(s)
+note over window: User clicks Calculate button
+
+User ->> window: _on_calculate_clicked()
+activate window
+window ->> window: read operand entry fields
+alt Valid number format
+  window ->> window: convert string to float
+  window ->> controller: execute_operation(op_name, operands)
+  activate controller
+
+  alt Correct arity
+    controller ->> registry: has(op_name)
+    activate registry
+    registry -->> controller: True/False
+    deactivate registry
+
+    controller ->> registry: get(op_name)
+    activate registry
+    registry -->> controller: Operation instance
+    deactivate registry
+
+    controller ->> controller: validate arity
+
+    alt Arity matches
+      controller ->> op: execute(*operands)
+      activate op
+      op -->> controller: result (numeric)
+      deactivate op
+      controller ->> controller: append to _session_history
+      controller -->> window: {"success": True, "operation": ..., "operands": ..., "result": ...}
+      deactivate controller
+
+      window ->> window: _format_result_display(result_dict)
+      window ->> window: update result label
+      window ->> controller: get_session_history()
+      activate controller
+      controller -->> window: list[str] of formatted entries
+      deactivate controller
+      window ->> window: update history listbox
+      window -->> User: Display result
+    else Arity mismatch
+      controller -->> window: {"success": False, "error": "requires N operand(s)"}
+      deactivate controller
+      window ->> window: update result label with error message
+      window -->> User: Display error message
+    end
+  else Unknown operation
+    controller -->> window: {"success": False, "error": "Unknown operation"}
+    deactivate controller
+    window -->> User: Display error message
+  end
+else Invalid number format
+  window ->> window: catch ValueError
+  window -->> User: Display "Error: Invalid number '<value>'"
+end
+deactivate window
+
+@enduml
