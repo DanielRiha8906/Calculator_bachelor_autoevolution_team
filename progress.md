@@ -540,4 +540,4 @@ Duration: 1037.7s | Cost: $2.296808 USD | Turns: 20
   - `artifacts/activity_gui_theme_routing.puml` — new activity diagram: button press routing with dark/orange theme annotations
   - `artifacts/sequence_gui_binary_op.puml` — updated sequence: dark-theme init phase prepended before binary operation flow
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 298.7s | Cost: $0.825349 USD | Turns: 12
