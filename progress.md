@@ -7,7 +7,7 @@
   - `artifacts/gui_calculate_flow.puml` — replaced dropdown-based flow with button-press grid flow, two-step arithmetic state machine, scientific panel conditional path
   - `artifacts/gui_operation_sequence.puml` — replaced Calculate-button sequence with digit/operator/equals/scientific button interaction paths
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 454.8s | Cost: $0.990516 USD | Turns: 17
 
 ## Run: Issue #464 — V3 Task 16 - Redesign - Structured/team (2026-04-25)
 
