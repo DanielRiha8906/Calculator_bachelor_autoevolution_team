@@ -607,6 +607,67 @@ All 38 tests pass immediately, indicating the implementer has successfully compl
 - File I/O with tmp_path fixture for isolated testing
 - Mock input/builtins.input for user interaction simulation
 - capsys fixture for output validation
+
+### 2026-04-25 | task/issue-413-tkinter-gui | WRITE + VERIFY | 70 tests updated/verified, all pass
+
+**Task:** Phase 1 (WRITE): Fix test_separation.py hardcoded paths and expand test_gui.py with comprehensive tests. Phase 2 (VERIFY): Run full test suite to confirm all tests pass.
+
+**Phase:** WRITE (Red) + VERIFY (Green)
+
+**Changes Made:**
+
+1. **test_separation.py path fixes:**
+   - Fixed 3 hardcoded absolute paths to use dynamic path calculation: `os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "<filename>"))`
+   - test_calculator_has_no_ui_imports: calculator.py path
+   - test_interface_no_direct_math_logic: interface.py path
+   - test_batch_cli_imports_from_interface: batch_cli.py path
+   - Added `import os` to the file
+   - All 16 tests now pass with dynamic paths
+
+2. **test_gui.py comprehensive rewrite:**
+   - Replaced mock-based tests with 54 comprehensive tests using proper mocking patterns
+   - Used `@pytest.fixture` with `patch` decorators to mock tkinter components without needing display
+   - Created `gui_with_mock_root` fixture that patches tkinter.Tk, Label, Entry, Button for headless testing
+   - Test categories (70 tests total across both files):
+     * TestGUIWindowCreation (3 tests): window title, calculator creation, initial state
+     * TestGUIWidgets (2 tests): entry and display widget existence
+     * TestGUINumberInput (3 tests): single digit, sequences, decimal handling
+     * TestGUIOperatorClick (5 tests): operator storage for add/subtract/multiply/divide
+     * TestGUICalculate (6 tests): parametrized binary operations + return type validation
+     * TestGUIUnaryOperations (10 tests): parametrized unary ops (square, cube, sqrt, cbrt, factorial, log, ln) + sin(0), cos(0)
+     * TestGUIErrorHandling (5 tests): division by zero, sqrt negative, factorial negative, log negative, ln negative
+     * TestGUIClear (2 tests): state reset, display reset
+     * TestGUIBackspace (3 tests): character removal, empty input, single char
+     * TestGUISignToggle (3 tests): positive negation, negative negation, decimal negation
+     * TestGUIConstantClick (2 tests): pi and e constant insertion
+     * TestGUIScientificMode (5 tests): toggle enable/disable, toggle twice, buttons non-empty, initially hidden
+     * TestGUIOperationSequence (2 tests): sequential and complex operation sequences
+     * TestGUIDecimalAndNegative (2 tests): decimal multiplication, negative addition
+     * TestLaunchGUI (1 test): function existence check
+
+**Key Finding (Unexpected - Implementation Already Complete):**
+All 54 new GUI tests PASS immediately. The implementer has already successfully completed the full GUI implementation:
+- CalculatorGUI.__init__() creates Calculator instance, initializes display/entry/scientific_buttons
+- _on_number_click() appends digits to current_input
+- _on_operator_click() stores first_operand and pending_op
+- _calculate() applies pending binary operations using calculator methods
+- _apply_unary() applies unary operations (square, cube, sqrt, cube_root, factorial, log, ln, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp)
+- _clear() resets all state
+- _on_backspace() removes last character
+- _on_sign_toggle() negates current_input
+- _on_constant_click() inserts pi/e values from calculator.get_pi()/get_e()
+- _toggle_scientific_mode() toggles mode flag and shows/hides scientific_buttons
+- Scientific buttons list populated with 10 operations + 2 constants (pi, e)
+
+**Test Results Summary:**
+- test_separation.py: 16 tests, all PASS (paths now dynamic)
+- test_gui.py: 54 tests, all PASS (comprehensive coverage)
+- Full test suite: 441 tests PASS, 1 skipped
+- Total tests updated/verified: 70 (16 + 54)
+- All test failures: 0
+- All tests pass before and after changes
+
+**Conclusion:** Both test files successfully fixed/expanded. test_separation.py now uses dynamic paths (portable across different environments). test_gui.py expanded from minimal stubs to 54 comprehensive tests with proper mocking for headless tkinter testing. Full test suite green (441 passed). Implementation for issue #413 (tkinter GUI) is complete and fully tested.
 - pytest.parametrize for quit variants (quit, exit, QUIT, EXIT)
 - Mock sys.argv for main() entry point routing
 - Mock sys.exit for exit code verification
