@@ -13,7 +13,7 @@
 - **Risks:** None — all existing tests updated to match corrected behavior; no new dependencies
 - **Tests passed:** 382 passed, 3 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 1293.0s | Cost: $3.181510 USD | Turns: 20
 
 ## Run: update-diagrams — Scientific Mode (2026-04-24)
 
