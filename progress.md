@@ -644,4 +644,4 @@ Duration: 357.3s | Cost: $0.797121 USD | Turns: 4
   - `artifacts/activity_mode_toggle.puml` — updated activity diagram for mode toggle flow (toggle → switch _current_mode → _rebuild_bottom_panel with correct op sets)
   - `artifacts/sequence_widget_creation.puml` — new sequence diagram for conditional widget creation (_make_button: _is_real_tk_widget check → real tk.Button or _TkStub, with hover binding in both paths)
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 290.3s | Cost: $0.730862 USD | Turns: 4
