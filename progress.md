@@ -9,7 +9,7 @@
   - `artifacts/sequence_mode_toggle.puml` — new sequence diagram for mode toggle flow
   - `artifacts/sequence_scientific_calculation.puml` — updated sequence diagram for scientific operation dispatch including arity-0 path
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 235.4s | Cost: $0.581542 USD | Turns: 4
 
 ## Run: Fix PR #457 — feat: add scientific mode to calculator (2026-04-25)
 
