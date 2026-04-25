@@ -514,4 +514,4 @@ Duration: 407.8s | Cost: $0.703099 USD | Turns: 4
   - `artifacts/gui_calculate_sequence.puml` — sequence diagram for user calculate operation flow
   - `artifacts/gui_mode_switch_activity.puml` — activity diagram for mode switching and operation menu rebuild
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
