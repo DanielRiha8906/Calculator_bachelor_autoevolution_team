@@ -1,0 +1,117 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageStyle rectangle
+
+package "Module Constants" <<Rectangle>> {
+    note as N1
+        **_THEME** (dict)
+        Colors: #000000, #FFFFFF, #FF9500,
+        #FFB143, #1C1C1E, #2C2C2E,
+        #333333, #4D4D4D
+        Fonts: result_font, button_font
+
+        **_OPERATION_SYMBOLS** (dict)
+        add→"+", subtract→"−",
+        multiply→"×", divide→"÷",
+        sqrt→"√", square→"x²",
+        factorial→"n!", ln→"ln",
+        log10→"log", pi→"π", ...
+
+        **_UNARY_OPS** (frozenset)
+        **_ARITHMETIC_OPS** (frozenset)
+        add, subtract, multiply, divide
+        **_NORMAL_OPS** (tuple)
+        sqrt, square, factorial, ln, log10
+        **_SCIENTIFIC_OPS** (tuple)
+        cube, cbrt, power, sin, cos,
+        tan, cot, asin, acos
+    end note
+}
+
+enum OperationMode {
+    NORMAL
+    SCIENTIFIC
+}
+
+class OperationHistory {
+    - _entries : list
+    + record(op_name: str, operands, result) : None
+    + get_entries() : list
+}
+
+class OperationRegistry {
+    - _calculator : Calculator
+    - _operations : dict
+    - _sorted_names : list
+    + call(op_name: str, *args) : Any
+    + get_operations_by_mode(mode: OperationMode) : list
+}
+
+class Calculator {
+    + add(a, b) : float
+    + subtract(a, b) : float
+    + multiply(a, b) : float
+    + divide(a, b) : float
+    + square(x) : float
+    + sqrt(x) : float
+    + cube(x) : float
+    + cbrt(x) : float
+    + power(base, exp) : float
+    + factorial(n) : float
+    + ln(x) : float
+    + log10(x) : float
+    + sin(x) : float
+    + cos(x) : float
+    + tan(x) : float
+    + cot(x) : float
+    + asin(x) : float
+    + acos(x) : float
+}
+
+class GuiCalculator {
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
+    - _root : object
+    - _current_mode : OperationMode
+    - _operation_buttons : list
+    - _normal_mode_buttons : list
+    - _scientific_mode_buttons : list
+    - _input_frame : Frame
+    - _result_frame : Frame
+    - _number_frame : Frame
+    - _operation_frame : Frame
+    - _result_label : Label
+    - _mode_toggle_btn : Button
+    - _btn_0..._btn_9 : Button
+    - _selected_op : str
+    .. Public API ..
+    + get_current_mode_operations() : List[str]
+    + calculate(op_name: str, *operands) : str
+    + get_history() : List[str]
+    + is_unary_operation(op_name: str) : bool
+    + run() : None
+    .. Mode Management ..
+    - _on_mode_toggle() : None
+    - _update_mode_toggle_text() : None
+    - _rebuild_op_grid() : None
+    .. GUI Builders ..
+    - _setup_ios_gui() : None
+    - _build_op_buttons() : None
+    - _make_button(parent, text, bg, fg, active_bg, command) : Button
+    .. Interaction Handlers ..
+    - _on_op_press(op_name: str) : None
+    - _on_button_enter(btn) : None
+    - _on_button_leave(btn) : None
+    .. Color Helpers ..
+    - _op_button_colours(op_name: str) : tuple
+}
+
+GuiCalculator *-- Calculator : _calculator
+GuiCalculator *-- OperationRegistry : _registry
+GuiCalculator *-- OperationHistory : _history
+GuiCalculator ..> OperationMode : uses
+OperationRegistry --> Calculator : delegates to
+
+@enduml

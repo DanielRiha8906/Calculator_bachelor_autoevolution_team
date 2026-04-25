@@ -1,0 +1,55 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceMessageAlign left
+skinparam participantFontSize 12
+title Widget Creation — Real tk vs _TkStub Conditional Factory
+
+participant "GuiCalculator" as GUI
+participant "_make_button()" as Factory
+participant "_is_real_tk_widget()" as Check
+participant "tk.Button\n(real tkinter)" as TkBtn
+participant "_TkStub\n(headless stub)" as Stub
+
+GUI -> Factory : _make_button(parent, text, bg, fg, active_bg, command)
+activate Factory
+
+Factory -> Check : _is_real_tk_widget(parent)
+activate Check
+note right of Check
+  Checks whether parent has a live
+  Tk interpreter (isinstance check).
+  Returns False in headless / CI env.
+end note
+Check --> Factory : True / False
+deactivate Check
+
+alt parent is a real Tk widget (True)
+    Factory -> TkBtn : tk.Button(parent, text=text,\n  bg=bg, fg=fg, command=command, ...)
+    activate TkBtn
+    TkBtn --> Factory : real Button widget
+    deactivate TkBtn
+else parent is not a real Tk widget (False)
+    Factory -> Stub : _TkStub(text=text, bg=bg,\n  fg=fg, command=command, ...)
+    activate Stub
+    Stub --> Factory : stub widget
+    deactivate Stub
+end
+
+Factory -> Factory : widget._orig_bg  = bg
+Factory -> Factory : widget._active_bg = active_bg
+
+Factory -> Factory : widget.bind("<Enter>",\n  lambda e: _on_button_enter(widget))
+Factory -> Factory : widget.bind("<Leave>",\n  lambda e: _on_button_leave(widget))
+
+Factory --> GUI : widget (real Button or _TkStub)
+deactivate Factory
+
+note over GUI
+  Hover handlers work identically for
+  real widgets and stubs: _on_button_enter
+  sets bg to _active_bg; _on_button_leave
+  restores bg to _orig_bg.
+end note
+
+@enduml

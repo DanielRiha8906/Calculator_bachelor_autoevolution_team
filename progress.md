@@ -1,3 +1,55 @@
+## Run: Fix PR #466 — widget factory real-tk rendering fix (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added `_is_real_tk_widget()` static method; modified `_make_button()`, `_make_label()`, `_make_frame()` to create real tkinter widgets when parent has a live Tk interpreter, falling back to `_TkStub` in headless/test environments
+  - `tests/test_gui_redesign.py` — added 10 tests: `TestWidgetFactoryRealStubBehavior` (6 tests for `_is_real_tk_widget` and factory stub detection) and `TestButtonStylingWithTkStub` (4 tests for color/attribute configuration)
+- **Purpose:** Fix GUI blank-screen issue: widget factories always returned _TkStub even when real tkinter was available, preventing any rendering on screen; now use real tk widgets in production and stubs only in CI/headless environments
+- **Risks:** None — headless detection uses isinstance check on Tcl/Tk interpreter object; existing test suite unaffected
+- **Tests passed:** 526 passed, 0 failed
+
+Duration: 879.7s | Cost: $2.005213 USD | Turns: 14
+
+## Run: Fix PR #466 (review feedback) — feat: iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/__main__.py` — changed import and instantiation from `CalculatorApp` to `GuiCalculator` in `--gui` branch
+  - `tests/test_gui_redesign.py` — added `TestMainEntryPoint` (2 tests) and `TestThreePanelLayoutStructure` (10 tests) classes verifying entry point and three-panel layout
+- **Purpose:** Address maintainer `request-changes:expert-team` feedback: update entry point to launch GuiCalculator, and add tests that verify the actual three-panel layout structure and correct entry point import
+- **Risks:** None — entry point change is a 2-line rename; all 516 tests pass with no regressions
+- **Tests passed:** 516 passed, 0 failed
+
+Duration: 700.6s | Cost: $1.274149 USD | Turns: 13
+
+## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — GuiCalculator class diagram with composition relationships
+  - `artifacts/class_gui_legacy.puml` — CalculatorApp and _TkStub class diagrams
+  - `artifacts/activity_digit_press.puml` — Digit button press activity flow
+  - `artifacts/activity_mode_toggle.puml` — Mode toggle activity flow with panel rebuild
+  - `artifacts/sequence_gui_init.puml` — GuiCalculator initialization sequence
+  - `artifacts/component_gui_layout.puml` — Widget hierarchy component diagram
+
+Duration: 286.3s | Cost: $0.629458 USD | Turns: 6
+
+## Run: Fix PR #466 — feat: iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — refactored `_setup_ios_gui()` to three-panel layout (top/content/bottom frames); added `_build_left_panel()`, `_build_right_panel()`, `_build_bottom_panel()`, `_rebuild_bottom_panel()`, `_on_digit_press()`; moved `_TkStub` to module level with `cget()`/`config()` support; `_on_mode_toggle()` now calls `_rebuild_bottom_panel()`
+- **Purpose:** Address owner review feedback: redesign GUI layout from vertical stack to left (number grid) + right (arithmetic ops) + bottom (remaining ops) distributed layout, with mode-adaptive bottom panel rebuild on mode switch.
+- **Risks:** None — change isolated to GUI layer; all colors from _THEME; headless test safety preserved via _TkStub
+- **Tests passed:** 504 passed, 0 failed
+
+Duration: 1068.0s | Cost: $2.115572 USD | Turns: 14
+
 ## Run: Issue #415 — V3 Task 15 - Expert/team (2026-04-25)
 
 - **Branch:** task/issue-415-tkinter-gui
@@ -15,6 +67,19 @@
 - **Tests passed:** 445 passed, 0 failed
 
 Duration: 973.7s | Cost: $2.535149 USD | Turns: 31
+
+## Run: Issue #465 — V3 Task 16 - Redesign - Expert/team (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — added _THEME dict (16 keys), _OPERATION_SYMBOLS dict (19 mappings), GuiCalculator class with iOS-style layout (result display, mode toggle, number grid, operation grid, hover effects); fixed _TkStub set()/get() to preserve state
+  - `tests/test_gui_redesign.py` — 34 new tests covering theme dict, symbol mapping, GuiCalculator class, result display styling, mode toggle, number pad layout, operation grid, button theming, hover bindings, window theming
+- **Purpose:** Fully redesign GuiCalculator in gui.py to iOS-style layout with centralized _THEME dict, symbol-mapped operation buttons, color-grouped buttons (orange operators, gray normal, dark scientific), hover effects, and explicit background propagation.
+- **Risks:** tkinter still unavailable in headless CI; GuiCalculator uses same _TkStub stub pattern as CalculatorApp for test safety. CalculatorApp preserved unchanged for backward compatibility.
+- **Tests passed:** 504 passed, 0 failed
+
+Duration: 1201.7s | Cost: $2.294038 USD | Turns: 19
 
 ## Run: Fix PR #462 — feat: add tkinter GUI with OO mode abstraction — trig ops (2026-04-25)
 
@@ -540,3 +605,43 @@ Duration: 405.0s | Cost: $0.640816 USD | Turns: 5
   - `artifacts/activity_diagram_entry_point.puml` — activity diagram for entry point routing
 
 Duration: 431.7s | Cost: $0.715237 USD | Turns: 5
+
+## Run: update-diagrams — iOS Calculator GUI Redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/ios_calculator_class_diagram.puml` — new class diagram for GuiCalculator and dependencies
+  - `artifacts/ios_calculator_activity_diagram.puml` — new activity diagram for mode toggle and operation press flows
+  - `artifacts/ios_calculator_sequence_diagram.puml` — new sequence diagram for mode toggle and calculation execution
+
+Duration: 248.3s | Cost: $0.569492 USD | Turns: 5
+
+## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — GuiCalculator class with iOS-style three-panel layout, widget factories, state, and composition relationships
+  - `artifacts/class_gui_legacy.puml` — CalculatorApp legacy class and _TkStub headless mock
+  - `artifacts/class_core.puml` — Core layer: Calculator, OperationRegistry, OperationHistory, enums and dataclasses
+  - `artifacts/class_modes.puml` — CalculatorMode hierarchy: SimpleMode and ScientificMode
+  - `artifacts/activity_digit_press.puml` — Activity flow for digit button press and operand accumulation
+  - `artifacts/activity_mode_toggle.puml` — Activity flow for mode toggle and bottom panel rebuild
+  - `artifacts/sequence_gui_init.puml` — Initialization sequence from __main__ through GuiCalculator setup to mainloop
+  - `artifacts/component_gui_layout.puml` — iOS three-panel widget hierarchy component diagram
+
+Duration: 357.3s | Cost: $0.797121 USD | Turns: 4
+
+## Run: update-diagrams — iOS-Style GuiCalculator Redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** main
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — updated class diagram adding _TkStub, CalculatorApp, and _is_real_tk_widget; full attribute/method inventory for all three classes with composition and stub-fallback associations
+  - `artifacts/class_module_constants.puml` — new focused diagram for all module-level constants (_THEME, _OPERATION_SYMBOLS, _UNARY_OPS, _NORMAL_OPS, _SCIENTIFIC_OPS, _ARITHMETIC_OPS, _ARITHMETIC_RIGHT_PANEL_ORDER, _TK_AVAILABLE) and their relationship to GuiCalculator
+  - `artifacts/activity_digit_input.puml` — new activity diagram for digit input flow (button press → accumulate _current_operand → update _result_label)
+  - `artifacts/activity_mode_toggle.puml` — updated activity diagram for mode toggle flow (toggle → switch _current_mode → _rebuild_bottom_panel with correct op sets)
+  - `artifacts/sequence_widget_creation.puml` — new sequence diagram for conditional widget creation (_make_button: _is_real_tk_widget check → real tk.Button or _TkStub, with hover binding in both paths)
+
+Duration: 290.3s | Cost: $0.730862 USD | Turns: 4

@@ -1,0 +1,48 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam activityFontSize 12
+title Mode Toggle — NORMAL ↔ SCIENTIFIC Panel Rebuild
+
+start
+
+:User presses mode toggle button;
+
+:_on_mode_toggle();
+
+if (_current_mode == NORMAL?) then (yes)
+    :_current_mode = SCIENTIFIC;
+else (no)
+    :_current_mode = NORMAL;
+endif
+
+:Update _mode_toggle_btn text\n("Scientific" ↔ "Normal");
+
+:_rebuild_bottom_panel();
+
+:Destroy existing _bottom_frame\nand all child operation buttons;
+
+:Create new _bottom_frame widget;
+
+if (_current_mode == NORMAL?) then (yes)
+    :Op set: _NORMAL_OPS\n(sqrt, square, factorial, ln, log10)\n5 ops in 4-column grid;
+else (no)
+    :Op set: _NORMAL_OPS + _SCIENTIFIC_OPS\n(+ cube, cbrt, power, sin, cos,\n  tan, cot, asin, acos)\n14 ops in 4-column grid;
+endif
+
+fork
+    :For each op_name:;
+    :_op_button_colours(op_name)\n→ (bg, fg, active_bg);
+    :_make_button(parent, symbol,\n  bg, fg, active_bg, command);
+    :grid-place button in 4-column layout;
+fork again
+    :bind <Enter> → _on_button_enter;
+    :bind <Leave> → _on_button_leave;
+end fork
+
+:Store button refs in _operation_buttons;
+
+:Bottom panel updated — new op set visible;
+
+stop
+@enduml

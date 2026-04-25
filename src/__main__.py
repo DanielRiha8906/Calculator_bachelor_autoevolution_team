@@ -16,8 +16,8 @@ def main():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--gui":
-        from .ui.gui import CalculatorApp
-        app = CalculatorApp()
+        from .ui.gui import GuiCalculator
+        app = GuiCalculator()
         app.run()
     elif len(sys.argv) > 1:
         exit_code = run_cli()

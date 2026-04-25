@@ -1,0 +1,74 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title Legacy GUI — CalculatorApp and _TkStub
+
+class _TkStub <<mock>> {
+    - _value : str
+    - _kwargs : dict
+    - _grid_info : dict
+    + __call__(*args, **kwargs) : _TkStub
+    + set(value) : None
+    + get() : str
+    + config(**kwargs) : None
+    + configure(**kwargs) : None
+    + cget(key) : Any
+    + bind(event, handler) : None
+    + grid(**kwargs) : None
+    + grid_info() : dict
+    + grid_columnconfigure(index, **opts) : None
+    + grid_rowconfigure(index, **opts) : None
+    + destroy() : None
+    + mainloop() : None
+}
+
+note right of _TkStub
+  Module-level mock replacing real Tk
+  widgets in headless/test environments.
+  Instantiated by CalculatorApp and
+  GuiCalculator when tkinter is absent.
+end note
+
+class CalculatorApp {
+    ' Backward-compatible form-based GUI
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
+    - _root
+    - _current_mode : OperationMode
+    - _modes : dict[OperationMode, CalculatorMode]
+    ' --- Public API ---
+    + get_current_mode_operations() : list
+    + switch_mode(mode) : None
+    + calculate(op_name, *operands) : str
+    + get_history() : list[str]
+    + is_unary_operation(op_name) : bool
+    + run() : None
+    ' --- Internal ---
+    - _setup_gui() : None
+    - _rebuild_operation_menu() : None
+    - _on_calculate() : None
+    - _parse_operand(value) : float   {static}
+}
+
+class Calculator
+class OperationRegistry
+class OperationHistory
+class SimpleMode
+class ScientificMode
+
+enum OperationMode <<enum>> {
+    NORMAL
+    SCIENTIFIC
+}
+
+CalculatorApp *-- Calculator
+CalculatorApp *-- OperationRegistry
+CalculatorApp *-- OperationHistory
+CalculatorApp ..> OperationMode
+CalculatorApp --> SimpleMode  : _modes[NORMAL]
+CalculatorApp --> ScientificMode : _modes[SCIENTIFIC]
+
+@enduml

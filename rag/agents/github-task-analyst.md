@@ -255,7 +255,7 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - `src/history.py` (session history tracking and persistence)
   - Implicit: core calculator logic, possibly spread across multiple files
 - **Ambiguities Flagged:**
-  1. **Exact module boundaries:** Which operations/components belong in which modules? What naming convention? (e.g., `src/core/`, `src/interface/`, `src/session/`, `src/utils/` or flat structure?)
+  1. **Exact module boundaries:** Which operations/components belong in which modules? What naming convention? (e.g., `src/core/`, `src/ui/`, `src/session/`, `src/utils/` or flat structure?)
   2. **Operations structure specifics:** Should operations be organized as classes (Strategy pattern), a factory/registry, a dispatch table, or something else?
   3. **Normal vs scientific separation point:** Where should the abstraction/separation exist for future scientific mode? (e.g., inherit from base Operation, use operation type tags, separate registries?)
   4. **Backward compatibility of imports:** Should existing imports from refactored modules still work (compatibility layer), or is breaking API acceptable?
@@ -480,7 +480,7 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - `src/core/operations.py` — possibly to add mode metadata or new operation category enum
   - `tests/` — new tests for mode selection and operation filtering
 
-### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team (CURRENT)
+### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team
 - **Task Type:** Feature implementation (GUI layer using tkinter)
 - **Scope:** Add graphical user interface for calculator using tkinter; preserve existing calculator behavior and application logic; reuse existing operations without duplication
 - **Key Patterns:**
@@ -677,3 +677,306 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - Owner mention of "18 operations" introduces new ambiguity about operation scope; may indicate missing trig ops or misalignment on expected feature set
   - Mode switching is core to issue #415 requirement; its failure is blocking PR merge
 
+### Cycle: 2026-04-25 — Issue #465: V3 Task 16 - GUI Redesign (iOS-Style) — CURRENT CYCLE
+- **Task Type:** Visual redesign (GUI layer styling and layout overhaul)
+- **Scope:** Fully redesign tkinter GUI to adopt modern iOS-style calculator appearance; preserve all calculation logic, operation functionality, and mode switching; focus is visual layout and styling only
+- **Key Patterns:**
+  - Clear, explicit specification of layout, colors, fonts, symbols, and visual behavior
+  - No comments or linked issues; all requirements in issue body
+  - Explicit scope constraint: "visual redesign only, not a restyle of existing widgets — rebuild layout from scratch inside GuiCalculator"
+  - Explicitly lists 5 major layout sections with precise specifications (result display, mode toggle, number grid, operation grid, button colors)
+  - Explicit out-of-scope: do NOT modify Calculator, OperationDispatcher, History, Mode, BaseMode, OPERATIONS, or any file outside gui.py
+  - Follows completion of GUI implementation (issue #415); builds on working tkinter GUI that needs visual overhaul
+- **Key Requirements (from issue body):**
+  1. **FR1 (MUST HAVE):** **Result Display Panel** — full-width label, right-aligned, black bg (#000000), white text (#FFFFFF), 32pt bold monospaced font; shows current result or "0" on startup
+  2. **FR2 (MUST HAVE):** **Mode Toggle Button** — text changes based on mode ("Scientific" if normal mode, "Normal" if scientific mode); clicking switches modes
+  3. **FR3 (MUST HAVE):** **Number Grid** — 3 columns × 4 rows; numbers 1–9 in top 3 rows, digit 0 in bottom row across all 3 columns; all buttons square
+  4. **FR4 (MUST HAVE):** **Operation Button Grid** — 4 columns, rows determined by operation count in current mode; all buttons square (equal width/height via grid weight), flat relief (no border)
+  5. **FR5 (MUST HAVE):** **Button Color Categorization** — Three color groups with specified bg and activebackground:
+     - Arithmetic operators (add, subtract, multiply, divide): bg=#FF9500, fg=#FFFFFF, activebackground=#FFB143
+     - Scientific/utility ops (in scientific mode): bg=#1C1C1E, fg=#FFFFFF, activebackground=#2C2C2E
+     - Standard ops (in normal mode): bg=#333333, fg=#FFFFFF, activebackground=#4D4D4D
+  6. **FR6 (MUST HAVE):** **Operation Symbol Mapping** — Use Unicode symbols instead of descriptions. Provided mapping: add→"+", subtract→"−", multiply→"×", divide→"÷", sqrt→"√", square→"x²", cube→"x³", power→"xʸ", factorial→"n!", log→"log", ln→"ln", sin→"sin", cos→"cos", tan→"tan", pi→"π", e→"e" (plus additional as appropriate)
+  7. **FR7 (MUST HAVE):** **Centralized Theme Dictionary** — Single `_THEME` dict at top of gui.py containing all color, font, and visual constants; no hardcoded values elsewhere
+  8. **FR8 (MUST HAVE):** **Explicit Background Color Assignment** — Window, all frames, all non-button widgets must explicitly set `bg` from `_THEME`; tkinter does not inherit colors automatically
+  9. **FR9 (MUST HAVE):** **Hover Effects** — All buttons bind `<Enter>` and `<Leave>` events; on hover, swap background to lighter shade (defined in `_THEME`); on leave, revert to default
+- **Constraints (from issue body):**
+  - **SC1:** Do NOT modify `Calculator`, `OperationDispatcher`, `History`, `Mode`, `BaseMode`, `OPERATIONS`, or any file outside `gui.py`
+  - **SC2:** Calculation logic must remain unchanged; redesign is visual-only
+  - **SC3:** All styling must be centralized in `_THEME` dict
+  - **SC4:** Update relevant tests to reflect changes
+- **Current State (Discovered from RAG + Prior Context):**
+  - **GUI already exists:** Issue #415 implemented tkinter GUI with mode switching, operation selection, operand entry
+  - **Current GUI status:** Tests passing (445+); manual testing reveals mode switching issues (from PR #462 feedback)
+  - **Current operations:** 12 confirmed (add, subtract, multiply, divide, power, factorial, square, cube, sqrt, cbrt, ln, log10); possibly 18 if trig ops from #412 are implemented
+  - **Mode support:** SimpleMode (6 ops) and ScientificMode (12 ops) exist; mode switching broken in GUI (per PR #462 feedback)
+  - **Existing GUI structure:** Likely uses basic tkinter layout (pack/grid mix); lacks theme dict and may have hardcoded colors/fonts
+- **Key Ambiguities Requiring Architect Clarification:**
+  1. **Window Dimensions and Responsiveness** — Issue specifies iOS-style layout but no window size. Fixed size (e.g., 400×600px) or resizable? Does layout scale, or widgets maintain fixed sizes? (ASSUMPTION: fixed or minimum window size acceptable)
+  2. **Hover Shade Definitions** — Issue states "lighter shade" but only provides one example (#FFB143 for orange). What are hover shades for gray (#333333) and dark (#1C1C1E)? (ASSUMPTION: architect must define all hover shades in _THEME)
+  3. **Monospace Font Family** — Task specifies "monospaced" but tkinter has different names per OS. Use "Courier", "Courier New", "TkFixedFont", or platform-agnostic? (ASSUMPTION: architect to specify)
+  4. **Operand Entry Mechanism** — Existing GUI supports operand entry; should number buttons append to operand, or replace? (ASSUMPTION: reuse existing operand entry logic; visual redesign does not change interaction model)
+  5. **Decimal Point Button** — Issue omits decimal point; should GUI include it (would require layout adjustment)? Or integers only? (ASSUMPTION: out of scope for this redesign; not mentioned)
+  6. **Equals/Compute Button** — Issue omits explicit equals button; is result auto-computed on operand entry, or does equals button exist? (ASSUMPTION: reuse existing computation model; visual redesign does not change when result is computed)
+  7. **Trig Operations Display** — Issue includes sin/cos/tan/pi/e in symbol mapping but unclear if these operations are available. If not implemented, should GUI stub them? (ASSUMPTION: architect must clarify which operations are actually available)
+  8. **Mode Toggle Position and Style** — Issue specifies "A button" but no details on position (between result and number grid?), size, or styling. (ASSUMPTION: architect to specify exact placement and styling)
+- **Constraints:**
+  - Must modify ONLY `src/ui/gui.py` (or whatever the current GUI file is named)
+  - Must not change calculation logic, operation registry, mode switching logic
+  - Must not change any file outside gui.py
+  - All 445+ existing tests must pass after redesign (no regressions)
+  - Visual redesign is cosmetic-only; behavior unchanged
+- **Acceptance Criteria (Measurable):**
+  1. **AC1 — Layout Integrity:** GUI has 5 distinct visual sections (result, mode toggle, number grid, operation grid, colors) visible and properly positioned per spec
+  2. **AC2 — Result Display:** Panel shows "0" on startup, updates after operations, right-aligned, black bg (#000000), white text (#FFFFFF), 32pt bold monospaced
+  3. **AC3 — Mode Toggle:** Button exists, text switches ("Scientific"/"Normal"), clicking switches modes, operation grid re-renders within 100ms
+  4. **AC4 — Number Grid:** 10 buttons (0–9) arranged 3×3 + 1×3, all square, aligned, clickable, responsive
+  5. **AC5 — Operation Grid:** 4 columns, rows = ceil(operation_count/4), buttons square, flat relief, no border
+  6. **AC6 — Color Accuracy:** Sample 5 buttons and verify colors match spec exactly (orange #FF9500, dark #1C1C1E, gray #333333, whites #FFFFFF)
+  7. **AC7 — Symbol Mapping:** All specified symbols render correctly as Unicode (no mojibake); source code is UTF-8; symbols are literal, not escape sequences
+  8. **AC8 — Theme Dictionary:** `_THEME` dict exists at top of gui.py; contains all colors, fonts, padding; no hardcoded values outside dict
+  9. **AC9 — Background Propagation:** Sample 5 widgets (window, frames, labels) and verify all have `bg=_THEME[...]` explicitly set
+  10. **AC10 — Hover Effects:** All buttons respond to `<Enter>`/`<Leave>` events; background swaps to lighter shade on hover, reverts on leave; hover does not break clicks
+  11. **AC11 — Test Regression:** All 445+ tests pass; no tests broken or removed; test count same or increased
+  12. **AC12 — Functional Parity:** Operations produce same results as before; mode switching logic unchanged; history and logging unaffected
+- **Handoff Notes for Architect:**
+  1. **Clarify window size and responsiveness** — fixed dimensions or resizable? Minimum size? (Recommend: fixed 400×600 or similar for stable iOS-style layout)
+  2. **Define all hover shade colors** — provide hex codes for each color group (orange hover, gray hover, dark hover)
+  3. **Specify monospace font strategy** — which font family (Courier, Courier New, TkFixedFont, or system default)?
+  4. **Clarify mode toggle placement** — exact position in layout (between result and number grid?), size, styling
+  5. **Confirm available operations** — are trig ops (sin, cos, tan, etc.) currently implemented and should appear in scientific mode?
+  6. **Produce ASCII/mockup layout diagram** — showing exact grid proportions, widget positioning, color assignments
+  7. **Clarify operand entry and computation** — should number buttons append to operand (iOS-style) or replace? When is result computed?
+  8. **Provide test specs** — covering layout structure, result display, colors, symbols, background propagation, hover effects, regression
+- **Files to Modify:**
+  - `src/ui/gui.py` (primary GUI implementation) — add `_THEME` dict, refactor layout, apply colors/fonts, add hover bindings
+  - Possibly `tests/test_gui.py` (if existing tests reference old GUI structure) — update assertions to match new layout
+- **Test Strategy:**
+  - Verify layout structure (5 sections, grids have correct dimensions)
+  - Verify result display styling (font, colors, alignment)
+  - Verify button colors match spec per category
+  - Verify symbol mapping (Unicode rendering)
+  - Verify background colors explicitly set on all containers
+  - Verify hover effects (binding, color swap, revert)
+  - Verify no regression in functionality (operations, mode switching, history)
+- **Out of Scope:**
+  - No changes to calculation logic
+  - No changes to mode switching behavior
+  - No changes to operation registry or available operations
+  - No changes to history or logging
+  - No changes outside gui.py
+  - No new features beyond visual redesign
+  - No keyboard shortcuts or advanced GUI features
+  - No accessibility overhaul (WCAG compliance not required)
+- **Label:** `ai-implement:expert-team` (expert team delivery with visual design focus)
+
+### Cycle: 2026-04-25 — PR #466 Review: Unresolved Feedback on Issue #465 Implementation (iOS-style GUI Redesign) — CURRENT
+- **Task Type:** PR review feedback analysis (identify and structure unresolved owner feedback requiring fixes)
+- **Scope:** Extract and structure unresolved owner feedback on PR #466 (Issue #465 iOS-style GUI redesign implementation)
+- **PR Status:** OPEN with blocking owner feedback; label `request-changes:expert-team`
+- **PR Implementation Summary (from PR body):**
+  - Adds `_THEME` dict at module level with 16 keys covering colors (window, result display, operator/normal/scientific buttons, mode toggle) and result font tuple
+  - Adds `_OPERATION_SYMBOLS` dict mapping 19 operation names to Unicode symbols (+, −, ×, ÷, √, x², x³, xʸ, n!, log, ln, sin, cos, tan, π, e, etc.)
+  - Adds `GuiCalculator` class with iOS-style layout: full-width result label (black bg, white 32pt bold monospace, right-aligned) → mode toggle button → 3×4 number grid (digits 1–9 + zero spanning all 3 columns) → 4-column operation grid
+  - Button color groups: orange (#FF9500) for arithmetic operators, dark (#1C1C1E) for scientific ops, gray (#333333) for normal ops; all flat relief, borderwidth=0, explicit activebackground
+  - Hover effects: `<Enter>`/`<Leave>` bindings on every button swap bg to lighter shade and revert
+  - All frames and non-button widgets explicitly set `bg` from `_THEME`; fixes tkinter non-inheritance
+  - Fixes `_TkStub.set()/get()` to preserve state for headless test compatibility
+  - Preserves `CalculatorApp` unchanged; all existing public API untouched
+  - Test plan: All 34 new tests in `tests/test_gui_redesign.py` pass + all 55 existing tests in `tests/test_gui.py` pass + full suite 504 passed, 0 failed
+- **PR TEST RESULT:** Claims "504 passed, 0 failed"; all tests passing; no regressions
+- **UNRESOLVED BLOCKERS (Critical - 2 comment threads):**
+  
+  **COMMENT 1 (2026-04-25 17:20:45Z) — Owner Task List (First Feedback):**
+  - **Status:** Flagged as "Fix needed" (explicit blocker signal)
+  - **Owner Feedback:** "When launching the calculator app in GUI mode, use the new design. Change the design, so that the numbers are to the left side, the basic operations (+,-,*,/) are to the right of them. Then the rest will be on the bottom. (The number will change base on if it's in standard or scientific mode)"
+  - **Interpretation:** Owner is requesting a LAYOUT REDESIGN that differs from PR's current layout (3×4 number grid at top-center, then 4-column operation grid below)
+  - **New Layout Specification:** 
+    - Numbers grid positioned on LEFT side (not full-width at top)
+    - Basic arithmetic operations (+, −, ×, ÷) positioned on RIGHT side
+    - "The rest" (remaining operations, likely scientific mode ops) positioned on BOTTOM
+    - Layout adapts based on mode (simple vs scientific)
+
+  **COMMENT 2 (2026-04-25 18:09:20Z) — Owner Escalation (Follow-up):**
+  - **Status:** Flagged as "Fix needed" (explicit blocker signal)
+  - **Owner Feedback (Explicit Task List):**
+    1. "In __main__.py change: from .ui.gui import CalculatorApp, to from .ui.gui import GuiCalculator."
+    2. "When launching the new design, nothing shows up. That's because tk.button was changed to _Tkstub, and same things happened in _make_label and _make_frame."
+    3. "Make it so, that when somebody launches the gui via python -m src --gui it launches GuiCalculator."
+    4. "When GuiCalculator is launched it should show all the assets. All the implemented operations, numbers from 0 - 9, Display screen, mode change. Look into original issue when in doubt."
+    5. "Modify/Delete all the tests and development artifacts so that the testing suite and artifacts reflect the real behavior."
+  - **Status:** Critical follow-up revealing multiple implementation failures: layout redesign not applied, entry point not updated, widget display broken, tests don't match actual behavior
+
+- **Requirements Extracted from Unresolved Feedback:**
+  1. **FR1 (MUST HAVE):** **Redesign GUI layout from current (vertical stacked) to new (side-by-side with operations on right, rest on bottom)**
+     - Current state: PR implements top-to-bottom layout (result → mode toggle → number grid → operation grid)
+     - Required state: Left-to-right layout (number grid on LEFT, arithmetic ops on RIGHT) with remaining ops on BOTTOM; layout adapts per mode
+     - Impact: Major layout refactor; affects widget positioning, grid weights, frame organization
+     - Priority: CRITICAL — owner's first feedback explicitly requests this layout change
+
+  2. **FR2 (MUST HAVE):** **Update `__main__.py` to import and launch `GuiCalculator` instead of `CalculatorApp`**
+     - Current state: PR does not specify which class should be launched; assuming CalculatorApp
+     - Required state: `src/__main__.py` must change imports from `from .ui.gui import CalculatorApp` to `from .ui.gui import GuiCalculator`
+     - Impact: Entry point change; affects how GUI is invoked via `python -m src --gui`
+     - Priority: CRITICAL — owner's second feedback explicitly lists this as task 1
+
+  3. **FR3 (MUST HAVE):** **Fix widget display issue — ensure GuiCalculator displays all visual elements**
+     - Symptom: Owner states "When launching the new design, nothing shows up" and mentions "_Tkstub" was changed from tk.button
+     - Current state: Widget display is broken; unclear if root cause is layout, widget creation, or root window display
+     - Fix: Verify GuiCalculator creates root window, calls mainloop, and all button/label/frame widgets are properly added to root
+     - Priority: CRITICAL — blocking the GUI from rendering at all
+
+  4. **FR4 (MUST HAVE):** **Preserve arithmetic operations (add, subtract, multiply, divide) in right-hand column**
+     - Requirement: These 4 operations must be vertically stacked on the right side of the GUI
+     - Current state: All operations in single 4-column grid below number grid
+     - Fix: Extract arithmetic ops from operation grid; create separate right-side layout for them
+     - Priority: HIGH — core to the new layout specification
+
+  5. **FR5 (MUST HAVE):** **Position remaining operations on bottom section**
+     - Requirement: Operations other than the 4 arithmetic ops should appear below the left/right number + arithmetic area
+     - Current state: All operations in single grid
+     - Fix: Separate operation set into two groups (arithmetic vs rest); layout rest on bottom
+     - Priority: HIGH — core to the new layout specification
+
+  6. **FR6 (MUST HAVE):** **Adapt layout based on calculator mode (simple vs scientific)**
+     - Requirement: Number grid and operation grid positioning/sizing should change based on selected mode
+     - Symptom: PR does not mention dynamic layout changes per mode; assumes static layout
+     - Fix: When mode switches, re-layout widgets to accommodate operation count (scientific mode may have more bottom operations than simple mode)
+     - Priority: HIGH — essential for mode switching to work visually
+
+  7. **FR7 (MUST HAVE):** **Update test suite to reflect real behavior**
+     - Requirement: Tests must match actual implementation behavior
+     - Current state: 504 passing tests but implementation doesn't work (GUI doesn't display)
+     - Fix: Modify/Delete tests that don't match real behavior; ensure test suite validates actual GUI structure and display
+     - Priority: HIGH — test-reality gap is unacceptable per owner feedback
+
+  8. **FR8 (MUST HAVE):** **Maintain all existing styling/color requirements from issue #465**
+     - Result display: black bg, white 32pt bold monospace, right-aligned (UNCHANGED)
+     - Mode toggle button: text switches, clicking works (UNCHANGED)
+     - Button colors: orange for arithmetic, dark for scientific, gray for normal (UNCHANGED)
+     - Theme dict: centralized _THEME dict (UNCHANGED)
+     - Hover effects: `<Enter>`/`<Leave>` swap colors (UNCHANGED)
+     - All explicit `bg` assignments from `_THEME` (UNCHANGED)
+     - Priority: HIGH — styling requirements from issue #465 must not be lost in layout redesign
+
+  9. **NFR1:** Layout changes must be **responsive** — when mode switches, layout re-renders to fit available operations
+
+  10. **NFR2:** All **504 tests must remain passing** after layout redesign (no regressions)
+
+  11. **NFR3:** Window size/proportions must accommodate new layout (left + right + bottom sections visible and usable)
+
+  12. **NFR4:** GUI must display properly when launched via `python -m src --gui` with no visual artifacts or missing elements
+
+- **Critical Ambiguities Requiring Architect Clarification:**
+  1. **Left-side number grid sizing:** How many columns should left-side number grid have? PR implements 3×4 (3 cols, 4 rows). Should this change? (ASSUMPTION: 3 columns × 3 rows for 1–9, then 0 spanning bottom, or different arrangement?)
+
+  2. **Right-side arithmetic layout:** Are arithmetic operations vertically stacked 4×1 (4 rows, 1 column), or in some other arrangement? (ASSUMPTION: 4 rows × 1 column = vertical stack)
+
+  3. **Bottom section sizing:** How many columns for "rest" operations on bottom? 4-column grid (matching current PR)? Variable based on mode? (ASSUMPTION: 4 columns to maintain consistency with PR)
+
+  4. **Mode-specific layout details:** In simple mode, how many operations on bottom? In scientific mode, how many? Does layout expand/contract, or does scrolling apply? (ASSUMPTION: owner expects visible grid layout, no scrolling)
+
+  5. **Result display and mode toggle position:** Do these stay at top (spanning full width)? Or move to accommodate new side-by-side layout? (ASSUMPTION: stay at top, spanning full width)
+
+  6. **Proportional sizing:** What are the width/height ratios between left (numbers), right (arithmetic), and bottom (rest) sections? (ASSUMPTION: architect to determine; suggest 1:1:2 or similar for balance)
+
+  7. **Window size impact:** Does new layout require larger minimum window size? (ASSUMPTION: architect to recommend)
+
+  8. **Zero button placement:** In current PR, 0 spans 3 columns at bottom of number grid. In new layout, does 0 stay in left-side grid, or move? (ASSUMPTION: stays in left-side number grid)
+
+  9. **Widget creation vs display:** Root cause of "nothing shows up" — is it that GuiCalculator is not being instantiated, not calling mainloop, or widgets are created but not displayed? (ASSUMPTION: architect must debug and clarify)
+
+  10. **_TkStub vs tk.button issue:** Owner mentions "_Tkstub" was changed; unclear if this is a real issue or confusion about implementation. CLARIFICATION NEEDED: Is _TkStub a test double that leaked into production code, or is this a misunderstanding?
+
+- **Root Cause Analysis:**
+  - **Layout Mismatch:** PR implemented a vertically stacked layout (top-to-bottom) matching issue #465 specification. However, owner's actual expectation (based on feedback) is a horizontally distributed layout (left/right/bottom). This suggests either:
+    1. Issue #465 specification was interpreted literally by implementer, but owner had different intent, OR
+    2. Owner's feedback reveals a NEW requirement not explicitly stated in issue #465 body
+    3. Owner tested PR and visually preferred the different layout over the top-to-bottom design
+  
+  - **Widget Display Failure:** Owner explicitly states GUI shows nothing when launched. This is a critical blocker that prevents visual testing. Root cause likely:
+    1. GuiCalculator class exists but is not instantiated in __main__.py
+    2. GuiCalculator creates widgets but doesn't call root.mainloop()
+    3. Entry point imports wrong class (still importing CalculatorApp instead of GuiCalculator)
+    4. _TkStub is interfering with actual tkinter widget rendering (test double leaked into production)
+  
+  - **Test-Reality Gap:** 504 tests pass but GUI doesn't display. Suggests tests mock tkinter or use headless rendering, so they don't catch display failures. Tests verify internal logic but not actual window rendering.
+
+- **Owner Expectations Inferred:**
+  - Layout MUST change from "vertical stack" to "left + right + bottom" model
+  - GUI MUST display properly when launched
+  - Arithmetic operations MUST be prominently accessible on right side
+  - GUI MUST adapt per mode (simple/scientific)
+  - Tests MUST reflect actual behavior (not just internal logic)
+  - Styling requirements from issue #465 remain unchanged; only layout differs
+  - Owner sees current PR as incomplete and broken; this is a BLOCKER for merge
+
+- **Handoff Notes for Architect:**
+  - **CRITICAL DECISION 1:** Confirm the new layout specification: number grid on LEFT (3×3 + spanning 0?), arithmetic ops on RIGHT (4×1 vertical stack?), rest on BOTTOM (4-column grid)?
+  - **CRITICAL DECISION 2:** Define proportions and sizing: what are the width/height ratios for left/right/bottom sections? Fixed sizes or proportional?
+  - **CRITICAL DECISION 3:** Specify mode adaptation: for simple vs scientific mode, what operations appear on bottom? Do layout dimensions change?
+  - **CRITICAL DECISION 4:** Clarify window size: what minimum/fixed size needed to accommodate left + right + bottom layout? (Suggest: 400×600 or similar)
+  - **CRITICAL DECISION 5:** Debug widget display issue: is it entry point not updated, GuiCalculator not calling mainloop, or _TkStub interference?
+  - Produce ASCII mockup or diagram showing exact widget positioning in new layout (left/right/bottom)
+  - Produce test specs for new layout: number grid position/sizing, arithmetic ops position/sizing, bottom ops position/sizing, mode-specific layout, responsive re-layout on mode switch, widget display verification
+
+- **Handoff Notes for Implementer:**
+  - **CRITICAL TASKS (in order of priority):**
+    1. Fix entry point: Update `src/__main__.py` to import and launch `GuiCalculator` instead of whatever current code does
+    2. Fix widget display: Debug why GUI shows nothing; verify GuiCalculator creates window, populates widgets, calls mainloop
+    3. Redesign layout: Refactor GUI layout from vertical stack to left/right/bottom distributed layout
+    4. Verify mode adaptation: When mode switches, re-layout widgets to accommodate operation count changes
+    5. Test updates: Modify/delete tests to reflect actual GUI structure and behavior
+  - **Layout refactoring steps:**
+    1. Create 3 main frames: left (numbers), right (arithmetic), bottom (rest)
+    2. Position frames side-by-side (left + right on top row), bottom frame below
+    3. Populate left frame with number grid (1–9 + 0)
+    4. Populate right frame with 4 arithmetic ops (add, subtract, multiply, divide) vertically stacked
+    5. Populate bottom frame with remaining operations (4-column grid)
+    6. On mode switch, re-populate bottom frame with correct operation set for mode
+    7. Verify all existing colors, fonts, hover effects, theme dict usage remains unchanged
+  - **Debug: Verify layout visually by launching GUI in both simple and scientific modes; number grid should be on left, arithmetic ops on right, remaining ops on bottom
+
+- **Handoff Notes for Tester:**
+  - Write new tests covering: (1) layout structure (left/right/bottom frames exist and positioned correctly), (2) number grid on left, (3) arithmetic ops on right, (4) remaining ops on bottom, (5) mode-specific bottom layout, (6) layout re-renders on mode switch, (7) all colors/fonts/styling preserved, (8) GUI displays when launched
+  - Verify all 504+ tests pass after layout redesign (no regression)
+  - Manual functional test: launch GUI via `python -m src --gui`, verify layout (left/right/bottom), switch modes, verify bottom ops change, test calculations from each section
+
+- **Label:** `request-changes:expert-team` (blocking feedback; multiple critical failures require fixes)
+
+- **Patterns Observed:**
+  - Second instance of owner feedback revealing gaps between issue spec and owner's actual intent (see also PR #462)
+  - Second follow-up comment escalating from "here's what's wrong" to "here's the full task list including implementation details"
+  - PR automated test suite passes (504 tests) but owner's manual testing fails on multiple fronts — significant test coverage gaps
+  - Widget display failure is a blocker that should have been caught by tests; suggests tests are too abstract (mocked tkinter) to catch real rendering issues
+  - Layout redesign is more complex than styling-only changes; impacts core widget positioning and frame organization
+  - Entry point issue (_CalculatorApp vs GuiCalculator) suggests implementer may not have coordinated with __main__.py updates
+
+- **Critical Dependency on PR #462 Fixes:**
+  - This PR (#466) builds on GUI from PR #462 (issue #415)
+  - PR #462 has unresolved mode switching feedback (issue #466 context shows it's still OPEN)
+  - RISK: Implementing layout redesign in #466 without resolving mode switching in #462 may introduce new conflicts or test regressions
+  - RECOMMENDATION: Architect should clarify dependency order; determine whether #462 must be fixed before #466 layout work, or if they can proceed in parallel
+
+### Cycle: 2026-04-25 — PR #466 Review: Final Analysis (CURRENT INVOCATION)
+- **Date:** 2026-04-25
+- **PR Title:** feat: iOS-style GuiCalculator redesign (issue #465)
+- **PR Number:** 466
+- **Owner Feedback Status:** UNRESOLVED — 3 critical feedback comments requiring fixes before merge
+- **Blocking Signal:** `request-changes:expert-team` label; explicit "Fix needed" and "Done?" signals in comments
+- **Key Patterns Identified:**
+  1. **Test-Reality Gap:** 504 tests pass but GUI doesn't display when launched; tests use mocked tkinter and don't validate actual rendering
+  2. **Layout Spec Ambiguity:** PR's vertical stacked layout differs from owner's expected horizontal left/right/bottom layout; spec in issue #465 was insufficient to clarify owner intent
+  3. **Entry Point Coordination Gap:** PR doesn't update `__main__.py` to use new GuiCalculator class; entry point still references old CalculatorApp
+  4. **Recurring Pattern:** Multiple PRs in this cycle show gap between automated test success and owner's manual functional testing; suggests need for integration tests that validate actual GUI behavior
+  5. **Styling vs Layout Separation:** PR's styling requirements (colors, fonts, hover) are correct per issue spec; layout redesign is orthogonal and owner-driven
+- **Patterns Recurring in Multiple PRs (#462, #466):**
+  - Owner provides explicit task lists in comment follow-ups after initial feedback
+  - Implementer attempts partial fixes that don't address root cause
+  - Test suite passes but functionality broken — test coverage gap on UI behavior
+  - Owner expectations diverge from literal spec interpretation
+- **Future Recommendations for Architect:**
+  1. For layout specifications, include ASCII mockups or wireframes to eliminate ambiguity
+  2. For tkinter GUIs, require integration tests that launch actual window and verify widget rendering (not just mocked behavior)
+  3. For entry point changes, produce explicit checklist (e.g., "update __main__.py imports", "verify python -m src --gui launches new class")
+  4. For mode-switching features, add UI behavior tests (mode switches → widgets update → user sees changes)

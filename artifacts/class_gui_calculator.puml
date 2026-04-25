@@ -1,0 +1,173 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title GuiCalculator — iOS-Style Three-Panel GUI
+
+class _TkStub <<stub>> {
+    - _value : str
+    - _kwargs : dict
+    - _grid_info : dict
+    + __call__(*args, **kwargs) : _TkStub
+    + title(s) : None
+    + resizable(w, h) : None
+    + geometry(s) : None
+    + mainloop() : None
+    + destroy() : None
+    + pack(**kwargs) : None
+    + grid(**kwargs) : None
+    + grid_info() : dict
+    + grid_columnconfigure(index, **opts) : None
+    + grid_rowconfigure(index, **opts) : None
+    + columnconfigure(index, **opts) : None
+    + rowconfigure(index, **opts) : None
+    + config(**kwargs) : None
+    + configure(**kwargs) : None
+    + cget(key) : Any
+    + bind(event, handler) : None
+    + set(value) : None
+    + get() : str
+    + insert(index, text) : None
+    + yview(*args) : None
+}
+
+note right of _TkStub
+  Headless test double — returned by
+  widget factories when tkinter is
+  absent or parent has no live Tk
+  interpreter (_is_real_tk_widget → False)
+end note
+
+class GuiCalculator {
+    ' --- Core dependencies ---
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
+    ' --- Mode & state ---
+    - _current_mode : OperationMode
+    - _current_operand : str
+    - _selected_operation : str
+    ' --- Layout frames ---
+    - _root : object
+    - _top_frame : object
+    - _content_frame : object
+    - _left_panel : object
+    - _right_panel : object
+    - _bottom_frame : object
+    ' --- Widget collections ---
+    - _digit_buttons : list
+    - _arithmetic_buttons : list
+    - _operation_buttons : list
+    ' --- Named widgets ---
+    - _result_label : object
+    - _mode_toggle_btn : object
+    ' --- Public API ---
+    + get_current_mode_operations() : List[str]
+    + calculate(op_name: str, *operands) : str
+    + get_history() : List[str]
+    + is_unary_operation(op_name: str) : bool
+    + run() : None
+    ' --- Layout setup ---
+    - _setup_ios_gui() : None
+    - _build_left_panel(parent_frame) : None
+    - _build_right_panel(parent_frame) : None
+    - _build_bottom_panel(parent_frame) : None
+    - _rebuild_bottom_panel() : None
+    - _build_op_buttons() : None
+    - _rebuild_op_grid() : None
+    ' --- Widget factories ---
+    - {static} _is_real_tk_widget(parent) : bool
+    - _make_button(parent, text, bg, fg, active_bg, command) : object
+    - _make_label(parent, text, bg, fg, font, anchor) : object
+    - _make_frame(parent, bg) : object
+    - _op_button_colours(op_name: str) : tuple
+    ' --- Interaction handlers ---
+    - _on_digit_press(digit: int) : None
+    - _on_mode_toggle() : None
+    - _on_button_enter(btn) : None
+    - _on_button_leave(btn) : None
+    - _on_op_press(op_name: str) : None
+}
+
+class CalculatorApp {
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
+    - _root : object
+    - _current_mode : OperationMode
+    - _modes : dict
+    + get_current_mode_operations() : List[str]
+    + switch_mode(mode: OperationMode) : None
+    + calculate(op_name: str, *operands) : str
+    + get_history() : List[str]
+    + is_unary_operation(op_name: str) : bool
+    + run() : None
+    - _setup_gui() : None
+    - _rebuild_operation_menu() : None
+    - _on_calculate() : None
+    - {static} _parse_operand(value) : object
+}
+
+class Calculator {
+    + add(a, b) : float
+    + subtract(a, b) : float
+    + multiply(a, b) : float
+    + divide(a, b) : float
+    + factorial(n) : float
+    + square(x) : float
+    + cube(x) : float
+    + sqrt(x) : float
+    + cbrt(x) : float
+    + log10(x) : float
+    + ln(x) : float
+    + power(base, exp) : float
+    + sin(x) : float
+    + cos(x) : float
+    + tan(x) : float
+    + cot(x) : float
+    + asin(x) : float
+    + acos(x) : float
+}
+
+class OperationRegistry {
+    + get_operations() : List[str]
+    + get_arity(op_name: str) : int
+    + call(op_name: str, *args) : Any
+    + get_operation_metadata(op_name: str) : OperationMetadata
+    + get_operation_mode(op_name: str) : OperationMode
+    + get_operations_by_mode(mode: OperationMode) : List[str]
+}
+
+class OperationHistory {
+    + record(op_name: str, operands, result) : None
+    + get_entries() : List[str]
+    + display() : str
+    + write_to_file(filepath) : None
+}
+
+enum OperationMode <<enum>> {
+    NORMAL
+    SCIENTIFIC
+}
+
+' Composition — each GUI class owns its core collaborators
+GuiCalculator  *-- Calculator        : _calculator
+GuiCalculator  *-- OperationRegistry : _registry
+GuiCalculator  *-- OperationHistory  : _history
+CalculatorApp  *-- Calculator        : _calculator
+CalculatorApp  *-- OperationRegistry : _registry
+CalculatorApp  *-- OperationHistory  : _history
+
+' Mode usage
+GuiCalculator  ..> OperationMode : _current_mode
+CalculatorApp  ..> OperationMode : _current_mode
+
+' Stub fallback (headless/test environments)
+GuiCalculator  ..> _TkStub : uses (headless fallback)
+CalculatorApp  ..> _TkStub : uses (headless fallback)
+
+' Registry delegates math to Calculator
+OperationRegistry --> Calculator : delegates to
+
+@enduml

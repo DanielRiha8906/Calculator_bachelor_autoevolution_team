@@ -1,0 +1,23 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam activityFontSize 12
+title Digit Button Press — Operand Accumulation Flow
+
+start
+
+:User clicks a digit button (0–9);
+
+:Lambda fires: _on_digit_press(digit);
+
+:_current_operand += str(digit);
+
+:_result_label.config(text=_current_operand);
+
+note right
+  Display updates immediately.
+  No separate refresh step needed.
+end note
+
+stop
+@enduml
