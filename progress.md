@@ -460,4 +460,4 @@ Duration: 211.6s | Cost: $0.600988 USD | Turns: 5
   - `artifacts/activity_mode_toggle.puml` — new activity diagram: mode-toggle sentinel protocol between main() and run_calculator()
   - `artifacts/activity_scientific_dispatch.puml` — new activity diagram: arity-based dispatch and domain-validation for scientific operations
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 227.1s | Cost: $0.516747 USD | Turns: 4
