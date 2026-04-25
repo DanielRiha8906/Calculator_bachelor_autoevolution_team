@@ -247,3 +247,34 @@ Accumulated implementation context for this experiment branch. Each cycle entry 
   - Splitting the ternary `mode = "scientific" if mode == "normal" else "normal"` into a proper if/else makes it safe to assign both `mode` and `available_ops` atomically in the same branch; the old ternary form would require re-reading the already-flipped `mode` to decide which op list to use.
   - `display_mode_change` must remain backward-compatible (single-arg callers still work) — using `None` as the default for `available_ops` achieves this cleanly.
 - **Test result:** pending VERIFY phase.
+
+### 2026-04-25 — issue-413 (followup): sys.exit(1) on error paths and full button layout in GUI
+
+- **Task:** (1) Modify `src/__main__.py` interactive loop to call `sys.exit(1)` when `MaxRetriesExceeded` or domain errors terminate the session. (2) Extend `src/gui.py` with a complete button layout and all button handler methods.
+- **Files changed:** `src/__main__.py` (error_occurred flag added), `src/gui.py` (full button layout + 6 new handler methods)
+- **Changes made:**
+  - `src/__main__.py`:
+    - Added `error_occurred: bool = False` flag before the loop.
+    - Changed `MaxRetriesExceeded` handler: added `error_occurred = True` before `break`.
+    - Changed `(ZeroDivisionError, ValueError)` handler from `pass`/continue to: `display_error(str(e))`, `error_occurred = True`, `break`.
+    - Replaced single `sys.exit(0)` after finally with conditional: `sys.exit(1)` when `error_occurred`, else `sys.exit(0)`.
+  - `src/gui.py`:
+    - Added `self.scientific_mode = False` and `self.scientific_buttons: list = []` to `__init__`.
+    - Added full grid layout: rows 2-7 with digit buttons 0-9, decimal, backspace, sign toggle, clear, equals, four binary operators, five unary buttons (x², x³, √, ∛, !) and power, log, ln buttons.
+    - Added scientific mode buttons (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, π, e) in rows 8-10 — created with `grid()` then immediately `grid_remove()`; stored in `self.scientific_buttons`.
+    - Added `_on_number_click(digit)`: appends digit to `current_input`, updates entry.
+    - Added `_on_operator_click(op)`: when `current_input` is non-empty, parses float and sets `first_operand`/`pending_op`/clears input; shows error dialog on `ValueError`.
+    - Updated `_apply_unary`: added early return `None` when `current_input` is empty; added entry update after success; extended except clause to include `AttributeError`.
+    - Updated `_calculate`: kept `float(self.current_input)` outside try (raises on invalid input as required by `test_gui_invalid_input`); added `if not self.pending_op: return None` guard after the float conversion.
+    - Updated `_clear`: added `self.entry.delete(0, tkinter.END)` to clear the entry widget too.
+    - Added `_on_backspace()`: removes last char from `current_input`, updates entry.
+    - Added `_on_sign_toggle()`: negates float value, updates `current_input` and entry.
+    - Added `_on_constant_click(op)`: calls zero-arg Calculator method, updates display and entry.
+    - Added `_toggle_scientific_mode()`: flips `self.scientific_mode`, shows/hides scientific buttons via `grid()`/`grid_remove()`.
+    - Added explicit `import tkinter.messagebox` at module top (was previously implicit via `import tkinter`).
+- **Patterns found:**
+  - `sys.exit(0)` in the normal exit path was wrong for error cases. Tracking `error_occurred` and branching AFTER the `finally` block is the correct pattern — `finally` always runs (for persistence) and the exit code decision is made after.
+  - When tkinter is mocked via `sys.modules`, `tkinter.messagebox` resolves to `tkinter_mock.messagebox`. A separate `import tkinter.messagebox` is not strictly needed when tkinter itself is mocked, but it is needed in production for the messagebox submodule to be loaded.
+  - `float(current_input)` outside the `try` in `_calculate` preserves the original contract: invalid numeric string raises `ValueError` directly to the caller. The `test_gui_invalid_input` test relies on this.
+  - Scientific buttons must be `grid()`-ed ONCE during construction (so tkinter records their grid position) and then `grid_remove()`-ed immediately. A subsequent `btn.grid()` with no arguments restores the recorded position — this is how show/hide toggling works in tkinter grid geometry manager.
+- **Test result:** 412 passed, 1 skipped (pre-existing skip). All 25 GUI tests pass. All 3 MainWithMaxRetries CLI tests pass.

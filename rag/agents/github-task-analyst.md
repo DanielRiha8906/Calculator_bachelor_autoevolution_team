@@ -422,3 +422,76 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - V3 Task 15 GUI comes late in cycle, after all core features, observability, architecture, and documentation are complete
   - This ordering suggests GUI is treated as an alternative/supplemental interface, not core to calculator function
 - **Recurring Pattern Insight:** V3 cycle structure: (1–4) foundation → (5,7) interaction modes → (8–10) robustness/observability → (11) architecture → (12) modularization → (13) documentation → (14-15) supplemental UIs. GUI as Task 15 (near-final) suggests it is the last major feature addition before the cycle concludes. This mirrors typical product development: core features → hardening → refactoring → documentation → optional/premium UIs.
+
+### Cycle: 2026-04-25 — PR #460: feat: add tkinter GUI for calculator app (issue #413)
+- **PR Title:** feat: add tkinter GUI for calculator app (issue #413)
+- **PR Number:** 460
+- **Created:** 2026-04-25T15:13:02Z
+- **Status:** OPEN with UNRESOLVED BLOCKING FEEDBACK
+- **Labels:** request-changes:naive-team
+- **Base:** exp3/naive-team (targeting non-main branch)
+- **Head:** task/issue-413-tkinter-gui (current working branch)
+- **Current PR Claims:**
+  - Adds `src/gui.py` with CalculatorGUI class + launch_gui() entry point
+  - Modifies `src/__main__.py` with --gui / gui CLI routing
+  - Adds `tests/test_gui.py` with 25 new tests
+  - Test results: "412 passed, 1 skipped, 0 failed"
+  - "No risks. GUI is additive and can be disabled without affecting any other mode."
+- **CRITICAL UNRESOLVED FEEDBACK (Comment ID 4319968526, created 2026-04-25T15:38:15Z):**
+  - **Status:** Flagged as "**Fix needed**" — BLOCKS PR ACCEPTANCE
+  - **Severity:** BLOCKING — Multiple critical defects identified
+- **Category 1: Test Suite Failures (6 failing tests)**
+  - **Pre-existing / unrelated to GUI:**
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_first_operand — AssertionError: expected call not found
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_operator — AssertionError: expected call not found
+    - tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_domain_error — StopIteration
+  - **Architectural/structural failures (module not found):**
+    - tests/test_separation.py::TestCalculatorHasNoUIImports::test_calculator_has_no_ui_imports — FileNotFoundError: /src/calculator.py
+    - tests/test_separation.py::TestInterfaceNoDirectMathLogic::test_interface_no_direct_math_logic — FileNotFoundError: /src/interface.py
+    - tests/test_separation.py::TestBatchCLIImportsFromInterface::test_batch_cli_imports_from_interface — FileNotFoundError: /src/batch_cli.py
+  - **Root Cause:** Test suite expects refactored module structure (Task #401 separation) that apparently has not been fully implemented. Files calculator.py, interface.py, batch_cli.py expected by tests do not exist in actual codebase.
+  - **Impact:** PR author claims "412 passed, 1 skipped, 0 failed" but local test runs show 6 failures. Contradicts PR description.
+- **Category 2: GUI Window Non-Functional — CRITICAL**
+  - **Observed Behavior:** `python -m src --gui` launches a tkinter window, but window is completely empty/blank — no UI elements visible
+  - **User Experience:** No display, no operations, no numbers, nothing
+  - **What's Missing (Must Implement Immediately):**
+    1. **Grid Layout Manager** — Window uses no layout manager; must use .grid() to arrange widgets
+    2. **Digit Buttons (0–9)** — All 10 numeric buttons missing
+    3. **Operator Buttons (+, −, ×, ÷)** — All 4 basic operators missing
+    4. **Equals Button (=)** — Submit/calculate button missing
+    5. **Clear Button (C)** — Reset button missing
+    6. **Decimal Point Button (.)** — Decimal input missing
+    7. **Button Click Bindings** — ALL buttons lack event handlers. No code wires button clicks to:
+       - Digit appending
+       - Operator selection
+       - Calculation execution
+       - Display clearing
+    8. **Display Widget** — No text display/label showing current input or result
+- **Category 3: Scientific Mode Toggle Missing — HIGH PRIORITY**
+  - **Current State:** GUI hardcoded to normal mode
+  - **What's Missing:**
+    1. **Mode Switch Button** — No UI button/toggle to switch modes
+    2. **Dynamic Button Creation** — When mode toggled, new buttons for scientific ops (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e) must be created and added to grid
+    3. **Mode-Aware Display** — Available operations must update when mode changes
+    4. **Button Bindings for Scientific Ops** — Each scientific button must be bound to corresponding Calculator method
+- **Recurring Pattern Connection:** This mirrors PR #432 (user input) and PR #457 (scientific mode):
+  - PR #432 feedback: "ALL operations must be callable, not just basic four"
+  - PR #457 feedback: "Mode switching must be integrated into UI, not just logic"
+  - PR #460 feedback: "GUI must have actual buttons, layout, and bindings to be functional"
+  - **Pattern:** PRs that claim functionality complete but lack UI integration are rejected by author with "Fix needed" flag
+- **Open Questions Requiring Clarification:**
+  1. **Test Suite Mismatch:** Why does PR claim "412 passed, 0 failed" when local runs show 6 failures? Is PR description outdated, or are tests environment-dependent?
+  2. **Module Structure:** Do calculator.py, interface.py, batch_cli.py actually exist in current branch, or has refactoring been partial?
+  3. **GUI Implementation Status:** Is gui.py a stub/skeleton that was never completed, or is there actual code that simply isn't rendering?
+- **Assessment: PR Currently Unmergeaable**
+  - GUI is not functional (no visible UI elements, no interactions possible)
+  - Test suite shows failures contradicting PR claims
+  - PR requires substantial remediation across both GUI implementation and test suite alignment
+  - Blocking label "request-changes:naive-team" indicates review is pending fixes
+- **Suggested Priority Order for Fixes:**
+  1. **FIRST:** Diagnose and resolve 6 test failures (especially test_separation.py module-not-found errors)
+  2. **SECOND:** Implement complete GUI layout with buttons, display, and all event bindings (Frames, Buttons, Grid layout, click handlers)
+  3. **THIRD:** Implement mode toggle and dynamic scientific button creation
+  4. **FOURTH:** Verify all 25 GUI tests actually validate UI behavior (not just code paths)
+  5. **FIFTH:** Confirm test suite restoration ("412 passed, 1 skipped, 0 failed" state)
+

@@ -45,6 +45,7 @@ def main() -> None:
     else:
         calc = Calculator()
         mode = "normal"
+        error_occurred = False
         display_welcome()
         try:
             while True:
@@ -65,16 +66,21 @@ def main() -> None:
                         continue
                 except MaxRetriesExceeded as e:
                     display_error(str(e))
+                    error_occurred = True
                     break
-                except (ZeroDivisionError, ValueError):
-                    # Error already displayed by run_calculator; continue loop
-                    pass
+                except (ZeroDivisionError, ValueError) as e:
+                    display_error(str(e))
+                    error_occurred = True
+                    break
         except KeyboardInterrupt:
             print("\nExiting...")
         finally:
             persist_history_to_file(calc)
 
-        sys.exit(0)
+        if error_occurred:
+            sys.exit(1)
+        else:
+            sys.exit(0)
 
 
 if __name__ == "__main__":

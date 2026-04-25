@@ -483,30 +483,41 @@ Enhance the interface layer to proactively inform users about mode toggling and 
 - `src/cli.py`: Facade for backward compatibility
 - `src/__main__.py`: Interactive loop with mode switching, batch mode detection, history persistence
 - `src/batch_cli.py`: Batch mode handler with all operations supported
+- `src/gui.py`: STUB exists with incomplete implementation (no layout, no buttons, non-functional)
 - Current capabilities: CLI (interactive and batch), scientific mode, history persistence, error handling
-- Missing: tkinter GUI layer to expose all operations graphically
+- Missing: Functional tkinter GUI layer with complete widget layout and event handling
+
+**Current GUI Status (src/gui.py):**
+- Has CalculatorGUI class skeleton with __init__, _set_operator, _apply_unary, _calculate, _clear, destroy methods
+- Entry and Label widgets created but NOT positioned (no grid layout)
+- No buttons created at all
+- No event bindings for button clicks
+- launch_gui() function exists but creates GUI that's completely blank/invisible
+- _apply_unary and _calculate reference tkinter.messagebox but don't import it
 
 **Requirements Analysis:**
 - Must: GUI with all 24 operations (12 basic + 12 scientific), error display, mode toggle
 - Must: Keep CLI/interactive/batch unchanged (no regressions)
 - Must: Loosely coupled (separate module, independent Calculator instance)
-- Nice: Handle errors gracefully (popup/inline display)
+- Nice: Handle errors gracefully (popup/inline display via messagebox)
 - Non-Functional: tkinter only (stdlib), no new dependencies
 
 **Key Architectural Decisions:**
-1. **Create new `src/gui.py`** — tkinter-based GUI module
-   - Implements CalculatorGUI class managing UI state and Calculator interaction
-   - Separate Calculator instance (independent history from CLI)
-   - Three operation panels: basic (always), advanced (always), scientific (toggled)
-   - Display area showing current input/result
-   - Clear button, Mode toggle button, error display via messagebox or label
-   - All operations called via getattr() on Calculator methods
-   - No imports of interface.py functions (self-contained)
+1. **Complete `src/gui.py`** with full implementation:
+   - Import tkinter and tkinter.messagebox for error popups
+   - Complete CalculatorGUI class with all widgets (display, entry, buttons)
+   - Use grid layout manager to position widgets in rows and columns
+   - Button layout: 3 sections (basic ops, advanced ops, scientific ops)
+   - All 24 operation buttons wired to appropriate handlers
+   - Display label showing current input/result
+   - Clear button and Mode toggle button
+   - Number buttons 0-9 and decimal point
+   - Error handling with messagebox.showerror() popups
+   - Scientific mode toggle dynamically shows/hides scientific operation buttons
    
-2. **Modify `src/__main__.py`** — Add GUI launch routing
-   - If sys.argv[1:] == ["--gui"] or ["gui"]: import gui.launch_gui() and run it
-   - Otherwise: existing interactive/batch/history routing unchanged
-   - Pure additive change; no disruption to existing modes
+2. **Modify `src/__main__.py`** — Already has GUI launch routing
+   - Line 28-31 already routes --gui flag to gui.launch_gui()
+   - No changes needed; already functional
    
 3. **No changes to Calculator or interface**
    - Calculator already has all operations
@@ -514,26 +525,21 @@ Enhance the interface layer to proactively inform users about mode toggling and 
    - GUI operates independently, calls Calculator methods directly
    
 4. **Test strategy:**
-   - Create `tests/test_gui.py` with 35 test scenarios
+   - Create `tests/test_gui.py` with 35+ test scenarios
    - Cover: window creation, all 24 operations, error cases, mode toggle, decimal/negative inputs
    - Use unittest.mock to mock tkinter interactions (Button clicks, Entry input, Label display)
    - Verify Calculator integration via getattr() calls
-   - All tests must initially fail (gui.py doesn't exist yet)
+   - All tests must initially fail (gui.py incomplete)
 
-**Module Organization Post-Implementation:**
-```
-src/
-├── calculator.py              [UNCHANGED] Facade for calculator_core
-├── calculator_core.py         [UNCHANGED] Calculator + history recording
-├── basic_operations.py        [UNCHANGED] Pure arithmetic
-├── advanced_operations.py     [UNCHANGED] Pure advanced math
-├── scientific_operations.py   [UNCHANGED] Pure scientific math
-├── interface.py               [UNCHANGED] Interactive CLI interface
-├── cli.py                     [UNCHANGED] Facade for interface
-├── batch_cli.py               [UNCHANGED] Batch mode handler
-├── gui.py                     [NEW] tkinter-based GUI
-└── __main__.py                [MODIFIED] Add --gui routing
-```
+**Detailed GUI Widget Layout:**
+- Root window: grid layout
+- Row 0: Display label (sticky NSEW, spans 4 columns)
+- Row 1: Entry field (sticky NSEW, spans 4 columns)
+- Row 2-4: Number pad (0-9, decimal) using grid layout
+- Row 5-8: Basic operations (+, -, *, /, square, cube, sqrt, cbrt) buttons
+- Row 9-12: Advanced operations (power, log, ln, factorial) buttons
+- Row 13-16: Scientific operations (sin, cos, tan, asin, acos, atan, etc.) buttons (initially hidden, shown in sci mode)
+- Last row: Clear, Mode Toggle, Equals buttons
 
 **Separation of Concerns:**
 - **calculator_core.py + operations modules:** Pure math, zero UI
@@ -553,6 +559,95 @@ src/
 - Risk: Import errors if tkinter unavailable. Mitigation: import only if --gui flag used; CLI users unaffected.
 
 **Handoff Notes for Next Agent:**
-- **pytest-edge-tester (WRITE phase):** Write 35 failing test cases in `tests/test_gui.py` covering: (1) GUI initialization (tests 1-4), (2) All 12 basic operations (tests 5-16), (3) All 12 scientific operations + mode toggle (tests 21-30), (4) Error handling (tests 17-19, 32), (5) Input handling (tests 33-35), (6) Mode independence from CLI (test 31). All tests must initially fail.
-- **python-code-implementer:** Implement `src/gui.py` and modify `src/__main__.py` per plan. Target: all 35 GUI tests passing + all 100+ existing tests passing (zero regressions).
+- **pytest-edge-tester (WRITE phase):** Write 35+ failing test cases in `tests/test_gui.py` covering: (1) GUI initialization (tests 1-4), (2) All 12 basic operations (tests 5-16), (3) All 12 scientific operations + mode toggle (tests 21-30), (4) Error handling (tests 17-19, 32), (5) Input handling (tests 33-35), (6) Mode independence from CLI (test 31), (7) Display and state management. All tests must initially fail.
+- **python-code-implementer:** Complete implementation of `src/gui.py` per plan. Target: all 35+ GUI tests passing + all 100+ existing tests passing (zero regressions).
+
+### Cycle 11: 2026-04-25 — PR #460 Unresolved Issues (Fix CLI Test Failures and Complete GUI)
+
+**Task:** Fix 6 failing tests across two categories and complete GUI implementation.
+
+**Analysis of Current State:**
+
+**Issue Category A: CLI Mode Retries (3 tests failing)**
+- `tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_first_operand` 
+  - Mocks input with side_effect=['sqrt', 'a', 'b', 'c', 'd'], expects sys.exit(1)
+  - Root cause: MaxRetriesExceeded is raised in run_calculator() but __main__.py main() loop doesn't have a sys.exit(1) call after catching it
+  - Current code (line 66-68 of __main__.py): catches MaxRetriesExceeded but just calls display_error(str(e)) and breaks; doesn't call sys.exit(1)
+  
+- `tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_max_retries_operator`
+  - Mocks input with side_effect=['%', '&', '@', '!', '5'], expects sys.exit(1)
+  - Same root cause: MaxRetriesExceeded caught but no sys.exit(1)
+  
+- `tests/test_cli.py::TestMainWithMaxRetries::test_main_interactive_domain_error`
+  - Mocks input with side_effect=['sqrt', '-9'], expects sys.exit(1)
+  - Root cause: ValueError caught but no sys.exit(1) call
+  - Current code (line 69-71): catches ZeroDivisionError and ValueError but just passes; doesn't exit
+
+**Issue Category B: Module Separation Tests (3 tests failing)**
+- `tests/test_separation.py::TestCalculatorHasNoUIImports::test_calculator_has_no_ui_imports`
+  - FileNotFoundError: `/src/calculator.py` not found
+  - Root cause: Test hardcodes path as `/src/calculator.py` but actual path is `/home/runner/work/Calculator.../src/calculator.py`
+  - The test is buggy, not the source code. However, per requirements, tests must pass.
+  
+- `tests/test_separation.py::TestInterfaceNoDirectMathLogic::test_interface_no_direct_math_logic`
+  - FileNotFoundError: `/src/interface.py` not found
+  - Same path issue as above
+  
+- `tests/test_separation.py::TestBatchCLIImportsFromInterface::test_batch_cli_imports_from_interface`
+  - FileNotFoundError: `/src/batch_cli.py` not found
+  - Same path issue as above
+
+**GUI Status:**
+- `src/gui.py` has skeleton but is incomplete:
+  - No grid layout; widgets not positioned
+  - No buttons created at all
+  - No event bindings
+  - Window launches but is blank/empty
+  - User cannot interact with it
+
+**Key Fix Decisions:**
+
+1. **Fix __main__.py to exit with code 1 on errors:**
+   - After catching MaxRetriesExceeded, call sys.exit(1) (line 67)
+   - After catching domain errors (ValueError, ZeroDivisionError), call sys.exit(1) (line 71)
+   - Ensure persist_history_to_file() is still called in finally block before exit
+   
+2. **Fix test_separation.py absolute path hardcoding:**
+   - Tests read calculator.py, interface.py, batch_cli.py source files
+   - Replace hardcoded `/src/...` with proper absolute path calculation using __file__ or os.path
+   - OR: Use a relative path from the test file location
+   - Tests at lines 19, 198, 321 need path fixes
+
+3. **Complete src/gui.py implementation:**
+   - Add grid layout manager with all widgets positioned
+   - Create numeric buttons (0-9, decimal point) wired to input handlers
+   - Create operator buttons (+, −, ×, ÷) wired to _set_operator
+   - Create unary operation buttons (square, cube, sqrt, cbrt, factorial, power, log, ln) wired to _apply_unary
+   - Create scientific operation buttons (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, exp, pi, e)
+   - Create display label showing current input
+   - Create Clear button wired to _clear
+   - Create Mode toggle button to show/hide scientific operations
+   - Create Equals button wired to _calculate
+   - Wire all buttons to appropriate handlers
+   - Import tkinter.messagebox for error display
+   - Ensure scientific operations buttons are hidden by default, shown when mode toggle is pressed
+
+**Architectural Impact:**
+- __main__.py changes are localized, non-breaking, just add exit codes
+- test_separation.py changes fix test bugs, no impact on source
+- gui.py completion is additive (non-breaking to existing code)
+
+**Patterns Found:**
+- Test path hardcoding is an anti-pattern; should use dynamic path calculation
+- GUI implementation requires careful event binding and state management
+- Mode toggle in GUI needs to both show/hide widgets AND potentially sync with Calculator state
+
+**Risks & Mitigations:**
+- Risk: Fixing __main__.py exit codes changes behavior slightly. Mitigation: minimal, localized change; preserves history persistence.
+- Risk: GUI widget count/layout is large and complex. Mitigation: organize buttons into logical groups (basic, advanced, scientific); test each group separately.
+- Risk: Scientific mode toggle in GUI needs to show/hide widgets dynamically. Mitigation: store button references, use grid_remove/grid in toggle handler.
+
+**Handoff Notes for Next Agent:**
+- **pytest-edge-tester (WRITE phase):** Write test specs for: (1) __main__.py error exit codes (3 tests), (2) test_separation.py path fixes (already covered by existing tests once paths are fixed), (3) GUI complete implementation (35+ tests). Expected: 3 existing CLI tests currently fail but will pass once __main__.py fixed; 3 existing separation tests fail due to path bugs but will pass once paths fixed; 35+ new GUI tests will fail until gui.py is complete.
+- **python-code-implementer:** (1) Fix __main__.py lines 67 and 71 to call sys.exit(1), (2) Fix test_separation.py paths in 3 test methods, (3) Complete src/gui.py with full widget implementation, grid layout, event bindings, and scientific mode toggle. Target: all 6 currently-failing tests pass + all 35+ new GUI tests pass + all 100+ existing tests continue passing.
 
