@@ -12,7 +12,7 @@
 - **Risks:** None — styling-only changes; no logic altered; all existing tests pass
 - **Tests passed:** 456 passed, 1 skipped, 0 failed
 
-Duration: PENDING | Cost: PENDING | Turns: PENDING
+Duration: 827.1s | Cost: $1.489116 USD | Turns: 15
 
 ## Run: update-diagrams — Scientific mode PlantUML diagrams (2026-04-25)
 
