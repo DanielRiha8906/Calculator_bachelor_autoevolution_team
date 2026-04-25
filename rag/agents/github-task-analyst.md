@@ -480,7 +480,7 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - `src/core/operations.py` — possibly to add mode metadata or new operation category enum
   - `tests/` — new tests for mode selection and operation filtering
 
-### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team (CURRENT)
+### Cycle: 2026-04-25 — Issue #415: V3 Task 15 - Expert/team
 - **Task Type:** Feature implementation (GUI layer using tkinter)
 - **Scope:** Add graphical user interface for calculator using tkinter; preserve existing calculator behavior and application logic; reuse existing operations without duplication
 - **Key Patterns:**
@@ -769,4 +769,135 @@ Accumulated context from past issue analyses on this experiment branch. Each cyc
   - No keyboard shortcuts or advanced GUI features
   - No accessibility overhaul (WCAG compliance not required)
 - **Label:** `ai-implement:expert-team` (expert team delivery with visual design focus)
+
+### Cycle: 2026-04-25 — PR #466 Review: Unresolved Feedback on Issue #465 Implementation (iOS-style GUI Redesign)
+- **Task Type:** PR review feedback analysis (identify and structure unresolved owner feedback requiring fixes)
+- **Scope:** Extract and structure unresolved owner feedback on PR #466 (Issue #465 iOS-style GUI redesign implementation)
+- **PR Status:** OPEN with blocking owner feedback; label `request-changes:expert-team`
+- **PR Implementation Summary (from PR body):**
+  - Adds `_THEME` dict at module level with 16 keys covering colors (window, result display, operator/normal/scientific buttons, mode toggle) and result font tuple
+  - Adds `_OPERATION_SYMBOLS` dict mapping 19 operation names to Unicode symbols (+, −, ×, ÷, √, x², x³, xʸ, n!, log, ln, sin, cos, tan, π, e, etc.)
+  - Adds `GuiCalculator` class with iOS-style layout: full-width result label (black bg, white 32pt bold monospace, right-aligned) → mode toggle button → 3×4 number grid (digits 1–9 + zero spanning all 3 columns) → 4-column operation grid
+  - Button color groups: orange (#FF9500) for arithmetic operators, dark (#1C1C1E) for scientific ops, gray (#333333) for normal ops; all flat relief, borderwidth=0, explicit activebackground
+  - Hover effects: `<Enter>`/`<Leave>` bindings on every button swap bg to lighter shade and revert
+  - All frames and non-button widgets explicitly set `bg` from `_THEME`; fixes tkinter non-inheritance
+  - Fixes `_TkStub.set()/get()` to preserve state for headless test compatibility
+  - Preserves `CalculatorApp` unchanged; all existing public API untouched
+  - Test plan: All 34 new tests in `tests/test_gui_redesign.py` pass + all 55 existing tests in `tests/test_gui.py` pass + full suite 504 passed, 0 failed
+- **PR TEST RESULT:** Claims "504 passed, 0 failed"; all tests passing; no regressions
+- **UNRESOLVED BLOCKER (Critical - 1 comment thread):**
+  
+  **COMMENT (2026-04-25 17:20:45Z) — Owner Task List (Explicit Requirements):**
+  - **Status:** Flagged as "Fix needed" (explicit blocker signal)
+  - **Owner Feedback:** "When launching the calculator app in GUI mode, use the new design. Change the design, so that the numbers are to the left side, the basic operations (+,-,*,/) are to the right of them. Then the rest will be on the bottom. (The number will change base on if it's in standard or scientific mode)"
+  - **Interpretation:** Owner is requesting a LAYOUT REDESIGN that differs from PR's current layout (3×4 number grid at top-center, then 4-column operation grid below)
+  - **New Layout Specification:** 
+    - Numbers grid positioned on LEFT side (not full-width at top)
+    - Basic arithmetic operations (+, −, ×, ÷) positioned on RIGHT side
+    - "The rest" (remaining operations, likely scientific mode ops) positioned on BOTTOM
+    - Layout adapts based on mode (simple vs scientific)
+
+- **Requirements Extracted from Unresolved Feedback:**
+  1. **FR1 (MUST HAVE):** **Redesign GUI layout from current (vertical stacked) to new (side-by-side with operations on right, rest on bottom)**
+     - Current state: PR implements top-to-bottom layout (result → mode toggle → number grid → operation grid)
+     - Required state: Left-to-right layout (number grid on LEFT, arithmetic ops on RIGHT) with remaining ops on BOTTOM; layout adapts per mode
+     - Impact: Major layout refactor; affects widget positioning, grid weights, frame organization
+     
+  2. **FR2 (MUST HAVE):** **Preserve arithmetic operations (add, subtract, multiply, divide) in right-hand column**
+     - Requirement: These 4 operations must be vertically stacked on the right side of the GUI
+     - Current state: All operations in single 4-column grid below number grid
+     - Fix: Extract arithmetic ops from operation grid; create separate right-side layout for them
+     
+  3. **FR3 (MUST HAVE):** **Position remaining operations on bottom section**
+     - Requirement: Operations other than the 4 arithmetic ops should appear below the left/right number + arithmetic area
+     - Current state: All operations in single grid
+     - Fix: Separate operation set into two groups (arithmetic vs rest); layout rest on bottom
+     
+  4. **FR4 (MUST HAVE):** **Adapt layout based on calculator mode (simple vs scientific)**
+     - Requirement: Number grid and operation grid positioning/sizing should change based on selected mode
+     - Symptom: PR does not mention dynamic layout changes per mode; assumes static layout
+     - Fix: When mode switches, re-layout widgets to accommodate operation count (scientific mode may have more bottom operations than simple mode)
+     
+  5. **FR5 (MUST HAVE):** **Maintain all existing styling/color requirements from issue #465**
+     - Result display: black bg, white 32pt bold monospace, right-aligned (UNCHANGED)
+     - Mode toggle button: text switches, clicking works (UNCHANGED)
+     - Button colors: orange for arithmetic, dark for scientific, gray for normal (UNCHANGED)
+     - Theme dict: centralized _THEME dict (UNCHANGED)
+     - Hover effects: `<Enter>`/`<Leave>` swap colors (UNCHANGED)
+     - All explicit `bg` assignments from `_THEME` (UNCHANGED)
+     
+  6. **NFR1:** Layout changes must be **responsive** — when mode switches, layout re-renders to fit available operations
+     
+  7. **NFR2:** All **504 tests must remain passing** after layout redesign (no regressions)
+     
+  8. **NFR3:** Window size/proportions must accommodate new layout (left + right + bottom sections visible and usable)
+
+- **Critical Ambiguities Requiring Architect Clarification:**
+  1. **Left-side number grid sizing:** How many columns should left-side number grid have? PR implements 3×4 (3 cols, 4 rows). Should this change? (ASSUMPTION: 3 columns × 3 rows for 1–9, then 0 spanning bottom, or different arrangement?)
+  
+  2. **Right-side arithmetic layout:** Are arithmetic operations vertically stacked 4×1 (4 rows, 1 column), or in some other arrangement? (ASSUMPTION: 4 rows × 1 column = vertical stack)
+  
+  3. **Bottom section sizing:** How many columns for "rest" operations on bottom? 4-column grid (matching current PR)? Variable based on mode? (ASSUMPTION: 4 columns to maintain consistency with PR)
+  
+  4. **Mode-specific layout details:** In simple mode, how many operations on bottom? In scientific mode, how many? Does layout expand/contract, or does scrolling apply? (ASSUMPTION: owner expects visible grid layout, no scrolling)
+  
+  5. **Result display and mode toggle position:** Do these stay at top (spanning full width)? Or move to accommodate new side-by-side layout? (ASSUMPTION: stay at top, spanning full width)
+  
+  6. **Proportional sizing:** What are the width/height ratios between left (numbers), right (arithmetic), and bottom (rest) sections? (ASSUMPTION: architect to determine; suggest 1:1:2 or similar for balance)
+  
+  7. **Window size impact:** Does new layout require larger minimum window size? (ASSUMPTION: architect to recommend)
+  
+  8. **Zero button placement:** In current PR, 0 spans 3 columns at bottom of number grid. In new layout, does 0 stay in left-side grid, or move? (ASSUMPTION: stays in left-side number grid)
+
+- **Root Cause Analysis:**
+  - **PR Layout Mismatch:** PR implemented a vertically stacked layout (top-to-bottom) matching issue #465 specification. However, owner's actual expectation (based on feedback) is a horizontally distributed layout (left/right/bottom). This suggests either:
+    1. Issue #465 specification was interpreted literally by implementer, but owner had different intent, OR
+    2. Owner's feedback reveals a NEW requirement not explicitly stated in issue #465 body
+  - **Pattern:** Similar to PR #462 feedback, owner's manual functional test reveals a gap between documented spec and owner's actual expectation
+
+- **Owner Expectations Inferred:**
+  - Layout must change from "vertical stack" to "left + right + bottom" model
+  - Arithmetic operations must be prominently accessible on right side
+  - GUI must adapt per mode (simple/scientific)
+  - Styling requirements (#465) remain unchanged; only layout differs
+  - Owner sees current PR layout as incorrect; this is a BLOCKER for merge
+
+- **Handoff Notes for Architect:**
+  - **CRITICAL DECISION 1:** Confirm the new layout specification: number grid on LEFT (3×3 + spanning 0?), arithmetic ops on RIGHT (4×1 vertical stack?), rest on BOTTOM (4-column grid)?
+  - **CRITICAL DECISION 2:** Define proportions and sizing: what are the width/height ratios for left/right/bottom sections? Fixed sizes or proportional?
+  - **CRITICAL DECISION 3:** Specify mode adaptation: for simple vs scientific mode, what operations appear on bottom? Do layout dimensions change?
+  - **CRITICAL DECISION 4:** Clarify window size: what minimum/fixed size needed to accommodate left + right + bottom layout? (Suggest: 400×600 or similar)
+  - Produce ASCII mockup or diagram showing exact widget positioning in new layout (left/right/bottom)
+  - Produce test specs for new layout: number grid position/sizing, arithmetic ops position/sizing, bottom ops position/sizing, mode-specific layout, responsive re-layout on mode switch
+
+- **Handoff Notes for Implementer:**
+  - Root change: refactor GUI layout from single vertical stack to left/right/bottom distributed layout
+  - Key steps:
+    1. Create 3 main frames: left (numbers), right (arithmetic), bottom (rest)
+    2. Position frames side-by-side (left + right on top row), bottom frame below
+    3. Populate left frame with number grid (1–9 + 0)
+    4. Populate right frame with 4 arithmetic ops (add, subtract, multiply, divide) vertically stacked
+    5. Populate bottom frame with remaining operations (4-column grid)
+    6. On mode switch, re-populate bottom frame with correct operation set for mode
+    7. Verify all existing colors, fonts, hover effects, theme dict usage remains unchanged
+  - DEBUG: Verify layout visually by launching GUI in both simple and scientific modes; number grid should be on left, arithmetic ops on right, remaining ops on bottom
+
+- **Handoff Notes for Tester:**
+  - Write new tests covering: (1) layout structure (left/right/bottom frames exist and positioned correctly), (2) number grid on left, (3) arithmetic ops on right, (4) remaining ops on bottom, (5) mode-specific bottom layout, (6) layout re-renders on mode switch, (7) all colors/fonts/styling preserved
+  - Verify all 504+ tests pass after layout redesign (no regression)
+  - Manual functional test: launch GUI, verify layout (left/right/bottom), switch modes, verify bottom ops change, test calculations from each section
+
+- **Label:** `request-changes:expert-team` (blocking feedback; layout mismatch requires major redesign)
+
+- **Patterns Observed:**
+  - Second instance of owner feedback revealing gaps between issue spec and owner's actual intent (see also PR #462)
+  - PR automated test suite passes (504 tests) but owner's manual layout inspection fails — test coverage gap (tests validate styling/colors but not layout structure/positioning)
+  - Feedback is explicit and actionable (left/right/bottom layout specified) but required architect to clarify ambiguities
+  - Layout redesign is more complex than styling-only changes; impacts core widget positioning and frame organization
+
+- **Critical Dependency on PR #462 Fixes:**
+  - This PR (#466) builds on GUI from PR #462 (issue #415)
+  - PR #462 has unresolved mode switching feedback (issue #466 context shows it's still OPEN)
+  - RISK: Implementing layout redesign in #466 without resolving mode switching in #462 may introduce new conflicts or test regressions
+  - RECOMMENDATION: Architect should clarify dependency order; determine whether #462 must be fixed before #466 layout work, or if they can proceed in parallel
 

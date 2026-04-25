@@ -182,80 +182,6 @@ Execution order: pytest-edge-tester WRITE → python-code-implementer → pytest
 
 ---
 
-### 2026-04-24 — PR #434 — Interactive Mode Entry Point (Unresolved Blocker)
-
-**Task:** Address blocker feedback from Owner (DanielRiha8906): "There is no way to launch the application to get into the interactive mode. Change __main__.py that when launched via python -m src, user input will be possible."
-
-**Status:** The `src/interactive.py` and `src/operation_registry.py` modules are ALREADY FULLY IMPLEMENTED and FUNCTIONAL from the previous cycle (issue #385). The blocker is that `src/__main__.py` does not invoke them; it only runs a hardcoded demo.
-
-**Current State:**
-- `src/__main__.py`: imports Calculator, defines `main()` with hardcoded demo operations, calls `main()` in `if __name__` block
-- `src/interactive.py`: fully implemented with `run_interactive_session()` function; accepts user input via `input()`, displays operation menu, prompts for operands, computes and displays results, handles errors gracefully, loops until user exits
-- `src/operation_registry.py`: fully implemented; introspects Calculator class, discovers all public methods, filters to arity 1 or 2, provides get_operations(), get_arity(), call() methods
-
-**Key Decisions:**
-- Single-file change to `src/__main__.py`: replace the `main()` call with `run_interactive_session()`
-- Keep existing `main()` function for backward compatibility (may be imported elsewhere)
-- Add import: `from .interactive import run_interactive_session`
-- Change `if __name__ == "__main__":` block from `main()` to `run_interactive_session()`
-- This is a 2-line change with zero impact on existing Calculator class or test suite
-
-**Architecture Impact:**
-- MINIMAL: only the entry point changes
-- `main()` is only called from `__main__` block; nothing else depends on it
-- No changes to Calculator, operation_registry, or interactive modules
-- Pre-existing tests continue to pass (unless they explicitly test entry point behavior)
-- Backward compatible: any code doing `from src import main; main()` still works (just invokes interactive session instead of demo)
-
-**Test Specifications for pytest-edge-tester (WRITE):**
-10 scenarios in new `tests/test_interactive_entrypoint.py` or extended `tests/test_interactive.py`:
-1. `__main__` block calls `run_interactive_session()` with no arguments
-2. User selects 'add', provides operands 5 and 3, gets result 8
-3. User selects 'factorial', provides operand 5, gets result 120
-4. User completes operation, chooses 'yes' to continue, performs second operation, then exits
-5. User completes operation, chooses 'no' to exit (session exits cleanly)
-6. Operation list is displayed at session start
-7. User enters invalid operation index (e.g., 999), sees "Invalid operation" message, re-prompted
-8. User enters non-numeric operand (e.g., "abc"), sees "Invalid input" message, re-prompted
-9. User selects divide with operands 5 and 0, sees "Error: Division by zero" message
-10. User selects sqrt with operand -4, sees "Error:" message (domain error), session continues
-
-All tests mock `builtins.input()` with sequence of user inputs and mock/capture `builtins.print()` to verify output.
-
-**Source Changes Plan for python-code-implementer:**
-- File: `src/__main__.py`
-  - Action: Modify existing file
-  - Change 1: Add import line at top: `from .interactive import run_interactive_session`
-  - Change 2: Keep existing `main()` function unchanged
-  - Change 3: In `if __name__ == "__main__":` block, replace `main()` with `run_interactive_session()`
-  - Total: 2 lines changed (1 added, 1 modified)
-  - No other files need modification
-
-**Why This Fixes the Blocker:**
-- Users can now run `python -m src` and immediately enter interactive mode
-- No more hardcoded demo; interactive session accepts live user input
-- All supporting infrastructure already exists and is tested
-- Minimal risk: one entry point change with zero side effects
-
-**Handoff to pytest-edge-tester (WRITE):**
-Write 10 test scenarios in `tests/test_interactive_entrypoint.py` (or append to `tests/test_interactive.py`). Tests must mock `input()` and `print()` to simulate user interaction. All tests should FAIL initially because the new import and entry point do not yet exist. Tests verify:
-- `run_interactive_session()` is invoked from `__main__` when module is executed
-- Normal flow: operation selection → operand input → result display → continue/exit
-- Error recovery: invalid operation, non-numeric operand, domain errors, zero division
-- Session loop: multi-calculation sessions with proper exit handling
-
-**Handoff to python-code-implementer:**
-Implement single-file change to `src/__main__.py`:
-1. Add import: `from .interactive import run_interactive_session`
-2. Keep `main()` function as-is (backward compatibility)
-3. Replace `main()` call in `if __name__ == "__main__":` block with `run_interactive_session()`
-
-No other source files need modification. `src/interactive.py` and `src/operation_registry.py` are already complete and functional. All Calculator methods remain unchanged.
-
-**Execution order:** pytest-edge-tester WRITE → python-code-implementer → pytest-edge-tester VERIFY → commit.
-
----
-
 ### 2026-04-24 — Issue #391 — V3 Task 7 - Expert/team — CLI for Bash Invocation
 
 **Task:** Add a command-line interface (CLI) enabling bash-based calculator invocation with operation name and operand arguments, supporting both unary and binary operations.
@@ -458,4 +384,174 @@ Implement complete GUI redesign in `src/ui/gui.py` per source changes plan. Key 
 **Key Deliverable:**
 
 iOS-style calculator GUI with modern visual design, centralized theme system, and interactive button layouts while preserving all underlying calculation logic and operation functionality.
+
+---
+
+### 2026-04-25 — PR #466 — Left/Right/Bottom Layout Redesign (Unresolved Owner Feedback)
+
+**Task:** Refactor iOS-style GUI layout from current single-column model to **left + right + bottom distributed layout**:
+- **LEFT SIDE:** Number grid (digits 1–9 plus 0) in 3×4 arrangement
+- **RIGHT SIDE:** Arithmetic operations (add, subtract, multiply, divide) vertically stacked
+- **BOTTOM SECTION:** All remaining operations (layout adapts per mode: simple vs scientific)
+
+**Status:** PR #466 is under review. Owner feedback (unresolved) requests a fundamental layout restructuring of `GuiCalculator` in `src/ui/gui.py`. Current layout has number grid and operations in sequential frames; new layout requires simultaneous left/right positioning with dynamic bottom section rebuild on mode switch.
+
+**Key Decisions:**
+1. **Overall Frame Structure:**
+   - Main window 480×640 pixels
+   - Top section: Result display + mode toggle (full-width, spans all columns)
+   - Main content area: 3-panel horizontal layout using tkinter Frame geometry
+     - LEFT PANEL: Number grid (3 columns wide, 4 rows tall)
+     - RIGHT PANEL: Arithmetic operations vertically stacked (1 column, 4 rows)
+     - These two panels side-by-side in a horizontal container frame
+   - BOTTOM PANEL: Remaining operations in dynamic 4-column grid below left/right panels
+   - Panels positioned with grid() manager for flexible layout
+
+2. **Number Grid (LEFT SIDE):**
+   - Digits 1–9 arranged in 3×3 grid (rows 0–2, cols 0–2)
+   - Digit 0 spans all 3 columns (row 3, cols 0–2, columnspan=3)
+   - All buttons themed with BUTTON_NORMAL colors
+   - Buttons stored in `self._digit_buttons` list for mode-independent persistence
+
+3. **Arithmetic Operations (RIGHT SIDE):**
+   - Vertical stack: ÷ (divide) at top, × (multiply) second, − (subtract) third, + (add) bottom
+   - Layout: 1 column, 4 rows (indices row=0–3, col=0)
+   - Buttons themed with BUTTON_OPERATOR colors (orange #FF9500)
+   - Buttons stored in `self._arithmetic_buttons` list (persistent, never rebuilt)
+
+4. **Bottom Operations Section (BOTTOM PANEL):**
+   - 4-column grid for remaining operations
+   - SIMPLE MODE: Shows _NORMAL_OPS only (sqrt, square, factorial, ln, log10) = 5 ops → 2 rows (fill row 1 with 1 op)
+   - SCIENTIFIC MODE: Shows _NORMAL_OPS + _SCIENTIFIC_OPS (5 + 9 = 14 ops) → 4 rows (4 cols × 4 rows = up to 16 slots)
+   - DESTROYED and REBUILT on mode switch (not just hidden)
+   - Operations themed per _op_button_colours() (orange for arithmetic, dark for scientific, gray for normal)
+   - Buttons stored in `self._operation_buttons` list; cleared on rebuild
+
+5. **Geometry Management (Grid):**
+   - Top frame (result + mode toggle): row=0, sticky=NSEW, full-width
+   - Content frame (left + right): row=1, sticky=NSEW
+     - Left subframe (number grid): column=0, sticky=NSEW, padx=(10,5)
+     - Right subframe (arithmetic): column=1, sticky=NSEW, padx=(5,10)
+   - Bottom frame (operation grid): row=2, sticky=NSEW, padx=10, pady=(0,10)
+   - Root window: `columnconfigure(0, weight=1)`, `rowconfigure([0,1,2], weight=1)` for dynamic resizing
+   - Panel frames: auto-expand to fill space; buttons use sticky=NSEW for square geometry
+
+6. **Number Button Functionality:**
+   - Single command callback: `_on_digit_press(digit)` (shared by all 10 buttons)
+   - Appends digit to current operand display (stored in `self._current_operand`)
+   - Updates result label with live operand value
+
+7. **Arithmetic Button Functionality:**
+   - Individual command callbacks per operation: `_on_operation_press("add")`, etc.
+   - Stores selected operation name in `self._selected_operation`
+   - Does NOT trigger calculation; sets up for next operand input
+
+8. **Operation Grid Button Functionality:**
+   - Individual command callbacks per operation: `_on_operation_press(op_name)`
+   - Same behavior as arithmetic buttons (operation selection)
+   - Special handling for "equals" or "clear" (if included): execute calculation or reset state
+
+9. **Mode Switch Behavior:**
+   - User clicks mode toggle button → `_on_mode_toggle()` called
+   - Mode flips (NORMAL ↔ SCIENTIFIC)
+   - Mode toggle button text updates: "Scientific" (when in NORMAL) or "Normal" (when in SCIENTIFIC)
+   - Arithmetic buttons (right side) remain unchanged
+   - Bottom operation grid is DESTROYED completely (clear `self._operation_buttons` list)
+   - `_build_bottom_operation_frame()` is called to rebuild with new operation set
+
+10. **Styling:**
+    - All colors from `_THEME` (no hardcoded hex values)
+    - All fonts from `_THEME`
+    - Hover effects on all buttons (arithmetic + bottom ops, not digits per aesthetic choice)
+    - Digit buttons use gray theme; arithmetic buttons use orange; operation buttons color-coded per type
+
+11. **Result Display:**
+    - Top of window, full-width label
+    - Black background, white right-aligned monospace text (32pt bold)
+    - Initially shows "0"
+    - Updates on digit press (shows current operand) and after calculation (shows result)
+
+12. **Styling from Issue #465 (PRESERVED):**
+    - Result display: black bg (#000000), white text (#FFFFFF), 32pt bold Courier
+    - Mode toggle: dark gray (#2C2C2E), white text, FLAT relief
+    - Arithmetic ops: orange (#FF9500)
+    - Scientific ops: dark gray (#1C1C1E)
+    - Normal ops: medium gray (#333333)
+    - Hover effects on all operation buttons
+    - Window background: black (#000000)
+    - All frame backgrounds: black (#000000)
+
+**Architecture Observations (from current src/ui/gui.py):**
+- `GuiCalculator` class already exists with:
+  - `_THEME` dict (complete with all colors/fonts)
+  - `_OPERATION_SYMBOLS` dict (operation name → Unicode symbol)
+  - Helper methods: `_make_button()`, `_op_button_colours()`, `_on_button_enter()`, `_on_button_leave()`
+  - Mode tracking: `_current_mode` (OperationMode.NORMAL or SCIENTIFIC)
+  - Operation tracking: `_operation_buttons` list, `_normal_mode_buttons` list, `_scientific_mode_buttons` list
+  - Methods: `_on_mode_toggle()`, `_update_mode_toggle_text()`, `_build_op_buttons()`, `_rebuild_op_grid()`, `_on_op_press()`
+- Current layout: sequential frames (input_frame → result_frame → mode_toggle → number_frame → operation_frame)
+- Public API: `get_current_mode_operations()`, `calculate()`, `get_history()`, `is_unary_operation()`, `run()` — all preserved
+
+**Changes Needed in `src/ui/gui.py`:**
+1. **Refactor `_setup_ios_gui()` method:**
+   - Delete current sequential frame structure
+   - Create hierarchical frame structure: top section (result + mode toggle), content section (left + right panels), bottom section (operations)
+   - Implement grid-based layout with proper geometry configuration
+
+2. **Create/Modify helper methods:**
+   - `_build_left_panel(parent_frame)` — create number grid in left frame
+   - `_build_right_panel(parent_frame)` — create arithmetic operation stack in right frame
+   - `_build_bottom_panel(parent_frame)` — create bottom operation grid; call before mode toggle initially
+   - `_rebuild_bottom_panel()` — destroy old bottom ops, rebuild with new mode ops (called by `_on_mode_toggle()`)
+   - `_on_digit_press(digit)` — append digit to operand, update display
+   - `_on_operation_press(op_name)` — select operation (already exists, reuse)
+   - Modify `_on_mode_toggle()` to call `_rebuild_bottom_panel()` instead of `_rebuild_op_grid()`
+
+3. **Preserve existing:**
+   - All public API methods
+   - `_make_button()`, `_op_button_colours()`, `_on_button_enter()`, `_on_button_leave()`
+   - `_THEME` and `_OPERATION_SYMBOLS` dictionaries
+   - Mode toggle button text update logic
+   - Hover effects on all operation buttons
+
+4. **Sizing and Spacing:**
+   - Window: 480×640 (width × height)
+   - Padding: 10px margins on all sides, 5px between left/right panels
+   - Button geometry: square (equal row/col weights in grid)
+   - Result display: 10px padx, 10px pady
+
+**Backward Compatibility:**
+- Public API fully preserved
+- Internal state variables (_current_mode, _operation_buttons, etc.) preserved
+- Tests that mock root and check widget attributes will need updates to assert grid layout, but existing widget presence tests should pass
+
+**Execution Order (Multi-Agent Pipeline):**
+1. **pytest-edge-tester (WRITE phase):** Create failing tests for new layout (15–20 scenarios covering frame structure, panel positions, button presence and placement in each panel, mode switch rebuild, etc.)
+2. **python-code-implementer:** Implement layout restructuring per source changes plan above
+3. **pytest-edge-tester (VERIFY phase):** Run full test suite; confirm all tests pass
+4. **Commit and PR:** Document layout change in PR description
+
+**Test Specifications (15–20 scenarios, detailed below in Section 1 of output):**
+- Frame structure tests: top, content (left+right), bottom frames exist and positioned correctly
+- Left panel tests: number grid is 3×4, buttons 1–9 in grid, button 0 spans 3 columns
+- Right panel tests: 4 arithmetic buttons vertically stacked
+- Bottom panel tests: grid with 4 columns, operation count matches mode, buttons rebuild on mode switch
+- Button functionality tests: digit press updates operand, operation press selects operation, mode toggle rebuilds bottom
+- Styling tests: colors from _THEME, hover effects, fonts, alignment
+
+**Handoff to pytest-edge-tester (WRITE):**
+Write 15–20 test scenarios covering layout structure, button placement, frame organization, mode switch behavior, and basic functionality. All tests must FAIL initially. Tests should use mocked root and verify grid positioning (via `grid_info()` calls and widget hierarchy inspection).
+
+**Handoff to python-code-implementer (upon tester's WRITE report):**
+Refactor `_setup_ios_gui()` and related methods in `src/ui/gui.py` per source changes plan. Key deliverables:
+1. Hierarchical frame structure: top (result + mode toggle), content (left number grid + right arithmetic), bottom (operations)
+2. Left panel: 3×4 number grid with digit 0 spanning 3 columns
+3. Right panel: 4 vertically stacked arithmetic operation buttons
+4. Bottom panel: 4-column operation grid, dynamically rebuilt on mode switch
+5. All layout via grid() geometry manager with proper row/col weights
+6. Styling from _THEME preserved; hover effects on operation buttons
+7. Mode toggle rebuilds bottom panel; digit press updates operand; operation press selects operation
+8. Public API fully preserved; backward compatible
+
+---
 

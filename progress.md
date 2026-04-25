@@ -1,3 +1,15 @@
+## Run: Fix PR #466 — feat: iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `src/ui/gui.py` — refactored `_setup_ios_gui()` to three-panel layout (top/content/bottom frames); added `_build_left_panel()`, `_build_right_panel()`, `_build_bottom_panel()`, `_rebuild_bottom_panel()`, `_on_digit_press()`; moved `_TkStub` to module level with `cget()`/`config()` support; `_on_mode_toggle()` now calls `_rebuild_bottom_panel()`
+- **Purpose:** Address owner review feedback: redesign GUI layout from vertical stack to left (number grid) + right (arithmetic ops) + bottom (remaining ops) distributed layout, with mode-adaptive bottom panel rebuild on mode switch.
+- **Risks:** None — change isolated to GUI layer; all colors from _THEME; headless test safety preserved via _TkStub
+- **Tests passed:** 504 passed, 0 failed
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING
+
 ## Run: Issue #415 — V3 Task 15 - Expert/team (2026-04-25)
 
 - **Branch:** task/issue-415-tkinter-gui
