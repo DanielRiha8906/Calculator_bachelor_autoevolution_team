@@ -603,3 +603,19 @@ Duration: 431.7s | Cost: $0.715237 USD | Turns: 5
   - `artifacts/ios_calculator_sequence_diagram.puml` — new sequence diagram for mode toggle and calculation execution
 
 Duration: 248.3s | Cost: $0.569492 USD | Turns: 5
+
+## Run: update-diagrams — iOS-style GuiCalculator redesign (2026-04-25)
+
+- **Branch:** task/issue-465-ios-calculator-redesign
+- **PR target:** exp3/expert-team
+- **Files changed:**
+  - `artifacts/class_gui_calculator.puml` — GuiCalculator class with iOS-style three-panel layout, widget factories, state, and composition relationships
+  - `artifacts/class_gui_legacy.puml` — CalculatorApp legacy class and _TkStub headless mock
+  - `artifacts/class_core.puml` — Core layer: Calculator, OperationRegistry, OperationHistory, enums and dataclasses
+  - `artifacts/class_modes.puml` — CalculatorMode hierarchy: SimpleMode and ScientificMode
+  - `artifacts/activity_digit_press.puml` — Activity flow for digit button press and operand accumulation
+  - `artifacts/activity_mode_toggle.puml` — Activity flow for mode toggle and bottom panel rebuild
+  - `artifacts/sequence_gui_init.puml` — Initialization sequence from __main__ through GuiCalculator setup to mainloop
+  - `artifacts/component_gui_layout.puml` — iOS three-panel widget hierarchy component diagram
+
+Duration: PENDING | Cost: PENDING | Turns: PENDING

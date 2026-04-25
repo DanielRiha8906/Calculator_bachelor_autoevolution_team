@@ -1,0 +1,38 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title UI Modes — CalculatorMode Hierarchy
+
+abstract class CalculatorMode <<abstract>> {
+    + {abstract} get_operations(registry) : list[str]
+}
+
+class SimpleMode {
+    ' Returns 6 NORMAL-mode operations
+    + get_operations(registry) : list[str]
+}
+
+class ScientificMode {
+    ' Returns all 18 SCIENTIFIC-mode operations
+    + get_operations(registry) : list[str]
+}
+
+class OperationRegistry {
+    + get_operations_by_mode(mode : OperationMode) : list
+}
+
+enum OperationMode <<enum>> {
+    NORMAL
+    SCIENTIFIC
+}
+
+CalculatorMode <|-- SimpleMode
+CalculatorMode <|-- ScientificMode
+SimpleMode ..> OperationRegistry  : calls get_operations_by_mode(NORMAL)
+ScientificMode ..> OperationRegistry : calls get_operations_by_mode(SCIENTIFIC)
+SimpleMode ..> OperationMode
+ScientificMode ..> OperationMode
+
+@enduml

@@ -1,7 +1,8 @@
 @startuml
+skinparam monochrome true
+skinparam shadowing false
 skinparam activityFontSize 12
-skinparam activityDiamondFontSize 11
-title Mode Toggle Flow — NORMAL ↔ SCIENTIFIC
+title Mode Toggle — NORMAL ↔ SCIENTIFIC Panel Rebuild
 
 start
 
@@ -16,35 +17,38 @@ else (no)
 endif
 
 :_update_mode_toggle_text();
+
 note right
-  Button label flips between
+  Button label switches between
   "Scientific" and "Normal"
 end note
 
 :_rebuild_bottom_panel();
 
-:Destroy existing _bottom_frame and its buttons;
+:Destroy existing _bottom_frame and its child buttons;
 
-:Create new _bottom_frame;
+:Create new _bottom_frame widget;
 
 if (_current_mode == NORMAL?) then (yes)
-    :Operation set: sqrt, square, factorial, ln, log10\n(5 ops across 4-column grid);
+    :Op set: sqrt, square, factorial, ln, log10\n(5 ops in 4-column grid);
 else (no)
-    :Operation set: all 14 ops\n(cube, cbrt, power, sin, cos,\ntan, cot, asin, acos + NORMAL);
+    :Op set: NORMAL ops + cube, cbrt, power,\nsin, cos, tan, cot, asin, acos\n(14 ops in 4-column grid);
 endif
 
-:_build_bottom_panel(parent);
+:_build_bottom_panel(new _bottom_frame);
 
-:For each op: _op_button_colours(op_name) → (bg, fg, active_bg);
+fork
+    :For each op: _op_button_colours(op_name) → (bg, fg, active_bg);
+fork again
+    :_make_button(parent, symbol, bg, fg, active_bg, command);
+end fork
 
-:_make_button(parent, symbol, bg, fg, active_bg, command);
-
-:grid-place button in 4-column layout;
+:grid-place each button in 4-column layout;
 
 :bind <Enter> → _on_button_enter;
 :bind <Leave> → _on_button_leave;
 
-:Bottom panel updated — new op grid visible;
+:Bottom panel updated — new op set visible;
 
 stop
 @enduml

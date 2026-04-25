@@ -1,60 +1,67 @@
 @startuml
+skinparam monochrome true
+skinparam shadowing false
 skinparam sequenceMessageAlign left
 skinparam participantFontSize 12
-title GuiCalculator Initialization Sequence
+title GuiCalculator — Initialization Sequence
 
-participant "__init__" as Init
+actor "python -m src --gui" as Main
+
+participant "GuiCalculator\n__init__" as Init
 participant "_setup_ios_gui" as Setup
 participant "_build_left_panel" as Left
 participant "_build_right_panel" as Right
 participant "_build_bottom_panel" as Bottom
 participant "Root Window" as Root
-participant "_TkStub widgets" as Widgets
+participant "Tk Widgets" as Widgets
 
-Init -> Init : inject Calculator, OperationRegistry, OperationHistory
+Main ->> Init : GuiCalculator(root, calculator, registry)
+
+activate Init
+Init -> Init : create Calculator\ncreate OperationRegistry(calculator)\ncreate OperationHistory()
 Init -> Init : _current_mode = NORMAL\n_current_operand = ""\n_selected_operation = ""
-Init -> Setup : _setup_ios_gui()
+Init ->> Setup : _setup_ios_gui()
+deactivate Init
 
 activate Setup
+Setup -> Root : configure(bg=#000000, geometry=480x640)
 
-Setup -> Root : configure(bg=#000000, size=480×640)
-
-Setup -> Widgets : _make_frame() → _top_frame (row=0)
+Setup -> Widgets : _make_frame() → _top_frame [row=0]
 activate Widgets
 Widgets --> Setup : _top_frame
-Setup -> Widgets : _make_label(_top_frame) → _result_label\n(32pt bold, right-aligned, white on black)
-Setup -> Widgets : _make_button(_top_frame) → _mode_toggle_btn
-Widgets --> Setup : done
+Setup -> Widgets : _make_label(_top_frame)\n→ _result_label (32pt bold Courier, right-aligned, white)
+Setup -> Widgets : _make_button(_top_frame)\n→ _mode_toggle_btn [row=1, columnspan=2]
+Widgets --> Setup : widgets placed
 deactivate Widgets
 
-Setup -> Widgets : _make_frame() → _content_frame (row=1)
+Setup -> Widgets : _make_frame() → _content_frame [row=1]
 activate Widgets
 Widgets --> Setup : _content_frame
 deactivate Widgets
 
-Setup -> Left : _build_left_panel(_content_frame)
+Setup ->> Left : _build_left_panel(_content_frame)
 activate Left
-Left -> Widgets : create digit buttons 1–9 in 3×3 grid
+Left -> Widgets : create digit buttons 1–9 in 3×3 grid [col=0]
 activate Widgets
-Left -> Widgets : create full-width "0" button (row=3, columnspan=3)
+Left -> Widgets : create "0" button full-width [row=3, columnspan=3]
 Widgets --> Left : buttons stored in _digit_buttons
 deactivate Widgets
 deactivate Left
 
-Setup -> Right : _build_right_panel(_content_frame)
+Setup ->> Right : _build_right_panel(_content_frame)
 activate Right
-Right -> Widgets : create ÷ × − + buttons (col=1, rows 0–3)
+Right -> Widgets : create ÷ × − + buttons [col=1, rows 0–3, orange]
 activate Widgets
 Widgets --> Right : buttons stored in _arithmetic_buttons
 deactivate Widgets
 deactivate Right
 
-Setup -> Widgets : _make_frame() → _bottom_frame (row=2)
+Setup -> Widgets : _make_frame() → _bottom_frame [row=2]
 activate Widgets
 Widgets --> Setup : _bottom_frame
 deactivate Widgets
 
-Setup -> Bottom : _build_bottom_panel(_bottom_frame)
+Setup ->> Bottom : _build_bottom_panel(_bottom_frame)
 activate Bottom
 Bottom -> Bottom : resolve NORMAL op set\n(sqrt, square, factorial, ln, log10)
 Bottom -> Widgets : create op buttons in 4-column grid
@@ -65,5 +72,10 @@ deactivate Widgets
 deactivate Bottom
 
 deactivate Setup
+
+Main ->> Init : run()
+activate Init
+Init -> Root : _root.mainloop()
+deactivate Init
 
 @enduml

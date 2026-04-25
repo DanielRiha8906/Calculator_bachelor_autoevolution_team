@@ -1,17 +1,24 @@
 @startuml
+skinparam monochrome true
+skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
-title GuiCalculator — Class Structure and Composition
+title GuiCalculator — iOS-Style Three-Panel GUI
 
 class GuiCalculator {
-    ' State
+    ' --- State ---
+    - _calculator : Calculator
+    - _registry : OperationRegistry
+    - _history : OperationHistory
     - _current_mode : OperationMode
     - _current_operand : str
     - _selected_operation : str
     - _digit_buttons : list
     - _arithmetic_buttons : list
     - _operation_buttons : list
-    ' Widget references
+    - _normal_mode_buttons : list
+    - _scientific_mode_buttons : list
+    ' --- Widget references ---
     - _root
     - _top_frame
     - _content_frame
@@ -20,31 +27,31 @@ class GuiCalculator {
     - _bottom_frame
     - _result_label
     - _mode_toggle_btn
-    ' Public API
+    ' --- Public API ---
     + get_current_mode_operations() : list
     + calculate(op_name, *operands) : str
-    + get_history() : list
+    + get_history() : list[str]
     + is_unary_operation(op_name) : bool
     + run() : None
-    ' GUI setup
+    ' --- Layout setup ---
     - _setup_ios_gui() : None
     - _build_left_panel(parent) : None
     - _build_right_panel(parent) : None
     - _build_bottom_panel(parent) : None
     - _rebuild_bottom_panel() : None
-    ' Widget factories
-    - _make_button(...) : _TkStub
-    - _make_label(...) : _TkStub
-    - _make_frame(...) : _TkStub
-    ' Interaction handlers
-    - _on_digit_press(digit: int) : None
+    ' --- Widget factories ---
+    - _make_button(parent, text, bg, fg, active_bg, command) : widget
+    - _make_label(parent, text, bg, fg, font, anchor) : widget
+    - _make_frame(parent, bg) : widget
+    ' --- Interaction handlers ---
+    - _on_digit_press(digit : int) : None
     - _on_mode_toggle() : None
     - _update_mode_toggle_text() : None
-    - _on_op_press(op_name: str) : None
+    - _on_op_press(op_name : str) : None
     - _on_button_enter(btn) : None
     - _on_button_leave(btn) : None
-    ' Helpers
-    - _op_button_colours(op_name: str) : tuple
+    ' --- Color helper ---
+    - _op_button_colours(op_name : str) : tuple[str, str, str]
 }
 
 class Calculator {
@@ -52,24 +59,39 @@ class Calculator {
     + subtract(a, b) : float
     + multiply(a, b) : float
     + divide(a, b) : float
-    + sqrt(x) : float
-    + square(x) : float
     + factorial(n) : float
-    + sin(x) / cos(x) / tan(x) : float
-    + ... (14 ops total)
+    + square(x) : float
+    + cube(x) : float
+    + sqrt(x) : float
+    + cbrt(x) : float
+    + log10(x) : float
+    + ln(x) : float
+    + power(base, exp) : float
+    + sin(x) : float
+    + cos(x) : float
+    + tan(x) : float
+    + cot(x) : float
+    + asin(x) : float
+    + acos(x) : float
 }
 
 class OperationRegistry {
+    + get_operations() : list
+    + get_arity(op_name) : int
     + call(op_name, *args) : Any
-    + get_operations_by_mode(mode) : list
+    + get_operation_metadata(op_name) : OperationMetadata
+    + get_operation_mode(op_name) : OperationMode
+    + get_operations_by_mode(mode : OperationMode) : list
 }
 
 class OperationHistory {
     + record(op_name, operands, result) : None
-    + get_entries() : list
+    + get_entries() : list[str]
+    + display() : str
+    + write_to_file(filepath) : None
 }
 
-enum OperationMode {
+enum OperationMode <<enum>> {
     NORMAL
     SCIENTIFIC
 }

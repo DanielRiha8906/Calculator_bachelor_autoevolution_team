@@ -1,0 +1,79 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+title Core Layer — Calculator, Registry, History, Enums
+
+class Calculator {
+    ' Pure stateless math operations (18 total)
+    + add(a, b) : float
+    + subtract(a, b) : float
+    + multiply(a, b) : float
+    + divide(a, b) : float
+    + factorial(n) : float
+    + square(x) : float
+    + cube(x) : float
+    + sqrt(x) : float
+    + cbrt(x) : float
+    + log10(x) : float
+    + ln(x) : float
+    + power(base, exp) : float
+    + sin(x) : float
+    + cos(x) : float
+    + tan(x) : float
+    + cot(x) : float
+    + asin(x) : float
+    + acos(x) : float
+}
+
+class OperationRegistry {
+    - _calculator : Calculator
+    - _operations : dict
+    - _sorted_names : list
+    + get_operations() : list
+    + get_arity(op_name) : int
+    + call(op_name, *args) : Any
+    + get_operation_metadata(op_name) : OperationMetadata
+    + get_operation_mode(op_name) : OperationMode
+    + get_operations_by_mode(mode : OperationMode) : list
+}
+
+class OperationHistory {
+    - _entries : list[str]
+    + record(op_name, operands, result) : None
+    + get_entries() : list[str]
+    + display() : str
+    + write_to_file(filepath) : None
+}
+
+class OperationMetadata <<dataclass>> {
+    + name : str
+    + arity : int
+    + op_type : OperationType
+    + description : str
+    + mode : OperationMode
+}
+
+enum OperationType <<enum>> {
+    UNARY
+    BINARY
+}
+
+enum OperationMode <<enum>> {
+    NORMAL
+    SCIENTIFIC
+}
+
+' Module-level function (shown as note)
+note top of OperationHistory
+  format_history_entry(operation_name,\n  operands, result) -> str\n  [module-level helper]
+end note
+
+OperationRegistry *-- Calculator         : _calculator
+OperationRegistry --> OperationMetadata  : uses
+OperationRegistry ..> OperationMode      : filters by
+OperationMetadata --> OperationType      : op_type
+OperationMetadata --> OperationMode      : mode
+
+@enduml

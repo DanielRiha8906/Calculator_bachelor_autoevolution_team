@@ -1,6 +1,8 @@
 @startuml
+skinparam monochrome true
+skinparam shadowing false
 skinparam activityFontSize 12
-title Digit Button Press Flow
+title Digit Button Press — Operand Accumulation Flow
 
 start
 
@@ -13,9 +15,8 @@ start
 :_result_label.config(text=_current_operand);
 
 note right
-  Result label updates
-  immediately — no
-  separate refresh step.
+  Display updates immediately.
+  No separate refresh step needed.
 end note
 
 stop

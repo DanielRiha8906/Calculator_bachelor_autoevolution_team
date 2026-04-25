@@ -1,37 +1,39 @@
 @startuml
+skinparam monochrome true
+skinparam shadowing false
 skinparam componentFontSize 12
 skinparam rectangleFontSize 11
-title GuiCalculator — Widget Hierarchy (480×640, bg=black)
+title GuiCalculator — Widget Hierarchy (480x640, bg=black)
 
-rectangle "Root Window" as Root {
+rectangle "Root Window [480x640, bg=#000000]" as Root {
 
-    rectangle "_top_frame  [row=0]" as Top {
-        component "_result_label\n32pt bold · right-aligned\nwhite on black" as ResultLabel
-        component "_mode_toggle_btn\n'Normal' | 'Scientific'" as ModeBtn
+    rectangle "_top_frame  [row=0, columnspan=2]" as Top {
+        component "_result_label\n32pt bold Courier · right-aligned\nwhite on black" as ResultLabel
+        component "_mode_toggle_btn\n'Normal' | 'Scientific'\n[row=1, columnspan=2, full-width]" as ModeBtn
     }
 
     rectangle "_content_frame  [row=1]" as Content {
 
         rectangle "_left_panel  [col=0]" as Left {
-            component "Digit buttons 1–9\n3×3 grid\ndark gray (#1C1C1E)" as Digits
-            component "Button '0'\nfull-width (columnspan=3)\ndark gray" as Zero
+            component "Digit buttons 1–9\n3x3 grid\ndark gray (#1C1C1E)" as Digits
+            component "Button '0'\nfull-width [row=3, columnspan=3]\ndark gray (#1C1C1E)" as Zero
         }
 
         rectangle "_right_panel  [col=1]" as Right {
-            component "÷  [row=0]\n× [row=1]\n−  [row=2]\n+  [row=3]\norange (#FF9500)\nactive: #FFB143" as Arith
+            component "÷  [row=0]\n×  [row=1]\n−  [row=2]\n+  [row=3]\norange (#FF9500) · active: #FFB143" as Arith
         }
     }
 
-    rectangle "_bottom_frame  [row=2]  — rebuilt on mode switch" as Bottom {
-        component "NORMAL: sqrt · square · factorial · ln · log10\n4-column grid · gray (#333333)" as NormalOps
-        component "SCIENTIFIC: + cube · cbrt · power\n  sin · cos · tan · cot · asin · acos\n4-column grid · dark (#2C2C2E)" as SciOps
+    rectangle "_bottom_frame  [row=2] — rebuilt on mode switch" as Bottom {
+        component "NORMAL mode:\nsqrt · x² · n! · ln · log₁₀\n4-column grid · gray (#333333)" as NormalOps
+        component "SCIENTIFIC mode (adds):\ncube · cbrt · power\nsin · cos · tan · cot · asin · acos\n4-column grid · dark (#2C2C2E)" as SciOps
     }
 }
 
 note right of Bottom
   _rebuild_bottom_panel() destroys
-  this frame and recreates it with
-  the mode-appropriate op set.
+  _bottom_frame and recreates it with
+  the mode-appropriate operation set.
 end note
 
 Root -[hidden]-> Top
